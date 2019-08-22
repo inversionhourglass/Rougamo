@@ -1,0 +1,227 @@
+<?xml version="1.0"?>
+<doc>
+    <assembly>
+        <name>Rougamo</name>
+    </assembly>
+    <members>
+        <member name="T:Rougamo.Context.ExceptionContext">
+            <summary>
+            方法执行异常上下文
+            </summary>
+        </member>
+        <member name="M:Rougamo.Context.ExceptionContext.#ctor(Rougamo.Context.OutContext)">
+            <summary>
+            </summary>
+        </member>
+        <member name="P:Rougamo.Context.ExceptionContext.IsHandled">
+            <summary>
+            原方法抛出的异常是否已处理，给<see cref="P:Rougamo.Context.ExceptionContext.HandledReturn"/>,<see cref="P:Rougamo.Context.ExceptionContext.Throw"/>赋值时会自动设置为true
+            </summary>
+        </member>
+        <member name="P:Rougamo.Context.ExceptionContext.OriginException">
+            <summary>
+            方法执行抛出的异常
+            </summary>
+        </member>
+        <member name="P:Rougamo.Context.ExceptionContext.HandledReturn">
+            <summary>
+            手动设置异常处理后的返回值
+            </summary>
+        </member>
+        <member name="P:Rougamo.Context.ExceptionContext.Throw">
+            <summary>
+            手动设置异常处理后重新抛出的异常
+            </summary>
+        </member>
+        <member name="T:Rougamo.Context.InContext">
+            <summary>
+            方法执行前上线文
+            </summary>
+        </member>
+        <member name="M:Rougamo.Context.InContext.#ctor(Rougamo.Context.OutContext)">
+            <summary>
+            </summary>
+        </member>
+        <member name="P:Rougamo.Context.InContext.Interrupt">
+            <summary>
+            终止方法执行，给<see cref="P:Rougamo.Context.InContext.ReplacedReturn"/>,<see cref="P:Rougamo.Context.InContext.Throw"/>赋值时会自动设置为true
+            </summary>
+        </member>
+        <member name="P:Rougamo.Context.InContext.ReplacedReturn">
+            <summary>
+            手动设置的返回值
+            </summary>
+        </member>
+        <member name="P:Rougamo.Context.InContext.Throw">
+            <summary>
+            手动引发的异常
+            </summary>
+        </member>
+        <member name="T:Rougamo.Context.MethodContext">
+            <summary>
+            方法执行上下文共享部分
+            </summary>
+        </member>
+        <member name="F:Rougamo.Context.MethodContext.UNSET">
+            <summary>
+            返回值未设置值时的默认值
+            </summary>
+        </member>
+        <member name="M:Rougamo.Context.MethodContext.#ctor(System.Object,System.Reflection.MethodInfo,System.Object[])">
+            <summary>
+            </summary>
+        </member>
+        <member name="P:Rougamo.Context.MethodContext.Target">
+            <summary>
+            宿主类实例
+            </summary>
+        </member>
+        <member name="P:Rougamo.Context.MethodContext.Args">
+            <summary>
+            方法入参
+            </summary>
+        </member>
+        <member name="P:Rougamo.Context.MethodContext.Method">
+            <summary>
+            切入方法
+            </summary>
+        </member>
+        <member name="T:Rougamo.Context.OutContext">
+            <summary>
+            方法执行完成上下文
+            </summary>
+        </member>
+        <member name="M:Rougamo.Context.OutContext.#ctor(System.Object,System.Reflection.MethodInfo,System.Object[])">
+            <summary>
+            </summary>
+        </member>
+        <member name="P:Rougamo.Context.OutContext.ExceptionOccurred">
+            <summary>
+            原方法执行是否触发异常
+            </summary>
+        </member>
+        <member name="P:Rougamo.Context.OutContext.ExceptionHandled">
+            <summary>
+            原方法触发的异常是否已处理
+            </summary>
+        </member>
+        <member name="P:Rougamo.Context.OutContext.OriginException">
+            <summary>
+            原方法抛出的异常
+            </summary>
+        </member>
+        <member name="P:Rougamo.Context.OutContext.Throw">
+            <summary>
+            手动引发的异常
+            </summary>
+        </member>
+        <member name="P:Rougamo.Context.OutContext.ReturnReplaced">
+            <summary>
+            是否替换了原始方法返回值
+            </summary>
+        </member>
+        <member name="P:Rougamo.Context.OutContext.OriginReturn">
+            <summary>
+            原始返回值
+            </summary>
+        </member>
+        <member name="P:Rougamo.Context.OutContext.ActuallyReturn">
+            <summary>
+            实际返回值
+            </summary>
+        </member>
+        <member name="T:Rougamo.Context.SuccessContext">
+            <summary>
+            方法执行成功（无异常）上下文
+            </summary>
+        </member>
+        <member name="M:Rougamo.Context.SuccessContext.#ctor(Rougamo.Context.OutContext)">
+            <summary>
+            </summary>
+        </member>
+        <member name="P:Rougamo.Context.SuccessContext.Replaced">
+            <summary>
+            是否已替换原方法返回值，给<see cref="P:Rougamo.Context.SuccessContext.ReplacedReturn"/>,<see cref="P:Rougamo.Context.SuccessContext.Throw"/>赋值时会自动设置为true
+            </summary>
+        </member>
+        <member name="P:Rougamo.Context.SuccessContext.OriginReturn">
+            <summary>
+            方法原始返回值，如需修改返回值，请通过<see cref="P:Rougamo.Context.SuccessContext.ReplacedReturn"/>进行修改
+            </summary>
+        </member>
+        <member name="P:Rougamo.Context.SuccessContext.ReplacedReturn">
+            <summary>
+            手动替换的返回值
+            </summary>
+        </member>
+        <member name="P:Rougamo.Context.SuccessContext.Throw">
+            <summary>
+            手动引发的异常
+            </summary>
+        </member>
+        <member name="T:Rougamo.IMo">
+            <summary>
+            </summary>
+        </member>
+        <member name="M:Rougamo.IMo.Before(Rougamo.Context.InContext)">
+            <summary>
+            方法执行前切入执行
+            </summary>
+            <returns>
+            see <see cref="T:Rougamo.Context.InContext"/>
+            -true: 方法继续执行；
+            -false：方法中断执行，返回自定义返回值或抛出异常
+            </returns>
+        </member>
+        <member name="M:Rougamo.IMo.Successed(Rougamo.Context.SuccessContext)">
+            <summary>
+            方法执行成功后切入执行
+            </summary>
+        </member>
+        <member name="M:Rougamo.IMo.Exceptioned(Rougamo.Context.ExceptionContext)">
+            <summary>
+            方法执行引发异常后切入执行
+            </summary>
+        </member>
+        <member name="M:Rougamo.IMo.Exit(Rougamo.Context.OutContext)">
+            <summary>
+            方法执行完成后切入执行
+            </summary>
+        </member>
+        <member name="T:Rougamo.IRougamo`1">
+            <summary>
+            跟接口，用于查找
+            </summary>
+        </member>
+        <member name="T:Rougamo.IFullRougamo`1">
+            <summary>
+            全方法接入
+            </summary>
+        </member>
+        <member name="T:Rougamo.IPublicRougamo`1">
+            <summary>
+            public方法接入
+            </summary>
+        </member>
+        <member name="T:Rougamo.IPublicInstanceRougamo`1">
+            <summary>
+            public且实例方法接入
+            </summary>
+        </member>
+        <member name="T:Rougamo.IInstanceRougamo`1">
+            <summary>
+            实例方法接入
+            </summary>
+        </member>
+        <member name="T:Rougamo.IFilterRougamo`1">
+            <summary>
+            实例方法接入
+            </summary>
+        </member>
+        <member name="P:Rougamo.IFilterRougamo`1.RougamoFiltereds">
+            <summary>
+            忽略的方法集合
+            </summary>
+        </member>
+    </members>
+</doc>
