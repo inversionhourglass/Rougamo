@@ -4,11 +4,12 @@ using System.Collections.Generic;
 
 namespace Rougamo.Fody
 {
-    public class ModuleWeaver : BaseModuleWeaver
+    public partial class ModuleWeaver : BaseModuleWeaver
     {
         public override void Execute()
         {
-            throw new NotImplementedException();
+            LoadBasicReference();
+            FindInjectTypes();
         }
 
         public override IEnumerable<string> GetAssembliesForScanning()

@@ -13,7 +13,11 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FodyTestConsole", "test\Fod
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FodyTestLib", "test\FodyTestLib\FodyTestLib.csproj", "{C62475F5-016E-44B6-964E-7CD6055514E0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rougamo.Fody", "src\Rougamo.Fody\Rougamo.Fody.csproj", "{191B2987-A3A5-4916-BE4B-2657854DFF39}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rougamo.Fody", "src\Rougamo.Fody\Rougamo.Fody.csproj", "{191B2987-A3A5-4916-BE4B-2657854DFF39}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rougamo.Fody.Tests", "test\Rougamo.Fody.Tests\Rougamo.Fody.Tests.csproj", "{9099F550-2393-4216-8916-2E34D9D3B48D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rougamo.TestAssembly", "test\Rougamo.TestAssembly\Rougamo.TestAssembly.csproj", "{F36B3E06-800D-423B-8A16-D82EDA580286}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -37,6 +41,14 @@ Global
 		{191B2987-A3A5-4916-BE4B-2657854DFF39}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{191B2987-A3A5-4916-BE4B-2657854DFF39}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{191B2987-A3A5-4916-BE4B-2657854DFF39}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9099F550-2393-4216-8916-2E34D9D3B48D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9099F550-2393-4216-8916-2E34D9D3B48D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9099F550-2393-4216-8916-2E34D9D3B48D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9099F550-2393-4216-8916-2E34D9D3B48D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F36B3E06-800D-423B-8A16-D82EDA580286}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F36B3E06-800D-423B-8A16-D82EDA580286}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F36B3E06-800D-423B-8A16-D82EDA580286}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F36B3E06-800D-423B-8A16-D82EDA580286}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -46,6 +58,8 @@ Global
 		{1E5AA37C-9036-47A2-BBEE-65331A796B3D} = {8C9FFBEC-F477-4037-B3FE-BAF02ED3A16C}
 		{C62475F5-016E-44B6-964E-7CD6055514E0} = {8C9FFBEC-F477-4037-B3FE-BAF02ED3A16C}
 		{191B2987-A3A5-4916-BE4B-2657854DFF39} = {E99BBF2A-FEAE-4CA4-BD18-646D1ACAB543}
+		{9099F550-2393-4216-8916-2E34D9D3B48D} = {8C9FFBEC-F477-4037-B3FE-BAF02ED3A16C}
+		{F36B3E06-800D-423B-8A16-D82EDA580286} = {8C9FFBEC-F477-4037-B3FE-BAF02ED3A16C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0BD0178E-76E0-4736-A036-89B1AA268A05}

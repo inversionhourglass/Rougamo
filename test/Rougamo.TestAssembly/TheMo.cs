@@ -1,8 +1,7 @@
-﻿using Rougamo;
-using Rougamo.Context;
+﻿using Rougamo.Context;
 using System;
 
-namespace FodyTestLib
+namespace Rougamo.TestAssembly
 {
     public class TheMo : IMo
     {
