@@ -1,11 +1,14 @@
 ﻿using Fody;
-using System;
+using Mono.Cecil;
 using System.Collections.Generic;
 
 namespace Rougamo.Fody
 {
     public partial class ModuleWeaver : BaseModuleWeaver
     {
+        private TypeReference _systemTypeRef;
+
+
         public override void Execute()
         {
             LoadBasicReference();

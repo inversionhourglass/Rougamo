@@ -9,11 +9,6 @@ namespace Rougamo
         /// <summary>
         /// 方法执行前切入执行
         /// </summary>
-        /// <returns>
-        /// see <see cref="EntryContext"/>
-        /// -true: 方法继续执行；
-        /// -false：方法中断执行，返回自定义返回值或抛出异常
-        /// </returns>
         void OnEntry(EntryContext context);
 
         /// <summary>

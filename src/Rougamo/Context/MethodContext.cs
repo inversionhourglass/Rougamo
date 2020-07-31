@@ -18,7 +18,7 @@ namespace Rougamo.Context
         {
             Target = target;
             Method = method;
-            Args = args;
+            Arguments = args;
         }
 
         /// <summary>
@@ -29,7 +29,7 @@ namespace Rougamo.Context
         /// <summary>
         /// 方法入参
         /// </summary>
-        public object[] Args { get; private set; }
+        public object[] Arguments { get; private set; }
 
         /// <summary>
         /// 切入方法

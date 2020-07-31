@@ -6,11 +6,13 @@ namespace Rougamo.Fody
     {
         void FindInjectTypes()
         {
+            FindImplementInjectTypes();
         }
 
         void FindImplementInjectTypes()
         {
-            ModuleDefinition.Types.Where(t => t.IsClass && !t.IsAbstract && t.HasInterfaces && t.IsAssignableFrom()))
+            var rougamos = ModuleDefinition.Types.Where(t => t.IsClass && !t.IsAbstract && t.HasInterfaces && _rougamoTd.IsAssignableFrom(t));
+            System.Console.WriteLine(rougamos.Count());
         }
     }
 }

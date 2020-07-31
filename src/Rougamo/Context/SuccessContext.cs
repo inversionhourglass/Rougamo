@@ -10,7 +10,7 @@
 
         /// <summary>
         /// </summary>
-        public SuccessContext(ExitContext exit) : base(exit.Target, exit.Method, exit.Args)
+        public SuccessContext(ExitContext exit) : base(exit.Target, exit.Method, exit.Arguments)
         {
             _exit = exit;
         }

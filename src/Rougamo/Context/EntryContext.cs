@@ -9,7 +9,7 @@
 
         /// <summary>
         /// </summary>
-        public EntryContext(ExitContext exit) : base(exit.Target, exit.Method, exit.Args)
+        public EntryContext(ExitContext exit) : base(exit.Target, exit.Method, exit.Arguments)
         {
             _exit = exit;
         }

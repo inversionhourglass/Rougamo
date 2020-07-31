@@ -12,7 +12,7 @@ namespace Rougamo.Context
 
         /// <summary>
         /// </summary>
-        public ExceptionContext(ExitContext exit) : base(exit.Target, exit.Method, exit.Args)
+        public ExceptionContext(ExitContext exit) : base(exit.Target, exit.Method, exit.Arguments)
         {
             _exit = exit;
         }

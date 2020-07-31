@@ -1,11 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net461</TargetFrameworks>
-  </PropertyGroup>
-
-  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>D:\Code\Benlai.Git\arch\infrastructure\src\Rougamo\Rougamo.xml</DocumentationFile>
+    <TargetFramework>netstandard2.0</TargetFramework>
+    <DocumentationFile>$(ProjectDir)\Rougamo.xml</DocumentationFile>
   </PropertyGroup>
 
 </Project>
