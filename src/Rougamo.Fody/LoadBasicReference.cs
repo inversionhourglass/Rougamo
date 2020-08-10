@@ -1,17 +1,13 @@
-﻿using Mono.Cecil;
-using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using System;
 
 namespace Rougamo.Fody
 {
     partial class ModuleWeaver
     {
-        TypeDefinition _rougamoTd;
-
         void LoadBasicReference()
         {
-            _rougamoTd = FindType("Rougamo.IMo");
+            _systemTypeRef = FindTypeDefinition(typeof(Type).FullName).ImportInto(ModuleDefinition);
+            _getTypeFromHandleRef = typeof(Type).GetMethod("GetTypeFromHandle", new[] { typeof(RuntimeTypeHandle) }).ImportInto(ModuleDefinition);
         }
     }
 }

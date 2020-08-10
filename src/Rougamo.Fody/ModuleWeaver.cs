@@ -8,11 +8,14 @@ namespace Rougamo.Fody
     {
         private TypeReference _systemTypeRef;
 
+        private MethodReference _getTypeFromHandleRef;
+
+        private List<RouType> _rouTypes;
 
         public override void Execute()
         {
             LoadBasicReference();
-            FindInjectTypes();
+            FindRous();
         }
 
         public override IEnumerable<string> GetAssembliesForScanning()

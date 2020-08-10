@@ -1,10 +1,15 @@
 ﻿using Rougamo.Context;
+using System;
 
 namespace Rougamo
 {
     /// <inheritdoc/>
-    public abstract class MoAttribute : IMo
+    [AttributeUsage(AttributeTargets.Assembly|AttributeTargets.Module|AttributeTargets.Class|AttributeTargets.Method)]
+    public abstract class MoAttribute : Attribute, IMo
     {
+        /// <inheritdoc/>
+        public virtual AccessFlags Flags { get; }
+
         /// <inheritdoc/>
         public abstract void OnEntry(EntryContext context);
 

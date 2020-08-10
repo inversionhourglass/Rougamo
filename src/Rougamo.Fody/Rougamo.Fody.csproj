@@ -2,7 +2,12 @@
 
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <DefineConstants>TRACE;FODY</DefineConstants>
   </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Rougamo\AccessFlags.cs" Link="Models\AccessFlags.cs" />
+  </ItemGroup>
 
   <ItemGroup>
     <PackageReference Include="FodyHelpers" Version="6.2.1" />

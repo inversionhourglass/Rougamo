@@ -10,7 +10,7 @@ namespace Rougamo.Fody.Tests
         public void Test1()
         {
             var weaver = new ModuleWeaver();
-            weaver.ExecuteTestRun("Rougamo.TestAssembly.dll");
+            weaver.ExecuteTestRun("Rougamo.UsingAssembly.dll");
         }
     }
 }

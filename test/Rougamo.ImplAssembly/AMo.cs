@@ -1,30 +1,28 @@
 ﻿using Rougamo.Context;
 using System;
+using System.Collections.Generic;
+using System.Text;
 
-namespace Rougamo.TestAssembly
+namespace Rougamo.ImplAssembly
 {
-    public class TheMo : IMo
+    public class AMo : IMo
     {
+        public AccessFlags Flags { get; }
+
         public void OnEntry(EntryContext context)
         {
-            Console.WriteLine(nameof(OnEntry));
         }
 
         public void OnException(ExceptionContext context)
         {
-            Console.WriteLine(nameof(OnException));
         }
 
         public void OnExit(ExitContext context)
         {
-            Console.WriteLine(nameof(OnExit));
         }
 
         public void OnSuccess(SuccessContext context)
         {
-            Console.WriteLine(nameof(OnSuccess));
         }
     }
-
-    public interface IBaseMo : IRougamo<TheMo> { }
 }

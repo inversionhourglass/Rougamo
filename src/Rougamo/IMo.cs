@@ -7,6 +7,11 @@ namespace Rougamo
     public interface IMo
     {
         /// <summary>
+        /// 可注入方法类型，应用于方法级别时，该属性无效
+        /// </summary>
+        AccessFlags Flags { get; }
+
+        /// <summary>
         /// 方法执行前切入执行
         /// </summary>
         void OnEntry(EntryContext context);

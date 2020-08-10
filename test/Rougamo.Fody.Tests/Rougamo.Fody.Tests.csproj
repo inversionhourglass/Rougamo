@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.2</TargetFramework>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
 
     <IsPackable>false</IsPackable>
   </PropertyGroup>
@@ -19,7 +19,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Rougamo.Fody\Rougamo.Fody.csproj" />
     <ProjectReference Include="..\..\src\Rougamo\Rougamo.csproj" />
-    <ProjectReference Include="..\Rougamo.TestAssembly\Rougamo.TestAssembly.csproj" />
+    <ProjectReference Include="..\Rougamo.UsingAssembly\Rougamo.UsingAssembly.csproj" />
   </ItemGroup>
 
 </Project>
