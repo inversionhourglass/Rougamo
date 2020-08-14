@@ -2,6 +2,7 @@
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
 using Mono.Collections.Generic;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -18,22 +19,30 @@ namespace Rougamo.Fody
 
         private void FullScan()
         {
-            (var directs, var proxies) = FindGlobalAttributes();
+            (var directs, var proxies, var ignores) = FindGlobalAttributes();
+
+            if (ignores == null) return;
 
             foreach (var typeDef in ModuleDefinition.Types)
             {
                 if (!typeDef.IsClass || typeDef.IsValueType || typeDef.IsDelegate() || !typeDef.HasMethods) continue;
 
+                var typeIgnores = ExtractIgnores(typeDef.CustomAttributes);
+                if (typeIgnores == null) continue;
+
                 var rouType = new RouType(typeDef);
-                var ignore = typeDef.CustomAttributes.Any(ca => ca.Is(Constants.TYPE_IgnoreMoAttribute));
-                var implementations = ExtractClassImplementations(typeDef);
-                var classAttributes = ExtractClassAttributes(typeDef);
+                var implementations = ExtractClassImplementations(typeDef, ignores, typeIgnores);
+                (var classAttributes, var classProxies) = ExtractAttributes(typeDef.CustomAttributes, proxies, $"class[{typeDef.FullName}]", ignores, typeIgnores);
 
                 foreach (var methodDef in typeDef.Methods)
                 {
                     if ((methodDef.Attributes & MethodAttributes.Abstract) != 0) continue;
 
+                    var methodIgnores = ExtractIgnores(methodDef.CustomAttributes);
+                    if (methodIgnores == null) continue;
 
+                    (var methodAttributes, var methodProxies) = ExtractAttributes(methodDef.CustomAttributes, proxies, $"method[{methodDef.FullName}]", ignores, typeIgnores, methodIgnores);
+                    rouType.Initialize(methodDef, directs, implementations, classAttributes, classProxies, methodAttributes, methodProxies);
                 }
             }
         }
@@ -44,11 +53,12 @@ namespace Rougamo.Fody
         /// <returns>
         /// directs: 继承自MoAttribute的类型
         /// proxies: 通过MoProxyAttribute代理的类型
+        /// ignores: 需要忽略的实现了IMo的织入类型
         /// </returns>
-        private (Dictionary<string, CustomAttribute> directs, Dictionary<string, (TypeDefinition origin, TypeDefinition proxy)> proxies) FindGlobalAttributes()
+        private (CustomAttribute[] directs, Dictionary<string, TypeDefinition> proxies, string[] ignores) FindGlobalAttributes()
         {
-            var (directs, proxies) = FindGlobalAttributes(ModuleDefinition.Assembly.CustomAttributes, "assembly");
-            var (moduleDirects, moduleProxies) = FindGlobalAttributes(ModuleDefinition.CustomAttributes, "module");
+            var (directs, proxies, ignores) = FindGlobalAttributes(ModuleDefinition.Assembly.CustomAttributes, "assembly");
+            var (moduleDirects, moduleProxies, moduleIgnores) = FindGlobalAttributes(ModuleDefinition.CustomAttributes, "module");
 
             foreach (var direct in moduleDirects)
             {
@@ -68,7 +78,22 @@ namespace Rougamo.Fody
                 proxies[proxy.Key] = proxy.Value;
             }
 
-            return (directs, proxies.Values.ToDictionary(x => x.origin.FullName));
+            ignores.AddRange(moduleIgnores);
+
+            foreach (var ignore in ignores.Keys)
+            {
+                if (directs.ContainsKey(ignore))
+                {
+                    directs.Remove(ignore);
+                }
+                var keys = proxies.Where(x => x.Value.FullName == ignore).Select(x => x.Key);
+                foreach (var key in keys)
+                {
+                    proxies.Remove(key);
+                }
+            }
+
+            return (directs.Values.ToArray(), proxies, ignores.Keys.ToArray());
         }
 
         /// <summary>
@@ -79,26 +104,20 @@ namespace Rougamo.Fody
         /// <returns>
         /// directs: 继承自MoAttribute的类型
         /// proxies: 通过MoProxyAttribute代理的类型
+        /// ignores: 需要忽略的实现了IMo的织入类型
         /// </returns>
-        private (Dictionary<string, CustomAttribute> directs, Dictionary<string, (TypeDefinition origin, TypeDefinition proxy)> proxies) FindGlobalAttributes(Collection<CustomAttribute> attributes, string locationName)
+        private (Dictionary<string, CustomAttribute> directs, Dictionary<string, TypeDefinition> proxies, Dictionary<string, TypeDefinition> ignores) FindGlobalAttributes(Collection<CustomAttribute> attributes, string locationName)
         {
             var directs = new Dictionary<string, CustomAttribute>();
             var proxies = new Dictionary<string, (TypeDefinition origin, TypeDefinition proxy)>();
+            var ignores = new Dictionary<string, TypeDefinition>();
 
             foreach (var attribute in attributes)
             {
                 var attrType = attribute.AttributeType;
                 if (attrType.DerivesFrom(Constants.TYPE_MoAttribute))
                 {
-                    var key = attrType.FullName;
-                    if (directs.TryAdd(key, attribute))
-                    {
-                        WriteInfo($"{locationName} MoAttribute found: {key}");
-                    }
-                    else
-                    {
-                        WriteError($"duplicate {locationName} MoAttribute found: {key}");
-                    }
+                    ExtractMoAttributeUniq(directs, attribute, locationName);
                 }
                 else if (attrType.Is(Constants.TYPE_MoProxyAttribute))
                 {
@@ -127,9 +146,13 @@ namespace Rougamo.Fody
                         }
                     }
                 }
+                else if (attrType.Is(Constants.TYPE_IgnoreMoAttribute))
+                {
+                    if (!ExtractIgnores(ref ignores, attribute)) break;
+                }
             }
 
-            return (directs, proxies);
+            return (directs, proxies.Values.ToDictionary(x => x.origin.FullName, x => x.proxy), ignores);
         }
 
         /// <summary>
@@ -140,9 +163,10 @@ namespace Rougamo.Fody
         ///         mo: 实现IMo接口的类型
         /// repulsions: 与mo互斥的类型
         /// </returns>
-        private (TypeDefinition mo, TypeDefinition[] repulsions)[] ExtractClassImplementations(TypeDefinition typeDef)
+        private (TypeDefinition mo, TypeDefinition[] repulsions)[] ExtractClassImplementations(TypeDefinition typeDef, params string[][] ignores)
         {
-            var mos = new List<(TypeDefinition, TypeDefinition[])>();
+            var ignoreSet = ignores.ToHashSet();
+            var mos = new List<(TypeDefinition mo, TypeDefinition[] repulsions)>();
             var mosInterfaces = typeDef.GetGenericInterfaces(Constants.TYPE_IRougamo_1);
             var repMosInterfaces = typeDef.GetGenericInterfaces(Constants.TYPE_IRougamo_2);
             var multiRepMosInterfaces = typeDef.GetGenericInterfaces(Constants.TYPE_IRepulsionsRougamo);
@@ -151,6 +175,7 @@ namespace Rougamo.Fody
             mos.AddRange(repMosInterfaces.Select(x => (x.GenericArguments[0].Resolve(), new TypeDefinition[] { x.GenericArguments[1].Resolve() })));
             mos.AddRange(multiRepMosInterfaces.Select(x => (x.GenericArguments[0].Resolve(), ExtractRepulsionFromIl(x.GenericArguments[1].Resolve()))));
 
+            mos.Remove(item => ignoreSet.Contains(item.mo.FullName));
             return mos.ToArray();
         }
 
@@ -231,13 +256,98 @@ namespace Rougamo.Fody
         }
 
         /// <summary>
-        /// 从class级别查找继承自MoAttribute的Attribute（仅当前类，父类级别无效）
+        /// 从一堆CustomAttribute中提取MoAttribute的子类以及被代理的Attribute
         /// </summary>
-        /// <param name="typeDef">程序集中的类型</param>
-        /// <returns>继承自MoAttribute的类型</returns>
-        private CustomAttribute[] ExtractClassAttributes(TypeDefinition typeDef)
+        /// <param name="attributes">一堆CustomAttribute</param>
+        /// <param name="proxies">代理声明</param>
+        /// <param name="locationName">CustomAttribute的来源</param>
+        /// <returns>
+        ///     mos: 继承自MoAttribute的类型
+        /// proxied: 通过代理设置的实现IMo接口的类型
+        /// </returns>
+        private (CustomAttribute[] mos, TypeDefinition[] proxied) ExtractAttributes(Collection<CustomAttribute> attributes, Dictionary<string, TypeDefinition> proxies, string locationName, params string[][] ignores)
         {
-            return typeDef.CustomAttributes.Where(ca => ca.DerivesFrom(Constants.TYPE_MoAttribute)).ToArray();
+            var ignoreSet = ignores.ToHashSet();
+            var mos = new Dictionary<string, CustomAttribute>();
+            var proxied = new Dictionary<string, TypeDefinition>();
+            foreach (var attribute in attributes)
+            {
+                if (attribute.AttributeType.DerivesFrom(Constants.TYPE_MoAttribute))
+                {
+                    ExtractMoAttributeUniq(mos, attribute, locationName);
+                }
+                else if (proxies.TryGetValue(attribute.AttributeType.FullName, out var proxy))
+                {
+                    proxied.TryAdd(proxy.FullName, proxy);
+                }
+            }
+
+            mos.Remove((key, value) => ignoreSet.Contains(key));
+            // proxies在FindGlobalAttributes中已经过滤了
+            return (mos.Values.ToArray(), proxied.Values.ToArray());
+        }
+
+        /// <summary>
+        /// 去重的将MoAttribute添加到已有集合中并记录日志
+        /// </summary>
+        /// <param name="mos">已有的MoAttribute子类</param>
+        /// <param name="attribute">CustomAttribute</param>
+        /// <param name="locationName">CustomAttribute的来源</param>
+        private void ExtractMoAttributeUniq(Dictionary<string, CustomAttribute> mos, CustomAttribute attribute, string locationName)
+        {
+            if(mos.TryAdd(attribute.AttributeType.FullName, attribute))
+            {
+                WriteInfo($"{locationName} MoAttribute found: {attribute.AttributeType.FullName}");
+            }
+            else
+            {
+                WriteError($"duplicate {locationName} MoAttribute found: {attribute.AttributeType.FullName}");
+            }
+        }
+
+        /// <summary>
+        /// 从一堆Attribute中找到IgnoreAttribute并提取忽略的织入类型
+        /// </summary>
+        /// <param name="attributes">一堆Attribute</param>
+        /// <returns>忽略的织入类型，如果返回null表示忽略全部</returns>
+        private string[] ExtractIgnores(Collection<CustomAttribute> attributes)
+        {
+            var ignores = new Dictionary<string, TypeDefinition>();
+            foreach (var attribute in attributes)
+            {
+                if (attribute.AttributeType.Is(Constants.TYPE_IgnoreMoAttribute) && !ExtractIgnores(ref ignores, attribute)) break;
+            }
+            return ignores.Keys.ToArray();
+        }
+
+        /// <summary>
+        /// 从IgnoreMoAttribute中提取忽略的织入类型
+        /// </summary>
+        /// <param name="ignores">已有的忽略类型</param>
+        /// <param name="attribute">IgnoreAttribute</param>
+        /// <returns>如果忽略全部返回false，否则返回true</returns>
+        private bool ExtractIgnores(ref Dictionary<string, TypeDefinition> ignores, CustomAttribute attribute)
+        {
+            if (!attribute.HasProperties || !attribute.Properties.TryGet(Constants.PROP_MoTypes, out var property))
+            {
+                ignores = null;
+                return false;
+            }
+
+            var enumerable = (IEnumerable)property.Value.Argument.Value;
+            foreach (var item in enumerable)
+            {
+                var def = item as TypeDefinition;
+                if (def == null && item is TypeReference @ref)
+                {
+                    def = @ref.Resolve();
+                }
+                if (def != null && def.Is(Constants.TYPE_IMo))
+                {
+                    ignores.TryAdd(def.FullName, def);
+                }
+            }
+            return true;
         }
     }
 }

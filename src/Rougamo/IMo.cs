@@ -7,7 +7,7 @@ namespace Rougamo
     public interface IMo
     {
         /// <summary>
-        /// 可注入方法类型，应用于方法级别时，该属性无效
+        /// 可织入方法类型，应用于方法级别时，该属性无效
         /// </summary>
         AccessFlags Flags { get; }
 

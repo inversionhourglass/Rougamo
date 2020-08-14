@@ -13,9 +13,5 @@ namespace Rougamo.Fody
         public TypeDefinition TypeDef { get; set; }
 
         public List<RouMethod> Methods { get; set; }
-
-        public List<Mo> AssemblyMos { get; set; }
-
-        public List<Mo> TypeMos { get; set; }
     }
 }

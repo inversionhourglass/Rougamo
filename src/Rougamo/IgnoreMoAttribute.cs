@@ -3,10 +3,14 @@
 namespace Rougamo
 {
     /// <summary>
-    /// 与<see cref="MoAttribute"/>以及<see cref="MoProxyAttribute"/>配合使用
+    /// 被标记的类型或方法将忽略代码织入
     /// </summary>
-    [AttributeUsage(AttributeTargets.Class|AttributeTargets.Method)]
+    [AttributeUsage(AttributeTargets.Assembly|AttributeTargets.Module|AttributeTargets.Class|AttributeTargets.Method, AllowMultiple = true)]
     public sealed class IgnoreMoAttribute : Attribute
     {
+        /// <summary>
+        /// 忽略指定实现<see cref="IMo"/>接口的织入类型，不传入忽略所有
+        /// </summary>
+        public Type[] MoTypes { get; set; }
     }
 }

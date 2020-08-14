@@ -2,7 +2,7 @@
 
 namespace Rougamo
 {
-    [AttributeUsage(AttributeTargets.Assembly|AttributeTargets.Module)]
+    [AttributeUsage(AttributeTargets.Assembly|AttributeTargets.Module, AllowMultiple = true)]
     public class MoProxyAttribute : Attribute
     {
         public MoProxyAttribute(Type originAttributeType, Type moAttribtueType)

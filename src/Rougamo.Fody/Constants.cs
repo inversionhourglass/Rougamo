@@ -11,10 +11,13 @@
         public const string TYPE_IRougamo_2 = "Rougamo.IRougamo`2";
         public const string TYPE_IRepulsionsRougamo = "Rougamo.IRepulsionsRougamo`2";
 
+        public const string TYPE_AsyncStateMachineAttribute = "System.Runtime.CompilerServices.AsyncStateMachineAttribute";
+
         public const string TYPE_ARRAY_Type = "System.Type[]";
 
         public const string PROP_Flags = "Flags";
         public const string PROP_Repulsions = "Repulsions";
+        public const string PROP_MoTypes = "MoTypes";
 
         public const string FIELD_Flags = "<Flags>k__BackingField";
         public const string FIELD_Repulsions = "<Repulsions>k__BackingField";
