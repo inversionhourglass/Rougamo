@@ -20,22 +20,6 @@ namespace Rougamo.Fody
             }
         }
 
-        public static HashSet<T> ToHashSet<T>(this T[][] arrays)
-        {
-            var hashSet = new HashSet<T>();
-            if(arrays != null)
-            {
-                foreach (var array in arrays)
-                {
-                    foreach (var item in array)
-                    {
-                        hashSet.Add(item);
-                    }
-                }
-            }
-            return hashSet;
-        }
-
         public static void Remove<T>(this List<T> items, Func<T, bool> predicate)
         {
             var stack = new Stack<int>();

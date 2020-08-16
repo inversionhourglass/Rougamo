@@ -20,7 +20,7 @@ namespace Rougamo.Fody
         {
             if (mo.Attribute.Properties.TryGet(Constants.PROP_Flags, out var property))
             {
-                return (AccessFlags)property.Value.Argument.Value;
+                return (AccessFlags)(sbyte)property.Value.Argument.Value;
             }
             var flags = ExtractFlagsFromIl(mo.Attribute.AttributeType.Resolve());
             return flags.HasValue ? flags.Value : AccessFlags.InstancePublic;
@@ -84,7 +84,7 @@ namespace Rougamo.Fody
             if (instruction.OpCode == OpCodes.Ldc_I4_3) return AccessFlags.Public;
             if (instruction.OpCode == OpCodes.Ldc_I4_6) return AccessFlags.Instance;
             if (instruction.OpCode == OpCodes.Ldc_I4_7) return AccessFlags.Instance | AccessFlags.Public;
-            if (instruction.OpCode == OpCodes.Ldc_I4_S) return (AccessFlags)instruction.Operand;
+            if (instruction.OpCode == OpCodes.Ldc_I4_S) return (AccessFlags)(sbyte)instruction.Operand;
             return null;
         }
 
@@ -92,26 +92,35 @@ namespace Rougamo.Fody
 
         public static void Initialize(this RouType rouType, MethodDefinition methdDef, CustomAttribute[] assemblyAttributes,
             (TypeDefinition mo, TypeDefinition[] repulsions)[] typeImplements, CustomAttribute[] typeAttributes, TypeDefinition[] typeProxies,
-            CustomAttribute[] methodAttributes, TypeDefinition[] methodProxies)
+            CustomAttribute[] methodAttributes, TypeDefinition[] methodProxies,
+            string[] assemblyIgnores, string[] typeIgnores, string[] methodIgnores)
         {
+            var ignores = new HashSet<string>(assemblyIgnores);
+            ignores.AddRange(typeIgnores);
+            ignores.AddRange(methodIgnores);
+
             var rouMethod = new RouMethod(methdDef);
 
-            rouMethod.AddMo(methodAttributes, MoFrom.Method);
-            rouMethod.AddMo(methodProxies, MoFrom.Method);
+            rouMethod.AddMo(methodAttributes.Where(x => !ignores.Contains(x.AttributeType.FullName)), MoFrom.Method);
+            rouMethod.AddMo(methodProxies.Where(x => !ignores.Contains(x.FullName)), MoFrom.Method);
 
-            rouMethod.AddMo(typeAttributes, MoFrom.Class);
-            rouMethod.AddMo(typeProxies, MoFrom.Class);
-            foreach (var implement in typeImplements)
+            rouMethod.AddMo(typeAttributes.Where(x => !ignores.Contains(x.AttributeType.FullName)), MoFrom.Class);
+            rouMethod.AddMo(typeProxies.Where(x => !ignores.Contains(x.FullName)), MoFrom.Class);
+            foreach (var implement in typeImplements.Where(x => !ignores.Contains(x.mo.FullName)))
             {
                 if (!rouMethod.Any(implement.repulsions))
                 {
                     rouMethod.AddMo(implement.mo, MoFrom.Class);
+                    ignores.AddRange(implement.repulsions.Select(x => x.FullName));
                 }
             }
 
-            rouMethod.AddMo(assemblyAttributes, MoFrom.Assembly);
+            rouMethod.AddMo(assemblyAttributes.Where(x => !ignores.Contains(x.AttributeType.FullName)), MoFrom.Assembly);
 
-            rouType.Methods.Add(rouMethod);
+            if (rouMethod.Mos.Any())
+            {
+                rouType.Methods.Add(rouMethod);
+            }
         }
 
         public static void AddMo(this RouMethod method, TypeDefinition typeDef, MoFrom from)
@@ -123,13 +132,13 @@ namespace Rougamo.Fody
             }
         }
 
-        public static void AddMo(this RouMethod method, CustomAttribute[] attributes, MoFrom from)
+        public static void AddMo(this RouMethod method, IEnumerable<CustomAttribute> attributes, MoFrom from)
         {
             var mos = attributes.Select(x => new Mo(x, from)).Where(x => (x.Flags & method.Flags(from)) != 0);
             method.Mos.AddRange(mos);
         }
 
-        public static void AddMo(this RouMethod method, TypeDefinition[] typeDefs, MoFrom from)
+        public static void AddMo(this RouMethod method, IEnumerable<TypeDefinition> typeDefs, MoFrom from)
         {
             var mos = typeDefs.Select(x => new Mo(x, from)).Where(x => (x.Flags & method.Flags(from)) != 0);
             method.Mos.AddRange(mos);

@@ -13,9 +13,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rougamo.Fody", "src\Rougamo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rougamo.Fody.Tests", "test\Rougamo.Fody.Tests\Rougamo.Fody.Tests.csproj", "{9099F550-2393-4216-8916-2E34D9D3B48D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rougamo.ImplAssembly", "test\Rougamo.ImplAssembly\Rougamo.ImplAssembly.csproj", "{B86F2A9B-B200-4004-B659-2D4D42E82ED5}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rougamo.ImplAssembly", "test\Rougamo.ImplAssembly\Rougamo.ImplAssembly.csproj", "{B86F2A9B-B200-4004-B659-2D4D42E82ED5}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rougamo.UsingAssembly", "test\Rougamo.UsingAssembly\Rougamo.UsingAssembly.csproj", "{A21471A9-D6A0-446A-86E5-BA7A683EFD87}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rougamo.UsingAssembly", "test\Rougamo.UsingAssembly\Rougamo.UsingAssembly.csproj", "{A21471A9-D6A0-446A-86E5-BA7A683EFD87}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionItems", "{BCA66129-FEC9-4244-B53E-931B928C723E}"
+	ProjectSection(SolutionItems) = preProject
+		README.md = README.md
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

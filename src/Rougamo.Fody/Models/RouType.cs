@@ -1,5 +1,6 @@
 ﻿using Mono.Cecil;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Rougamo.Fody
 {
@@ -8,10 +9,13 @@ namespace Rougamo.Fody
         public RouType(TypeDefinition typeDefinition)
         {
             TypeDef = typeDefinition;
+            Methods = new List<RouMethod>();
         }
 
-        public TypeDefinition TypeDef { get; set; }
+        public TypeDefinition TypeDef { get; }
 
-        public List<RouMethod> Methods { get; set; }
+        public List<RouMethod> Methods { get; }
+
+        public bool HasMo => Methods.Any(rm => rm.Mos.Any());
     }
 }

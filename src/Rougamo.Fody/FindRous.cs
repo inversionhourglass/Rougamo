@@ -5,7 +5,6 @@ using Mono.Collections.Generic;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 
 namespace Rougamo.Fody
 {
@@ -26,23 +25,28 @@ namespace Rougamo.Fody
             foreach (var typeDef in ModuleDefinition.Types)
             {
                 if (!typeDef.IsClass || typeDef.IsValueType || typeDef.IsDelegate() || !typeDef.HasMethods) continue;
+                if (typeDef.Implement(Constants.TYPE_IMo) || typeDef.DerivesFromAny(Constants.TYPE_MoRepulsion, Constants.TYPE_IgnoreMoAttribute, Constants.TYPE_MoProxyAttribute)) continue;
 
                 var typeIgnores = ExtractIgnores(typeDef.CustomAttributes);
                 if (typeIgnores == null) continue;
 
                 var rouType = new RouType(typeDef);
-                var implementations = ExtractClassImplementations(typeDef, ignores, typeIgnores);
-                (var classAttributes, var classProxies) = ExtractAttributes(typeDef.CustomAttributes, proxies, $"class[{typeDef.FullName}]", ignores, typeIgnores);
+                var implementations = ExtractClassImplementations(typeDef);
+                (var classAttributes, var classProxies) = ExtractAttributes(typeDef.CustomAttributes, proxies, $"class[{typeDef.FullName}]");
 
                 foreach (var methodDef in typeDef.Methods)
                 {
-                    if ((methodDef.Attributes & MethodAttributes.Abstract) != 0) continue;
+                    if (methodDef.IsConstructor || (methodDef.Attributes & MethodAttributes.Abstract) != 0) continue;
 
                     var methodIgnores = ExtractIgnores(methodDef.CustomAttributes);
                     if (methodIgnores == null) continue;
 
-                    (var methodAttributes, var methodProxies) = ExtractAttributes(methodDef.CustomAttributes, proxies, $"method[{methodDef.FullName}]", ignores, typeIgnores, methodIgnores);
-                    rouType.Initialize(methodDef, directs, implementations, classAttributes, classProxies, methodAttributes, methodProxies);
+                    (var methodAttributes, var methodProxies) = ExtractAttributes(methodDef.CustomAttributes, proxies, $"method[{methodDef.FullName}]");
+                    rouType.Initialize(methodDef, directs, implementations, classAttributes, classProxies, methodAttributes, methodProxies, ignores, typeIgnores, methodIgnores);
+                }
+                if (rouType.HasMo)
+                {
+                    _rouTypes.Add(rouType);
                 }
             }
         }
@@ -127,11 +131,11 @@ namespace Rougamo.Fody
                     var proxy = arg2 is TypeDefinition ? (TypeDefinition)arg2 : ((TypeReference)arg2).Resolve();
                     if (!proxy.DerivesFrom(Constants.TYPE_MoAttribute))
                     {
-                        WriteError($"Mo proxy type has to inherit from Rougamo.MoAttribute");
+                        WriteError($"Mo proxy type must inherit from Rougamo.MoAttribute");
                     }
                     else if (!proxy.GetConstructors().Any(ctor => !ctor.HasParameters))
                     {
-                        WriteError($"Mo proxy type has to contains non-parameters constructor");
+                        WriteError($"Mo proxy type must contains non-parameters constructor");
                     }
                     else
                     {
@@ -163,9 +167,8 @@ namespace Rougamo.Fody
         ///         mo: 实现IMo接口的类型
         /// repulsions: 与mo互斥的类型
         /// </returns>
-        private (TypeDefinition mo, TypeDefinition[] repulsions)[] ExtractClassImplementations(TypeDefinition typeDef, params string[][] ignores)
+        private (TypeDefinition mo, TypeDefinition[] repulsions)[] ExtractClassImplementations(TypeDefinition typeDef)
         {
-            var ignoreSet = ignores.ToHashSet();
             var mos = new List<(TypeDefinition mo, TypeDefinition[] repulsions)>();
             var mosInterfaces = typeDef.GetGenericInterfaces(Constants.TYPE_IRougamo_1);
             var repMosInterfaces = typeDef.GetGenericInterfaces(Constants.TYPE_IRougamo_2);
@@ -175,7 +178,6 @@ namespace Rougamo.Fody
             mos.AddRange(repMosInterfaces.Select(x => (x.GenericArguments[0].Resolve(), new TypeDefinition[] { x.GenericArguments[1].Resolve() })));
             mos.AddRange(multiRepMosInterfaces.Select(x => (x.GenericArguments[0].Resolve(), ExtractRepulsionFromIl(x.GenericArguments[1].Resolve()))));
 
-            mos.Remove(item => ignoreSet.Contains(item.mo.FullName));
             return mos.ToArray();
         }
 
@@ -267,7 +269,6 @@ namespace Rougamo.Fody
         /// </returns>
         private (CustomAttribute[] mos, TypeDefinition[] proxied) ExtractAttributes(Collection<CustomAttribute> attributes, Dictionary<string, TypeDefinition> proxies, string locationName, params string[][] ignores)
         {
-            var ignoreSet = ignores.ToHashSet();
             var mos = new Dictionary<string, CustomAttribute>();
             var proxied = new Dictionary<string, TypeDefinition>();
             foreach (var attribute in attributes)
@@ -282,7 +283,6 @@ namespace Rougamo.Fody
                 }
             }
 
-            mos.Remove((key, value) => ignoreSet.Contains(key));
             // proxies在FindGlobalAttributes中已经过滤了
             return (mos.Values.ToArray(), proxied.Values.ToArray());
         }
@@ -317,7 +317,7 @@ namespace Rougamo.Fody
             {
                 if (attribute.AttributeType.Is(Constants.TYPE_IgnoreMoAttribute) && !ExtractIgnores(ref ignores, attribute)) break;
             }
-            return ignores.Keys.ToArray();
+            return ignores?.Keys.ToArray();
         }
 
         /// <summary>
@@ -335,14 +335,15 @@ namespace Rougamo.Fody
             }
 
             var enumerable = (IEnumerable)property.Value.Argument.Value;
-            foreach (var item in enumerable)
+            foreach (CustomAttributeArgument item in enumerable)
             {
-                var def = item as TypeDefinition;
-                if (def == null && item is TypeReference @ref)
+                var value = item.Value;
+                var def = value as TypeDefinition;
+                if (def == null && value is TypeReference @ref)
                 {
                     def = @ref.Resolve();
                 }
-                if (def != null && def.Is(Constants.TYPE_IMo))
+                if (def != null && def.Implement(Constants.TYPE_IMo))
                 {
                     ignores.TryAdd(def.FullName, def);
                 }

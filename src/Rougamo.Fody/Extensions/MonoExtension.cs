@@ -17,12 +17,31 @@ namespace Rougamo.Fody
             return attribute.AttributeType.Is(fullName);
         }
 
+        public static bool Implement(this TypeDefinition typeDef, string @interface)
+        {
+            do
+            {
+                if (typeDef.Interfaces.Any(x => x.InterfaceType.FullName == @interface)) return true;
+                typeDef = typeDef.BaseType?.Resolve();
+            } while (typeDef != null);
+            return false;
+        }
+
         public static bool DerivesFrom(this TypeReference typeRef, string baseClass)
         {
             do
             {
                 if ((typeRef = typeRef.Resolve().BaseType)?.FullName == baseClass) return true;
             } while (typeRef != null);
+            return false;
+        }
+
+        public static bool DerivesFromAny(this TypeReference typeRef, params string[] baseClasses)
+        {
+            foreach (var baseClass in baseClasses)
+            {
+                if (typeRef.DerivesFrom(baseClass)) return true;
+            }
             return false;
         }
 
@@ -59,7 +78,7 @@ namespace Rougamo.Fody
             return false;
         }
 
-        public static bool IsLdtoken(this Instruction instruction, string baseType, out TypeDefinition typeDef)
+        public static bool IsLdtoken(this Instruction instruction, string @interface, out TypeDefinition typeDef)
         {
             typeDef = null;
             if (instruction.OpCode != OpCodes.Ldtoken) return false;
@@ -70,7 +89,7 @@ namespace Rougamo.Fody
                 typeDef = typeRef.Resolve();
             }
             if (typeDef == null) return false;
-            return typeDef.DerivesFrom(baseType);
+            return typeDef.Implement(@interface);
         }
 
         public static bool IsStfld(this Instruction instruction, string fieldName, string fieldType)

@@ -3,7 +3,7 @@ using System;
 
 namespace Rougamo.ImplAssembly
 {
-    public class PublicGlobalMoAttribute : MoAttribute
+    public class PublicMoAttribute : MoAttribute
     {
         public override AccessFlags Flags => AccessFlags.Public;
 

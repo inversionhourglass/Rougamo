@@ -21,11 +21,12 @@ namespace Rougamo.Fody
 
         public AccessFlags Flags(MoFrom from)
         {
-            var flags = MethodDef.HasThis ? AccessFlags.Instance : AccessFlags.Static;
+            var flags = AccessFlags.All;
             bool? isPublic = null;
             if(from > MoFrom.Method)
             {
                 isPublic = MethodDef.IsPublic;
+                flags = MethodDef.HasThis ? AccessFlags.Instance : AccessFlags.Static;
             }
             if(from > MoFrom.Class)
             {
