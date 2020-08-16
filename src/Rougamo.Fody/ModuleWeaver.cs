@@ -16,6 +16,7 @@ namespace Rougamo.Fody
         {
             LoadBasicReference();
             FindRous();
+            WeaveMos();
         }
 
         public override IEnumerable<string> GetAssembliesForScanning()

@@ -22,6 +22,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionIt
 		README.md = README.md
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rougamo.ILTest", "test\Rougamo.ILTest\Rougamo.ILTest.csproj", "{409FADAB-3CE0-430D-87B4-6A0C7276F755}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -48,6 +50,10 @@ Global
 		{A21471A9-D6A0-446A-86E5-BA7A683EFD87}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A21471A9-D6A0-446A-86E5-BA7A683EFD87}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A21471A9-D6A0-446A-86E5-BA7A683EFD87}.Release|Any CPU.Build.0 = Release|Any CPU
+		{409FADAB-3CE0-430D-87B4-6A0C7276F755}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{409FADAB-3CE0-430D-87B4-6A0C7276F755}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{409FADAB-3CE0-430D-87B4-6A0C7276F755}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{409FADAB-3CE0-430D-87B4-6A0C7276F755}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -58,6 +64,7 @@ Global
 		{9099F550-2393-4216-8916-2E34D9D3B48D} = {8C9FFBEC-F477-4037-B3FE-BAF02ED3A16C}
 		{B86F2A9B-B200-4004-B659-2D4D42E82ED5} = {8C9FFBEC-F477-4037-B3FE-BAF02ED3A16C}
 		{A21471A9-D6A0-446A-86E5-BA7A683EFD87} = {8C9FFBEC-F477-4037-B3FE-BAF02ED3A16C}
+		{409FADAB-3CE0-430D-87B4-6A0C7276F755} = {8C9FFBEC-F477-4037-B3FE-BAF02ED3A16C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0BD0178E-76E0-4736-A036-89B1AA268A05}

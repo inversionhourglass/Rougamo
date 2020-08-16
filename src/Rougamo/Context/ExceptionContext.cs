@@ -8,27 +8,18 @@ namespace Rougamo.Context
     public sealed class ExceptionContext : MethodContext
     {
         private readonly ExitContext _exit;
-        private Exception _exception;
 
         /// <summary>
         /// </summary>
-        public ExceptionContext(ExitContext exit) : base(exit.Target, exit.Method, exit.Arguments)
+        public ExceptionContext(ExitContext exit, Exception exception) : base(exit.Target, exit.Method, exit.Arguments)
         {
             _exit = exit;
+            Exception = _exit.Exception = exception;
         }
 
         /// <summary>
         /// 异常
         /// </summary>
-        public Exception Exception
-        {
-            get => _exception;
-            // todo: change to private
-            set
-            {
-                _exception = value;
-                _exit.Exception = value;
-            }
-        }
+        public Exception Exception { get; }
     }
 }
