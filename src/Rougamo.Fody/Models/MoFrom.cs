@@ -1,4 +1,4 @@
-﻿namespace Rougamo.Fody.Models
+﻿namespace Rougamo.Fody
 {
     /// <summary>
     /// 织入来源

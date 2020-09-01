@@ -1,5 +1,4 @@
 ﻿using Mono.Cecil;
-using Rougamo.Fody.Models;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -8,6 +7,7 @@ namespace Rougamo.Fody
     internal sealed class RouMethod
     {
         private bool? _isAsync;
+        private bool? _isIterator;
 
         public RouMethod(MethodDefinition methodDef)
         {
@@ -37,6 +37,18 @@ namespace Rougamo.Fody
                 flags &= isPublic.Value ? AccessFlags.Public : AccessFlags.NonPublic;
             }
             return flags;
+        }
+
+        public bool IsIterator
+        {
+            get
+            {
+                if (!_isIterator.HasValue)
+                {
+                    _isIterator = MethodDef.CustomAttributes.Any(attr => attr.Is(Constants.TYPE_IteratorStateMachineAttribute));
+                }
+                return _isIterator.Value;
+            }
         }
 
         public bool IsAsync

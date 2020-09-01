@@ -1,5 +1,4 @@
-﻿using System;
-using System.Reflection;
+﻿using System.Reflection;
 
 namespace Rougamo.Context
 {
@@ -11,15 +10,5 @@ namespace Rougamo.Context
         /// <summary>
         /// </summary>
         public ExitContext(object target, MethodInfo method, params object[] args) : base(target, method, args) { }
-
-        /// <summary>
-        /// 返回值
-        /// </summary>
-        public object ReturnValue { get; internal set; }
-
-        /// <summary>
-        /// 方法执行异常
-        /// </summary>
-        public Exception Exception { get; internal set; }
     }
 }

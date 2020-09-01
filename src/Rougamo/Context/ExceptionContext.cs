@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 
 namespace Rougamo.Context
 {
@@ -7,19 +8,13 @@ namespace Rougamo.Context
     /// </summary>
     public sealed class ExceptionContext : MethodContext
     {
-        private readonly ExitContext _exit;
-
         /// <summary>
         /// </summary>
-        public ExceptionContext(ExitContext exit, Exception exception) : base(exit.Target, exit.Method, exit.Arguments)
-        {
-            _exit = exit;
-            Exception = _exit.Exception = exception;
-        }
+        public ExceptionContext(object target, MethodInfo method, params object[] args) : base(target, method, args) { }
 
         /// <summary>
         /// 异常
         /// </summary>
-        public Exception Exception { get; }
+        public Exception Exception { get; set; }
     }
 }

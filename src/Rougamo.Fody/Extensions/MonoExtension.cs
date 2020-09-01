@@ -180,14 +180,6 @@ namespace Rougamo.Fody
             return variable;
         }
 
-        //public static AccessFlags GetPropertyFlags(this PropertyDefinition propertyDef)
-        //{
-        //    var flags = AccessFlags.Default;
-        //    flags |= propertyDef.GetMethod.IsPublic ? AccessFlags.Public : AccessFlags.NonPublic;
-        //    flags |= propertyDef.HasThis ? AccessFlags.Instance : AccessFlags.Static;
-        //    return flags;
-        //}
-
         public static List<GenericInstanceType> GetGenericInterfaces(this TypeDefinition typeDef, string interfaceName)
         {
             var interfaces = new List<GenericInstanceType>();

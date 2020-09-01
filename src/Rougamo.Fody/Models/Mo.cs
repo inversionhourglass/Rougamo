@@ -1,5 +1,4 @@
 ﻿using Mono.Cecil;
-using Rougamo.Fody.Models;
 using System.Collections.Generic;
 
 namespace Rougamo.Fody

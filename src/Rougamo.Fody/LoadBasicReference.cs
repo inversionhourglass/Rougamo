@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Mono.Cecil.Rocks;
+using System;
+using System.Linq;
 
 namespace Rougamo.Fody
 {
@@ -7,6 +9,7 @@ namespace Rougamo.Fody
         void LoadBasicReference()
         {
             _systemTypeRef = FindTypeDefinition(typeof(Type).FullName).ImportInto(ModuleDefinition);
+
             _getTypeFromHandleRef = typeof(Type).GetMethod("GetTypeFromHandle", new[] { typeof(RuntimeTypeHandle) }).ImportInto(ModuleDefinition);
         }
     }

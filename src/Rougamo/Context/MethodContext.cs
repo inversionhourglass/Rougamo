@@ -8,11 +8,6 @@ namespace Rougamo.Context
     public abstract class MethodContext
     {
         /// <summary>
-        /// 返回值未设置值时的默认值
-        /// </summary>
-        protected static readonly object UNSET = "unset";
-
-        /// <summary>
         /// </summary>
         protected MethodContext(object target, MethodInfo method, params object[] args)
         {
