@@ -10,11 +10,14 @@ namespace Rougamo.Context
     {
         /// <summary>
         /// </summary>
-        public ExceptionContext(object target, MethodInfo method, params object[] args) : base(target, method, args) { }
+        public ExceptionContext(Exception exception, object target, Type targetType, MethodBase method, params object[] args) : base(target, targetType, method, args)
+        {
+            Exception = exception;
+        }
 
         /// <summary>
-        /// 异常
+        /// 异常，不可修改
         /// </summary>
-        public Exception Exception { get; set; }
+        public Exception Exception { get; }
     }
 }

@@ -14,6 +14,7 @@ namespace Rougamo.Fody
         {
             _rouTypes = new List<RouType>();
             FullScan();
+            ExtractTypeReferences();
         }
 
         private void FullScan()
@@ -48,6 +49,40 @@ namespace Rougamo.Fody
                 {
                     _rouTypes.Add(rouType);
                 }
+            }
+        }
+
+        /// <summary>
+        /// 提取后续常用的TypeReference
+        /// </summary>
+        private void ExtractTypeReferences()
+        {
+            if(_rouTypes.Count > 0)
+            {
+                var sampleMo = _rouTypes.First().Methods.First().Mos.First();
+                var typeDef = sampleMo.Attribute == null ? sampleMo.TypeDef : sampleMo.Attribute.AttributeType.Resolve();
+                var imoTypeDef = typeDef.GetInterfaceDefinition(Constants.TYPE_IMo);
+                foreach (var methodDef in imoTypeDef.Methods)
+                {
+                    if(methodDef.Name == Constants.METHOD_OnEntry)
+                    {
+                        _entryContextTypeRef = methodDef.Parameters.First().ParameterType;
+                    }
+                    else if (methodDef.Name == Constants.METHOD_OnSuccess)
+                    {
+                        _successContextTypeRef = methodDef.Parameters.First().ParameterType;
+                    }
+                    else if (methodDef.Name == Constants.METHOD_OnException)
+                    {
+                        _exceptionContextTypeRef = methodDef.Parameters.First().ParameterType;
+                    }
+                    else if (methodDef.Name == Constants.METHOD_OnExit)
+                    {
+                        _exitContextTypeRef = methodDef.Parameters.First().ParameterType;
+                    }
+                }
+                _objectArrayTypeRef = _entryContextTypeRef.Resolve().GetConstructors().First().Parameters.Last().ParameterType;
+                _imoTypeRef = imoTypeDef;
             }
         }
 

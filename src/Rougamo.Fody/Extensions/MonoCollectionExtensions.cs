@@ -1,5 +1,6 @@
 ﻿using Mono.Cecil;
 using Mono.Collections.Generic;
+using System.Collections.Generic;
 
 namespace Rougamo.Fody
 {
@@ -17,6 +18,14 @@ namespace Rougamo.Fody
             }
             argument = null;
             return false;
+        }
+
+        public static void AddRange<T>(this Collection<T> collection, IList<T> items)
+        {
+            foreach (var item in items)
+            {
+                collection.Add(item);
+            }
         }
     }
 }

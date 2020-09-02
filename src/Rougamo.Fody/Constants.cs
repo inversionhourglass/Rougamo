@@ -16,6 +16,7 @@
         public const string TYPE_ExceptionContext = "Rougamo.Context.ExceptionContext";
         public const string TYPE_ExitContext = "Rougamo.Context.ExitContext";
 
+        public const string TYPE_MulticastDelegate = "System.MulticastDelegate";
         public const string TYPE_AsyncStateMachineAttribute = "System.Runtime.CompilerServices.AsyncStateMachineAttribute";
         public const string TYPE_IteratorStateMachineAttribute = "System.Runtime.CompilerServices.IteratorStateMachineAttribute";
 
@@ -28,6 +29,9 @@
         public const string FIELD_Flags = "<Flags>k__BackingField";
         public const string FIELD_Repulsions = "<Repulsions>k__BackingField";
 
-        public const string TYPE_MulticastDelegate = "System.MulticastDelegate";
+        public const string METHOD_OnEntry = "OnEntry";
+        public const string METHOD_OnSuccess = "OnSuccess";
+        public const string METHOD_OnException = "OnException";
+        public const string METHOD_OnExit = "OnExit";
     }
 }

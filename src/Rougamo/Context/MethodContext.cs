@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 
 namespace Rougamo.Context
 {
@@ -9,9 +10,10 @@ namespace Rougamo.Context
     {
         /// <summary>
         /// </summary>
-        protected MethodContext(object target, MethodInfo method, params object[] args)
+        protected MethodContext(object target, Type targetType, MethodBase method, params object[] args)
         {
             Target = target;
+            TargetType = targetType;
             Method = method;
             Arguments = args;
         }
@@ -22,6 +24,11 @@ namespace Rougamo.Context
         public object Target { get; private set; }
 
         /// <summary>
+        /// 宿主类型
+        /// </summary>
+        public Type TargetType { get; set; }
+
+        /// <summary>
         /// 方法入参
         /// </summary>
         public object[] Arguments { get; private set; }
@@ -29,6 +36,6 @@ namespace Rougamo.Context
         /// <summary>
         /// 切入方法
         /// </summary>
-        public MethodInfo Method { get; private set; }
+        public MethodBase Method { get; private set; }
     }
 }

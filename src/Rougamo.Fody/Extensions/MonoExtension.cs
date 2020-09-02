@@ -192,6 +192,17 @@ namespace Rougamo.Fody
             return interfaces;
         }
 
+        public static TypeDefinition GetInterfaceDefinition(this TypeDefinition typeDef, string interfaceName)
+        {
+            do
+            {
+                var interfaceRef = typeDef.Interfaces.Select(itf => itf.InterfaceType).Where(itfRef => itfRef.FullName == interfaceName);
+                if (interfaceRef.Any()) return interfaceRef.First().Resolve();
+                typeDef = typeDef.BaseType.Resolve();
+            } while (typeDef != null);
+            return null;
+        }
+
         #region Import
 
         public static TypeReference ImportInto(this TypeDefinition typeDef, ModuleDefinition moduleDef) => moduleDef.ImportReference(typeDef);

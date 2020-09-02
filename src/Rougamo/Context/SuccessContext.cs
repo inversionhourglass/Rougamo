@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System;
+using System.Reflection;
 
 namespace Rougamo.Context
 {
@@ -7,28 +8,22 @@ namespace Rougamo.Context
     /// </summary>
     public sealed class SuccessContext : MethodContext
     {
-        private object _returnValue;
-
         /// <summary>
         /// </summary>
-        public SuccessContext(object target, MethodInfo method, params object[] args) : base(target, method, args) { }
-
-        /// <summary>
-        /// 方法返回值
-        /// </summary>
-        public object ReturnValue
+        public SuccessContext(bool hasReturnValue, object returnValue, object target, Type targetType, MethodBase method, params object[] args) : base(target, targetType, method, args)
         {
-            get => _returnValue;
-            set
-            {
-                HasReturnValue = true;
-                _returnValue = value;
-            }
+            HasReturnValue = hasReturnValue;
+            ReturnValue = returnValue;
         }
+
+        /// <summary>
+        /// 方法返回值，不可修改
+        /// </summary>
+        public object ReturnValue { get; }
 
         /// <summary>
         /// 是否有返回值
         /// </summary>
-        public bool HasReturnValue { get; private set; }
+        public bool HasReturnValue { get; }
     }
 }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.IO;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace Rougamo.ILTest
 {
@@ -36,9 +37,14 @@ namespace Rougamo.ILTest
 
         public int SyncWrap(int k, int p)
         {
-            var _ = new TheMo();
-            var @out = new Rougamo.Context.ExitContext(this, typeof(RougamoILCompare).GetMethod("SyncWrap", BindingFlags.Public | BindingFlags.Instance), k, p);
-            var @in = new Rougamo.Context.EntryContext(@out);
+            var objs = new object[] { null, 1, 2.34, Guid.NewGuid() };
+            var _ = new TheMoAttribute(AccessFlags.All, 123, new[] { 1.21, 2.34, 5.121 })
+            {
+                StringValue = "234",
+                ObjectValue = null,
+                IntArray = new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 100 }
+            };
+            var @in = new Rougamo.Context.EntryContext(this, typeof(RougamoILCompare), typeof(RougamoILCompare).GetMethod("SyncWrap", BindingFlags.Public | BindingFlags.Instance), k, p);
             _.OnEntry(@in);
             try
             {
@@ -60,14 +66,23 @@ namespace Rougamo.ILTest
             }
             catch (Exception e)
             {
-                var @exception = new Rougamo.Context.ExceptionContext(@out, e);
+                var @exception = new Rougamo.Context.ExceptionContext(e, this, typeof(RougamoILCompare), typeof(RougamoILCompare).GetMethod("SyncWrap", BindingFlags.Public | BindingFlags.Instance), k, p);
                 _.OnException(exception);
                 throw e;
             }
             finally
             {
+                var @out = new Rougamo.Context.ExitContext(this, typeof(RougamoILCompare), typeof(RougamoILCompare).GetMethod("SyncWrap", BindingFlags.Public | BindingFlags.Instance), k, p);
                 _.OnExit(@out);
             }
+        }
+
+        public async Task<string>AsyncNone(string a, Guid b)
+        {
+            Console.WriteLine(1);
+            await Task.Delay(100);
+            Console.WriteLine("2");
+            return "3";
         }
     }
 }

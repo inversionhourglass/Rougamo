@@ -1,10 +1,11 @@
 ﻿using Mono.Cecil.Cil;
+using Rougamo.Fody.Models;
 
 namespace Rougamo.Fody
 {
     internal sealed class MoVariables
     {
-        public VariableDefinition[] Mos { get; set; }
+        public VariableWithInitialize[] Mos { get; set; }
         
         public VariableDefinition EntryContext { get; set; }
         

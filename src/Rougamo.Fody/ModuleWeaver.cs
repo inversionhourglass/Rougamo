@@ -7,6 +7,15 @@ namespace Rougamo.Fody
     public partial class ModuleWeaver : BaseModuleWeaver
     {
         private TypeReference _systemTypeRef;
+        private TypeReference _methodBaseTypeRef;
+        private TypeReference _intTypeRef;
+        private TypeReference _objectTypeRef;
+        private TypeReference _imoTypeRef;
+        private TypeReference _entryContextTypeRef;
+        private TypeReference _successContextTypeRef;
+        private TypeReference _exceptionContextTypeRef;
+        private TypeReference _exitContextTypeRef;
+        private TypeReference _objectArrayTypeRef;
 
         private MethodReference _getTypeFromHandleRef;
 
@@ -16,6 +25,7 @@ namespace Rougamo.Fody
         {
             LoadBasicReference();
             FindRous();
+            if (_rouTypes.Count == 0) return;
             WeaveMos();
         }
 

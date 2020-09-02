@@ -1,6 +1,7 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
+using Rougamo.Fody.Models;
 using System.Collections.Generic;
 using System.Linq;
 
