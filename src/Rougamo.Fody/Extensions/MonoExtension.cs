@@ -1,5 +1,7 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Mono.Cecil.Rocks;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -143,6 +145,13 @@ namespace Rougamo.Fody
             }
         }
 
+        public static MethodDefinition GetZeroArgsCtor(this TypeDefinition typeDef)
+        {
+            var zeroCtor = typeDef.GetConstructors().FirstOrDefault(ctor => !ctor.HasParameters);
+            if (zeroCtor == null) throw new RougamoException($"could not found zero arguments constructor from {typeDef.FullName}");
+            return zeroCtor;
+        }
+
         public static MethodReference RecursionImportPropertySet(this CustomAttribute attribute, ModuleDefinition moduleDef, string propertyName)
         {
             return RecursionImportPropertySet(attribute.AttributeType.Resolve(), moduleDef, propertyName);
@@ -158,19 +167,19 @@ namespace Rougamo.Fody
             return RecursionImportPropertySet(baseTypeDef, moduleDef, propertyName);
         }
 
-        public static MethodReference RecursionImportMethod(this CustomAttribute attribute, ModuleDefinition moduleDef, string methodName)
+        public static MethodReference RecursionImportMethod(this CustomAttribute attribute, ModuleDefinition moduleDef, string methodName, Func<MethodDefinition, bool> predicate)
         {
-            return RecursionImportMethod(attribute.AttributeType.Resolve(), moduleDef, methodName);
+            return RecursionImportMethod(attribute.AttributeType.Resolve(), moduleDef, methodName, predicate);
         }
 
-        public static MethodReference RecursionImportMethod(this TypeDefinition typeDef, ModuleDefinition moduleDef, string methodName)
+        public static MethodReference RecursionImportMethod(this TypeDefinition typeDef, ModuleDefinition moduleDef, string methodName, Func<MethodDefinition, bool> predicate)
         {
-            var methodDef = typeDef.Methods.FirstOrDefault(md => md.Name == methodName && !md.HasParameters);
+            var methodDef = typeDef.Methods.FirstOrDefault(md => md.Name == methodName && predicate(md));
             if (methodDef != null) return moduleDef.ImportReference(methodDef);
 
             var baseTypeDef = typeDef.BaseType.Resolve();
             if (baseTypeDef.FullName == typeof(object).FullName) throw new RougamoException($"can not find method({methodName}) from {typeDef.FullName}");
-            return RecursionImportMethod(baseTypeDef, moduleDef, methodName);
+            return RecursionImportMethod(baseTypeDef, moduleDef, methodName, predicate);
         }
 
         public static VariableDefinition CreateVariable(this MethodBody body, TypeReference variableTypeReference)
@@ -205,12 +214,33 @@ namespace Rougamo.Fody
 
         #region Import
 
-        public static TypeReference ImportInto(this TypeDefinition typeDef, ModuleDefinition moduleDef) => moduleDef.ImportReference(typeDef);
+        public static TypeReference ImportInto(this TypeReference typeRef, ModuleDefinition moduleDef) => moduleDef.ImportReference(typeRef);
 
-        public static FieldReference ImportInto(this FieldDefinition fieldDef, ModuleDefinition moduleDef) => moduleDef.ImportReference(fieldDef);
+        public static FieldReference ImportInto(this FieldReference fieldRef, ModuleDefinition moduleDef) => moduleDef.ImportReference(fieldRef);
 
-        public static MethodReference ImportInto(this MethodDefinition methodDef, ModuleDefinition moduleDef) => moduleDef.ImportReference(methodDef);
+        public static MethodReference ImportInto(this MethodReference methodRef, ModuleDefinition moduleDef) => moduleDef.ImportReference(methodRef);
 
         #endregion Import
+
+        public static Instruction Copy(this Instruction instruction)
+        {
+            if (instruction.Operand == null) return Instruction.Create(instruction.OpCode);
+            if (instruction.Operand is sbyte sbyteValue) return Instruction.Create(instruction.OpCode, sbyteValue);
+            if (instruction.Operand is byte byteValue) return Instruction.Create(instruction.OpCode, byteValue);
+            if (instruction.Operand is int intValue) return Instruction.Create(instruction.OpCode, intValue);
+            if (instruction.Operand is long longValue) return Instruction.Create(instruction.OpCode, longValue);
+            if (instruction.Operand is float floatValue) return Instruction.Create(instruction.OpCode, floatValue);
+            if (instruction.Operand is double doubleValue) return Instruction.Create(instruction.OpCode, doubleValue);
+            if (instruction.Operand is string stringValue) return Instruction.Create(instruction.OpCode, stringValue);
+            if (instruction.Operand is FieldReference fieldReference) return Instruction.Create(instruction.OpCode, fieldReference);
+            if (instruction.Operand is TypeReference typeReference) return Instruction.Create(instruction.OpCode, typeReference);
+            if (instruction.Operand is MethodReference methodReference) return Instruction.Create(instruction.OpCode, methodReference);
+            if (instruction.Operand is ParameterDefinition parameterDefinition) return Instruction.Create(instruction.OpCode, parameterDefinition);
+            if (instruction.Operand is VariableDefinition variableDefinition) return Instruction.Create(instruction.OpCode, variableDefinition);
+            if (instruction.Operand is Instruction instruction1) return Instruction.Create(instruction.OpCode, instruction1);
+            if (instruction.Operand is Instruction[] instructions) return Instruction.Create(instruction.OpCode, instructions);
+            if (instruction.Operand is CallSite callSite) return Instruction.Create(instruction.OpCode, callSite);
+            throw new RougamoException($"not support instruction Operand copy type: {instruction.Operand.GetType().FullName}");
+        }
     }
 }

@@ -6,18 +6,21 @@ namespace Rougamo.Fody
 {
     public partial class ModuleWeaver : BaseModuleWeaver
     {
-        private TypeReference _systemTypeRef;
-        private TypeReference _methodBaseTypeRef;
-        private TypeReference _intTypeRef;
-        private TypeReference _objectTypeRef;
-        private TypeReference _imoTypeRef;
-        private TypeReference _entryContextTypeRef;
-        private TypeReference _successContextTypeRef;
-        private TypeReference _exceptionContextTypeRef;
-        private TypeReference _exitContextTypeRef;
-        private TypeReference _objectArrayTypeRef;
+        private TypeReference _typeSystemRef;
+        private TypeReference _typeMethodBaseRef;
+        private TypeReference _typeIntRef;
+        private TypeReference _typeObjectRef;
+        private TypeReference _typeObjectArrayRef;
+        private TypeReference _typeExceptionRef;
+        private TypeReference _typeIMoRef;
+        private TypeReference _typeMethodContextRef;
 
-        private MethodReference _getTypeFromHandleRef;
+        private MethodReference _methodGetTypeFromHandleRef;
+        private MethodReference _methodGetMethodFromHandleRef;
+        private MethodReference _methodMethodContextCtorRef;
+        private MethodReference _methodMethodContextSetExceptionRef;
+        private MethodReference _methodMethodContextSetReturnValueRef;
+        private MethodReference _methodMethodContextSetHasReturnValueRef;
 
         private List<RouType> _rouTypes;
 

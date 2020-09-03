@@ -37,15 +37,16 @@ namespace Rougamo.ILTest
 
         public int SyncWrap(int k, int p)
         {
-            var objs = new object[] { null, 1, 2.34, Guid.NewGuid() };
+            var method = typeof(RougamoILCompare).GetMethod(nameof(SyncWrap), new[] { typeof(int), typeof(int) });
+            var objs = new object[] { method, 1, 2.34, Guid.NewGuid() };
             var _ = new TheMoAttribute(AccessFlags.All, 123, new[] { 1.21, 2.34, 5.121 })
             {
                 StringValue = "234",
                 ObjectValue = null,
                 IntArray = new[] { 1, 2, 3, 4, 5, 6, 7, 8, 9, 100 }
             };
-            var @in = new Rougamo.Context.EntryContext(this, typeof(RougamoILCompare), typeof(RougamoILCompare).GetMethod("SyncWrap", BindingFlags.Public | BindingFlags.Instance), k, p);
-            _.OnEntry(@in);
+            var context = new Rougamo.Context.MethodContext(this, typeof(RougamoILCompare), typeof(RougamoILCompare).GetMethod("SyncWrap", BindingFlags.Public | BindingFlags.Instance), new object[] { k, p });
+            _.OnEntry(context);
             try
             {
                 _random = new Random(k|p);
@@ -66,14 +67,13 @@ namespace Rougamo.ILTest
             }
             catch (Exception e)
             {
-                var @exception = new Rougamo.Context.ExceptionContext(e, this, typeof(RougamoILCompare), typeof(RougamoILCompare).GetMethod("SyncWrap", BindingFlags.Public | BindingFlags.Instance), k, p);
-                _.OnException(exception);
+                context.Exception = e;
+                _.OnException(context);
                 throw e;
             }
             finally
             {
-                var @out = new Rougamo.Context.ExitContext(this, typeof(RougamoILCompare), typeof(RougamoILCompare).GetMethod("SyncWrap", BindingFlags.Public | BindingFlags.Instance), k, p);
-                _.OnExit(@out);
+                _.OnExit(context);
             }
         }
 

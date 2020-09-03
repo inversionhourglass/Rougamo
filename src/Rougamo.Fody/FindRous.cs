@@ -64,25 +64,22 @@ namespace Rougamo.Fody
                 var imoTypeDef = typeDef.GetInterfaceDefinition(Constants.TYPE_IMo);
                 foreach (var methodDef in imoTypeDef.Methods)
                 {
-                    if(methodDef.Name == Constants.METHOD_OnEntry)
+                    if(methodDef.Name == Constants.METHOD_OnEntry ||
+                        methodDef.Name == Constants.METHOD_OnSuccess ||
+                        methodDef.Name == Constants.METHOD_OnException ||
+                        methodDef.Name == Constants.METHOD_OnExit)
                     {
-                        _entryContextTypeRef = methodDef.Parameters.First().ParameterType;
-                    }
-                    else if (methodDef.Name == Constants.METHOD_OnSuccess)
-                    {
-                        _successContextTypeRef = methodDef.Parameters.First().ParameterType;
-                    }
-                    else if (methodDef.Name == Constants.METHOD_OnException)
-                    {
-                        _exceptionContextTypeRef = methodDef.Parameters.First().ParameterType;
-                    }
-                    else if (methodDef.Name == Constants.METHOD_OnExit)
-                    {
-                        _exitContextTypeRef = methodDef.Parameters.First().ParameterType;
+                        _typeMethodContextRef = methodDef.Parameters.First().ParameterType.ImportInto(ModuleDefinition);
+                        break;
                     }
                 }
-                _objectArrayTypeRef = _entryContextTypeRef.Resolve().GetConstructors().First().Parameters.Last().ParameterType;
-                _imoTypeRef = imoTypeDef;
+                _typeIMoRef = imoTypeDef;
+                var typeMethodContextDef = _typeMethodContextRef.Resolve();
+                _methodMethodContextCtorRef = typeMethodContextDef.GetConstructors().First().ImportInto(ModuleDefinition);
+                _methodMethodContextSetExceptionRef = typeMethodContextDef.RecursionImportPropertySet(ModuleDefinition, Constants.PROP_Exception);
+                _methodMethodContextSetReturnValueRef = typeMethodContextDef.RecursionImportPropertySet(ModuleDefinition, Constants.PROP_ReturnValue);
+                _methodMethodContextSetHasReturnValueRef = typeMethodContextDef.RecursionImportPropertySet(ModuleDefinition, Constants.PROP_HasReturnValue);
+                _typeObjectArrayRef = _methodMethodContextCtorRef.Parameters.Last().ParameterType;
             }
         }
 

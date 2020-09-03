@@ -14,21 +14,21 @@ namespace Rougamo
         /// <summary>
         /// 方法执行前切入执行
         /// </summary>
-        void OnEntry(EntryContext context);
+        void OnEntry(MethodContext context);
 
         /// <summary>
         /// 方法执行成功后切入执行
         /// </summary>
-        void OnSuccess(SuccessContext context);
+        void OnSuccess(MethodContext context);
 
         /// <summary>
         /// 方法执行引发异常后切入执行
         /// </summary>
-        void OnException(ExceptionContext context);
+        void OnException(MethodContext context);
 
         /// <summary>
         /// 方法执行完成后切入执行
         /// </summary>
-        void OnExit(ExitContext context);
+        void OnExit(MethodContext context);
     }
 }

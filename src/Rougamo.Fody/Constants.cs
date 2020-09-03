@@ -11,11 +11,9 @@
         public const string TYPE_IRougamo_1 = "Rougamo.IRougamo`1";
         public const string TYPE_IRougamo_2 = "Rougamo.IRougamo`2";
         public const string TYPE_IRepulsionsRougamo = "Rougamo.IRepulsionsRougamo`2";
-        public const string TYPE_EntryContext = "Rougamo.Context.EntryContext";
-        public const string TYPE_SuccessContext = "Rougamo.Context.SuccessContext";
-        public const string TYPE_ExceptionContext = "Rougamo.Context.ExceptionContext";
-        public const string TYPE_ExitContext = "Rougamo.Context.ExitContext";
+        public const string TYPE_MethodContext = "Rougamo.Context.MethodContext";
 
+        public const string TYPE_Void = "System.Void";
         public const string TYPE_MulticastDelegate = "System.MulticastDelegate";
         public const string TYPE_AsyncStateMachineAttribute = "System.Runtime.CompilerServices.AsyncStateMachineAttribute";
         public const string TYPE_IteratorStateMachineAttribute = "System.Runtime.CompilerServices.IteratorStateMachineAttribute";
@@ -25,6 +23,9 @@
         public const string PROP_Flags = "Flags";
         public const string PROP_Repulsions = "Repulsions";
         public const string PROP_MoTypes = "MoTypes";
+        public const string PROP_Exception = "Exception";
+        public const string PROP_ReturnValue = "ReturnValue";
+        public const string PROP_HasReturnValue = "HasReturnValue";
 
         public const string FIELD_Flags = "<Flags>k__BackingField";
         public const string FIELD_Repulsions = "<Repulsions>k__BackingField";

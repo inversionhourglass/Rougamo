@@ -1,5 +1,4 @@
 ﻿using Rougamo.Context;
-using System.Drawing;
 
 namespace Rougamo.ILTest
 {
@@ -24,19 +23,19 @@ namespace Rougamo.ILTest
 
         public object ObjectValue { get; set; }
 
-        public override void OnEntry(EntryContext context)
+        public override void OnEntry(MethodContext context)
         {
         }
 
-        public override void OnException(ExceptionContext context)
+        public override void OnException(MethodContext context)
         {
         }
 
-        public override void OnExit(ExitContext context)
+        public override void OnExit(MethodContext context)
         {
         }
 
-        public override void OnSuccess(SuccessContext context)
+        public override void OnSuccess(MethodContext context)
         {
         }
     }

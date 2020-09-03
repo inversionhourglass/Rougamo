@@ -26,15 +26,15 @@ namespace Rougamo
         public virtual AccessFlags Flags { get; }
 
         /// <inheritdoc/>
-        public abstract void OnEntry(EntryContext context);
+        public virtual void OnEntry(MethodContext context) { }
 
         /// <inheritdoc/>
-        public abstract void OnException(ExceptionContext context);
+        public virtual void OnException(MethodContext context) { }
 
         /// <inheritdoc/>
-        public abstract void OnExit(ExitContext context);
+        public virtual void OnExit(MethodContext context) { }
 
         /// <inheritdoc/>
-        public abstract void OnSuccess(SuccessContext context);
+        public virtual void OnSuccess(MethodContext context) { }
     }
 }

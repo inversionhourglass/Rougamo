@@ -1,5 +1,7 @@
 ﻿using Rougamo.Context;
 using System;
+using System.Diagnostics;
+using System.Text.Json;
 
 namespace Rougamo.ImplAssembly
 {
@@ -7,24 +9,27 @@ namespace Rougamo.ImplAssembly
     {
         public override AccessFlags Flags { get; } = AccessFlags.Static;
 
-        public override void OnEntry(EntryContext context)
+        public override void OnEntry(MethodContext context)
         {
-            throw new NotImplementedException();
+            Debug.Print($@"[{this.GetType().FullName}.{nameof(OnEntry)}] context=>
+Target: {context.Target},
+TargetType: {context.TargetType},
+Arguments: {JsonSerializer.Serialize(context.Arguments)}");
         }
 
-        public override void OnException(ExceptionContext context)
+        public override void OnException(MethodContext context)
         {
-            throw new NotImplementedException();
+            Debug.Print($"[{this.GetType().FullName}.{nameof(OnException)}] {context.Exception}");
         }
 
-        public override void OnExit(ExitContext context)
+        public override void OnExit(MethodContext context)
         {
-            throw new NotImplementedException();
+            Debug.Print($"[{this.GetType().FullName}.{nameof(OnExit)}]");
         }
 
-        public override void OnSuccess(SuccessContext context)
+        public override void OnSuccess(MethodContext context)
         {
-            throw new NotImplementedException();
+            Debug.Print($"[{this.GetType().FullName}.{nameof(OnSuccess)}] {context.HasReturnValue}<->{JsonSerializer.Serialize(context.ReturnValue)}");
         }
     }
 }

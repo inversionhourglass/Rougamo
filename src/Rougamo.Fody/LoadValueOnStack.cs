@@ -40,7 +40,7 @@ namespace Rougamo.Fody
                 return new List<Instruction>
                 {
                     Instruction.Create(OpCodes.Ldtoken, typeRefValue),
-                    Instruction.Create(OpCodes.Call, _getTypeFromHandleRef)
+                    Instruction.Create(OpCodes.Call, _methodGetTypeFromHandleRef)
                 };
             }
 
@@ -48,7 +48,7 @@ namespace Rougamo.Fody
             {
                 var valueType = arg.Type;
                 if (arg.Value is TypeReference)
-                    valueType = _systemTypeRef;
+                    valueType = _typeSystemRef;
                 bool isEnum = valueType.IsEnum(out _);
                 var instructions = LoadValueOnStack(valueType, arg.Value);
                 if (valueType.IsValueType || (!valueType.IsArray && isEnum))
@@ -117,29 +117,34 @@ namespace Rougamo.Fody
 
         private IList<Instruction> LoadDeclaringTypeOnStack(MethodDefinition methodDef)
         {
-            return LoadValueOnStack(_systemTypeRef, methodDef.DeclaringType);
+            return LoadValueOnStack(_typeSystemRef, methodDef.DeclaringType);
         }
 
-        private IList<Instruction> LoadMethodInfoOnStack(MethodDefinition methodDef)
+        private IList<Instruction> LoadMethodBaseOnStack(MethodDefinition methodDef)
         {
-            return LoadValueOnStack(_methodBaseTypeRef, methodDef);
+            return new[]
+            {
+                Instruction.Create(OpCodes.Ldtoken, methodDef),
+                Instruction.Create(OpCodes.Ldtoken, methodDef.DeclaringType),
+                Instruction.Create(OpCodes.Call, _methodGetMethodFromHandleRef)
+            };
         }
 
         private IList<Instruction> LoadMethodArgumentsOnStack(MethodDefinition methodDef)
         {
             var instructions = new List<Instruction>();
 
-            instructions.AddRange(LoadValueOnStack(_intTypeRef, methodDef.Parameters.Count));
-            instructions.Add(Instruction.Create(OpCodes.Newarr, _objectTypeRef));
+            instructions.AddRange(LoadValueOnStack(_typeIntRef, methodDef.Parameters.Count));
+            instructions.Add(Instruction.Create(OpCodes.Newarr, _typeObjectRef));
             for (int i = 0; i < methodDef.Parameters.Count; i++)
             {
                 instructions.Add(Instruction.Create(OpCodes.Dup));
                 instructions.Add(Instruction.Create(OpCodes.Ldc_I4, i));
-                instructions.Add(Instruction.Create(OpCodes.Ldarg, i + 1));
+                instructions.Add(Instruction.Create(OpCodes.Ldarg, methodDef.Parameters[i]));
                 var parameterType = methodDef.Parameters[i].ParameterType;
                 if (parameterType.IsValueType || parameterType.IsEnum(out _) && !parameterType.IsArray)
                 {
-                    instructions.Add(Instruction.Create(OpCodes.Box, _objectTypeRef));
+                    instructions.Add(Instruction.Create(OpCodes.Box, parameterType));
                 }
                 instructions.Add(Instruction.Create(OpCodes.Stelem_Ref));
             }

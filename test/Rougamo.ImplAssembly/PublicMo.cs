@@ -7,22 +7,22 @@ namespace Rougamo.ImplAssembly
     {
         public AccessFlags Flags { get; } = AccessFlags.Public;
 
-        public void OnEntry(EntryContext context)
+        public void OnEntry(MethodContext context)
         {
             throw new NotImplementedException();
         }
 
-        public void OnException(ExceptionContext context)
+        public void OnException(MethodContext context)
         {
             throw new NotImplementedException();
         }
 
-        public void OnExit(ExitContext context)
+        public void OnExit(MethodContext context)
         {
             throw new NotImplementedException();
         }
 
-        public void OnSuccess(SuccessContext context)
+        public void OnSuccess(MethodContext context)
         {
             throw new NotImplementedException();
         }
