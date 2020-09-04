@@ -9,8 +9,6 @@ namespace Rougamo.Context
     public sealed class MethodContext
     {
         private Exception _exception;
-        private bool _hasException;
-        private bool _exceptionSet;
         private object _returnValue;
         private bool _hasReturnValue;
         private bool _returnValueSet;
@@ -53,26 +51,16 @@ namespace Rougamo.Context
             get => _exception;
             set
             {
-                if (_exceptionSet) return;
-                _exceptionSet = true;
-                _hasException = true;
+                if (_returnValueSet) return;
+                _returnValueSet = true;
                 _exception = value;
             }
         }
 
         /// <summary>
-        /// 是否有异常，不可修改，静态织入时设置
+        /// 是否有异常
         /// </summary>
-        public bool HasException
-        {
-            get => _hasException;
-            set
-            {
-                if (_exceptionSet) return;
-                _exceptionSet = true;
-                _hasException = value;
-            }
-        }
+        public bool HasException => Exception != null;
 
         /// <summary>
         /// 方法返回值，不可修改，静态织入时设置

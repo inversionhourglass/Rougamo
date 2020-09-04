@@ -20,6 +20,17 @@ namespace Rougamo.ILTest
             return a + max + "";
         }
 
+        public int If(int x)
+        {
+            var value = 0;
+            if (x > 0)
+            {
+                Console.WriteLine("1");
+                value = x;
+            }
+            return value;
+        }
+
         public int SyncNone(int k, int p)
         {
             _random = new Random(k|p);

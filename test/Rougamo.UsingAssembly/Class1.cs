@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-namespace Rougamo.NugetUsingAssembly
+namespace Rougamo.UsingAssembly
 {
     public class Class1
     {
@@ -12,39 +12,27 @@ namespace Rougamo.NugetUsingAssembly
 
         public int InstanceReturn(int seed)
         {
-            var mo = new Rougamo.NugetImplAssembly.PublicMoAttribute(123, new double[0]);
-            var context = new Rougamo.Context.MethodContext(this, null, null, new object[] { seed });
-            mo.OnEntry(context);
+            var random = new Random(seed);
+            for (int i = 0; i < 100; i++)
+            {
+                if (random.Next() == 121) return 123;
+            }
+
             try
             {
-                var random = new Random(seed);
-                for (int i = 0; i < 100; i++)
+                var x = 0;
+                var y = 0;
+                do
                 {
-                    if (random.Next() == 121) return 123;
-                }
-
-                try
-                {
-                    var x = 0;
-                    var y = 0;
-                    do
-                    {
-                        y += random.Next();
-                        if (y % 157 == 0) return y + 715;
-                        if (y % 715 == 0) throw new Exception();
-                    } while (x++ < 100);
-                    return 731;
-                }
-                catch (Exception e)
-                {
-                    if (random.Next() % 31 == 2) return 31;
-                    throw e;
-                }
+                    y += random.Next();
+                    if (y % 157 == 0) return y + 715;
+                    if (y % 715 == 0) throw new Exception();
+                } while (x++ < 100);
+                return 731;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
-                context.Exception = e;
-                mo.OnException(context);
+                if (random.Next() % 31 == 2) return 31;
                 throw e;
             }
         }

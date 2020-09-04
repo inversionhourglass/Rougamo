@@ -166,6 +166,15 @@ namespace Rougamo.Fody
             if (baseTypeDef.FullName == typeof(object).FullName) throw new RougamoException($"can not find property({propertyName}) from {typeDef.FullName}");
             return RecursionImportPropertySet(baseTypeDef, moduleDef, propertyName);
         }
+        public static MethodReference RecursionImportPropertyGet(this TypeDefinition typeDef, ModuleDefinition moduleDef, string propertyName)
+        {
+            var propertyDef = typeDef.Properties.FirstOrDefault(pd => pd.Name == propertyName);
+            if (propertyDef != null) return moduleDef.ImportReference(propertyDef.GetMethod);
+
+            var baseTypeDef = typeDef.BaseType.Resolve();
+            if (baseTypeDef.FullName == typeof(object).FullName) throw new RougamoException($"can not find property({propertyName}) from {typeDef.FullName}");
+            return RecursionImportPropertyGet(baseTypeDef, moduleDef, propertyName);
+        }
 
         public static MethodReference RecursionImportMethod(this CustomAttribute attribute, ModuleDefinition moduleDef, string methodName, Func<MethodDefinition, bool> predicate)
         {

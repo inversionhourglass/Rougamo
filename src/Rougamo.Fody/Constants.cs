@@ -24,6 +24,7 @@
         public const string PROP_Repulsions = "Repulsions";
         public const string PROP_MoTypes = "MoTypes";
         public const string PROP_Exception = "Exception";
+        public const string PROP_HasException = "HasException";
         public const string PROP_ReturnValue = "ReturnValue";
         public const string PROP_HasReturnValue = "HasReturnValue";
 

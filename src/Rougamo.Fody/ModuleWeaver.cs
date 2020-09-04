@@ -21,6 +21,7 @@ namespace Rougamo.Fody
         private MethodReference _methodMethodContextSetExceptionRef;
         private MethodReference _methodMethodContextSetReturnValueRef;
         private MethodReference _methodMethodContextSetHasReturnValueRef;
+        private MethodReference _methodMethodContextGetHasExceptionRef;
 
         private List<RouType> _rouTypes;
 

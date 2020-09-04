@@ -31,8 +31,8 @@ namespace Rougamo.NugetImplAssembly
             Console.WriteLine($@"[{this.GetType().FullName}.{nameof(OnEntry)}] Self=>
 IntValue: {IntValue},
 StringValue: {StringValue},
-DoubleArray: {string.Join(",", DoubleArray)},
-IntArray: {string.Join(",", IntArray)},
+DoubleArray: {string.Join(",", DoubleArray ?? new double[0])},
+IntArray: {string.Join(",", IntArray ?? new int[0])},
 ObjectValue: {ObjectValue},
 Flags: {Flags}");
             Console.WriteLine($@"[{this.GetType().FullName}.{nameof(OnEntry)}] context=>
