@@ -248,16 +248,13 @@ namespace Rougamo.Fody
         private VariableDefinition InitMethodContext(MethodDefinition methodDef, List<Instruction> instructions)
         {
             var variable = methodDef.Body.CreateVariable(_typeMethodContextRef);
-            //var argumentsVariable = methodDef.Body.CreateVariable(_typeObjectArrayRef);
 
-            //instructions.AddRange(LoadMethodArgumentsOnStack(methodDef));
-            //instructions.Add(Instruction.Create(OpCodes.Stloc, argumentsVariable));
+            //instructions.AddRange(LoadMethodArgumentsOnStack(methodDef, out var argumentsVariable)); // variable
             instructions.Add(LoadThisOnStack(methodDef));
             instructions.AddRange(LoadDeclaringTypeOnStack(methodDef));
             instructions.AddRange(LoadMethodBaseOnStack(methodDef));
-            instructions.AddRange(LoadMethodArgumentsOnStack(methodDef));
-            //instructions.Add(Instruction.Create(OpCodes.Ldloc, argumentsVariable));
-            //instructions.Add(Instruction.Create(OpCodes.Ldnull));
+            instructions.AddRange(LoadMethodArgumentsOnStack(methodDef)); // dup
+            //instructions.Add(Instruction.Create(OpCodes.Ldloc, argumentsVariable)); // variable
             instructions.Add(Instruction.Create(OpCodes.Newobj, _methodMethodContextCtorRef));
             instructions.Add(Instruction.Create(OpCodes.Stloc, variable));
 

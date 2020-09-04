@@ -130,15 +130,19 @@ namespace Rougamo.Fody
             };
         }
 
-        private IList<Instruction> LoadMethodArgumentsOnStack(MethodDefinition methodDef)
+        private IList<Instruction> LoadMethodArgumentsOnStack(MethodDefinition methodDef) // dup
+        //private IList<Instruction> LoadMethodArgumentsOnStack(MethodDefinition methodDef, out VariableDefinition argumentsVariable) // variable
         {
             var instructions = new List<Instruction>();
+            //argumentsVariable = methodDef.Body.CreateVariable(_typeObjectArrayRef); // variable
 
             instructions.AddRange(LoadValueOnStack(_typeIntRef, methodDef.Parameters.Count));
             instructions.Add(Instruction.Create(OpCodes.Newarr, _typeObjectRef));
+            //instructions.Add(Instruction.Create(OpCodes.Stloc, argumentsVariable)); // variable
             for (int i = 0; i < methodDef.Parameters.Count; i++)
             {
-                instructions.Add(Instruction.Create(OpCodes.Dup));
+                //instructions.Add(Instruction.Create(OpCodes.Ldloc, argumentsVariable)); // variable
+                instructions.Add(Instruction.Create(OpCodes.Dup)); // dup
                 instructions.Add(Instruction.Create(OpCodes.Ldc_I4, i));
                 instructions.Add(Instruction.Create(OpCodes.Ldarg, methodDef.Parameters[i]));
                 var parameterType = methodDef.Parameters[i].ParameterType;

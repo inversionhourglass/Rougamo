@@ -1,8 +1,23 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
+    <IsPacking>false</IsPacking>
+    <Version Condition="'$(Configuration)'=='Debug'">0.1.0-alpha2</Version>
+    <Version Condition="'$(Configuration)'=='Release'">0.1.0-alpha2</Version>
     <TargetFramework>netstandard2.0</TargetFramework>
+    <Authors>Hourglass Inversion</Authors>
+    <Product>Rougamo.Fody</Product>
+    <Description>method wave</Description>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <DocumentationFile>$(ProjectDir)\Rougamo.xml</DocumentationFile>
+    <PackageReleaseNotes></PackageReleaseNotes>
+    <RepositoryUrl>https://github.com/inversionhourglass/Rougamo</RepositoryUrl>
+    <NugetServer>http://nuget.benlailife.com:8004/nuget/arch</NugetServer>
   </PropertyGroup>
-
+  <ItemGroup Condition="'$(IsPacking)'=='true'">
+    <PackageReference Include="Fody" Version="6.2.5" PrivateAssets="none" />
+    <PackageReference Include="FodyPackaging" Version="6.2.5" PrivateAssets="All" />
+  </ItemGroup>
+  <ItemGroup Condition="'$(IsPacking)'=='true'">
+    <ProjectReference Include="..\Rougamo.Fody\Rougamo.Fody.csproj" PrivateAssets="All" />
+  </ItemGroup>
 </Project>

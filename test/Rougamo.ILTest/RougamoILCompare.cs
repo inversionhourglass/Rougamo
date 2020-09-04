@@ -11,6 +11,11 @@ namespace Rougamo.ILTest
 
         public string SingleResult(int a, float b, double c)
         {
+            var objs = new object[3];
+            objs[0] = 1;
+            objs[1] = "2";
+            objs[2] = 3.1561;
+
             var max = Math.Max(b, c);
             return a + max + "";
         }
