@@ -87,7 +87,7 @@ namespace Rougamo.Fody
         #endregion Mo-Flags
 
         public static void Initialize(this RouType rouType, MethodDefinition methdDef, CustomAttribute[] assemblyAttributes,
-            (TypeDefinition mo, TypeDefinition[] repulsions)[] typeImplements, CustomAttribute[] typeAttributes, TypeDefinition[] typeProxies,
+            RepulsionMo[] typeImplements, CustomAttribute[] typeAttributes, TypeDefinition[] typeProxies,
             CustomAttribute[] methodAttributes, TypeDefinition[] methodProxies,
             string[] assemblyIgnores, string[] typeIgnores, string[] methodIgnores)
         {
@@ -102,12 +102,12 @@ namespace Rougamo.Fody
 
             rouMethod.AddMo(typeAttributes.Where(x => !ignores.Contains(x.AttributeType.FullName)), MoFrom.Class);
             rouMethod.AddMo(typeProxies.Where(x => !ignores.Contains(x.FullName)), MoFrom.Class);
-            foreach (var implement in typeImplements.Where(x => !ignores.Contains(x.mo.FullName)))
+            foreach (var implement in typeImplements.Where(x => !ignores.Contains(x.Mo.FullName)))
             {
-                if (!rouMethod.Any(implement.repulsions))
+                if (!rouMethod.Any(implement.Repulsions))
                 {
-                    rouMethod.AddMo(implement.mo, MoFrom.Class);
-                    ignores.AddRange(implement.repulsions.Select(x => x.FullName));
+                    rouMethod.AddMo(implement.Mo, MoFrom.Class);
+                    ignores.AddRange(implement.Repulsions.Select(x => x.FullName));
                 }
             }
 

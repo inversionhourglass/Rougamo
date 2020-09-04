@@ -19,9 +19,9 @@ namespace Rougamo.Fody
 
         private void FullScan()
         {
-            (var directs, var proxies, var ignores) = FindGlobalAttributes();
+            var globalMos = FindGlobalAttributes();
 
-            if (ignores == null) return;
+            if (globalMos.Ignores == null) return;
 
             foreach (var typeDef in ModuleDefinition.Types)
             {
@@ -33,7 +33,7 @@ namespace Rougamo.Fody
 
                 var rouType = new RouType(typeDef);
                 var implementations = ExtractClassImplementations(typeDef);
-                (var classAttributes, var classProxies) = ExtractAttributes(typeDef.CustomAttributes, proxies, $"class[{typeDef.FullName}]");
+                var classExtracts = ExtractAttributes(typeDef.CustomAttributes, globalMos.Proxies, $"class[{typeDef.FullName}]");
 
                 foreach (var methodDef in typeDef.Methods)
                 {
@@ -42,8 +42,8 @@ namespace Rougamo.Fody
                     var methodIgnores = ExtractIgnores(methodDef.CustomAttributes);
                     if (methodIgnores == null) continue;
 
-                    (var methodAttributes, var methodProxies) = ExtractAttributes(methodDef.CustomAttributes, proxies, $"method[{methodDef.FullName}]");
-                    rouType.Initialize(methodDef, directs, implementations, classAttributes, classProxies, methodAttributes, methodProxies, ignores, typeIgnores, methodIgnores);
+                    var methodExtracts = ExtractAttributes(methodDef.CustomAttributes, globalMos.Proxies, $"method[{methodDef.FullName}]");
+                    rouType.Initialize(methodDef, globalMos.Directs, implementations, classExtracts.Mos, classExtracts.Proxied, methodExtracts.Mos, methodExtracts.Proxied, globalMos.Ignores, typeIgnores, methodIgnores);
                 }
                 if (rouType.HasMo)
                 {
@@ -91,45 +91,45 @@ namespace Rougamo.Fody
         /// proxies: 通过MoProxyAttribute代理的类型
         /// ignores: 需要忽略的实现了IMo的织入类型
         /// </returns>
-        private (CustomAttribute[] directs, Dictionary<string, TypeDefinition> proxies, string[] ignores) FindGlobalAttributes()
+        private SimplifyGlobalMos FindGlobalAttributes()
         {
-            var (directs, proxies, ignores) = FindGlobalAttributes(ModuleDefinition.Assembly.CustomAttributes, "assembly");
-            var (moduleDirects, moduleProxies, moduleIgnores) = FindGlobalAttributes(ModuleDefinition.CustomAttributes, "module");
+            var assemblyMos = FindGlobalAttributes(ModuleDefinition.Assembly.CustomAttributes, "assembly");
+            var moduleMos = FindGlobalAttributes(ModuleDefinition.CustomAttributes, "module");
 
-            foreach (var direct in moduleDirects)
+            foreach (var direct in moduleMos.Directs)
             {
-                if (directs.ContainsKey(direct.Key))
+                if (assemblyMos.Directs.ContainsKey(direct.Key))
                 {
                     WriteInfo($"module replaces assembly MoAttribute: {direct.Key}");
                 }
-                directs[direct.Key] = direct.Value;
+                assemblyMos.Directs[direct.Key] = direct.Value;
             }
 
-            foreach (var proxy in moduleProxies)
+            foreach (var proxy in moduleMos.Proxies)
             {
-                if (proxies.ContainsKey(proxy.Key))
+                if (assemblyMos.Proxies.ContainsKey(proxy.Key))
                 {
                     WriteInfo($"module replaces assembly MoProxyAttribute: {proxy.Key}");
                 }
-                proxies[proxy.Key] = proxy.Value;
+                assemblyMos.Proxies[proxy.Key] = proxy.Value;
             }
 
-            ignores.AddRange(moduleIgnores);
+            assemblyMos.Ignores.AddRange(moduleMos.Ignores);
 
-            foreach (var ignore in ignores.Keys)
+            foreach (var ignore in assemblyMos.Ignores.Keys)
             {
-                if (directs.ContainsKey(ignore))
+                if (assemblyMos.Directs.ContainsKey(ignore))
                 {
-                    directs.Remove(ignore);
+                    assemblyMos.Directs.Remove(ignore);
                 }
-                var keys = proxies.Where(x => x.Value.FullName == ignore).Select(x => x.Key);
+                var keys = assemblyMos.Proxies.Where(x => x.Value.FullName == ignore).Select(x => x.Key);
                 foreach (var key in keys)
                 {
-                    proxies.Remove(key);
+                    assemblyMos.Proxies.Remove(key);
                 }
             }
 
-            return (directs.Values.ToArray(), proxies, ignores.Keys.ToArray());
+            return new SimplifyGlobalMos(assemblyMos.Directs.Values.ToArray(), assemblyMos.Proxies, assemblyMos.Ignores.Keys.ToArray());
         }
 
         /// <summary>
@@ -142,10 +142,10 @@ namespace Rougamo.Fody
         /// proxies: 通过MoProxyAttribute代理的类型
         /// ignores: 需要忽略的实现了IMo的织入类型
         /// </returns>
-        private (Dictionary<string, CustomAttribute> directs, Dictionary<string, TypeDefinition> proxies, Dictionary<string, TypeDefinition> ignores) FindGlobalAttributes(Collection<CustomAttribute> attributes, string locationName)
+        private GlobalMos FindGlobalAttributes(Collection<CustomAttribute> attributes, string locationName)
         {
             var directs = new Dictionary<string, CustomAttribute>();
-            var proxies = new Dictionary<string, (TypeDefinition origin, TypeDefinition proxy)>();
+            var proxies = new Dictionary<string, ProxyReleation>();
             var ignores = new Dictionary<string, TypeDefinition>();
 
             foreach (var attribute in attributes)
@@ -172,7 +172,7 @@ namespace Rougamo.Fody
                     else
                     {
                         var key = $"{origin.FullName}|{proxy.FullName}";
-                        if (proxies.TryAdd(key, (origin, proxy)))
+                        if (proxies.TryAdd(key, new ProxyReleation(origin, proxy)))
                         {
                             WriteInfo($"{locationName} MoProxyAttribute found: {key}");
                         }
@@ -188,7 +188,7 @@ namespace Rougamo.Fody
                 }
             }
 
-            return (directs, proxies.Values.ToDictionary(x => x.origin.FullName, x => x.proxy), ignores);
+            return new GlobalMos(directs, proxies.Values.ToDictionary(x => x.Origin.FullName, x => x.Proxy), ignores);
         }
 
         /// <summary>
@@ -199,16 +199,16 @@ namespace Rougamo.Fody
         ///         mo: 实现IMo接口的类型
         /// repulsions: 与mo互斥的类型
         /// </returns>
-        private (TypeDefinition mo, TypeDefinition[] repulsions)[] ExtractClassImplementations(TypeDefinition typeDef)
+        private RepulsionMo[] ExtractClassImplementations(TypeDefinition typeDef)
         {
-            var mos = new List<(TypeDefinition mo, TypeDefinition[] repulsions)>();
+            var mos = new List<RepulsionMo>();
             var mosInterfaces = typeDef.GetGenericInterfaces(Constants.TYPE_IRougamo_1);
             var repMosInterfaces = typeDef.GetGenericInterfaces(Constants.TYPE_IRougamo_2);
             var multiRepMosInterfaces = typeDef.GetGenericInterfaces(Constants.TYPE_IRepulsionsRougamo);
 
-            mos.AddRange(mosInterfaces.Select(x => (x.GenericArguments[0].Resolve(), new TypeDefinition[0])));
-            mos.AddRange(repMosInterfaces.Select(x => (x.GenericArguments[0].Resolve(), new TypeDefinition[] { x.GenericArguments[1].Resolve() })));
-            mos.AddRange(multiRepMosInterfaces.Select(x => (x.GenericArguments[0].Resolve(), ExtractRepulsionFromIl(x.GenericArguments[1].Resolve()))));
+            mos.AddRange(mosInterfaces.Select(x => new RepulsionMo(x.GenericArguments[0].Resolve(), new TypeDefinition[0])));
+            mos.AddRange(repMosInterfaces.Select(x => new RepulsionMo(x.GenericArguments[0].Resolve(), new TypeDefinition[] { x.GenericArguments[1].Resolve() })));
+            mos.AddRange(multiRepMosInterfaces.Select(x => new RepulsionMo(x.GenericArguments[0].Resolve(), ExtractRepulsionFromIl(x.GenericArguments[1].Resolve()))));
 
             return mos.ToArray();
         }
@@ -299,7 +299,7 @@ namespace Rougamo.Fody
         ///     mos: 继承自MoAttribute的类型
         /// proxied: 通过代理设置的实现IMo接口的类型
         /// </returns>
-        private (CustomAttribute[] mos, TypeDefinition[] proxied) ExtractAttributes(Collection<CustomAttribute> attributes, Dictionary<string, TypeDefinition> proxies, string locationName, params string[][] ignores)
+        private ExtractMos ExtractAttributes(Collection<CustomAttribute> attributes, Dictionary<string, TypeDefinition> proxies, string locationName, params string[][] ignores)
         {
             var mos = new Dictionary<string, CustomAttribute>();
             var proxied = new Dictionary<string, TypeDefinition>();
@@ -316,7 +316,7 @@ namespace Rougamo.Fody
             }
 
             // proxies在FindGlobalAttributes中已经过滤了
-            return (mos.Values.ToArray(), proxied.Values.ToArray());
+            return new ExtractMos(mos.Values.ToArray(), proxied.Values.ToArray());
         }
 
         /// <summary>
