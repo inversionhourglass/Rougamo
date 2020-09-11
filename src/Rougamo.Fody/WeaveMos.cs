@@ -40,7 +40,7 @@ namespace Rougamo.Fody
         {
         }
 
-        private void SyncMethodWeave(RouMethod rouMethod)
+        private void SyncMethodWeave2(RouMethod rouMethod)
         {
             var methodBody = rouMethod.MethodDef.Body;
 
@@ -105,13 +105,18 @@ namespace Rougamo.Fody
             rouMethod.MethodDef.Body.Optimize();
         }
 
-        private void SyncMethodWeave1(RouMethod rouMethod)
+        private void SyncMethodWeave(RouMethod rouMethod)
         {
-            TryCatchFinally(rouMethod.MethodDef, out var tryStart, out var catchStart, out var finallyStart, out var finallyEnd, out var exceptionVariable);
+            GenerateTryCatchFinally(rouMethod.MethodDef, out var tryStart, out var catchStart, out var finallyStart, out var finallyEnd, out var exceptionVariable);
+            SetTryCatchFinally(rouMethod.MethodDef, tryStart, catchStart, finallyStart, finallyEnd);
             OnEntry(rouMethod, tryStart, out var moVariables, out var contextVariable);
+            OnException(rouMethod.MethodDef, moVariables, contextVariable, exceptionVariable, catchStart);
+            OnSuccess(rouMethod.MethodDef, moVariables, contextVariable, finallyStart, finallyEnd);
+            OnExit(rouMethod.MethodDef, moVariables, contextVariable, finallyEnd);
+
         }
 
-        private void TryCatchFinally(MethodDefinition methodDef, out Instruction tryStart, out Instruction catchStart, out Instruction finallyStart, out Instruction finallyEnd, out VariableDefinition exceptionVariable)
+        private void GenerateTryCatchFinally(MethodDefinition methodDef, out Instruction tryStart, out Instruction catchStart, out Instruction finallyStart, out Instruction finallyEnd, out VariableDefinition exceptionVariable)
         {
             var bodyIns = methodDef.Body.Instructions;
             tryStart = bodyIns.First();
@@ -160,6 +165,30 @@ namespace Rougamo.Fody
             finallyStart = Instruction.Create(OpCodes.Nop);
             bodyIns.InsertBefore(finallyEnd, finallyStart);
             bodyIns.InsertBefore(finallyEnd, Instruction.Create(OpCodes.Endfinally));
+
+
+        }
+
+        private void SetTryCatchFinally(MethodDefinition methodDef, Instruction tryStart, Instruction catchStart, Instruction finallyStart, Instruction finallyEnd)
+        {
+            var exceptionHandler = new ExceptionHandler(ExceptionHandlerType.Catch)
+            {
+                CatchType = _typeExceptionRef,
+                TryStart = tryStart,
+                TryEnd = catchStart,
+                HandlerStart = catchStart,
+                HandlerEnd = finallyStart
+            };
+            var finallyHandler = new ExceptionHandler(ExceptionHandlerType.Finally)
+            {
+                TryStart = tryStart,
+                TryEnd = finallyStart,
+                HandlerStart = finallyStart,
+                HandlerEnd = finallyEnd
+            };
+
+            methodDef.Body.ExceptionHandlers.Add(exceptionHandler);
+            methodDef.Body.ExceptionHandlers.Add(finallyHandler);
         }
 
         private void OnEntry(RouMethod rouMethod, Instruction tryStart, out VariableDefinition[] moVariables, out VariableDefinition contextVariable)
@@ -171,15 +200,46 @@ namespace Rougamo.Fody
             rouMethod.MethodDef.Body.Instructions.InsertBefore(tryStart, ins);
         }
 
-        private void OnException(VariableDefinition[] moVariables, VariableDefinition contextVariable)
+        private void OnException(MethodDefinition methodDef, VariableDefinition[] moVariables, VariableDefinition contextVariable, VariableDefinition exceptionVariable, Instruction catchStart)
         {
+            var ins = new List<Instruction>();
+            ins.Add(Instruction.Create(OpCodes.Ldloc, contextVariable));
+            ins.Add(Instruction.Create(OpCodes.Ldloc, exceptionVariable));
+            ins.Add(Instruction.Create(OpCodes.Callvirt, _methodMethodContextSetExceptionRef));
+            ExecuteMoMethod(Constants.METHOD_OnException, moVariables, contextVariable, ins);
+            methodDef.Body.Instructions.InsertAfter(catchStart, ins);
+        }
 
+        private void OnSuccess(MethodDefinition methodDef, VariableDefinition[] moVariables, VariableDefinition contextVariable, Instruction finallyStart, Instruction finallyEnd)
+        {
+            var successEnd = Instruction.Create(OpCodes.Nop);
+            methodDef.Body.Instructions.InsertAfter(finallyStart, successEnd);
+
+            var ins = new List<Instruction>();
+            ins.Add(Instruction.Create(OpCodes.Ldloc, contextVariable));
+            ins.Add(Instruction.Create(OpCodes.Callvirt, _methodMethodContextGetHasExceptionRef));
+            ins.Add(Instruction.Create(OpCodes.Brtrue_S, successEnd));
+            if (finallyEnd.OpCode != OpCodes.Nop)
+            {
+                ins.Add(Instruction.Create(OpCodes.Ldloc, contextVariable));
+                ins.Add(finallyEnd.Copy());
+                ins.Add(Instruction.Create(OpCodes.Callvirt, _methodMethodContextSetReturnValueRef));
+            }
+            ExecuteMoMethod(Constants.METHOD_OnSuccess, moVariables, contextVariable, ins);
+            methodDef.Body.Instructions.InsertAfter(finallyStart, ins);
+        }
+
+        private void OnExit(MethodDefinition methodDef, VariableDefinition[] moVariables, VariableDefinition contextVariable, Instruction finallyEnd)
+        {
+            var ins = new List<Instruction>();
+            ExecuteMoMethod(Constants.METHOD_OnExit, moVariables, contextVariable, ins);
+            methodDef.Body.Instructions.InsertBefore(finallyEnd.Previous, ins);
         }
 
         private IList<Instruction> CreateCatchInstructions(MethodBody methodBody, VariableDefinition[] mos, VariableDefinition methodContext)
         {
             var catchInstructions = new List<Instruction>();
-
+            
             var exceptionVariable = methodBody.CreateVariable(_typeExceptionRef);
             catchInstructions.Add(Instruction.Create(OpCodes.Stloc, exceptionVariable));
             catchInstructions.Add(Instruction.Create(OpCodes.Ldloc, methodContext));
@@ -230,8 +290,6 @@ namespace Rougamo.Fody
                     methodDef.Body.Instructions.InsertBefore(beforeReturnInstruction, beforeReturnNop);
                 }
                 beforeReturnInstruction = beforeReturnNop;
-                successInstructions.Add(Instruction.Create(OpCodes.Ldc_I4_0));
-                successInstructions.Add(Instruction.Create(OpCodes.Callvirt, _methodMethodContextSetHasReturnValueRef));
             }
             else
             {

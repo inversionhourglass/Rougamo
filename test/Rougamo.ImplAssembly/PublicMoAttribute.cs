@@ -53,7 +53,7 @@ Arguments: {JsonSerializer.Serialize(context.Arguments)}");
 
         public override void OnSuccess(MethodContext context)
         {
-            Debug.Print($"[{this.GetType().FullName}.{nameof(OnSuccess)}] {context.HasReturnValue}<->{JsonSerializer.Serialize(context.ReturnValue)}");
+            Debug.Print($"[{this.GetType().FullName}.{nameof(OnSuccess)}] {JsonSerializer.Serialize(context.ReturnValue)}");
         }
     }
 }

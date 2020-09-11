@@ -26,7 +26,6 @@
         public const string PROP_Exception = "Exception";
         public const string PROP_HasException = "HasException";
         public const string PROP_ReturnValue = "ReturnValue";
-        public const string PROP_HasReturnValue = "HasReturnValue";
 
         public const string FIELD_Flags = "<Flags>k__BackingField";
         public const string FIELD_Repulsions = "<Repulsions>k__BackingField";

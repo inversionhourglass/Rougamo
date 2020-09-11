@@ -78,7 +78,6 @@ namespace Rougamo.Fody
                 _methodMethodContextCtorRef = typeMethodContextDef.GetConstructors().First().ImportInto(ModuleDefinition);
                 _methodMethodContextSetExceptionRef = typeMethodContextDef.RecursionImportPropertySet(ModuleDefinition, Constants.PROP_Exception);
                 _methodMethodContextSetReturnValueRef = typeMethodContextDef.RecursionImportPropertySet(ModuleDefinition, Constants.PROP_ReturnValue);
-                _methodMethodContextSetHasReturnValueRef = typeMethodContextDef.RecursionImportPropertySet(ModuleDefinition, Constants.PROP_HasReturnValue);
                 _methodMethodContextGetHasExceptionRef = typeMethodContextDef.RecursionImportPropertyGet(ModuleDefinition, Constants.PROP_HasException);
                 _typeObjectArrayRef = _methodMethodContextCtorRef.Parameters.Last().ParameterType;
             }
