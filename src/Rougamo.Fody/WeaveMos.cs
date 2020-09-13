@@ -113,7 +113,6 @@ namespace Rougamo.Fody
             OnException(rouMethod.MethodDef, moVariables, contextVariable, exceptionVariable, catchStart);
             OnSuccess(rouMethod.MethodDef, moVariables, contextVariable, finallyStart, finallyEnd);
             OnExit(rouMethod.MethodDef, moVariables, contextVariable, finallyEnd);
-
         }
 
         private void GenerateTryCatchFinally(MethodDefinition methodDef, out Instruction tryStart, out Instruction catchStart, out Instruction finallyStart, out Instruction finallyEnd, out VariableDefinition exceptionVariable)
@@ -155,6 +154,11 @@ namespace Rougamo.Fody
                     finallyEnd = finallyEnd.Previous;
                 }
             }
+            if (finallyEnd.Previous != null && (finallyEnd.Previous.OpCode == OpCodes.Br || finallyEnd.Previous.OpCode == OpCodes.Br_S))
+            {
+                finallyEnd.Previous.OpCode = OpCodes.Nop;
+                finallyEnd.Previous.Operand = null;
+            }
 
             exceptionVariable = methodDef.Body.CreateVariable(_typeExceptionRef);
             bodyIns.InsertBefore(finallyEnd, Instruction.Create(OpCodes.Leave_S, finallyEnd));
@@ -169,8 +173,38 @@ namespace Rougamo.Fody
 
         }
 
+        private HashSet<OpCode> _redirectOps = new HashSet<OpCode>
+        {
+            OpCodes.Leave, OpCodes.Leave_S, OpCodes.Br, OpCodes.Br_S,
+            OpCodes.Brtrue, OpCodes.Brtrue_S, OpCodes.Brfalse, OpCodes.Brfalse_S,
+        };
         private void SetTryCatchFinally(MethodDefinition methodDef, Instruction tryStart, Instruction catchStart, Instruction finallyStart, Instruction finallyEnd)
         {
+            Instruction handlerEndNop = null;
+            var redirectToEnds = methodDef.Body.Instructions.Where(x => _redirectOps.Contains(x.OpCode) && x.Operand == finallyEnd);
+            if (redirectToEnds.Any())
+            {
+                handlerEndNop = Instruction.Create(OpCodes.Nop);
+                methodDef.Body.Instructions.InsertBefore(catchStart, handlerEndNop);
+                foreach (var item in redirectToEnds)
+                {
+                    item.Operand = handlerEndNop;
+                }
+            }
+
+            foreach (var handler in methodDef.Body.ExceptionHandlers)
+            {
+                if (handler.HandlerEnd == finallyEnd)
+                {
+                    if (handlerEndNop == null)
+                    {
+                        handlerEndNop = Instruction.Create(OpCodes.Nop);
+                        methodDef.Body.Instructions.InsertBefore(catchStart, handlerEndNop);
+                    }
+                    handler.HandlerEnd = handlerEndNop;
+                }
+            }
+
             var exceptionHandler = new ExceptionHandler(ExceptionHandlerType.Catch)
             {
                 CatchType = _typeExceptionRef,
@@ -223,6 +257,10 @@ namespace Rougamo.Fody
             {
                 ins.Add(Instruction.Create(OpCodes.Ldloc, contextVariable));
                 ins.Add(finallyEnd.Copy());
+                if (methodDef.ReturnType.IsValueType || methodDef.ReturnType.IsEnum(out _) && !methodDef.ReturnType.IsArray)
+                {
+                    ins.Add(Instruction.Create(OpCodes.Box, methodDef.ReturnType.ImportInto(ModuleDefinition)));
+                }
                 ins.Add(Instruction.Create(OpCodes.Callvirt, _methodMethodContextSetReturnValueRef));
             }
             ExecuteMoMethod(Constants.METHOD_OnSuccess, moVariables, contextVariable, ins);
@@ -307,7 +345,7 @@ namespace Rougamo.Fody
                 successInstructions.Add(beforeReturnInstruction.Copy());
                 if (methodDef.ReturnType.IsValueType || methodDef.ReturnType.IsEnum(out _) && !methodDef.ReturnType.IsArray)
                 {
-                    successInstructions.Add(Instruction.Create(OpCodes.Box, _typeObjectRef));
+                    successInstructions.Add(Instruction.Create(OpCodes.Box, methodDef.ReturnType.ImportInto(ModuleDefinition)));
                 }
                 successInstructions.Add(Instruction.Create(OpCodes.Callvirt, _methodMethodContextSetReturnValueRef));
             }

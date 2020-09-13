@@ -24,11 +24,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionIt
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rougamo.ILTest", "test\Rougamo.ILTest\Rougamo.ILTest.csproj", "{409FADAB-3CE0-430D-87B4-6A0C7276F755}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rougamo.NugetImplAssembly", "test\Rougamo.NugetImplAssembly\Rougamo.NugetImplAssembly.csproj", "{F47D41DD-851E-424D-8CFA-FB3511E5D9DB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rougamo.NugetImplAssembly", "test\Rougamo.NugetImplAssembly\Rougamo.NugetImplAssembly.csproj", "{F47D41DD-851E-424D-8CFA-FB3511E5D9DB}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rougamo.NugetUsingAssembly", "test\Rougamo.NugetUsingAssembly\Rougamo.NugetUsingAssembly.csproj", "{9F3FC974-E3BC-4021-94DA-B21B2CC06478}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rougamo.NugetUsingAssembly", "test\Rougamo.NugetUsingAssembly\Rougamo.NugetUsingAssembly.csproj", "{9F3FC974-E3BC-4021-94DA-B21B2CC06478}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rougamo.NugetConsoleTest", "test\Rougamo.NugetConsoleTest\Rougamo.NugetConsoleTest.csproj", "{12290496-CF06-4992-B7C5-D86902411D1A}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rougamo.NugetConsoleTest", "test\Rougamo.NugetConsoleTest\Rougamo.NugetConsoleTest.csproj", "{12290496-CF06-4992-B7C5-D86902411D1A}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rougamo.FileReferenceTest", "test\Rougamo.FileReferenceTest\Rougamo.FileReferenceTest.csproj", "{E5AAF1F3-F55E-41D7-9F4F-E3F5E058C9FD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -72,6 +74,10 @@ Global
 		{12290496-CF06-4992-B7C5-D86902411D1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{12290496-CF06-4992-B7C5-D86902411D1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{12290496-CF06-4992-B7C5-D86902411D1A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E5AAF1F3-F55E-41D7-9F4F-E3F5E058C9FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E5AAF1F3-F55E-41D7-9F4F-E3F5E058C9FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E5AAF1F3-F55E-41D7-9F4F-E3F5E058C9FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E5AAF1F3-F55E-41D7-9F4F-E3F5E058C9FD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -86,6 +92,7 @@ Global
 		{F47D41DD-851E-424D-8CFA-FB3511E5D9DB} = {8C9FFBEC-F477-4037-B3FE-BAF02ED3A16C}
 		{9F3FC974-E3BC-4021-94DA-B21B2CC06478} = {8C9FFBEC-F477-4037-B3FE-BAF02ED3A16C}
 		{12290496-CF06-4992-B7C5-D86902411D1A} = {8C9FFBEC-F477-4037-B3FE-BAF02ED3A16C}
+		{E5AAF1F3-F55E-41D7-9F4F-E3F5E058C9FD} = {8C9FFBEC-F477-4037-B3FE-BAF02ED3A16C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0BD0178E-76E0-4736-A036-89B1AA268A05}

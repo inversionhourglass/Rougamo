@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Rougamo\Rougamo.csproj" />
+    <ProjectReference Include="..\Rougamo.ImplAssembly\Rougamo.ImplAssembly.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Rougamo.UsingAssembly">
+      <HintPath>DLLs\Rougamo.UsingAssembly.OriginPatched.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+
+</Project>
