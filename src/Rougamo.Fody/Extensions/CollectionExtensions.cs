@@ -20,6 +20,12 @@ namespace Rougamo.Fody
             }
         }
 
+        public static T AddAndGet<T>(this List<T> items, T item)
+        {
+            items.Add(item);
+            return item;
+        }
+
         public static void Remove<T>(this List<T> items, Func<T, bool> predicate)
         {
             var stack = new Stack<int>();
