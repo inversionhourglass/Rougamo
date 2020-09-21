@@ -48,6 +48,7 @@ namespace Rougamo.Fody
             OnException(rouMethod.MethodDef, moVariables, contextVariable, exceptionVariable, catchStart);
             OnSuccess(rouMethod.MethodDef, moVariables, contextVariable, finallyStart, finallyEnd);
             OnExit(rouMethod.MethodDef, moVariables, contextVariable, finallyEnd);
+            rouMethod.MethodDef.Body.Optimize();
         }
 
         private void GenerateTryCatchFinally(MethodDefinition methodDef, out Instruction tryStart, out Instruction catchStart, out Instruction finallyStart, out Instruction finallyEnd, out VariableDefinition exceptionVariable)
