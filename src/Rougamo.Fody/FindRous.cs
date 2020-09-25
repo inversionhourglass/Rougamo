@@ -73,7 +73,8 @@ namespace Rougamo.Fody
                         break;
                     }
                 }
-                _typeIMoRef = imoTypeDef;
+                _typeIMoRef = imoTypeDef.ImportInto(ModuleDefinition);
+                _typeIMoArrayRef = new ArrayType(_typeIMoRef);
                 var typeMethodContextDef = _typeMethodContextRef.Resolve();
                 _methodMethodContextCtorRef = typeMethodContextDef.GetConstructors().First().ImportInto(ModuleDefinition);
                 _methodMethodContextSetExceptionRef = typeMethodContextDef.RecursionImportPropertySet(ModuleDefinition, Constants.PROP_Exception);

@@ -38,6 +38,16 @@ namespace Rougamo.Fody
 
         private void AsyncMethodWeave(RouMethod rouMethod)
         {
+            AsyncOnEntry(rouMethod, out var mosFieldDef, out var contextFieldDef);
+        }
+
+        private void AsyncOnEntry(RouMethod rouMethod, out FieldDefinition mosFieldDef, out FieldDefinition contextFieldDef)
+        {
+            var stateTypeDef = rouMethod.MethodDef.ResolveAsyncStateMachine();
+            mosFieldDef = new FieldDefinition(Constants.FIELD_RougamoMos, FieldAttributes.Public, _typeIMoArrayRef);
+            contextFieldDef = new FieldDefinition(Constants.FIELD_RougamoContext, FieldAttributes.Public, _typeMethodContextRef);
+            stateTypeDef.Fields.Add(mosFieldDef);
+            stateTypeDef.Fields.Add(contextFieldDef);
         }
 
         private void SyncMethodWeave(RouMethod rouMethod)

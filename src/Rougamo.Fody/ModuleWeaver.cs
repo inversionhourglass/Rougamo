@@ -14,6 +14,7 @@ namespace Rougamo.Fody
         private TypeReference _typeExceptionRef;
         private TypeReference _typeIMoRef;
         private TypeReference _typeMethodContextRef;
+        private TypeReference _typeIMoArrayRef;
 
         private MethodReference _methodGetTypeFromHandleRef;
         private MethodReference _methodGetMethodFromHandleRef;

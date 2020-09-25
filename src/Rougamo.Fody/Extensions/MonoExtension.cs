@@ -251,5 +251,12 @@ namespace Rougamo.Fody
             if (instruction.Operand is CallSite callSite) return Instruction.Create(instruction.OpCode, callSite);
             throw new RougamoException($"not support instruction Operand copy type: {instruction.Operand.GetType().FullName}");
         }
+
+        public static TypeDefinition ResolveAsyncStateMachine(this MethodDefinition methodDef)
+        {
+            var stateMachineAttr = methodDef.CustomAttributes.Single(attr => attr.Is(Constants.TYPE_AsyncStateMachineAttribute));
+            var obj = stateMachineAttr.ConstructorArguments[0].Value;
+            return obj as TypeDefinition ?? (obj as TypeReference).Resolve();
+        }
     }
 }

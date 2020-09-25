@@ -29,6 +29,8 @@
 
         public const string FIELD_Flags = "<Flags>k__BackingField";
         public const string FIELD_Repulsions = "<Repulsions>k__BackingField";
+        public const string FIELD_RougamoMos = ">_<rougamo_mos";
+        public const string FIELD_RougamoContext = ">_<rougamo_context";
 
         public const string METHOD_OnEntry = "OnEntry";
         public const string METHOD_OnSuccess = "OnSuccess";

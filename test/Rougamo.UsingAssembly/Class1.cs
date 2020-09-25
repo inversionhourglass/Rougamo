@@ -2,14 +2,20 @@
 using Rougamo.ImplAssembly;
 using System;
 using System.IO;
+using System.Threading.Tasks;
 
 namespace Rougamo.UsingAssembly
 {
     public class Class1
     {
-        public void InstanceVoid(string stringValue, int[] intArray)
+        public async Task InstanceVoid(string stringValue, int[] intArray)
         {
-            Console.WriteLine("这里是instance");
+            Console.WriteLine("before");
+            await Task.Delay(100);
+            Console.WriteLine("middle");
+            await Task.Delay(100);
+            Console.WriteLine("after");
+
         }
 
         public int InstanceReturn(int seed)
