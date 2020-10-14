@@ -62,6 +62,7 @@ namespace Rougamo.Fody
                 var sampleMo = _rouTypes.First().Methods.First().Mos.First();
                 var typeDef = sampleMo.Attribute == null ? sampleMo.TypeDef : sampleMo.Attribute.AttributeType.Resolve();
                 var imoTypeDef = typeDef.GetInterfaceDefinition(Constants.TYPE_IMo);
+                _methodIMosRef = new Dictionary<string, MethodReference>(4);
                 foreach (var methodDef in imoTypeDef.Methods)
                 {
                     if(methodDef.Name == Constants.METHOD_OnEntry ||
@@ -69,8 +70,11 @@ namespace Rougamo.Fody
                         methodDef.Name == Constants.METHOD_OnException ||
                         methodDef.Name == Constants.METHOD_OnExit)
                     {
-                        _typeMethodContextRef = methodDef.Parameters.First().ParameterType.ImportInto(ModuleDefinition);
-                        break;
+                        _methodIMosRef.Add(methodDef.Name, methodDef.ImportInto(ModuleDefinition));
+                        if (_typeMethodContextRef == null)
+                        {
+                            _typeMethodContextRef = methodDef.Parameters.First().ParameterType.ImportInto(ModuleDefinition);
+                        }
                     }
                 }
                 _typeIMoRef = imoTypeDef.ImportInto(ModuleDefinition);

@@ -8,13 +8,40 @@ namespace Rougamo.UsingAssembly
 {
     public class Class1
     {
-        public async Task InstanceVoid(string stringValue, int[] intArray)
+        private IMo[] _mos;
+
+        public void ForEach()
+        {
+            //try
+            //{
+            //    Console.WriteLine(1);
+            //}
+            //catch (Exception e)
+            //{
+            //    Console.WriteLine(e);
+            //    for (int i = 0; i < _mos.Length; i++)
+            //    {
+            //        _mos[i].OnEntry(null);
+            //    }
+            //    Console.WriteLine(3);
+            //}
+            //Console.WriteLine();
+            //foreach (var item in _mos)
+            //{
+            //    item.OnEntry(null);
+            //}
+        }
+
+        public async Task<int> InstanceVoid(string stringValue, int[] intArray)
         {
             Console.WriteLine("before");
+            Console.WriteLine(this._mos);
             await Task.Delay(100);
             Console.WriteLine("middle");
             await Task.Delay(100);
+            throw new Exception();
             Console.WriteLine("after");
+            return 123;
 
         }
 
@@ -47,6 +74,7 @@ namespace Rougamo.UsingAssembly
 
         public int InstanceReturnSimple(int seed)
         {
+            var arr = new int[] { 1, 2, 3 };
             var random = new Random(seed);
             var count = 0;
             while (count++ < 100)
@@ -58,7 +86,7 @@ namespace Rougamo.UsingAssembly
                     break;
                 }
             }
-            return seed;
+            return arr[0];
         }
 
         public static void StaticVoid(int k, int p)

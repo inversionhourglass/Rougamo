@@ -1,6 +1,7 @@
 ﻿using Fody;
 using Mono.Cecil;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Rougamo.Fody
 {
@@ -22,11 +23,14 @@ namespace Rougamo.Fody
         private MethodReference _methodMethodContextSetExceptionRef;
         private MethodReference _methodMethodContextSetReturnValueRef;
         private MethodReference _methodMethodContextGetHasExceptionRef;
+        private Dictionary<string, MethodReference> _methodIMosRef;
 
         private List<RouType> _rouTypes;
 
         public override void Execute()
         {
+            if (Config != null && string.Equals(Config.Attributes("enabled").Select(x => x.Value).SingleOrDefault(), "false", System.StringComparison.OrdinalIgnoreCase)) return;
+
             LoadBasicReference();
             FindRous();
             if (_rouTypes.Count == 0) return;

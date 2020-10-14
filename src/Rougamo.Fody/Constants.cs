@@ -14,9 +14,11 @@
         public const string TYPE_MethodContext = "Rougamo.Context.MethodContext";
 
         public const string TYPE_Void = "System.Void";
+        public const string TYPE_Task = "System.Threading.Tasks.Task";
         public const string TYPE_MulticastDelegate = "System.MulticastDelegate";
         public const string TYPE_AsyncStateMachineAttribute = "System.Runtime.CompilerServices.AsyncStateMachineAttribute";
         public const string TYPE_IteratorStateMachineAttribute = "System.Runtime.CompilerServices.IteratorStateMachineAttribute";
+        public const string TYPE_AsyncTaskMethodBuilder = "System.Runtime.CompilerServices.AsyncTaskMethodBuilder";
 
         public const string TYPE_ARRAY_Type = "System.Type[]";
 
@@ -36,5 +38,8 @@
         public const string METHOD_OnSuccess = "OnSuccess";
         public const string METHOD_OnException = "OnException";
         public const string METHOD_OnExit = "OnExit";
+        public const string METHOD_Create = "Create";
+        public const string METHOD_MoveNext = "MoveNext";
+        public const string METHOD_SetResult = "SetResult";
     }
 }
