@@ -11,7 +11,7 @@ namespace Rougamo.Fody
     {
         public static bool Is(this TypeReference typeRef, string fullName)
         {
-            return typeRef.Resolve().FullName == fullName;
+            return typeRef.Resolve()?.FullName == fullName;
         }
 
         public static bool Is(this CustomAttribute attribute, string fullName)
@@ -39,7 +39,7 @@ namespace Rougamo.Fody
         {
             do
             {
-                if ((typeRef = typeRef.Resolve().BaseType)?.FullName == baseClass) return true;
+                if ((typeRef = typeRef.Resolve()?.BaseType)?.FullName == baseClass) return true;
             } while (typeRef != null);
 
             return false;
@@ -78,7 +78,7 @@ namespace Rougamo.Fody
         public static bool IsEnum(this TypeReference typeRef, out TypeReference underlyingType)
         {
             var typeDef = typeRef.Resolve();
-            if (typeDef.IsEnum)
+            if (typeDef != null && typeDef.IsEnum)
             {
                 underlyingType = typeDef.Fields.First(f => f.Name == "value__").FieldType;
                 return true;
@@ -115,8 +115,6 @@ namespace Rougamo.Fody
 
             return def != null && def.Name == fieldName && def.FieldType.Is(fieldType);
         }
-
-        //public static System.Collections.Generic.List<TypeReference> 
 
         public static OpCode GetStElemCode(this TypeReference typeRef)
         {
@@ -295,10 +293,37 @@ namespace Rougamo.Fody
             return obj as TypeDefinition ?? (obj as TypeReference).Resolve();
         }
 
-        public static Instruction CloseLdarg0(this Instruction instruction)
+        public static Instruction ClosePreviousLdarg0(this Instruction instruction, MethodDefinition methodDef)
         {
             while ((instruction = instruction.Previous) != null && instruction.OpCode.Code != Code.Ldarg_0) { }
-            return instruction.OpCode.Code == Code.Ldarg_0 ? instruction : throw new RougamoException("can not find ldarg.0 from previouses");
+            return instruction != null && instruction.OpCode.Code == Code.Ldarg_0 ? instruction : throw new RougamoException($"[{methodDef.FullName}] cannot find ldarg.0 from previouses");
+        }
+
+        public static Instruction ClosePreviousOffset(this Instruction instruction, MethodDefinition methodDef)
+        {
+            while ((instruction = instruction.Previous) != null && instruction.Offset == 0) { }
+            return instruction != null && instruction.Offset != 0 ? instruction : throw new RougamoException($"[{methodDef.FullName}] cannot find has offset instruction from previouses");
+        }
+
+        public static Instruction Stloc2Ldloc(this Instruction instruction, string exceptionMessage)
+        {
+            switch (instruction.OpCode.Code)
+            {
+                case Code.Stloc_0:
+                    return Instruction.Create(OpCodes.Ldloc_0);
+                case Code.Stloc_1:
+                    return Instruction.Create(OpCodes.Ldloc_1);
+                case Code.Stloc_2:
+                    return Instruction.Create(OpCodes.Ldloc_2);
+                case Code.Stloc_3:
+                    return Instruction.Create(OpCodes.Ldloc_3);
+                case Code.Stloc:
+                    return Instruction.Create(OpCodes.Ldloc, (VariableDefinition)instruction.Operand);
+                case Code.Stloc_S:
+                    return Instruction.Create(OpCodes.Ldloc_S, (VariableDefinition)instruction.Operand);
+                default:
+                    throw new RougamoException(exceptionMessage);
+            }
         }
 
         private static readonly Dictionary<Code, OpCode> _OptimizeCodes = new Dictionary<Code, OpCode>

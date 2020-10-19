@@ -1,6 +1,5 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
-using Mono.Cecil.Rocks;
 using Mono.Collections.Generic;
 using System.Collections.Generic;
 using System.Linq;
@@ -82,15 +81,12 @@ namespace Rougamo.Fody
         {
             var instructions = moveNextMethodDef.Body.Instructions;
             var exceptionHandler = OuterExceptionHandler(moveNextMethodDef.Body);
-            if (exceptionHandler.HandlerStart.OpCode != OpCodes.Stloc_S || !(exceptionHandler.HandlerStart.Operand is VariableDefinition exceptionVariable))
-            {
-                throw new RougamoException("exception handler first instruction is not stloc.s exception");
-            }
+            var ldlocException = exceptionHandler.HandlerStart.Stloc2Ldloc($"[{rouMethod.MethodDef.FullName}] exception handler first instruction is not stloc.s exception");
 
             var next = exceptionHandler.HandlerStart.Next;
             instructions.InsertBefore(next, Instruction.Create(OpCodes.Ldarg_0));
             instructions.InsertBefore(next, Instruction.Create(OpCodes.Ldfld, contextFieldDef));
-            instructions.InsertBefore(next, Instruction.Create(OpCodes.Ldloc_S, exceptionVariable));
+            instructions.InsertBefore(next, ldlocException);
             instructions.InsertBefore(next, Instruction.Create(OpCodes.Callvirt, _methodMethodContextSetExceptionRef));
             var splitNop = Instruction.Create(OpCodes.Nop);
             instructions.InsertBefore(next, splitNop);
@@ -103,7 +99,7 @@ namespace Rougamo.Fody
             if (setResultIns == null) return; // 100% throw exception
 
             var instructions = moveNextMethodDef.Body.Instructions;
-            var closeThisIns = setResultIns.CloseLdarg0();
+            var closeThisIns = setResultIns.ClosePreviousLdarg0(rouMethod.MethodDef);
             if (returnTypeRef != null)
             {
                 var ldlocResult = setResultIns.Previous.Copy();
@@ -125,14 +121,14 @@ namespace Rougamo.Fody
         private ExceptionHandler OuterExceptionHandler(MethodBody methodBody)
         {
             ExceptionHandler exceptionHandler = null;
-            int offset = methodBody.Instructions.Last().Offset;
+            int offset = methodBody.Instructions.First().Offset;
             foreach (var handler in methodBody.ExceptionHandlers)
             {
                 if (handler.HandlerType != ExceptionHandlerType.Catch) continue;
-                if (handler.TryStart.Offset < offset)
+                if (handler.TryEnd.Offset > offset)
                 {
                     exceptionHandler = handler;
-                    offset = handler.TryStart.Offset;
+                    offset = handler.TryEnd.Offset;
                 }
             }
             return exceptionHandler ?? throw new RougamoException("can not find outer exception handler");
@@ -155,19 +151,16 @@ namespace Rougamo.Fody
             var bodyIns = methodDef.Body.Instructions;
             tryStart = GetFirstInsAsNop(methodDef.Body);
 
-            var returns = methodDef.Body.Instructions.Where(ins => ins.OpCode == OpCodes.Ret);
-            if (returns.Count() != 1)
-            {
-                throw new RougamoException($"[{methodDef.FullName}] multiple ret found");
-            }
-            var returnIns = returns.Single();
+            var leaves = new List<Instruction>();
+            var returns = bodyIns.Where(ins => ins.OpCode == OpCodes.Ret).ToArray();
+            var returnIns = returns.Length == 1 ? returns[0] : MergeReturns(methodDef, returns.ToArray(), leaves);
             finallyEnd = returnIns.Previous;
             if (methodDef.ReturnType.Is(Constants.TYPE_Void))
             {
                 if (finallyEnd == null || finallyEnd.OpCode != OpCodes.Nop)
                 {
                     finallyEnd = Instruction.Create(OpCodes.Nop);
-                    methodDef.Body.Instructions.InsertBefore(returnIns, finallyEnd);
+                    bodyIns.InsertBefore(returnIns, finallyEnd);
                 }
             }
             else
@@ -175,27 +168,30 @@ namespace Rougamo.Fody
                 while (true)
                 {
                     if (finallyEnd == null) throw new RougamoException($"[{methodDef.FullName}] not found Ldloc before ret");
-                    if (finallyEnd.OpCode == OpCodes.Ldloc_0 ||
-                        finallyEnd.OpCode == OpCodes.Ldloc_1 ||
-                        finallyEnd.OpCode == OpCodes.Ldloc_2 ||
-                        finallyEnd.OpCode == OpCodes.Ldloc_3 ||
-                        finallyEnd.OpCode == OpCodes.Ldloc ||
-                        finallyEnd.OpCode == OpCodes.Ldloc_S) break;
+                    if (finallyEnd.OpCode.Code != Code.Nop) break;
                     finallyEnd = finallyEnd.Previous;
                 }
+                if (finallyEnd.OpCode.Code != Code.Ldloc_0 && finallyEnd.OpCode.Code != Code.Ldloc_1 &&
+                    finallyEnd.OpCode.Code != Code.Ldloc_2 && finallyEnd.OpCode.Code != Code.Ldloc_3 &&
+                    finallyEnd.OpCode.Code != Code.Ldloc && finallyEnd.OpCode.Code != Code.Ldloc_S)
+                {
+                    var returnVariable = methodDef.Body.CreateVariable(methodDef.ReturnType.ImportInto(ModuleDefinition));
+                    var next = finallyEnd.Next;
+                    finallyEnd = Instruction.Create(OpCodes.Ldloc, returnVariable);
+                    bodyIns.InsertBefore(next, Instruction.Create(OpCodes.Stloc, returnVariable));
+                    bodyIns.InsertBefore(next, finallyEnd);
+                }
             }
-            //if (finallyEnd.Previous != null && (finallyEnd.Previous.OpCode == OpCodes.Br || finallyEnd.Previous.OpCode == OpCodes.Br_S))
-            //{
-            //    finallyEnd.Previous.OpCode = OpCodes.Nop;
-            //    finallyEnd.Previous.Operand = null;
-            //}
 
             exceptionVariable = methodDef.Body.CreateVariable(_typeExceptionRef);
-            bodyIns.InsertBefore(finallyEnd, skipRedirects.AddAndGet(Instruction.Create(OpCodes.Leave_S, finallyEnd)));
+            if (!leaves.Contains(finallyEnd.Previous))
+            {
+                bodyIns.InsertBefore(finallyEnd, skipRedirects.AddAndGet(Instruction.Create(OpCodes.Leave, finallyEnd)));
+            }
             catchStart = Instruction.Create(OpCodes.Stloc, exceptionVariable);
             bodyIns.InsertBefore(finallyEnd, catchStart);
             bodyIns.InsertBefore(finallyEnd, Instruction.Create(OpCodes.Rethrow));
-            bodyIns.InsertBefore(finallyEnd, skipRedirects.AddAndGet(Instruction.Create(OpCodes.Leave_S, finallyEnd)));
+            bodyIns.InsertBefore(finallyEnd, skipRedirects.AddAndGet(Instruction.Create(OpCodes.Leave, finallyEnd)));
             finallyStart = Instruction.Create(OpCodes.Nop);
             bodyIns.InsertBefore(finallyEnd, finallyStart);
             bodyIns.InsertBefore(finallyEnd, Instruction.Create(OpCodes.Endfinally));
@@ -203,14 +199,28 @@ namespace Rougamo.Fody
             AdjustRedirects(methodDef, skipRedirects, catchStart, finallyEnd);
         }
 
-        private HashSet<OpCode> _redirectOps = new HashSet<OpCode>
+        private Instruction MergeReturns(MethodDefinition methodDef, Instruction[] returns, List<Instruction> leaves)
         {
-            OpCodes.Leave, OpCodes.Leave_S, OpCodes.Br, OpCodes.Br_S,
-            OpCodes.Brtrue, OpCodes.Brtrue_S, OpCodes.Brfalse, OpCodes.Brfalse_S,
-        };
+            var returnVariable = methodDef.Body.CreateVariable(methodDef.ReturnType.ImportInto(ModuleDefinition));
+            var ldlocReturn = Instruction.Create(OpCodes.Ldloc, returnVariable);
+            var ret = Instruction.Create(OpCodes.Ret);
+            methodDef.Body.Instructions.Add(ldlocReturn);
+            methodDef.Body.Instructions.Add(ret);
+
+            foreach (var @return in returns)
+            {
+                @return.OpCode = OpCodes.Stloc;
+                @return.Operand = returnVariable;
+                methodDef.Body.Instructions.InsertAfter(@return, leaves.AddAndGet(Instruction.Create(OpCodes.Leave, ldlocReturn)));
+            }
+
+            return ret;
+        }
+
         private void AdjustRedirects(MethodDefinition methodDef, List<Instruction> skipRedirects, Instruction catchStart, Instruction finallyEnd)
         {
-            var redirectToEnds = methodDef.Body.Instructions.Where(x => _redirectOps.Contains(x.OpCode) && ((Instruction)x.Operand).Offset > catchStart.Previous.Previous.Offset && !skipRedirects.Contains(x));
+            var closePreviousOffset = catchStart.Previous.ClosePreviousOffset(methodDef);
+            var redirectToEnds = methodDef.Body.Instructions.Where(x => _brs.Contains(x.OpCode.Code) && ((Instruction)x.Operand).Offset > closePreviousOffset.Offset && !skipRedirects.Contains(x));
             if (redirectToEnds.Any())
             {
                 foreach (var item in redirectToEnds)
@@ -221,7 +231,7 @@ namespace Rougamo.Fody
 
             foreach (var handler in methodDef.Body.ExceptionHandlers)
             {
-                if (handler.HandlerEnd.Offset > catchStart.Previous.Previous.Offset)
+                if (handler.HandlerEnd.Offset > closePreviousOffset.Offset)
                 {
                     handler.HandlerEnd = catchStart.Previous;
                 }
@@ -323,6 +333,7 @@ namespace Rougamo.Fody
             }
             throw new RougamoException("unable find call AsyncTaskMethodBuilder.Create instruction");
         }
+
         #region LoadMosOnStack
 
         private VariableDefinition[] LoadMosOnStack(RouMethod rouMethod, List<Instruction> instructions)
