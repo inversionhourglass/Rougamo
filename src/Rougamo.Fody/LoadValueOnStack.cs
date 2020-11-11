@@ -141,11 +141,19 @@ namespace Rougamo.Fody
             //instructions.Add(Instruction.Create(OpCodes.Stloc, argumentsVariable)); // variable
             for (int i = 0; i < methodDef.Parameters.Count; i++)
             {
+                var parameter = methodDef.Parameters[i];
                 //instructions.Add(Instruction.Create(OpCodes.Ldloc, argumentsVariable)); // variable
                 instructions.Add(Instruction.Create(OpCodes.Dup)); // dup
                 instructions.Add(Instruction.Create(OpCodes.Ldc_I4, i));
-                instructions.Add(Instruction.Create(OpCodes.Ldarg, methodDef.Parameters[i]));
-                var parameterType = methodDef.Parameters[i].ParameterType;
+                if (parameter.IsOut)
+                {
+                    instructions.Add(Instruction.Create(OpCodes.Initobj, parameter.ParameterType.ImportInto(ModuleDefinition)));
+                }
+                else
+                {
+                    instructions.Add(Instruction.Create(OpCodes.Ldarg, parameter));
+                }
+                var parameterType = parameter.ParameterType;
                 if (parameterType.IsValueType || parameterType.IsEnum(out _) && !parameterType.IsArray)
                 {
                     instructions.Add(Instruction.Create(OpCodes.Box, parameterType));

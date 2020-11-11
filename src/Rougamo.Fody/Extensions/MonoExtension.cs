@@ -326,6 +326,11 @@ namespace Rougamo.Fody
             }
         }
 
+        public static Instruction LdlocOrA(this VariableDefinition variable)
+        {
+            return variable.VariableType.IsValueType ? Instruction.Create(OpCodes.Ldloca, variable) : Instruction.Create(OpCodes.Ldloc, variable);
+        }
+
         private static readonly Dictionary<Code, OpCode> _OptimizeCodes = new Dictionary<Code, OpCode>
         {
             { Code.Leave_S, OpCodes.Leave }, { Code.Br_S, OpCodes.Br },

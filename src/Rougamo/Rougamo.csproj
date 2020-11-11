@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <IsPacking>false</IsPacking>
-    <Version Condition="'$(Configuration)'=='Debug'">0.1.0-beta92</Version>
-    <Version Condition="'$(Configuration)'=='Release'">0.1.0-beta92</Version>
+    <IsPacking>true</IsPacking>
+    <Version Condition="'$(Configuration)'=='Debug'">0.1.0-beta93</Version>
+    <Version Condition="'$(Configuration)'=='Release'">0.1.0-beta93</Version>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Authors>Hourglass Inversion</Authors>
     <Product>Rougamo.Fody</Product>

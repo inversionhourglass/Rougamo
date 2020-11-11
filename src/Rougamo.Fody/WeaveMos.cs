@@ -177,7 +177,7 @@ namespace Rougamo.Fody
                 {
                     var returnVariable = methodDef.Body.CreateVariable(methodDef.ReturnType.ImportInto(ModuleDefinition));
                     var next = finallyEnd.Next;
-                    finallyEnd = Instruction.Create(OpCodes.Ldloc, returnVariable);
+                    finallyEnd = returnVariable.LdlocOrA();
                     bodyIns.InsertBefore(next, Instruction.Create(OpCodes.Stloc, returnVariable));
                     bodyIns.InsertBefore(next, finallyEnd);
                 }
@@ -202,7 +202,7 @@ namespace Rougamo.Fody
         private Instruction MergeReturns(MethodDefinition methodDef, Instruction[] returns, List<Instruction> leaves)
         {
             var returnVariable = methodDef.Body.CreateVariable(methodDef.ReturnType.ImportInto(ModuleDefinition));
-            var ldlocReturn = Instruction.Create(OpCodes.Ldloc, returnVariable);
+            var ldlocReturn = returnVariable.LdlocOrA();
             var ret = Instruction.Create(OpCodes.Ret);
             methodDef.Body.Instructions.Add(ldlocReturn);
             methodDef.Body.Instructions.Add(ret);
@@ -373,7 +373,7 @@ namespace Rougamo.Fody
         private void InitMosField(RouMethod rouMethod, FieldDefinition mosFieldDef, VariableDefinition stateMachineVariable, Instruction taskBuilderPreviousIns)
         {
             var instructions = rouMethod.MethodDef.Body.Instructions;
-            instructions.InsertBefore(taskBuilderPreviousIns, Instruction.Create(OpCodes.Ldloc, stateMachineVariable));
+            instructions.InsertBefore(taskBuilderPreviousIns, Instruction.Create(OpCodes.Ldloca, stateMachineVariable));
             instructions.InsertBefore(taskBuilderPreviousIns, Instruction.Create(OpCodes.Ldc_I4, rouMethod.Mos.Count));
             instructions.InsertBefore(taskBuilderPreviousIns, Instruction.Create(OpCodes.Newarr, _typeIMoRef));
             var i = 0;
@@ -453,7 +453,7 @@ namespace Rougamo.Fody
         private void InitMethodContextField(RouMethod rouMethod, FieldDefinition contextFieldDef, VariableDefinition stateMachineVariable, Instruction taskBuilderPreviousIns)
         {
             var instructions = rouMethod.MethodDef.Body.Instructions;
-            instructions.InsertBefore(taskBuilderPreviousIns, Instruction.Create(OpCodes.Ldloc, stateMachineVariable));
+            instructions.InsertBefore(taskBuilderPreviousIns, Instruction.Create(OpCodes.Ldloca, stateMachineVariable));
             var contextInitIns = new List<Instruction>();
             InitMethodContext(rouMethod.MethodDef, contextInitIns);
             instructions.InsertBefore(taskBuilderPreviousIns, contextInitIns);
@@ -488,7 +488,7 @@ namespace Rougamo.Fody
             }
             else
             {
-                instructions.InsertBefore(nextIns, Instruction.Create(OpCodes.Ldloc, stateMachineVariable));
+                instructions.InsertBefore(nextIns, Instruction.Create(OpCodes.Ldloca, stateMachineVariable));
             }
             instructions.InsertBefore(nextIns, Instruction.Create(OpCodes.Ldfld, mosField));
             instructions.InsertBefore(nextIns, Instruction.Create(OpCodes.Ldloc, flagVariable));
@@ -499,7 +499,7 @@ namespace Rougamo.Fody
             }
             else
             {
-                instructions.InsertBefore(nextIns, Instruction.Create(OpCodes.Ldloc, stateMachineVariable));
+                instructions.InsertBefore(nextIns, Instruction.Create(OpCodes.Ldloca, stateMachineVariable));
             }
             instructions.InsertBefore(nextIns, Instruction.Create(OpCodes.Ldfld, contextField));
             instructions.InsertBefore(nextIns, Instruction.Create(OpCodes.Callvirt, _methodIMosRef[methodName]));
