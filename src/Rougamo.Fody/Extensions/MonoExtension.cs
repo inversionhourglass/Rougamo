@@ -24,6 +24,11 @@ namespace Rougamo.Fody
             return methodRef.FullName == fullName;
         }
 
+        public static bool IsOrDerivesFrom(this TypeReference typeRef, string className)
+        {
+            return Is(typeRef, className) || DerivesFrom(typeRef, className);
+        }
+
         public static bool Implement(this TypeDefinition typeDef, string @interface)
         {
             do
@@ -328,7 +333,31 @@ namespace Rougamo.Fody
 
         public static Instruction LdlocOrA(this VariableDefinition variable)
         {
-            return variable.VariableType.IsValueType ? Instruction.Create(OpCodes.Ldloca, variable) : Instruction.Create(OpCodes.Ldloc, variable);
+            var variableTypeDef = variable.VariableType.Resolve();
+            return variableTypeDef.IsValueType && !variableTypeDef.IsEnum && !variableTypeDef.IsPrimitive ? Instruction.Create(OpCodes.Ldloca, variable) : Instruction.Create(OpCodes.Ldloc, variable);
+        }
+
+        public static Instruction Ldind(this TypeReference typeRef)
+        {
+            if (typeRef == null) throw new ArgumentNullException(nameof(typeRef), "Ldind argument null");
+            var typeDef = typeRef.Resolve();
+            if (!typeRef.IsValueType) return Instruction.Create(OpCodes.Ldind_Ref);
+            if (typeDef.Is(typeof(byte).FullName)) return Instruction.Create(OpCodes.Ldind_I1);
+            if (typeDef.Is(typeof(short).FullName)) return Instruction.Create(OpCodes.Ldind_I2);
+            if (typeDef.Is(typeof(int).FullName)) return Instruction.Create(OpCodes.Ldind_I4);
+            if (typeDef.Is(typeof(long).FullName)) return Instruction.Create(OpCodes.Ldind_I8);
+            if (typeDef.Is(typeof(sbyte).FullName)) return Instruction.Create(OpCodes.Ldind_U1);
+            if (typeDef.Is(typeof(ushort).FullName)) return Instruction.Create(OpCodes.Ldind_U2);
+            if (typeDef.Is(typeof(uint).FullName)) return Instruction.Create(OpCodes.Ldind_U4);
+            if (typeDef.Is(typeof(ulong).FullName)) return Instruction.Create(OpCodes.Ldind_I8);
+            if (typeDef.Is(typeof(float).FullName)) return Instruction.Create(OpCodes.Ldind_R4);
+            if (typeDef.Is(typeof(double).FullName)) return Instruction.Create(OpCodes.Ldind_R8);
+            if (typeDef.IsEnum)
+            {
+                if (typeDef.Fields.Count == 0) return Instruction.Create(OpCodes.Ldind_I);
+                return Ldind(typeDef.Fields[0].FieldType);
+            }
+            return Instruction.Create(OpCodes.Ldobj, typeRef); // struct
         }
 
         private static readonly Dictionary<Code, OpCode> _OptimizeCodes = new Dictionary<Code, OpCode>

@@ -1,6 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <IsPacking>true</IsPacking>
+    <IsPacking>false</IsPacking>
     <Version Condition="'$(Configuration)'=='Debug'">0.1.0-beta93</Version>
     <Version Condition="'$(Configuration)'=='Release'">0.1.0-beta93</Version>
     <TargetFramework>netstandard2.0</TargetFramework>

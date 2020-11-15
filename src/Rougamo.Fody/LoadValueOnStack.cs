@@ -130,38 +130,51 @@ namespace Rougamo.Fody
             };
         }
 
-        private IList<Instruction> LoadMethodArgumentsOnStack(MethodDefinition methodDef) // dup
-        //private IList<Instruction> LoadMethodArgumentsOnStack(MethodDefinition methodDef, out VariableDefinition argumentsVariable) // variable
+        private IList<Instruction> LoadMethodArgumentsOnStack(MethodDefinition methodDef)
         {
             var instructions = new List<Instruction>();
-            //argumentsVariable = methodDef.Body.CreateVariable(_typeObjectArrayRef); // variable
 
             instructions.AddRange(LoadValueOnStack(_typeIntRef, methodDef.Parameters.Count));
             instructions.Add(Instruction.Create(OpCodes.Newarr, _typeObjectRef));
-            //instructions.Add(Instruction.Create(OpCodes.Stloc, argumentsVariable)); // variable
             for (int i = 0; i < methodDef.Parameters.Count; i++)
             {
                 var parameter = methodDef.Parameters[i];
-                //instructions.Add(Instruction.Create(OpCodes.Ldloc, argumentsVariable)); // variable
-                instructions.Add(Instruction.Create(OpCodes.Dup)); // dup
+                instructions.Add(Instruction.Create(OpCodes.Dup));
                 instructions.Add(Instruction.Create(OpCodes.Ldc_I4, i));
-                if (parameter.IsOut)
+                if (LoadMethodArgumentsOnStack(parameter, instructions))
                 {
-                    instructions.Add(Instruction.Create(OpCodes.Initobj, parameter.ParameterType.ImportInto(ModuleDefinition)));
-                }
-                else
-                {
-                    instructions.Add(Instruction.Create(OpCodes.Ldarg, parameter));
-                }
-                var parameterType = parameter.ParameterType;
-                if (parameterType.IsValueType || parameterType.IsEnum(out _) && !parameterType.IsArray)
-                {
-                    instructions.Add(Instruction.Create(OpCodes.Box, parameterType));
+                    var parameterType = parameter.ParameterType;
+                    if (parameterType is ByReferenceType byRefType)
+                    {
+                        parameterType = byRefType.ElementType;
+                    }
+                    if (parameterType.IsValueType)
+                    {
+                        instructions.Add(Instruction.Create(OpCodes.Box, parameterType));
+                    }
                 }
                 instructions.Add(Instruction.Create(OpCodes.Stelem_Ref));
             }
 
             return instructions;
+        }
+
+        private bool LoadMethodArgumentsOnStack(ParameterDefinition parameter, IList<Instruction> instructions)
+        {
+            if (parameter.IsOut)
+            {
+                instructions.Add(Instruction.Create(OpCodes.Ldnull));
+                return false;
+            }
+
+            instructions.Add(Instruction.Create(OpCodes.Ldarg, parameter));
+            if (parameter.ParameterType.IsByReference)
+            {
+                if (!(parameter.ParameterType is ByReferenceType parameterType)) throw new RougamoException($"LoadMethodArgumentsOnStack({parameter.Name} {parameter.ParameterType}) is byReference but cannot convert to ByReferenceType");
+                var ldind = parameterType.ElementType.ImportInto(ModuleDefinition).Ldind();
+                if (ldind != null) instructions.Add(ldind);
+            }
+            return true;
         }
     }
 }

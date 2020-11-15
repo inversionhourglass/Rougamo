@@ -8,48 +8,69 @@ namespace Rougamo.UsingAssembly
 {
     public class Class1
     {
-        enum Enu
+        public enum Enu : byte
         {
             A,
             B
         }
+
+        public struct Ab
+        {
+            public int Id { get; set; }
+        }
         private IMo[] _mos;
 
-        public void Test(out int x, ref string y, out Class1 z)
+        public void Test(ref byte a, out sbyte b, ref short c, out ushort d, ref int e, ref uint f, ref long g, out ulong h, ref float i, ref double j, ref decimal v, ref Enu[] enu, ref Ab ab, ref Class1 cls)
         {
-            ValueTask vt;
-            Enu enu;
-
-            x = 1;
-            y = string.Empty;
-            z = null;
-            if(y.Length > 10)
-            {
-                vt = new ValueTask();
-                enu = Enu.A;
-            }
+            a = default;
+            b = default;
+            c = default;
+            d = default;
+            e = default;
+            f = default;
+            g = default;
+            h = default;
+            i = default;
+            j = default;
+            v = default;
+            enu = default;
+            ab = default;
+            cls = default;
+            var obj1 = (object)v;
+            var obj2 = (object)ab;
+            Console.WriteLine(a);
+            Console.WriteLine(b);
+            Console.WriteLine(c);
+            Console.WriteLine(d);
+            Console.WriteLine(e);
+            Console.WriteLine(f);
+            Console.WriteLine(g);
+            Console.WriteLine(h);
+            Console.WriteLine(i);
+            Console.WriteLine(j);
+            Console.WriteLine(enu);
         }
 
         //public void ForEach()
         //{
-            //try
-            //{
-            //    Console.WriteLine(1);
-            //}
-            //catch (Exception e)
-            //{
-            //    Console.WriteLine(e);
-            //    for (int i = 0; i < _mos.Length; i++)
-            //    {
-            //        _mos[i].OnEntry(null);
-            //    }
-            //    Console.WriteLine(3);
-            //}
-            //Console.WriteLine();
-            //foreach (var item in _mos)
-            //{
-            //    item.OnEntry(null);
-            //}
+        //try
+        //{
+        //    Console.WriteLine(1);
+        //}
+        //catch (Exception e)
+        //{
+        //    Console.WriteLine(e);
+        //    for (int i = 0; i < _mos.Length; i++)
+        //    {
+        //        _mos[i].OnEntry(null);
+        //    }
+        //    Console.WriteLine(3);
+        //}
+        //Console.WriteLine();
+        //foreach (var item in _mos)
+        //{
+        //    item.OnEntry(null);
+        //}
         //}
 
         //public async Task<int> InstanceVoid(string stringValue, int[] intArray)

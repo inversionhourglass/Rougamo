@@ -191,7 +191,7 @@ namespace Rougamo.Fody
             catchStart = Instruction.Create(OpCodes.Stloc, exceptionVariable);
             bodyIns.InsertBefore(finallyEnd, catchStart);
             bodyIns.InsertBefore(finallyEnd, Instruction.Create(OpCodes.Rethrow));
-            bodyIns.InsertBefore(finallyEnd, skipRedirects.AddAndGet(Instruction.Create(OpCodes.Leave, finallyEnd)));
+            //bodyIns.InsertBefore(finallyEnd, skipRedirects.AddAndGet(Instruction.Create(OpCodes.Leave, finallyEnd))); // maybe
             finallyStart = Instruction.Create(OpCodes.Nop);
             bodyIns.InsertBefore(finallyEnd, finallyStart);
             bodyIns.InsertBefore(finallyEnd, Instruction.Create(OpCodes.Endfinally));
