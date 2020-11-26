@@ -27,6 +27,7 @@ namespace Rougamo.Fody.Tests
             float i = 9.9f;
             double j = 10.01;
             Enu enu = Enu.A;
+            class1Class.SyncException("1", 2);
             //class1.Test(ref a, ref b, ref c, ref d, ref e, ref f, ref g, ref h, ref i, ref j, ref enu);
             //class1.InstanceVoid("123", new[] { 1, 2, 3 });
         }

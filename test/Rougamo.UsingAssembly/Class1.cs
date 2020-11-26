@@ -20,36 +20,68 @@ namespace Rougamo.UsingAssembly
         }
         private IMo[] _mos;
 
-        public void Test(ref byte a, out sbyte b, ref short c, out ushort d, ref int e, ref uint f, ref long g, out ulong h, ref float i, ref double j, ref decimal v, ref Enu[] enu, ref Ab ab, ref Class1 cls)
+        private static void SyncException()
         {
-            a = default;
-            b = default;
-            c = default;
-            d = default;
-            e = default;
-            f = default;
-            g = default;
-            h = default;
-            i = default;
-            j = default;
-            v = default;
-            enu = default;
-            ab = default;
-            cls = default;
-            var obj1 = (object)v;
-            var obj2 = (object)ab;
-            Console.WriteLine(a);
-            Console.WriteLine(b);
-            Console.WriteLine(c);
-            Console.WriteLine(d);
-            Console.WriteLine(e);
-            Console.WriteLine(f);
-            Console.WriteLine(g);
-            Console.WriteLine(h);
-            Console.WriteLine(i);
-            Console.WriteLine(j);
-            Console.WriteLine(enu);
+            Console.WriteLine("SyncException");
+            throw new Exception();
         }
+
+        //public static void Abc()
+        //{
+        //    IMo attr = new StaticMoAttribute();
+        //    var context = new MethodContext(null, typeof(Class1), null, new object[0]);
+        //    attr.OnEntry(context);
+        //    try
+        //    {
+        //        Console.WriteLine("SyncException");
+        //        throw new Exception();
+        //    }
+        //    catch (Exception e)
+        //    {
+        //        context.Exception = e;
+        //        attr.OnException(context);
+        //        throw;
+        //    }
+        //    finally
+        //    {
+        //        if (!context.HasException)
+        //        {
+        //            attr.OnSuccess(context);
+        //        }
+        //        attr.OnExit(context);
+        //    }
+        //}
+
+        //public void Test(ref byte a, out sbyte b, ref short c, out ushort d, ref int e, ref uint f, ref long g, out ulong h, ref float i, ref double j, ref decimal v, ref Enu[] enu, ref Ab ab, ref Class1 cls)
+        //{
+        //    a = default;
+        //    b = default;
+        //    c = default;
+        //    d = default;
+        //    e = default;
+        //    f = default;
+        //    g = default;
+        //    h = default;
+        //    i = default;
+        //    j = default;
+        //    v = default;
+        //    enu = default;
+        //    ab = default;
+        //    cls = default;
+        //    var obj1 = (object)v;
+        //    var obj2 = (object)ab;
+        //    Console.WriteLine(a);
+        //    Console.WriteLine(b);
+        //    Console.WriteLine(c);
+        //    Console.WriteLine(d);
+        //    Console.WriteLine(e);
+        //    Console.WriteLine(f);
+        //    Console.WriteLine(g);
+        //    Console.WriteLine(h);
+        //    Console.WriteLine(i);
+        //    Console.WriteLine(j);
+        //    Console.WriteLine(enu);
+        //}
 
         //public void ForEach()
         //{

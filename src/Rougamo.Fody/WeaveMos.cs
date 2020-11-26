@@ -136,55 +136,70 @@ namespace Rougamo.Fody
 
         private void SyncMethodWeave(RouMethod rouMethod)
         {
-            GenerateTryCatchFinally(rouMethod.MethodDef, out var tryStart, out var catchStart, out var finallyStart, out var finallyEnd, out var exceptionVariable);
-            SetTryCatchFinally(rouMethod.MethodDef, tryStart, catchStart, finallyStart, finallyEnd);
+            var justThrow = GenerateTryCatchFinally(rouMethod.MethodDef, out var tryStart, out var catchStart, out var finallyStart, out var finallyEnd, out var exceptionVariable);
+            SetTryCatchFinally(rouMethod.MethodDef, tryStart, catchStart, finallyStart, justThrow ? null : finallyEnd);
             OnEntry(rouMethod, tryStart, out var moVariables, out var contextVariable);
             OnException(rouMethod.MethodDef, moVariables, contextVariable, exceptionVariable, catchStart);
             OnSuccess(rouMethod.MethodDef, moVariables, contextVariable, finallyStart, finallyEnd);
             OnExit(rouMethod.MethodDef, moVariables, contextVariable, finallyEnd);
+            if (justThrow)
+            {
+                rouMethod.MethodDef.Body.Instructions.Remove(finallyEnd);
+            }
             rouMethod.MethodDef.Body.OptimizePlus();
         }
 
-        private void GenerateTryCatchFinally(MethodDefinition methodDef, out Instruction tryStart, out Instruction catchStart, out Instruction finallyStart, out Instruction finallyEnd, out VariableDefinition exceptionVariable)
+        private bool GenerateTryCatchFinally(MethodDefinition methodDef, out Instruction tryStart, out Instruction catchStart, out Instruction finallyStart, out Instruction finallyEnd, out VariableDefinition exceptionVariable)
         {
+            var justThrow = false;
             var skipRedirects = new List<Instruction>();
             var bodyIns = methodDef.Body.Instructions;
             tryStart = GetFirstInsAsNop(methodDef.Body);
 
             var leaves = new List<Instruction>();
             var returns = bodyIns.Where(ins => ins.OpCode == OpCodes.Ret).ToArray();
-            var returnIns = returns.Length == 1 ? returns[0] : MergeReturns(methodDef, returns.ToArray(), leaves);
-            finallyEnd = returnIns.Previous;
-            if (methodDef.ReturnType.Is(Constants.TYPE_Void))
+            if (returns.Length == 0)
             {
-                if (finallyEnd == null || finallyEnd.OpCode != OpCodes.Nop)
-                {
-                    finallyEnd = Instruction.Create(OpCodes.Nop);
-                    bodyIns.InsertBefore(returnIns, finallyEnd);
-                }
+                finallyEnd = Instruction.Create(OpCodes.Nop);
+                bodyIns.Add(finallyEnd);
+                justThrow = true;
             }
             else
             {
-                while (true)
+                var returnIns = returns.Length == 1 ? returns[0] : MergeReturns(methodDef, returns.ToArray(), leaves);
+                finallyEnd = returnIns.Previous;
+                if (methodDef.ReturnType.Is(Constants.TYPE_Void))
                 {
-                    if (finallyEnd == null) throw new RougamoException($"[{methodDef.FullName}] not found Ldloc before ret");
-                    if (finallyEnd.OpCode.Code != Code.Nop) break;
-                    finallyEnd = finallyEnd.Previous;
+                    if (finallyEnd == null || finallyEnd.OpCode != OpCodes.Nop)
+                    {
+                        finallyEnd = Instruction.Create(OpCodes.Nop);
+                        bodyIns.InsertBefore(returnIns, finallyEnd);
+                    }
                 }
-                if (finallyEnd.OpCode.Code != Code.Ldloc_0 && finallyEnd.OpCode.Code != Code.Ldloc_1 &&
-                    finallyEnd.OpCode.Code != Code.Ldloc_2 && finallyEnd.OpCode.Code != Code.Ldloc_3 &&
-                    finallyEnd.OpCode.Code != Code.Ldloc && finallyEnd.OpCode.Code != Code.Ldloc_S)
+                else
                 {
-                    var returnVariable = methodDef.Body.CreateVariable(methodDef.ReturnType.ImportInto(ModuleDefinition));
-                    var next = finallyEnd.Next;
-                    finallyEnd = returnVariable.LdlocOrA();
-                    bodyIns.InsertBefore(next, Instruction.Create(OpCodes.Stloc, returnVariable));
-                    bodyIns.InsertBefore(next, finallyEnd);
+                    while (true)
+                    {
+                        if (finallyEnd == null) throw new RougamoException($"[{methodDef.FullName}] not found Ldloc before ret");
+                        if (finallyEnd.OpCode.Code != Code.Nop) break;
+                        finallyEnd = finallyEnd.Previous;
+                    }
+                    if (finallyEnd.OpCode.Code != Code.Ldloc_0 && finallyEnd.OpCode.Code != Code.Ldloc_1 &&
+                        finallyEnd.OpCode.Code != Code.Ldloc_2 && finallyEnd.OpCode.Code != Code.Ldloc_3 &&
+                        finallyEnd.OpCode.Code != Code.Ldloc && finallyEnd.OpCode.Code != Code.Ldloc_S &&
+                        finallyEnd.OpCode.Code != Code.Ldloca && finallyEnd.OpCode.Code != Code.Ldloca_S)
+                    {
+                        var returnVariable = methodDef.Body.CreateVariable(methodDef.ReturnType.ImportInto(ModuleDefinition));
+                        var next = finallyEnd.Next;
+                        finallyEnd = returnVariable.LdlocOrA();
+                        bodyIns.InsertBefore(next, Instruction.Create(OpCodes.Stloc, returnVariable));
+                        bodyIns.InsertBefore(next, finallyEnd);
+                    }
                 }
             }
 
             exceptionVariable = methodDef.Body.CreateVariable(_typeExceptionRef);
-            if (!leaves.Contains(finallyEnd.Previous))
+            if (returns.Length != 0 && !leaves.Contains(finallyEnd.Previous))
             {
                 bodyIns.InsertBefore(finallyEnd, skipRedirects.AddAndGet(Instruction.Create(OpCodes.Leave, finallyEnd)));
             }
@@ -196,7 +211,8 @@ namespace Rougamo.Fody
             bodyIns.InsertBefore(finallyEnd, finallyStart);
             bodyIns.InsertBefore(finallyEnd, Instruction.Create(OpCodes.Endfinally));
 
-            AdjustRedirects(methodDef, skipRedirects, catchStart, finallyEnd);
+            AdjustRedirects(methodDef, skipRedirects, catchStart);
+            return justThrow;
         }
 
         private Instruction MergeReturns(MethodDefinition methodDef, Instruction[] returns, List<Instruction> leaves)
@@ -217,7 +233,7 @@ namespace Rougamo.Fody
             return ret;
         }
 
-        private void AdjustRedirects(MethodDefinition methodDef, List<Instruction> skipRedirects, Instruction catchStart, Instruction finallyEnd)
+        private void AdjustRedirects(MethodDefinition methodDef, List<Instruction> skipRedirects, Instruction catchStart)
         {
             var closePreviousOffset = catchStart.Previous.ClosePreviousOffset(methodDef);
             var redirectToEnds = methodDef.Body.Instructions.Where(x => _brs.Contains(x.OpCode.Code) && ((Instruction)x.Operand).Offset > closePreviousOffset.Offset && !skipRedirects.Contains(x));
@@ -373,7 +389,8 @@ namespace Rougamo.Fody
         private void InitMosField(RouMethod rouMethod, FieldDefinition mosFieldDef, VariableDefinition stateMachineVariable, Instruction taskBuilderPreviousIns)
         {
             var instructions = rouMethod.MethodDef.Body.Instructions;
-            instructions.InsertBefore(taskBuilderPreviousIns, Instruction.Create(OpCodes.Ldloca, stateMachineVariable));
+            //instructions.InsertBefore(taskBuilderPreviousIns, Instruction.Create(OpCodes.Ldloca, stateMachineVariable));
+            instructions.InsertBefore(taskBuilderPreviousIns, stateMachineVariable.LdlocOrA());
             instructions.InsertBefore(taskBuilderPreviousIns, Instruction.Create(OpCodes.Ldc_I4, rouMethod.Mos.Count));
             instructions.InsertBefore(taskBuilderPreviousIns, Instruction.Create(OpCodes.Newarr, _typeIMoRef));
             var i = 0;
@@ -453,7 +470,7 @@ namespace Rougamo.Fody
         private void InitMethodContextField(RouMethod rouMethod, FieldDefinition contextFieldDef, VariableDefinition stateMachineVariable, Instruction taskBuilderPreviousIns)
         {
             var instructions = rouMethod.MethodDef.Body.Instructions;
-            instructions.InsertBefore(taskBuilderPreviousIns, Instruction.Create(OpCodes.Ldloca, stateMachineVariable));
+            instructions.InsertBefore(taskBuilderPreviousIns, stateMachineVariable.LdlocOrA());
             var contextInitIns = new List<Instruction>();
             InitMethodContext(rouMethod.MethodDef, contextInitIns);
             instructions.InsertBefore(taskBuilderPreviousIns, contextInitIns);
@@ -488,7 +505,7 @@ namespace Rougamo.Fody
             }
             else
             {
-                instructions.InsertBefore(nextIns, Instruction.Create(OpCodes.Ldloca, stateMachineVariable));
+                instructions.InsertBefore(nextIns, stateMachineVariable.LdlocOrA());
             }
             instructions.InsertBefore(nextIns, Instruction.Create(OpCodes.Ldfld, mosField));
             instructions.InsertBefore(nextIns, Instruction.Create(OpCodes.Ldloc, flagVariable));
@@ -499,7 +516,7 @@ namespace Rougamo.Fody
             }
             else
             {
-                instructions.InsertBefore(nextIns, Instruction.Create(OpCodes.Ldloca, stateMachineVariable));
+                instructions.InsertBefore(nextIns, stateMachineVariable.LdlocOrA());
             }
             instructions.InsertBefore(nextIns, Instruction.Create(OpCodes.Ldfld, contextField));
             instructions.InsertBefore(nextIns, Instruction.Create(OpCodes.Callvirt, _methodIMosRef[methodName]));
@@ -517,8 +534,7 @@ namespace Rougamo.Fody
             {
                 instructions.Add(Instruction.Create(OpCodes.Ldloc, mo));
                 instructions.Add(Instruction.Create(OpCodes.Ldloc, methodContext));
-                var methodRef = mo.VariableType.Resolve().RecursionImportMethod(ModuleDefinition, methodName, md => md.Parameters.Count == 1 && md.Parameters.First().ParameterType.Is(Constants.TYPE_MethodContext));
-                instructions.Add(Instruction.Create(OpCodes.Callvirt, methodRef));
+                instructions.Add(Instruction.Create(OpCodes.Callvirt, _methodIMosRef[methodName]));
             }
         }
     }
