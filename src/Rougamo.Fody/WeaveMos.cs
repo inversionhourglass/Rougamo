@@ -166,9 +166,10 @@ namespace Rougamo.Fody
             }
             else
             {
-                var returnIns = returns.Length == 1 ? returns[0] : MergeReturns(methodDef, returns.ToArray(), leaves);
+                var isVoid = methodDef.ReturnType.Is(Constants.TYPE_Void);
+                var returnIns = returns.Length == 1 ? returns[0] : MergeReturns(methodDef, returns.ToArray(), leaves, isVoid);
                 finallyEnd = returnIns.Previous;
-                if (methodDef.ReturnType.Is(Constants.TYPE_Void))
+                if (isVoid)
                 {
                     if (finallyEnd == null || finallyEnd.OpCode != OpCodes.Nop)
                     {
@@ -201,7 +202,8 @@ namespace Rougamo.Fody
             exceptionVariable = methodDef.Body.CreateVariable(_typeExceptionRef);
             if (returns.Length != 0 && !leaves.Contains(finallyEnd.Previous))
             {
-                bodyIns.InsertBefore(finallyEnd, skipRedirects.AddAndGet(Instruction.Create(OpCodes.Leave, finallyEnd)));
+                //bodyIns.InsertBefore(finallyEnd, skipRedirects.AddAndGet(Instruction.Create(OpCodes.Leave, finallyEnd)));
+                bodyIns.InsertBefore(finallyEnd, Instruction.Create(OpCodes.Leave, finallyEnd));
             }
             catchStart = Instruction.Create(OpCodes.Stloc, exceptionVariable);
             bodyIns.InsertBefore(finallyEnd, catchStart);
@@ -211,37 +213,57 @@ namespace Rougamo.Fody
             bodyIns.InsertBefore(finallyEnd, finallyStart);
             bodyIns.InsertBefore(finallyEnd, Instruction.Create(OpCodes.Endfinally));
 
-            AdjustRedirects(methodDef, skipRedirects, catchStart);
+            AdjustRedirects(methodDef, skipRedirects, catchStart, finallyEnd);
             return justThrow;
         }
 
-        private Instruction MergeReturns(MethodDefinition methodDef, Instruction[] returns, List<Instruction> leaves)
+        private Instruction MergeReturns(MethodDefinition methodDef, Instruction[] returns, List<Instruction> leaves, bool isVoid)
         {
-            var returnVariable = methodDef.Body.CreateVariable(methodDef.ReturnType.ImportInto(ModuleDefinition));
-            var ldlocReturn = returnVariable.LdlocOrA();
             var ret = Instruction.Create(OpCodes.Ret);
-            methodDef.Body.Instructions.Add(ldlocReturn);
-            methodDef.Body.Instructions.Add(ret);
-
-            foreach (var @return in returns)
+            if (isVoid)
             {
-                @return.OpCode = OpCodes.Stloc;
-                @return.Operand = returnVariable;
-                methodDef.Body.Instructions.InsertAfter(@return, leaves.AddAndGet(Instruction.Create(OpCodes.Leave, ldlocReturn)));
+                foreach (var @return in returns)
+                {
+                    @return.OpCode = OpCodes.Leave;
+                    @return.Operand = ret;
+                }
+            }
+            else
+            {
+                var returnVariable = methodDef.Body.CreateVariable(methodDef.ReturnType.ImportInto(ModuleDefinition));
+                var ldlocReturn = returnVariable.LdlocOrA();
+                methodDef.Body.Instructions.Add(ldlocReturn);
+
+                foreach (var @return in returns)
+                {
+                    @return.OpCode = OpCodes.Stloc;
+                    @return.Operand = returnVariable;
+                    methodDef.Body.Instructions.InsertAfter(@return, leaves.AddAndGet(Instruction.Create(OpCodes.Leave, ldlocReturn)));
+                }
             }
 
+            methodDef.Body.Instructions.Add(ret);
             return ret;
         }
 
-        private void AdjustRedirects(MethodDefinition methodDef, List<Instruction> skipRedirects, Instruction catchStart)
+        private void AdjustRedirects(MethodDefinition methodDef, List<Instruction> skipRedirects, Instruction catchStart, Instruction finallyEnd)
         {
             var closePreviousOffset = catchStart.Previous.ClosePreviousOffset(methodDef);
-            var redirectToEnds = methodDef.Body.Instructions.Where(x => _brs.Contains(x.OpCode.Code) && ((Instruction)x.Operand).Offset > closePreviousOffset.Offset && !skipRedirects.Contains(x));
-            if (redirectToEnds.Any())
+            //var redirectToEnds = methodDef.Body.Instructions.Where(x => _brs.Contains(x.OpCode.Code) && ((Instruction)x.Operand).Offset > closePreviousOffset.Offset && !skipRedirects.Contains(x));
+            //if (redirectToEnds.Any())
+            //{
+            //    foreach (var item in redirectToEnds)
+            //    {
+            //        item.Operand = catchStart.Previous;
+            //    }
+            //}
+            foreach (var instruction in methodDef.Body.Instructions)
             {
-                foreach (var item in redirectToEnds)
+                if (instruction.Offset == 0) continue;
+                if (_brs.Contains(instruction.OpCode.Code) && ((Instruction)instruction.Operand).Offset > closePreviousOffset.Offset)
                 {
-                    item.Operand = catchStart.Previous;
+                    instruction.OpCode = OpCodes.Leave;
+                    instruction.Operand = finallyEnd;
                 }
             }
 
@@ -341,7 +363,10 @@ namespace Rougamo.Fody
             for (int i = 0; i < body.Instructions.Count; i++)
             {
                 var ins = body.Instructions[i];
-                if (ins.OpCode == OpCodes.Call && ins.Operand is MethodReference methodRef && methodRef.DeclaringType.FullName.StartsWith(Constants.TYPE_AsyncTaskMethodBuilder) && methodRef.Name == Constants.METHOD_Create)
+                if (ins.OpCode == OpCodes.Call && ins.Operand is MethodReference methodRef &&
+                    (methodRef.DeclaringType.FullName.StartsWith(Constants.TYPE_AsyncTaskMethodBuilder) ||
+                    methodRef.DeclaringType.FullName.StartsWith(Constants.TYPE_AsyncValueTaskMethodBuilder)) &&
+                    methodRef.Name == Constants.METHOD_Create)
                 {
                     builderDef = methodRef.DeclaringType.Resolve();
                     return ins.Previous;
