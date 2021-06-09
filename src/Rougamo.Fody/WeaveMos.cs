@@ -14,6 +14,8 @@ namespace Rougamo.Fody
             {
                 foreach (var rouMethod in rouType.Methods)
                 {
+                    if (rouMethod.MethodDef.IsEmpty()) continue;
+                    
                     if (rouMethod.IsIterator)
                     {
                         IteratorMethodWeave(rouMethod);
@@ -152,11 +154,10 @@ namespace Rougamo.Fody
         private bool GenerateTryCatchFinally(MethodDefinition methodDef, out Instruction tryStart, out Instruction catchStart, out Instruction finallyStart, out Instruction finallyEnd, out VariableDefinition exceptionVariable)
         {
             var justThrow = false;
-            var skipRedirects = new List<Instruction>();
             var bodyIns = methodDef.Body.Instructions;
             tryStart = GetFirstInsAsNop(methodDef.Body);
 
-            var leaves = new List<Instruction>();
+            var manuaLeaves = new List<Instruction>();
             var returns = bodyIns.Where(ins => ins.OpCode == OpCodes.Ret).ToArray();
             if (returns.Length == 0)
             {
@@ -167,7 +168,7 @@ namespace Rougamo.Fody
             else
             {
                 var isVoid = methodDef.ReturnType.Is(Constants.TYPE_Void);
-                var returnIns = returns.Length == 1 ? returns[0] : MergeReturns(methodDef, returns.ToArray(), leaves, isVoid);
+                var returnIns = returns.Length == 1 ? returns[0] : MergeReturns(methodDef, returns.ToArray(), manuaLeaves, isVoid);
                 finallyEnd = returnIns.Previous;
                 if (isVoid)
                 {
@@ -200,7 +201,7 @@ namespace Rougamo.Fody
             }
 
             exceptionVariable = methodDef.Body.CreateVariable(_typeExceptionRef);
-            if (returns.Length != 0 && !leaves.Contains(finallyEnd.Previous))
+            if (returns.Length != 0 && !manuaLeaves.Contains(finallyEnd.Previous))
             {
                 //bodyIns.InsertBefore(finallyEnd, skipRedirects.AddAndGet(Instruction.Create(OpCodes.Leave, finallyEnd)));
                 bodyIns.InsertBefore(finallyEnd, Instruction.Create(OpCodes.Leave, finallyEnd));
@@ -213,7 +214,7 @@ namespace Rougamo.Fody
             bodyIns.InsertBefore(finallyEnd, finallyStart);
             bodyIns.InsertBefore(finallyEnd, Instruction.Create(OpCodes.Endfinally));
 
-            AdjustRedirects(methodDef, skipRedirects, catchStart, finallyEnd);
+            AdjustRedirects(methodDef, catchStart, finallyEnd);
             return justThrow;
         }
 
@@ -246,17 +247,10 @@ namespace Rougamo.Fody
             return ret;
         }
 
-        private void AdjustRedirects(MethodDefinition methodDef, List<Instruction> skipRedirects, Instruction catchStart, Instruction finallyEnd)
+        private void AdjustRedirects(MethodDefinition methodDef, Instruction catchStart, Instruction finallyEnd)
         {
-            var closePreviousOffset = catchStart.Previous.ClosePreviousOffset(methodDef);
-            //var redirectToEnds = methodDef.Body.Instructions.Where(x => _brs.Contains(x.OpCode.Code) && ((Instruction)x.Operand).Offset > closePreviousOffset.Offset && !skipRedirects.Contains(x));
-            //if (redirectToEnds.Any())
-            //{
-            //    foreach (var item in redirectToEnds)
-            //    {
-            //        item.Operand = catchStart.Previous;
-            //    }
-            //}
+            var closePreviousOffset = catchStart.Previous.ClosePreviousOffset(methodDef) ?? methodDef.Body.Instructions.First();
+
             foreach (var instruction in methodDef.Body.Instructions)
             {
                 if (instruction.Offset == 0) continue;

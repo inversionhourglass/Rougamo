@@ -42,6 +42,7 @@ namespace Rougamo.Fody
         {
             if (Config != null && string.Equals(Config.Attributes("enabled").Select(x => x.Value).SingleOrDefault(), "false", System.StringComparison.OrdinalIgnoreCase)) return;
 
+            LoadLocalAssemblies();
             LoadBasicReference();
             FindRous();
             if (_rouTypes.Count == 0) return;
@@ -55,6 +56,29 @@ namespace Rougamo.Fody
             yield return "System";
             yield return "System.Runtime";
             yield return "System.Core";
+        }
+
+        private void LoadLocalAssemblies()
+        {
+            var folderPath = System.IO.Path.GetDirectoryName(AssemblyFilePath);
+            var assemblyPaths = System.IO.Directory.GetFiles(folderPath, "*.dll");
+            foreach (var assemblyPath in assemblyPaths)
+            {
+                if (assemblyPath == this.AssemblyFilePath)
+                {
+                    continue;
+                }
+                try
+                {
+                    //var binary = System.IO.File.ReadAllBytes(assemblyPath);
+                    //System.Reflection.Assembly.Load(binary);
+                    System.Reflection.Assembly.LoadFrom(assemblyPath);
+                }
+                catch
+                {
+                    // ignore
+                }
+            }
         }
     }
 }

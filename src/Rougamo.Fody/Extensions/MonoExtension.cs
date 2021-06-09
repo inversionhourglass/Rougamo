@@ -307,7 +307,7 @@ namespace Rougamo.Fody
         public static Instruction ClosePreviousOffset(this Instruction instruction, MethodDefinition methodDef)
         {
             while ((instruction = instruction.Previous) != null && instruction.Offset == 0) { }
-            return instruction != null && instruction.Offset != 0 ? instruction : throw new RougamoException($"[{methodDef.FullName}] cannot find has offset instruction from previouses");
+            return instruction;
         }
 
         public static Instruction Stloc2Ldloc(this Instruction instruction, string exceptionMessage)
@@ -334,7 +334,7 @@ namespace Rougamo.Fody
         public static Instruction LdlocOrA(this VariableDefinition variable)
         {
             var variableTypeDef = variable.VariableType.Resolve();
-            return variableTypeDef.IsValueType && !variableTypeDef.IsEnum && !variableTypeDef.IsPrimitive ? Instruction.Create(OpCodes.Ldloca, variable) : Instruction.Create(OpCodes.Ldloc, variable);
+            return variable.VariableType.IsGenericParameter || variableTypeDef.IsValueType && !variableTypeDef.IsEnum && !variableTypeDef.IsPrimitive ? Instruction.Create(OpCodes.Ldloca, variable) : Instruction.Create(OpCodes.Ldloc, variable);
         }
 
         public static Instruction Ldind(this TypeReference typeRef)
@@ -358,6 +358,17 @@ namespace Rougamo.Fody
                 return Ldind(typeDef.Fields[0].FieldType);
             }
             return Instruction.Create(OpCodes.Ldobj, typeRef); // struct
+        }
+
+        private static Code[] _EmptyCodes = new[] {Code.Nop, Code.Ret};
+        public static bool IsEmpty(this MethodDefinition methodDef)
+        {
+            foreach (var instruction in methodDef.Body.Instructions)
+            {
+                if (!_EmptyCodes.Contains(instruction.OpCode.Code)) return false;
+            }
+
+            return true;
         }
 
         private static readonly Dictionary<Code, OpCode> _OptimizeCodes = new Dictionary<Code, OpCode>
