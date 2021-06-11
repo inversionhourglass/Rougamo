@@ -331,6 +331,11 @@ namespace Rougamo.Fody
             }
         }
 
+        public static Instruction Ldloc(this VariableDefinition variable)
+        {
+            return Instruction.Create(OpCodes.Ldloc, variable);
+        }
+
         public static Instruction LdlocOrA(this VariableDefinition variable)
         {
             var variableTypeDef = variable.VariableType.Resolve();

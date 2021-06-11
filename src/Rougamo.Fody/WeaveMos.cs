@@ -186,14 +186,14 @@ namespace Rougamo.Fody
                         if (finallyEnd.OpCode.Code != Code.Nop) break;
                         finallyEnd = finallyEnd.Previous;
                     }
-                    if (finallyEnd.OpCode.Code != Code.Ldloc_0 && finallyEnd.OpCode.Code != Code.Ldloc_1 &&
-                        finallyEnd.OpCode.Code != Code.Ldloc_2 && finallyEnd.OpCode.Code != Code.Ldloc_3 &&
-                        finallyEnd.OpCode.Code != Code.Ldloc && finallyEnd.OpCode.Code != Code.Ldloc_S &&
-                        finallyEnd.OpCode.Code != Code.Ldloca && finallyEnd.OpCode.Code != Code.Ldloca_S)
+                    //if (finallyEnd.OpCode.Code != Code.Ldloc_0 && finallyEnd.OpCode.Code != Code.Ldloc_1 &&
+                    //    finallyEnd.OpCode.Code != Code.Ldloc_2 && finallyEnd.OpCode.Code != Code.Ldloc_3 &&
+                    //    finallyEnd.OpCode.Code != Code.Ldloc && finallyEnd.OpCode.Code != Code.Ldloc_S &&
+                    //    finallyEnd.OpCode.Code != Code.Ldloca && finallyEnd.OpCode.Code != Code.Ldloca_S)
                     {
                         var returnVariable = methodDef.Body.CreateVariable(methodDef.ReturnType.ImportInto(ModuleDefinition));
                         var next = finallyEnd.Next;
-                        finallyEnd = returnVariable.LdlocOrA();
+                        finallyEnd = returnVariable.Ldloc();
                         bodyIns.InsertBefore(next, Instruction.Create(OpCodes.Stloc, returnVariable));
                         bodyIns.InsertBefore(next, finallyEnd);
                     }
@@ -232,7 +232,7 @@ namespace Rougamo.Fody
             else
             {
                 var returnVariable = methodDef.Body.CreateVariable(methodDef.ReturnType.ImportInto(ModuleDefinition));
-                var ldlocReturn = returnVariable.LdlocOrA();
+                var ldlocReturn = returnVariable.Ldloc();
                 methodDef.Body.Instructions.Add(ldlocReturn);
 
                 foreach (var @return in returns)
