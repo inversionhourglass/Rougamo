@@ -188,8 +188,13 @@ namespace Rougamo.Fody
                     {
                         @return.OpCode = OpCodes.Stloc;
                         @return.Operand = returnVariable;
+                        bodyIns.InsertAfter(@return, Instruction.Create(OpCodes.Leave, finallyEnd));
                     }
-                    bodyIns.InsertAfter(@return, Instruction.Create(OpCodes.Leave, finallyEnd));
+                    else
+                    {
+                        @return.OpCode = OpCodes.Leave;
+                        @return.Operand = finallyEnd;
+                    }
                 }
             }
 
