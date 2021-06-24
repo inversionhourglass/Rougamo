@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <IsPacking>false</IsPacking>
-    <Version Condition="'$(Configuration)'=='Debug'">0.1.1-beta3</Version>
+    <Version Condition="'$(Configuration)'=='Debug'">0.1.1-beta4</Version>
     <Version Condition="'$(Configuration)'=='Release'"></Version>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Authors>Hourglass Inversion</Authors>
