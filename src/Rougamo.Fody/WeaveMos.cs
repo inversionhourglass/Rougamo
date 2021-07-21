@@ -47,7 +47,10 @@ namespace Rougamo.Fody
             if (stateTypeDef.HasGenericParameters)
             {
                 var stateTypeRef = new GenericInstanceType(stateTypeDef);
-                stateTypeRef.GenericArguments.Add(stateTypeDef.GenericParameters[0]);
+                foreach (var parameter in stateTypeDef.GenericParameters)
+                {
+                    stateTypeRef.GenericArguments.Add(parameter);
+                }
                 mosFieldRef = new FieldReference(mosFieldDef.Name, mosFieldDef.FieldType, stateTypeRef);
                 contextFieldRef = new FieldReference(contextFieldDef.Name, contextFieldDef.FieldType, stateTypeRef);
             }
@@ -119,7 +122,7 @@ namespace Rougamo.Fody
                 instructions.InsertBefore(closeThisIns, Instruction.Create(OpCodes.Ldarg_0));
                 instructions.InsertBefore(closeThisIns, Instruction.Create(OpCodes.Ldfld, contextFieldRef));
                 instructions.InsertBefore(closeThisIns, ldlocResult);
-                if(returnTypeRef.IsValueType || returnTypeRef.IsEnum(out _) && !returnTypeRef.IsArray)
+                if(returnTypeRef.IsValueType || returnTypeRef.IsEnum(out _) && !returnTypeRef.IsArray || returnTypeRef.IsGenericParameter)
                 {
                     instructions.InsertBefore(closeThisIns, Instruction.Create(OpCodes.Box, returnTypeRef.ImportInto(ModuleDefinition)));
                 }
@@ -273,7 +276,7 @@ namespace Rougamo.Fody
             {
                 ins.Add(Instruction.Create(OpCodes.Ldloc, contextVariable));
                 ins.Add(finallyEnd.Copy());
-                if (methodDef.ReturnType.IsValueType || methodDef.ReturnType.IsEnum(out _) && !methodDef.ReturnType.IsArray)
+                if (methodDef.ReturnType.IsValueType || methodDef.ReturnType.IsEnum(out _) && !methodDef.ReturnType.IsArray || methodDef.ReturnType.IsGenericParameter)
                 {
                     ins.Add(Instruction.Create(OpCodes.Box, methodDef.ReturnType.ImportInto(ModuleDefinition)));
                 }

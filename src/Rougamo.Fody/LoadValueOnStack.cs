@@ -51,7 +51,7 @@ namespace Rougamo.Fody
                     valueType = _typeSystemRef;
                 bool isEnum = valueType.IsEnum(out _);
                 var instructions = LoadValueOnStack(valueType, arg.Value);
-                if (valueType.IsValueType || (!valueType.IsArray && isEnum))
+                if (valueType.IsValueType || (!valueType.IsArray && isEnum) || valueType.IsGenericParameter)
                     instructions.Add(Instruction.Create(OpCodes.Box, valueType));
                 return instructions;
             }
@@ -148,7 +148,7 @@ namespace Rougamo.Fody
                     {
                         parameterType = byRefType.ElementType;
                     }
-                    if (parameterType.IsValueType)
+                    if (parameterType.IsValueType || parameterType.IsGenericParameter)
                     {
                         instructions.Add(Instruction.Create(OpCodes.Box, parameterType));
                     }
