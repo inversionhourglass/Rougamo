@@ -124,7 +124,7 @@ namespace Rougamo.Fody
                 instructions.InsertBefore(closeThisIns, ldlocResult);
                 if(returnTypeRef.IsValueType || returnTypeRef.IsEnum(out _) && !returnTypeRef.IsArray || returnTypeRef.IsGenericParameter)
                 {
-                    instructions.InsertBefore(closeThisIns, Instruction.Create(OpCodes.Box, returnTypeRef.ImportInto(ModuleDefinition)));
+                    instructions.InsertBefore(closeThisIns, Instruction.Create(OpCodes.Box, ldlocResult.GetVariableType(moveNextMethodDef.Body)));
                 }
                 instructions.InsertBefore(closeThisIns, Instruction.Create(OpCodes.Callvirt, _methodMethodContextSetReturnValueRef));
             }

@@ -331,6 +331,30 @@ namespace Rougamo.Fody
             }
         }
 
+        public static TypeReference GetVariableType(this Instruction ldlocIns, MethodBody body)
+        {
+            switch (ldlocIns.OpCode.Code)
+            {
+                case Code.Ldloc_0:
+                    return body.Variables[0].VariableType;
+                case Code.Ldloc_1:
+                    return body.Variables[1].VariableType;
+                case Code.Ldloc_2:
+                    return body.Variables[2].VariableType;
+                case Code.Ldloc_3:
+                    return body.Variables[3].VariableType;
+                case Code.Ldloc:
+                case Code.Ldloc_S:
+                    return ((VariableDefinition)ldlocIns.Operand).VariableType;
+                case Code.Ldloca:
+                case Code.Ldloca_S:
+                    throw new RougamoException("need to take a research");
+                default:
+                    throw new RougamoException("can not get variable type from code: " + ldlocIns.OpCode.Code);
+
+            }
+        }
+
         public static Instruction Ldloc(this VariableDefinition variable)
         {
             return Instruction.Create(OpCodes.Ldloc, variable);
