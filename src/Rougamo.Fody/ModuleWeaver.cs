@@ -10,15 +10,20 @@ namespace Rougamo.Fody
         private TypeReference _typeSystemRef;
         private TypeReference _typeMethodBaseRef;
         private TypeReference _typeIntRef;
+        private TypeReference _typeBoolRef;
         private TypeReference _typeObjectRef;
         private TypeReference _typeObjectArrayRef;
         private TypeReference _typeExceptionRef;
+        private TypeDefinition _typeListDef;
+        private TypeReference _typeListRef;
         private TypeReference _typeIMoRef;
         private TypeReference _typeMethodContextRef;
         private TypeReference _typeIMoArrayRef;
 
         private MethodReference _methodGetTypeFromHandleRef;
         private MethodReference _methodGetMethodFromHandleRef;
+        private MethodReference _methodListAddRef;
+        private MethodReference _methodListToArrayRef;
         private MethodReference _methodMethodContextCtorRef;
         private MethodReference _methodMethodContextSetExceptionRef;
         private MethodReference _methodMethodContextSetReturnValueRef;
@@ -29,7 +34,7 @@ namespace Rougamo.Fody
 
         public override void Execute()
         {
-            if (Config != null && string.Equals(Config.Attributes("enabled").Select(x => x.Value).SingleOrDefault(), "false", System.StringComparison.OrdinalIgnoreCase)) return;
+            if (!this.ConfigEnabled()) return;
 
             LoadLocalAssemblies();
             LoadBasicReference();

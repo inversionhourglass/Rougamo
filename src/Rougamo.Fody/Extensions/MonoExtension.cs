@@ -292,8 +292,17 @@ namespace Rougamo.Fody
 
         public static TypeDefinition ResolveAsyncStateMachine(this MethodDefinition methodDef)
         {
-            var stateMachineAttr =
-                methodDef.CustomAttributes.Single(attr => attr.Is(Constants.TYPE_AsyncStateMachineAttribute));
+            return methodDef.ResolveStateMachine(Constants.TYPE_AsyncStateMachineAttribute);
+        }
+
+        public static TypeDefinition ResolveIteratorStateMachine(this MethodDefinition methodDef)
+        {
+            return methodDef.ResolveStateMachine(Constants.TYPE_IteratorStateMachineAttribute);
+        }
+
+        public static TypeDefinition ResolveStateMachine(this MethodDefinition methodDef, string stateMachineAttributeName)
+        {
+            var stateMachineAttr = methodDef.CustomAttributes.Single(attr => attr.Is(stateMachineAttributeName));
             var obj = stateMachineAttr.ConstructorArguments[0].Value;
             return obj as TypeDefinition ?? (obj as TypeReference).Resolve();
         }
@@ -387,6 +396,26 @@ namespace Rougamo.Fody
                 return Ldind(typeDef.Fields[0].FieldType);
             }
             return Instruction.Create(OpCodes.Ldobj, typeRef); // struct
+        }
+
+        public static MethodReference GenericTypeMethodReference(this TypeReference typeRef, MethodReference methodRef, ModuleDefinition moduleDefinition)
+        {
+            var genericMethodRef = new MethodReference(methodRef.Name, methodRef.ReturnType, typeRef)
+            {
+                HasThis = methodRef.HasThis,
+                ExplicitThis = methodRef.ExplicitThis,
+                CallingConvention = methodRef.CallingConvention
+            };
+            foreach (var parameter in methodRef.Parameters)
+            {
+                genericMethodRef.Parameters.Add(new ParameterDefinition(parameter.ParameterType));
+            }
+            foreach (var parameter in methodRef.GenericParameters)
+            {
+                genericMethodRef.GenericParameters.Add(new GenericParameter(parameter.Name, genericMethodRef));
+            }
+
+            return genericMethodRef.ImportInto(moduleDefinition);
         }
 
         private static Code[] _EmptyCodes = new[] {Code.Nop, Code.Ret};

@@ -16,19 +16,42 @@ namespace Rougamo.Fody.Tests
             var result = weaver.ExecuteTestRun("Rougamo.UsingAssembly.dll");
             var class1 = result.Assembly.GetInstance(typeof(Class1).FullName);
             var class1Class = result.Assembly.GetStaticInstance(typeof(Class1).FullName);
-            byte a = 1;
-            sbyte b = 2;
-            short c = 3;
-            ushort d = 4;
-            int e = 5;
-            uint f = 6;
-            long g = 7;
-            ulong h = 8;
-            float i = 9.9f;
-            double j = 10.01;
-            Enu enu = Enu.A;
-            class1Class.SyncException("1", 2);
-            //class1.Test(ref a, ref b, ref c, ref d, ref e, ref f, ref g, ref h, ref i, ref j, ref enu);
+            var enumerable = class1.E1();
+            foreach(var item in enumerable)
+            {
+                Console.WriteLine(item);
+            }
+            //class1.MultiAwait().Wait();
+            //class1.HttpAsync().Wait();
+            //class1.HttpValueAsync().AsTask().Wait();
+            //try
+            //{
+            //    class1.Thrown();
+            //}
+            //catch
+            //{
+
+            //}
+            //class1.Empty();
+            //class1Class.Sync();
+
+            #region unsucess
+            //byte a = default;
+            //sbyte b = default;
+            //short c = default;
+            //ushort d = default;
+            //int e = default;
+            //uint f = default;
+            //long g = default;
+            //ulong h = default;
+            //float i = default;
+            //double j = default;
+            //decimal v = default;
+            //Enu[] enu = new Enu[0];
+            //Ab ab = new Ab();
+            //Class1 cls = new Class1();
+            //class1.Test(ref a, out b, ref c, out d, ref e, ref f, ref g, out h, ref i, ref j, ref v, ref enu, ref ab, ref cls);
+            #endregion
             //class1.InstanceVoid("123", new[] { 1, 2, 3 });
         }
     }

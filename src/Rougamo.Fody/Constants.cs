@@ -15,9 +15,11 @@
 
         public const string TYPE_Void = "System.Void";
         public const string TYPE_Task = "System.Threading.Tasks.Task";
+        public const string TYPE_ValueTask = "System.Threading.Tasks.ValueTask";
         public const string TYPE_MulticastDelegate = "System.MulticastDelegate";
         public const string TYPE_AsyncStateMachineAttribute = "System.Runtime.CompilerServices.AsyncStateMachineAttribute";
         public const string TYPE_IteratorStateMachineAttribute = "System.Runtime.CompilerServices.IteratorStateMachineAttribute";
+        public const string TYPE_AsyncIteratorStateMachineAttribute = "System.Runtime.CompilerServices.AsyncIteratorStateMachineAttribute";
         public const string TYPE_AsyncTaskMethodBuilder = "System.Runtime.CompilerServices.AsyncTaskMethodBuilder";
         public const string TYPE_AsyncValueTaskMethodBuilder = "System.Runtime.CompilerServices.AsyncValueTaskMethodBuilder";
 
@@ -34,6 +36,7 @@
         public const string FIELD_Repulsions = "<Repulsions>k__BackingField";
         public const string FIELD_RougamoMos = ">_<rougamo_mos";
         public const string FIELD_RougamoContext = ">_<rougamo_context";
+        public const string FIELD_IteratorReturnList = ">_<returns";
 
         public const string METHOD_OnEntry = "OnEntry";
         public const string METHOD_OnSuccess = "OnSuccess";

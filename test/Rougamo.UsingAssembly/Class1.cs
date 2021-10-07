@@ -1,7 +1,9 @@
 ﻿using Rougamo.Context;
 using Rougamo.ImplAssembly;
 using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Net.Http;
 using System.Threading.Tasks;
 
 namespace Rougamo.UsingAssembly
@@ -24,6 +26,67 @@ namespace Rougamo.UsingAssembly
         {
             Console.WriteLine("SyncException");
             throw new Exception();
+        }
+
+        public static void Sync()
+        {
+            Console.WriteLine(1);
+            try
+            {
+                Console.WriteLine(2);
+                throw new ArgumentNullException();
+            }
+            catch(Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
+        }
+
+        public async Task HttpAsync()
+        {
+            var client = new HttpClient();
+            var response = await client.GetAsync("https://www.baidu.com").ConfigureAwait(false);
+            var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            Console.WriteLine(content);
+        }
+
+        public async ValueTask HttpValueAsync()
+        {
+            var client = new HttpClient();
+            var response = await client.GetAsync("https://www.baidu.com").ConfigureAwait(false);
+            var content = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            Console.WriteLine(content);
+        }
+
+        public async Task MultiAwait()
+        {
+            Console.WriteLine(1);
+            await Task.Delay(1000);
+            Console.WriteLine(2);
+            await Task.Delay(1000);
+            Console.WriteLine(3);
+        }
+
+        public IEnumerable<string> E1()
+        {
+            var random = new Random();
+            var start = random.Next(33, 126 / 2);
+            var count = random.Next(1, 126 - start);
+            for (int i = 0; i < count; i++)
+            {
+                if (i % 6 == 0) throw new InvalidOperationException("666");
+                yield return ((char)(start + i)).ToString();
+            }
+        }
+
+        public string Thrown()
+        {
+            throw new Exception();
+        }
+
+        public void Empty()
+        {
+
         }
 
         //public static void Abc()

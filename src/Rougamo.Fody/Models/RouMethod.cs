@@ -8,6 +8,7 @@ namespace Rougamo.Fody
     {
         private bool? _isAsync;
         private bool? _isIterator;
+        private bool? _isAsyncIterator;
 
         public RouMethod(MethodDefinition methodDef)
         {
@@ -51,7 +52,19 @@ namespace Rougamo.Fody
             }
         }
 
-        public bool IsAsync
+        public bool IsAsyncIterator
+        {
+            get
+            {
+                if (!_isAsyncIterator.HasValue)
+                {
+                    _isAsyncIterator = MethodDef.CustomAttributes.Any(attr => attr.Is(Constants.TYPE_AsyncIteratorStateMachineAttribute));
+                }
+                return _isAsyncIterator.Value;
+            }
+        }
+
+        public bool IsAsyncTaskOrValueTask
         {
             get
             {
