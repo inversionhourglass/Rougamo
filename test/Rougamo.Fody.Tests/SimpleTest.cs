@@ -1,6 +1,8 @@
 using Fody;
 using Rougamo.UsingAssembly;
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Threading;
 using Xunit;
 using static Rougamo.UsingAssembly.Class1;
@@ -10,17 +12,22 @@ namespace Rougamo.Fody.Tests
     public class SimpleTest
     {
         [Fact]
-        public void Test1()
+        public async void Test1()
         {
             var weaver = new ModuleWeaver();
             var result = weaver.ExecuteTestRun("Rougamo.UsingAssembly.dll");
             var class1 = result.Assembly.GetInstance(typeof(Class1).FullName);
             var class1Class = result.Assembly.GetStaticInstance(typeof(Class1).FullName);
-            var enumerable = class1.E1();
-            foreach(var item in enumerable)
+            var enumerable = (IAsyncEnumerable<int>)class1.AE1();
+            await foreach(var item in enumerable)
             {
-                Console.WriteLine(item);
+                Debug.Print(item.ToString());
             }
+            //var enumerable = ((IAsyncEnumerable<int>)class1.AE1()).GetAsyncEnumerator();
+            //while (enumerable.MoveNextAsync().AsTask().Result)
+            //{
+            //    Debug.Print(enumerable.Current.ToString());
+            //}
             //class1.MultiAwait().Wait();
             //class1.HttpAsync().Wait();
             //class1.HttpValueAsync().AsTask().Wait();

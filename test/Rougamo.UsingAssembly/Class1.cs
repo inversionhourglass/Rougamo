@@ -79,6 +79,20 @@ namespace Rougamo.UsingAssembly
             }
         }
 
+        public async IAsyncEnumerable<int> AE1()
+        {
+            var random = new Random();
+            var count = random.Next(10, 100);
+            yield return 0;
+            for (int i = 0; i < count; i++)
+            {
+                if (i % 9 == 0) throw new InvalidOperationException("999");
+                await Task.Yield();
+                yield return random.Next();
+            }
+            yield return 1;
+        }
+
         public string Thrown()
         {
             throw new Exception();

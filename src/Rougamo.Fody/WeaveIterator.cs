@@ -1,7 +1,5 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
-using Mono.Collections.Generic;
-using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 
@@ -11,7 +9,7 @@ namespace Rougamo.Fody
     {
         private void IteratorMethodWeave(RouMethod rouMethod)
         {
-            IteratorOnEntry(rouMethod, out var stateTypeDef, out var mosFieldDef, out var contextFieldDef, out var returnsFieldDef);
+            IteratorOnEntry(rouMethod, Constants.TYPE_IteratorStateMachineAttribute, out var stateTypeDef, out var mosFieldDef, out var contextFieldDef, out var returnsFieldDef);
             var moveNextMethodDef = stateTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
             FieldReference mosFieldRef = mosFieldDef;
             FieldReference contextFieldRef = contextFieldDef;
@@ -41,9 +39,9 @@ namespace Rougamo.Fody
             moveNextMethodDef.Body.OptimizePlus();
         }
 
-        private TypeReference IteratorOnEntry(RouMethod rouMethod, out TypeDefinition stateTypeDef, out FieldDefinition mosFieldDef, out FieldDefinition contextFieldDef, out FieldDefinition returnsFieldDef)
+        private TypeReference IteratorOnEntry(RouMethod rouMethod, string stateMachineName, out TypeDefinition stateTypeDef, out FieldDefinition mosFieldDef, out FieldDefinition contextFieldDef, out FieldDefinition returnsFieldDef)
         {
-            IteratorFieldDefinition(rouMethod, out stateTypeDef, out mosFieldDef, out contextFieldDef, out returnsFieldDef);
+            IteratorFieldDefinition(rouMethod, stateMachineName, out stateTypeDef, out mosFieldDef, out contextFieldDef, out returnsFieldDef);
             var stateMachineTypeRef = IteratorGetEntryStateTypeReference(rouMethod.MethodDef.Body);
             var stateMachineVariable = rouMethod.MethodDef.Body.CreateVariable(stateMachineTypeRef);
             var mosFieldRef = new FieldReference(mosFieldDef.Name, mosFieldDef.FieldType, stateMachineTypeRef);
@@ -112,9 +110,9 @@ namespace Rougamo.Fody
             ExecuteMoMethod(Constants.METHOD_OnSuccess, methodDef, mosCount, null, mosFieldRef, contextFieldRef, onExitStart);
         }
 
-        private void IteratorFieldDefinition(RouMethod rouMethod, out TypeDefinition stateTypeDef, out FieldDefinition mosFieldDef, out FieldDefinition contextFieldDef, out FieldDefinition returnFieldDef)
+        private void IteratorFieldDefinition(RouMethod rouMethod, string stateMachineName, out TypeDefinition stateTypeDef, out FieldDefinition mosFieldDef, out FieldDefinition contextFieldDef, out FieldDefinition returnFieldDef)
         {
-            stateTypeDef = rouMethod.MethodDef.ResolveIteratorStateMachine();
+            stateTypeDef = rouMethod.MethodDef.ResolveStateMachine(stateMachineName);
             var fieldAttributes = FieldAttributes.Public;
             mosFieldDef = new FieldDefinition(Constants.FIELD_RougamoMos, fieldAttributes, _typeIMoArrayRef);
             contextFieldDef = new FieldDefinition(Constants.FIELD_RougamoContext, fieldAttributes, _typeMethodContextRef);
