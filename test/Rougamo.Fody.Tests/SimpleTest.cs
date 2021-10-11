@@ -18,11 +18,23 @@ namespace Rougamo.Fody.Tests
             var result = weaver.ExecuteTestRun("Rougamo.UsingAssembly.dll");
             var class1 = result.Assembly.GetInstance(typeof(Class1).FullName);
             var class1Class = result.Assembly.GetStaticInstance(typeof(Class1).FullName);
-            var enumerable = (IAsyncEnumerable<int>)class1.AE1();
-            await foreach(var item in enumerable)
+            
+            class1.AsyncVoid(new Random(), 100);
+            try
             {
-                Debug.Print(item.ToString());
+                class1.AsyncVoidSyncException(Guid.NewGuid());
             }
+            catch (ArgumentException)
+            {
+                // ignore
+            }
+            class1.AsyncVoidAsyncException(DateTime.Now);
+            Thread.Sleep(30000);
+            //var enumerable = (IAsyncEnumerable<int>)class1.AE1();
+            //await foreach(var item in enumerable)
+            //{
+            //    Debug.Print(item.ToString());
+            //}
             //var enumerable = ((IAsyncEnumerable<int>)class1.AE1()).GetAsyncEnumerator();
             //while (enumerable.MoveNextAsync().AsTask().Result)
             //{

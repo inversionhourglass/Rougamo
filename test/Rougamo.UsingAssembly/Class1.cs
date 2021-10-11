@@ -93,6 +93,26 @@ namespace Rougamo.UsingAssembly
             yield return 1;
         }
 
+        public async void AsyncVoid(Random random, int max)
+        {
+            var rd = random.Next(max);
+            await Task.Delay(rd % 13);
+            Console.WriteLine(rd);
+        }
+
+        public async void AsyncVoidSyncException(Guid guid)
+        {
+            Console.WriteLine(guid);
+            throw new ArgumentException(nameof(guid));
+        }
+
+        public async void AsyncVoidAsyncException(DateTime time)
+        {
+            Console.WriteLine(time);
+            await Task.Delay(time.GetHashCode() % 31);
+            throw new InvalidOperationException();
+        }
+
         public string Thrown()
         {
             throw new Exception();

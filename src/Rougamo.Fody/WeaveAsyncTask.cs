@@ -44,7 +44,7 @@ namespace Rougamo.Fody
             ExecuteMoMethod(Constants.METHOD_OnEntry, rouMethod.MethodDef, rouMethod.Mos.Count, stateMachineVariable, mosFieldRef, contextFieldRef, taskBuilderPreviousIns);
 
             var returnType = rouMethod.MethodDef.ReturnType;
-            return returnType.Is(Constants.TYPE_Task) || returnType.Is(Constants.TYPE_ValueTask) ? null : ((GenericInstanceType)returnType).GenericArguments[0];
+            return returnType.Is(Constants.TYPE_Task) || returnType.Is(Constants.TYPE_ValueTask) || returnType.Is(Constants.TYPE_Void) ? null : ((GenericInstanceType)returnType).GenericArguments[0];
         }
 
         private void AsyncOnExceptionWithExit(RouMethod rouMethod, MethodDefinition moveNextMethodDef, FieldReference mosFieldRef, FieldReference contextFieldRef)
@@ -58,7 +58,9 @@ namespace Rougamo.Fody
             instructions.InsertBefore(next, Instruction.Create(OpCodes.Ldfld, contextFieldRef));
             instructions.InsertBefore(next, ldlocException);
             instructions.InsertBefore(next, Instruction.Create(OpCodes.Callvirt, _methodMethodContextSetExceptionRef));
-            ExecuteMoMethod(Constants.METHOD_OnException, moveNextMethodDef, rouMethod.Mos.Count, null, mosFieldRef, contextFieldRef, next);
+            var splitNop = Instruction.Create(OpCodes.Nop);
+            instructions.InsertBefore(next, splitNop); // this nop is needed, OnExit will never execute if remove this nop
+            ExecuteMoMethod(Constants.METHOD_OnException, moveNextMethodDef, rouMethod.Mos.Count, null, mosFieldRef, contextFieldRef, splitNop);
             ExecuteMoMethod(Constants.METHOD_OnExit, moveNextMethodDef, rouMethod.Mos.Count, null, mosFieldRef, contextFieldRef, next);
         }
 
@@ -80,7 +82,9 @@ namespace Rougamo.Fody
                 }
                 instructions.InsertBefore(closeThisIns, Instruction.Create(OpCodes.Callvirt, _methodMethodContextSetReturnValueRef));
             }
-            ExecuteMoMethod(Constants.METHOD_OnSuccess, moveNextMethodDef, rouMethod.Mos.Count, null, mosFieldRef, contextFieldRef, closeThisIns);
+            var splitNop = Instruction.Create(OpCodes.Nop);
+            instructions.InsertBefore(closeThisIns, splitNop); // this nop is needed, OnExit will never execute if remove this nop
+            ExecuteMoMethod(Constants.METHOD_OnSuccess, moveNextMethodDef, rouMethod.Mos.Count, null, mosFieldRef, contextFieldRef, splitNop);
             ExecuteMoMethod(Constants.METHOD_OnExit, moveNextMethodDef, rouMethod.Mos.Count, null, mosFieldRef, contextFieldRef, closeThisIns);
         }
 
@@ -117,7 +121,8 @@ namespace Rougamo.Fody
                 var ins = body.Instructions[i];
                 if (ins.OpCode == OpCodes.Call && ins.Operand is MethodReference methodRef &&
                     (methodRef.DeclaringType.FullName.StartsWith(Constants.TYPE_AsyncTaskMethodBuilder) ||
-                    methodRef.DeclaringType.FullName.StartsWith(Constants.TYPE_AsyncValueTaskMethodBuilder)) &&
+                    methodRef.DeclaringType.FullName.StartsWith(Constants.TYPE_AsyncValueTaskMethodBuilder) ||
+                    methodRef.DeclaringType.FullName.StartsWith(Constants.TYPE_AsyncVoidMethodBuilder)) &&
                     methodRef.Name == Constants.METHOD_Create)
                 {
                     builderDef = methodRef.DeclaringType.Resolve();
