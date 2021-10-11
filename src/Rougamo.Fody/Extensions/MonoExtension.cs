@@ -4,6 +4,8 @@ using Mono.Cecil.Rocks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using CallSite = Mono.Cecil.CallSite;
 
 namespace Rougamo.Fody
 {
@@ -290,14 +292,10 @@ namespace Rougamo.Fody
                 $"not support instruction Operand copy type: {instruction.Operand.GetType().FullName}");
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TypeDefinition ResolveAsyncStateMachine(this MethodDefinition methodDef)
         {
             return methodDef.ResolveStateMachine(Constants.TYPE_AsyncStateMachineAttribute);
-        }
-
-        public static TypeDefinition ResolveIteratorStateMachine(this MethodDefinition methodDef)
-        {
-            return methodDef.ResolveStateMachine(Constants.TYPE_IteratorStateMachineAttribute);
         }
 
         public static TypeDefinition ResolveStateMachine(this MethodDefinition methodDef, string stateMachineAttributeName)

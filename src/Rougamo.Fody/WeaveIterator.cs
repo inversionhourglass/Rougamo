@@ -29,7 +29,7 @@ namespace Rougamo.Fody
                 returnsFieldRef = returnsFieldRef == null ? null : new FieldReference(returnsFieldDef.Name, returnsFieldDef.FieldType, stateTypeRef);
                 currentFieldRef = new FieldReference(currentFieldRef.Name, currentFieldRef.FieldType, stateTypeRef);
             }
-            // will never just throw
+            // finallyEnd null be null
             GenerateTryCatchFinally(moveNextMethodDef, out var tryStart, out var catchStart, out var finallyStart, out var finallyEnd, out var exceptionVariable, out var returnVariable);
             SetTryCatchFinally(moveNextMethodDef, tryStart, catchStart, finallyStart, finallyEnd);
             OnExceptionFromField(moveNextMethodDef, rouMethod.Mos.Count, mosFieldRef, contextFieldRef, exceptionVariable, catchStart);
@@ -57,10 +57,10 @@ namespace Rougamo.Fody
             return ((GenericInstanceType)returnType).GenericArguments[0];
         }
 
-        private void IteratorOnExitOrMoveNext(MethodDefinition methodDef, int mosCount, FieldReference mosFieldRef, FieldReference contextFieldRef, FieldReference returnsFieldRef, FieldReference currentFieldRef, VariableDefinition returnVariable, Instruction finallyStart, Instruction finallyScopeEnd)
+        private void IteratorOnExitOrMoveNext(MethodDefinition methodDef, int mosCount, FieldReference mosFieldRef, FieldReference contextFieldRef, FieldReference returnsFieldRef, FieldReference currentFieldRef, VariableDefinition returnVariable, Instruction finallyStart, Instruction finallyEnd)
         {
-            var finallyEnd = finallyScopeEnd.Previous;
-            var yieldBrTo = finallyEnd;
+            var endFinally = finallyEnd.Previous;
+            var yieldBrTo = endFinally;
             if (returnsFieldRef != null)
             {
                 var listAddMethodRef = returnsFieldRef.FieldType.GenericTypeMethodReference(_methodListAddRef, ModuleDefinition);
@@ -73,13 +73,13 @@ namespace Rougamo.Fody
                     Instruction.Create(OpCodes.Ldfld, currentFieldRef),
                     Instruction.Create(OpCodes.Callvirt, listAddMethodRef)
                 };
-                methodDef.Body.Instructions.InsertBefore(finallyEnd, addCurrentToReturns);
+                methodDef.Body.Instructions.InsertBefore(endFinally, addCurrentToReturns);
             }
 
             ExecuteMoMethod(Constants.METHOD_OnExit, methodDef, mosCount, null, mosFieldRef, contextFieldRef, yieldBrTo);
             if (returnsFieldRef != null)
             {
-                methodDef.Body.Instructions.InsertBefore(yieldBrTo, Instruction.Create(OpCodes.Br_S, finallyEnd));
+                methodDef.Body.Instructions.InsertBefore(yieldBrTo, Instruction.Create(OpCodes.Br_S, endFinally));
             }
             if (finallyStart.OpCode.Code != Code.Nop) throw new RougamoException("finally start is not nop");
             finallyStart.OpCode = OpCodes.Ldloc;

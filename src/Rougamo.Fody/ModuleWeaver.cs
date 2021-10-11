@@ -2,6 +2,7 @@
 using Mono.Cecil;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace Rougamo.Fody
 {
@@ -71,6 +72,18 @@ namespace Rougamo.Fody
                     // ignore
                 }
             }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private TypeReference Import(TypeReference typeRef)
+        {
+            return ModuleDefinition.ImportReference(typeRef);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private MethodReference Import(MethodReference methodRef)
+        {
+            return ModuleDefinition.ImportReference(methodRef);
         }
     }
 }
