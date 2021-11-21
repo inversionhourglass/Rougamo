@@ -1,8 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <IsPacking>false</IsPacking>
-    <Version Condition="'$(Configuration)'=='Debug'">0.1.1-beta9</Version>
-    <Version Condition="'$(Configuration)'=='Release'"></Version>
+    <Version Condition="'$(Configuration)'=='Debug'">1.0.1</Version>
+    <Version Condition="'$(Configuration)'=='Release'">1.0.1</Version>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Authors>Hourglass Inversion</Authors>
     <Product>Rougamo.Fody</Product>
@@ -11,7 +11,8 @@
     <DocumentationFile>$(ProjectDir)\Rougamo.xml</DocumentationFile>
     <PackageReleaseNotes></PackageReleaseNotes>
     <RepositoryUrl>https://github.com/inversionhourglass/Rougamo</RepositoryUrl>
-    <NugetServer>http://nuget.benlailife.com:8004/nuget/arch</NugetServer>
+    <PackageIcon>Rougamo.png</PackageIcon>
+    <PackageIconUrl />
   </PropertyGroup>
   <ItemGroup Condition="'$(IsPacking)'=='true'">
     <PackageReference Include="Fody" Version="6.2.5" PrivateAssets="none" />
@@ -19,5 +20,11 @@
   </ItemGroup>
   <ItemGroup Condition="'$(IsPacking)'=='true'">
     <ProjectReference Include="..\Rougamo.Fody\Rougamo.Fody.csproj" PrivateAssets="All" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\..\Rougamo.png">
+      <Pack>True</Pack>
+      <PackagePath></PackagePath>
+    </None>
   </ItemGroup>
 </Project>

@@ -2,6 +2,9 @@
 
 namespace Rougamo
 {
+    /// <summary>
+    /// 使用一个已有Attribute作为代理类型进行织入
+    /// </summary>
     [AttributeUsage(AttributeTargets.Assembly|AttributeTargets.Module, AllowMultiple = true)]
     public class MoProxyAttribute : Attribute
     {
