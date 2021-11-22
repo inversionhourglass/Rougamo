@@ -269,3 +269,40 @@ public class Cls
 5. Type `MoProxyAttribute`
 6. Type `IRougamo<>`, `IRougamo<,>`, `IRepulsionsRougamo<,>`
 7. Assembly & Module `MoAttribute`
+
+### 开关(enable/disable)
+Rougamo由个人开发，由于能力有限，对IL的研究也不是那么深入透彻，并且随着.NET的发展也会不断的出现一些新的类型、新的语意甚至新的IL指令，
+也因此可能会存在一些BUG，而当IL层面的BUG可能无法快速定位到问题并修复，所以这里提供了一个开关可以在不去掉Rougamo引用的情况下不进行代码织入，
+也因此推荐各位在使用Rougamo进行代码织入时，织入的代码是不影响业务的，比如日志和APM。如果希望使用稳定且在遇到问题能够快速得到支持的静态织入
+组件，推荐使用[PostSharp](https://www.postsharp.net)
+
+Rougamo是在[fody](https://github.com/Fody/Fody)的基础上研发的，引用Rougamo后首次编译会生成一个`FodyWeavers.xml`文件，默认内容如下
+```xml
+<Weavers xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="FodyWeavers.xsd">
+  <Rougamo />
+</Weavers>
+```
+在希望禁用Rougamo时，需要在配置文件的`Rougamo`节点增加属性`enabled`并设置值为`false`
+```xml
+<Weavers xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="FodyWeavers.xsd">
+  <Rougamo enabled="false" />
+</Weavers>
+```
+
+### 记录yield return IEnumerable/IAsyncEnumerable返回值
+我们知道，使用`yield return`语法糖+`IEnumerable`返回值的方法，在调用方法结束后，该方法的代码实际并没有执行，代码的实际执行是在你访问
+这个`IEnumerable`对象里的元素时候，比如你去foreach这个对象或者调用`ToList/ToArray`的时候，并且返回的这些元素并没有一个数组/链表进行
+统一的保存（具体原理在这里不展开说明了），所以默认情况下是没有办法直接获取到`yield return IEnumerable`返回的所有元素集合的。
+
+但可能有些对代码监控比较严格的场景需要记录所有返回值，所以在实现上我创建了一个数组保存了所有的返回元素，但是由于这个数组是额外创建的，会占
+用额外的内存空间，同时又不清楚这个`IEnumerable`返回的元素集合有多大，所以为了避免可能额外产生过多的内存消耗，默认情况下是不会记录
+`yield return IEnumerable`返回值的，如果需要记录返回值，需要在`FodyWeavers.xml`的`Rougamo`节点增加属性配置`enumerable-returns="true"`
+```xml
+<Weavers xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="FodyWeavers.xsd">
+  <Rougamo enumerable-returns="true" />
+</Weavers>
+```
+
+### todo
+1. 测试代码
+2. 英文文档
