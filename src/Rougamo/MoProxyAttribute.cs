@@ -8,6 +8,8 @@ namespace Rougamo
     [AttributeUsage(AttributeTargets.Assembly|AttributeTargets.Module, AllowMultiple = true)]
     public class MoProxyAttribute : Attribute
     {
+        /// <summary>
+        /// </summary>
         public MoProxyAttribute(Type originAttributeType, Type moAttribtueType)
         {
             OriginAttributeType = originAttributeType;

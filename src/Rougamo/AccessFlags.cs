@@ -6,6 +6,9 @@ namespace Rougamo.Fody
 namespace Rougamo
 #endif
 {
+    /// <summary>
+    /// accessable flags
+    /// </summary>
     [Flags]
 #if FODY
     internal enum AccessFlags

@@ -8,31 +8,18 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{8C9FFBEC-F477-4037-B3FE-BAF02ED3A16C}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rougamo", "src\Rougamo\Rougamo.csproj", "{B4805E71-39B3-4731-A221-45B1ED33943F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{191B2987-A3A5-4916-BE4B-2657854DFF39} = {191B2987-A3A5-4916-BE4B-2657854DFF39}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rougamo.Fody", "src\Rougamo.Fody\Rougamo.Fody.csproj", "{191B2987-A3A5-4916-BE4B-2657854DFF39}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rougamo.Fody.Tests", "test\Rougamo.Fody.Tests\Rougamo.Fody.Tests.csproj", "{9099F550-2393-4216-8916-2E34D9D3B48D}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rougamo.ImplAssembly", "test\Rougamo.ImplAssembly\Rougamo.ImplAssembly.csproj", "{B86F2A9B-B200-4004-B659-2D4D42E82ED5}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rougamo.UsingAssembly", "test\Rougamo.UsingAssembly\Rougamo.UsingAssembly.csproj", "{A21471A9-D6A0-446A-86E5-BA7A683EFD87}"
-EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionItems", "{BCA66129-FEC9-4244-B53E-931B928C723E}"
 	ProjectSection(SolutionItems) = preProject
-		global.json = global.json
+		deploy.bat = deploy.bat
 		README.md = README.md
 		Rougamo.png = Rougamo.png
 	EndProjectSection
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rougamo.ILTest", "test\Rougamo.ILTest\Rougamo.ILTest.csproj", "{409FADAB-3CE0-430D-87B4-6A0C7276F755}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rougamo.NugetImplAssembly", "test\Rougamo.NugetImplAssembly\Rougamo.NugetImplAssembly.csproj", "{F47D41DD-851E-424D-8CFA-FB3511E5D9DB}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rougamo.NugetUsingAssembly", "test\Rougamo.NugetUsingAssembly\Rougamo.NugetUsingAssembly.csproj", "{9F3FC974-E3BC-4021-94DA-B21B2CC06478}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rougamo.NugetConsoleTest", "test\Rougamo.NugetConsoleTest\Rougamo.NugetConsoleTest.csproj", "{12290496-CF06-4992-B7C5-D86902411D1A}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rougamo.FileReferenceTest", "test\Rougamo.FileReferenceTest\Rougamo.FileReferenceTest.csproj", "{E5AAF1F3-F55E-41D7-9F4F-E3F5E058C9FD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -48,38 +35,6 @@ Global
 		{191B2987-A3A5-4916-BE4B-2657854DFF39}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{191B2987-A3A5-4916-BE4B-2657854DFF39}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{191B2987-A3A5-4916-BE4B-2657854DFF39}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9099F550-2393-4216-8916-2E34D9D3B48D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9099F550-2393-4216-8916-2E34D9D3B48D}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9099F550-2393-4216-8916-2E34D9D3B48D}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9099F550-2393-4216-8916-2E34D9D3B48D}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B86F2A9B-B200-4004-B659-2D4D42E82ED5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B86F2A9B-B200-4004-B659-2D4D42E82ED5}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B86F2A9B-B200-4004-B659-2D4D42E82ED5}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B86F2A9B-B200-4004-B659-2D4D42E82ED5}.Release|Any CPU.Build.0 = Release|Any CPU
-		{A21471A9-D6A0-446A-86E5-BA7A683EFD87}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A21471A9-D6A0-446A-86E5-BA7A683EFD87}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A21471A9-D6A0-446A-86E5-BA7A683EFD87}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A21471A9-D6A0-446A-86E5-BA7A683EFD87}.Release|Any CPU.Build.0 = Release|Any CPU
-		{409FADAB-3CE0-430D-87B4-6A0C7276F755}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{409FADAB-3CE0-430D-87B4-6A0C7276F755}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{409FADAB-3CE0-430D-87B4-6A0C7276F755}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{409FADAB-3CE0-430D-87B4-6A0C7276F755}.Release|Any CPU.Build.0 = Release|Any CPU
-		{F47D41DD-851E-424D-8CFA-FB3511E5D9DB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F47D41DD-851E-424D-8CFA-FB3511E5D9DB}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F47D41DD-851E-424D-8CFA-FB3511E5D9DB}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F47D41DD-851E-424D-8CFA-FB3511E5D9DB}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9F3FC974-E3BC-4021-94DA-B21B2CC06478}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9F3FC974-E3BC-4021-94DA-B21B2CC06478}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9F3FC974-E3BC-4021-94DA-B21B2CC06478}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9F3FC974-E3BC-4021-94DA-B21B2CC06478}.Release|Any CPU.Build.0 = Release|Any CPU
-		{12290496-CF06-4992-B7C5-D86902411D1A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{12290496-CF06-4992-B7C5-D86902411D1A}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{12290496-CF06-4992-B7C5-D86902411D1A}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{12290496-CF06-4992-B7C5-D86902411D1A}.Release|Any CPU.Build.0 = Release|Any CPU
-		{E5AAF1F3-F55E-41D7-9F4F-E3F5E058C9FD}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E5AAF1F3-F55E-41D7-9F4F-E3F5E058C9FD}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{E5AAF1F3-F55E-41D7-9F4F-E3F5E058C9FD}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{E5AAF1F3-F55E-41D7-9F4F-E3F5E058C9FD}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -87,14 +42,6 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{B4805E71-39B3-4731-A221-45B1ED33943F} = {E99BBF2A-FEAE-4CA4-BD18-646D1ACAB543}
 		{191B2987-A3A5-4916-BE4B-2657854DFF39} = {E99BBF2A-FEAE-4CA4-BD18-646D1ACAB543}
-		{9099F550-2393-4216-8916-2E34D9D3B48D} = {8C9FFBEC-F477-4037-B3FE-BAF02ED3A16C}
-		{B86F2A9B-B200-4004-B659-2D4D42E82ED5} = {8C9FFBEC-F477-4037-B3FE-BAF02ED3A16C}
-		{A21471A9-D6A0-446A-86E5-BA7A683EFD87} = {8C9FFBEC-F477-4037-B3FE-BAF02ED3A16C}
-		{409FADAB-3CE0-430D-87B4-6A0C7276F755} = {8C9FFBEC-F477-4037-B3FE-BAF02ED3A16C}
-		{F47D41DD-851E-424D-8CFA-FB3511E5D9DB} = {8C9FFBEC-F477-4037-B3FE-BAF02ED3A16C}
-		{9F3FC974-E3BC-4021-94DA-B21B2CC06478} = {8C9FFBEC-F477-4037-B3FE-BAF02ED3A16C}
-		{12290496-CF06-4992-B7C5-D86902411D1A} = {8C9FFBEC-F477-4037-B3FE-BAF02ED3A16C}
-		{E5AAF1F3-F55E-41D7-9F4F-E3F5E058C9FD} = {8C9FFBEC-F477-4037-B3FE-BAF02ED3A16C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0BD0178E-76E0-4736-A036-89B1AA268A05}

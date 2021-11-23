@@ -1,30 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <IsPacking>false</IsPacking>
-    <Version Condition="'$(Configuration)'=='Debug'">1.0.1</Version>
-    <Version Condition="'$(Configuration)'=='Release'">1.0.1</Version>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Authors>Hourglass Inversion</Authors>
-    <Product>Rougamo.Fody</Product>
-    <Description>method wave</Description>
+    <Version>1.0.1-beta</Version>
+    <Authors>ihourglass</Authors>
+    <Description>ilweaver, aop at compile time</Description>
+    <PackageTags>AOP</PackageTags>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <DocumentationFile>$(ProjectDir)\Rougamo.xml</DocumentationFile>
-    <PackageReleaseNotes></PackageReleaseNotes>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <SignAssembly>true</SignAssembly>
+    <AssemblyOriginatorKeyFile>rougamo.snk</AssemblyOriginatorKeyFile>
+    <PackageOutputPath>$(SolutionDir)nugets</PackageOutputPath>
     <RepositoryUrl>https://github.com/inversionhourglass/Rougamo</RepositoryUrl>
-    <PackageIcon>Rougamo.png</PackageIcon>
-    <PackageIconUrl />
+    <PackageIconUrl>https://raw.githubusercontent.com/inversionhourglass/Rougamo/master/Rougamo.png</PackageIconUrl>
   </PropertyGroup>
-  <ItemGroup Condition="'$(IsPacking)'=='true'">
+  <ItemGroup>
     <PackageReference Include="Fody" Version="6.2.5" PrivateAssets="none" />
     <PackageReference Include="FodyPackaging" Version="6.2.5" PrivateAssets="All" />
-  </ItemGroup>
-  <ItemGroup Condition="'$(IsPacking)'=='true'">
-    <ProjectReference Include="..\Rougamo.Fody\Rougamo.Fody.csproj" PrivateAssets="All" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\Rougamo.png">
-      <Pack>True</Pack>
-      <PackagePath></PackagePath>
-    </None>
   </ItemGroup>
 </Project>
