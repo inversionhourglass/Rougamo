@@ -21,7 +21,7 @@ namespace Rougamo.Fody
         {
             var globalMos = FindGlobalAttributes();
 
-            if (globalMos.Ignores == null) return;
+            if (globalMos.GlobalIgnore) return;
 
             foreach (var typeDef in ModuleDefinition.Types)
             {
@@ -100,6 +100,8 @@ namespace Rougamo.Fody
         {
             var assemblyMos = FindGlobalAttributes(ModuleDefinition.Assembly.CustomAttributes, "assembly");
             var moduleMos = FindGlobalAttributes(ModuleDefinition.CustomAttributes, "module");
+
+            if (assemblyMos.GlobalIgnore || moduleMos.GlobalIgnore) return new SimplifyGlobalMos();
 
             foreach (var direct in moduleMos.Directs)
             {

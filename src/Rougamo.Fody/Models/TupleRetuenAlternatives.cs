@@ -5,6 +5,11 @@ namespace Rougamo.Fody
 {
     internal sealed class SimplifyGlobalMos
     {
+        /// <summary>
+        /// use this constructor if exists global IgnoreMoAttribute
+        /// </summary>
+        public SimplifyGlobalMos() { }
+
         public SimplifyGlobalMos(CustomAttribute[] directs, Dictionary<string, TypeDefinition> proxies, string[] ignores)
         {
             Directs = directs;
@@ -18,6 +23,7 @@ namespace Rougamo.Fody
 
         public string[] Ignores { get; }
 
+        public bool GlobalIgnore => Ignores == null;
     }
 
     internal sealed class GlobalMos
@@ -34,6 +40,8 @@ namespace Rougamo.Fody
         public Dictionary<string, TypeDefinition> Proxies { get; }
 
         public Dictionary<string, TypeDefinition> Ignores { get; }
+
+        public bool GlobalIgnore => Ignores == null;
     }
 
     internal sealed class RepulsionMo

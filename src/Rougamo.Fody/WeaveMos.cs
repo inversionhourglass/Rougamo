@@ -41,7 +41,7 @@ namespace Rougamo.Fody
 
         private void EmptyMethodWeave()
         {
-
+            // todo: empty method weave
         }
 
         /// <summary>
