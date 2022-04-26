@@ -21,6 +21,12 @@ namespace Rougamo.Fody
             return "true".Equals(recording, StringComparison.OrdinalIgnoreCase);
         }
 
+        public static bool ConfigReverseCallEnding(this BaseModuleWeaver weaver)
+        {
+            var reverseCall = weaver.GetConfigValue("reverse-call-ending", "true");
+            return "true".Equals(reverseCall, StringComparison.OrdinalIgnoreCase);
+        }
+
         private static string GetConfigValue(this BaseModuleWeaver weaver, string configKey, string defaultValue)
         {
             if (weaver.Config == null) return defaultValue;

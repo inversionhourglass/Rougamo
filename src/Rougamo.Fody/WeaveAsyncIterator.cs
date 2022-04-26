@@ -44,8 +44,8 @@ namespace Rougamo.Fody
                 switch (setResult.Previous.OpCode.Code)
                 {
                     case Code.Ldc_I4_0: // finished
-                        ExecuteMoMethod(Constants.METHOD_OnExit, moveNextMethodDef, rouMethod.Mos.Count, null, mosFieldRef, contextFieldRef, setResult.Next);
-                        ExecuteMoMethod(Constants.METHOD_OnSuccess, moveNextMethodDef, rouMethod.Mos.Count, null, mosFieldRef, contextFieldRef, setResult.Next);
+                        ExecuteMoMethod(Constants.METHOD_OnExit, moveNextMethodDef, rouMethod.Mos.Count, null, mosFieldRef, contextFieldRef, setResult.Next, this.ConfigReverseCallEnding());
+                        ExecuteMoMethod(Constants.METHOD_OnSuccess, moveNextMethodDef, rouMethod.Mos.Count, null, mosFieldRef, contextFieldRef, setResult.Next, this.ConfigReverseCallEnding());
                         if(returnsFieldRef != null)
                         {
                             var listToArrayMethodRef = returnsFieldRef.FieldType.GenericTypeMethodReference(_methodListToArrayRef, ModuleDefinition);

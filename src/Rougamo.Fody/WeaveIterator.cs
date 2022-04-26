@@ -52,7 +52,7 @@ namespace Rougamo.Fody
             InitMosField(rouMethod, mosFieldRef, stateMachineVariable, retIns);
             InitMethodContextField(rouMethod, contextFieldRef, stateMachineVariable, retIns);
             rouMethod.MethodDef.Body.Instructions.InsertBefore(retIns, Instruction.Create(OpCodes.Ldloc, stateMachineVariable));
-            ExecuteMoMethod(Constants.METHOD_OnEntry, rouMethod.MethodDef, rouMethod.Mos.Count, stateMachineVariable, mosFieldRef, contextFieldRef, retIns.Previous);
+            ExecuteMoMethod(Constants.METHOD_OnEntry, rouMethod.MethodDef, rouMethod.Mos.Count, stateMachineVariable, mosFieldRef, contextFieldRef, retIns.Previous, false);
             var returnType = rouMethod.MethodDef.ReturnType;
             return ((GenericInstanceType)returnType).GenericArguments[0];
         }
@@ -76,7 +76,7 @@ namespace Rougamo.Fody
                 methodDef.Body.Instructions.InsertBefore(endFinally, addCurrentToReturns);
             }
 
-            ExecuteMoMethod(Constants.METHOD_OnExit, methodDef, mosCount, null, mosFieldRef, contextFieldRef, yieldBrTo);
+            ExecuteMoMethod(Constants.METHOD_OnExit, methodDef, mosCount, null, mosFieldRef, contextFieldRef, yieldBrTo, this.ConfigReverseCallEnding());
             if (returnsFieldRef != null)
             {
                 methodDef.Body.Instructions.InsertBefore(yieldBrTo, Instruction.Create(OpCodes.Br_S, endFinally));
@@ -107,7 +107,7 @@ namespace Rougamo.Fody
                     Instruction.Create(OpCodes.Callvirt, _methodMethodContextSetReturnValueRef)
                 });
             }
-            ExecuteMoMethod(Constants.METHOD_OnSuccess, methodDef, mosCount, null, mosFieldRef, contextFieldRef, onExitStart);
+            ExecuteMoMethod(Constants.METHOD_OnSuccess, methodDef, mosCount, null, mosFieldRef, contextFieldRef, onExitStart, this.ConfigReverseCallEnding());
         }
 
         private void IteratorFieldDefinition(RouMethod rouMethod, string stateMachineName, out TypeDefinition stateTypeDef, out FieldDefinition mosFieldDef, out FieldDefinition contextFieldDef, out FieldDefinition returnFieldDef)

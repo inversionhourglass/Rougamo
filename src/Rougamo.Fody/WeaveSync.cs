@@ -22,7 +22,7 @@ namespace Rougamo.Fody
             var instructions = new List<Instruction>();
             moVariables = LoadMosOnStack(rouMethod, instructions);
             contextVariable = CreateMethodContextVariable(rouMethod.MethodDef, instructions);
-            ExecuteMoMethod(Constants.METHOD_OnEntry, moVariables, contextVariable, instructions);
+            ExecuteMoMethod(Constants.METHOD_OnEntry, moVariables, contextVariable, instructions, false);
             rouMethod.MethodDef.Body.Instructions.InsertBefore(tryStart, instructions);
         }
 
@@ -32,7 +32,7 @@ namespace Rougamo.Fody
             instructions.Add(Instruction.Create(OpCodes.Ldloc, contextVariable));
             instructions.Add(Instruction.Create(OpCodes.Ldloc, exceptionVariable));
             instructions.Add(Instruction.Create(OpCodes.Callvirt, _methodMethodContextSetExceptionRef));
-            ExecuteMoMethod(Constants.METHOD_OnException, moVariables, contextVariable, instructions);
+            ExecuteMoMethod(Constants.METHOD_OnException, moVariables, contextVariable, instructions, this.ConfigReverseCallEnding());
             methodDef.Body.Instructions.InsertAfter(catchStart, instructions);
         }
 
@@ -57,14 +57,14 @@ namespace Rougamo.Fody
                 }
                 instructions.Add(Instruction.Create(OpCodes.Callvirt, _methodMethodContextSetReturnValueRef));
             }
-            ExecuteMoMethod(Constants.METHOD_OnSuccess, moVariables, contextVariable, instructions);
+            ExecuteMoMethod(Constants.METHOD_OnSuccess, moVariables, contextVariable, instructions, this.ConfigReverseCallEnding());
             methodDef.Body.Instructions.InsertAfter(finallyStart, instructions);
         }
 
         private void SyncOnExit(MethodDefinition methodDef, VariableDefinition[] moVariables, VariableDefinition contextVariable, Instruction finallyStart)
         {
             var instructions = new List<Instruction>();
-            ExecuteMoMethod(Constants.METHOD_OnExit, moVariables, contextVariable, instructions);
+            ExecuteMoMethod(Constants.METHOD_OnExit, moVariables, contextVariable, instructions, this.ConfigReverseCallEnding());
             methodDef.Body.Instructions.InsertAfter(finallyStart, instructions);
         }
     }

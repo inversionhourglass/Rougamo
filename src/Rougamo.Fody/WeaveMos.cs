@@ -135,7 +135,7 @@ namespace Rougamo.Fody
             ins.Add(Instruction.Create(OpCodes.Ldfld, contextFieldRef));
             ins.Add(Instruction.Create(OpCodes.Ldloc, exceptionVariable));
             ins.Add(Instruction.Create(OpCodes.Callvirt, _methodMethodContextSetExceptionRef));
-            ExecuteMoMethod(Constants.METHOD_OnException, methodDef, mosCount, null, moFieldRef, contextFieldRef, catchStart.Next);
+            ExecuteMoMethod(Constants.METHOD_OnException, methodDef, mosCount, null, moFieldRef, contextFieldRef, catchStart.Next, this.ConfigReverseCallEnding());
             methodDef.Body.Instructions.InsertAfter(catchStart, ins);
         }
 
@@ -272,17 +272,36 @@ namespace Rougamo.Fody
             instructions.Add(Instruction.Create(OpCodes.Newobj, _methodMethodContextCtorRef));
         }
 
-        private void ExecuteMoMethod(string methodName, MethodDefinition methodDef, int mosCount, VariableDefinition stateMachineVariable, FieldReference mosField, FieldReference contextField, Instruction beforeThisInstruction)
+        private void ExecuteMoMethod(string methodName, MethodDefinition methodDef, int mosCount, VariableDefinition stateMachineVariable, FieldReference mosField, FieldReference contextField, Instruction beforeThisInstruction, bool reverseCall)
         {
             var instructions = methodDef.Body.Instructions;
             var flagVariable = methodDef.Body.CreateVariable(_typeIntRef);
-            instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Ldc_I4_0));
-            instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Stloc, flagVariable));
-            var loopFirst = Instruction.Create(OpCodes.Ldloc, flagVariable);
-            instructions.InsertBefore(beforeThisInstruction, loopFirst);
-            instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Ldc_I4, mosCount));
-            instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Clt));
-            instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Brfalse_S, beforeThisInstruction));
+
+            Instruction loopFirst;
+
+            if (reverseCall)
+            {
+                instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Ldc_I4, mosCount));
+                instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Ldc_I4_1));
+                instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Sub));
+                instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Stloc, flagVariable));
+                loopFirst = Instruction.Create(OpCodes.Ldloc, flagVariable);
+                instructions.InsertBefore(beforeThisInstruction, loopFirst);
+                instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Ldc_I4_0));
+                instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Clt));
+                instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Brtrue, beforeThisInstruction));
+            }
+            else
+            {
+                instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Ldc_I4_0));
+                instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Stloc, flagVariable));
+                loopFirst = Instruction.Create(OpCodes.Ldloc, flagVariable);
+                instructions.InsertBefore(beforeThisInstruction, loopFirst);
+                instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Ldc_I4, mosCount));
+                instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Clt));
+                instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Brfalse_S, beforeThisInstruction));
+            }
+
             if (stateMachineVariable == null)
             {
                 instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Ldarg_0));
@@ -307,14 +326,22 @@ namespace Rougamo.Fody
             // maybe nop
             instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Ldloc, flagVariable));
             instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Ldc_I4_1));
-            instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Add));
+            if (reverseCall)
+            {
+                instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Sub));
+            }
+            else
+            {
+                instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Add));
+            }
             instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Stloc, flagVariable));
             instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Br_S, loopFirst));
         }
 
-        private void ExecuteMoMethod(string methodName, VariableDefinition[] mos, VariableDefinition methodContext, List<Instruction> instructions)
+        private void ExecuteMoMethod(string methodName, VariableDefinition[] mos, VariableDefinition methodContext, List<Instruction> instructions, bool reverseCall)
         {
-            foreach (var mo in mos)
+            var orderedMos = reverseCall ? mos.Reverse() : mos;
+            foreach (var mo in orderedMos)
             {
                 instructions.AddRange(new[]
                 {
