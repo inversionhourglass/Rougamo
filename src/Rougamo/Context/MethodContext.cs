@@ -49,7 +49,7 @@ namespace Rougamo.Context
         public bool HasReturnValue => ReturnType != typeof(void);
 
         /// <summary>
-        /// Method return value, if you want to assign a value to it, you'd better use <see cref="HandledException(object)"/> or <see cref="ReplaceReturnValue(object)"/>
+        /// Method return value, if you want to assign a value to it, you'd better use <see cref="HandledException(IMo, object)"/> or <see cref="ReplaceReturnValue(IMo, object)"/>
         /// </summary>
         public object ReturnValue { get; set; }
 
@@ -59,7 +59,12 @@ namespace Rougamo.Context
         public bool ReturnValueReplaced { get; private set; }
 
         /// <summary>
-        /// Exception throws by method, if you want to prevent exception, you'd better use <see cref="HandledException(object)"/>
+        /// when multiple <see cref="IMo"/> applied to the method, you will know who replace the return value
+        /// </summary>
+        public IMo ReturnValueModifier { get; private set; }
+
+        /// <summary>
+        /// Exception throws by method, if you want to prevent exception, you'd better use <see cref="HandledException(IMo, object)"/>
         /// </summary>
         public Exception Exception { get; set; }
 
@@ -74,13 +79,19 @@ namespace Rougamo.Context
         public bool ExceptionHandled { get; private set; }
 
         /// <summary>
+        /// when multiple <see cref="IMo"/> applied to the method, you will know who handled the exception
+        /// </summary>
+        public IMo ExceptionHandler { get; private set; }
+
+        /// <summary>
         /// Prevent exception thrown by the method and set the return value.
         /// If the return type is void, <paramref name="returnValue"/> is ignored.
         /// <see cref="ExceptionHandled"/> and <see cref="ReturnValueReplaced"/> will be set to true
         /// </summary>
-        public void HandledException(object returnValue)
+        public void HandledException(IMo handler, object returnValue)
         {
-            ReplaceReturnValue(returnValue);
+            ReplaceReturnValue(handler, returnValue);
+            ExceptionHandler = handler;
             ExceptionHandled = true;
             Exception = null;
         }
@@ -89,9 +100,7 @@ namespace Rougamo.Context
         /// Replace return value, if the return type is void, <paramref name="returnValue"/> is ignored.
         /// <see cref="ReturnValueReplaced"/> will be set to true
         /// </summary>
-        /// <param name="returnValue"></param>
-        /// <exception cref="ArgumentException"></exception>
-        public void ReplaceReturnValue(object returnValue)
+        public void ReplaceReturnValue(IMo modifier, object returnValue)
         {
             if (HasReturnValue)
             {
@@ -101,6 +110,7 @@ namespace Rougamo.Context
                 }
                 ReturnValue = returnValue;
             }
+            ReturnValueModifier = modifier;
             ReturnValueReplaced = true;
         }
     }

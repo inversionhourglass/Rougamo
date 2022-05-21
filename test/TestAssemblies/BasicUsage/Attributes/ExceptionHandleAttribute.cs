@@ -13,11 +13,11 @@ namespace BasicUsage.Attributes
             base.OnException(context);
             if(context.ReturnType == typeof(int))
             {
-                context.HandledException(IntValue);
+                context.HandledException(this, IntValue);
             }
             else if(context.ReturnType == typeof(string))
             {
-                context.HandledException(StringValue);
+                context.HandledException(this, StringValue);
             }
         }
     }

@@ -13,11 +13,11 @@ namespace BasicUsage.Attributes
             base.OnSuccess(context);
             if (context.ReturnType == typeof(int))
             {
-                context.ReplaceReturnValue(IntValue);
+                context.ReplaceReturnValue(this, IntValue);
             }
             else if (context.ReturnType == typeof(string))
             {
-                context.ReplaceReturnValue(StringValue);
+                context.ReplaceReturnValue(this, StringValue);
             }
         }
     }
