@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.29201.188
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32319.34
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{E99BBF2A-FEAE-4CA4-BD18-646D1ACAB543}"
 EndProject
@@ -21,6 +21,12 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "SolutionItems", "SolutionIt
 		Rougamo.png = Rougamo.png
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "TestAssemblies", "TestAssemblies", "{400088B1-D25F-49FE-887E-E9E2FE62B3CB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "BasicUsage", "test\TestAssemblies\BasicUsage\BasicUsage.csproj", "{F325A49A-8333-490E-98DF-5CBDC9F79E64}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rougamo.Fody.Tests", "test\Rougamo.Fody.Tests\Rougamo.Fody.Tests.csproj", "{D7315A9F-D9E0-44FF-A826-BBC3385CF844}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -35,6 +41,14 @@ Global
 		{191B2987-A3A5-4916-BE4B-2657854DFF39}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{191B2987-A3A5-4916-BE4B-2657854DFF39}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{191B2987-A3A5-4916-BE4B-2657854DFF39}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F325A49A-8333-490E-98DF-5CBDC9F79E64}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F325A49A-8333-490E-98DF-5CBDC9F79E64}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F325A49A-8333-490E-98DF-5CBDC9F79E64}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F325A49A-8333-490E-98DF-5CBDC9F79E64}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D7315A9F-D9E0-44FF-A826-BBC3385CF844}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D7315A9F-D9E0-44FF-A826-BBC3385CF844}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D7315A9F-D9E0-44FF-A826-BBC3385CF844}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D7315A9F-D9E0-44FF-A826-BBC3385CF844}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -42,6 +56,9 @@ Global
 	GlobalSection(NestedProjects) = preSolution
 		{B4805E71-39B3-4731-A221-45B1ED33943F} = {E99BBF2A-FEAE-4CA4-BD18-646D1ACAB543}
 		{191B2987-A3A5-4916-BE4B-2657854DFF39} = {E99BBF2A-FEAE-4CA4-BD18-646D1ACAB543}
+		{400088B1-D25F-49FE-887E-E9E2FE62B3CB} = {8C9FFBEC-F477-4037-B3FE-BAF02ED3A16C}
+		{F325A49A-8333-490E-98DF-5CBDC9F79E64} = {400088B1-D25F-49FE-887E-E9E2FE62B3CB}
+		{D7315A9F-D9E0-44FF-A826-BBC3385CF844} = {8C9FFBEC-F477-4037-B3FE-BAF02ED3A16C}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0BD0178E-76E0-4736-A036-89B1AA268A05}
