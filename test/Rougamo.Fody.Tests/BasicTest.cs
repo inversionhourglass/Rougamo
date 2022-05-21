@@ -1,3 +1,5 @@
+using BasicUsage;
+using BasicUsage.Attributes;
 using System;
 using System.Collections;
 using System.Threading.Tasks;
@@ -66,7 +68,7 @@ namespace Rougamo.Fody.Tests
             Assert.Equal(1, data.Count);
 
             instance.Context = null;
-            var successValue = await (Task<string>)instance.SuccessAsync();
+            var successValue = await (Task<int>)instance.SuccessAsync();
             Assert.Equal(successValue, instance.Context.ReturnValue);
 
             instance.Context = null;
@@ -78,6 +80,39 @@ namespace Rougamo.Fody.Tests
             var exitWithSuccessValue = await (Task<string>)instance.ExitWithSuccessAsync();
             Assert.Equal(exitWithSuccessValue, instance.Context.ReturnValue);
             Assert.Null(instance.Context.Exception);
+        }
+
+        [Fact]
+        public void ModifyReturnValueTest()
+        {
+            var originInstance = new ModifyReturnValue();
+            var instance = GetInstance("BasicUsage.ModifyReturnValue");
+
+            Assert.Throws<InvalidOperationException>(() => originInstance.Exception());
+            var exceptionHandledValue = instance.Exception();
+            Assert.Equal(ExceptionHandleAttribute.StringValue, exceptionHandledValue);
+
+            Assert.Throws<InvalidOperationException>(() => originInstance.ExceptionWithUnbox());
+            var exceptionHandledUnboxValue = instance.ExceptionWithUnbox();
+            Assert.Equal(ExceptionHandleAttribute.IntValue, exceptionHandledUnboxValue);
+
+            Assert.Throws<InvalidOperationException>(() => originInstance.ExceptionUnhandled());
+            Assert.Throws<InvalidOperationException>(() => instance.ExceptionUnhandled());
+
+            var args = new object[] { 1, '-', nameof(ModifyReturnValueTest), 3.14 };
+            var originSuccessValue = originInstance.Succeeded(args);
+            var replacedSuccessValue = instance.Succeeded(args);
+            Assert.NotEqual(originSuccessValue, replacedSuccessValue);
+            Assert.Equal(ReturnValueReplaceAttribute.StringValue, replacedSuccessValue);
+
+            var originUnboxValue = originInstance.SucceededWithUnbox();
+            var replacedUnboxValue = instance.SucceededWithUnbox();
+            Assert.NotEqual(originUnboxValue, replacedUnboxValue);
+            Assert.Equal(ReturnValueReplaceAttribute.IntValue, replacedUnboxValue);
+
+            var originValue = originInstance.SucceededUnrecognized();
+            var unrecognizedValue = instance.SucceededUnrecognized();
+            Assert.Equal(originValue, unrecognizedValue);
         }
     }
 }

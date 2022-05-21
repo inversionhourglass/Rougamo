@@ -21,10 +21,10 @@ namespace BasicUsage
         }
 
         [OnSuccess]
-        public async Task<string> SuccessAsync()
+        public async Task<int> SuccessAsync()
         {
             await Task.Yield();
-            return nameof(SuccessAsync);
+            return nameof(SuccessAsync).Length;
         }
 
         [OnExit]

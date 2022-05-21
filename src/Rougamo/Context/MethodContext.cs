@@ -8,10 +8,6 @@ namespace Rougamo.Context
     /// </summary>
     public sealed class MethodContext
     {
-        private Exception _exception;
-        private object _returnValue;
-        private bool _returnValueSet;
-
         /// <summary>
         /// </summary>
         public MethodContext(object target, Type targetType, MethodBase method, object[] args)
@@ -23,66 +19,89 @@ namespace Rougamo.Context
         }
 
         /// <summary>
-        /// 宿主类实例
+        /// Method' declaring type instance, null if method is a static method
         /// </summary>
         public object Target { get; private set; }
 
         /// <summary>
-        /// 宿主类型
+        /// Method' declaring type
         /// </summary>
         public Type TargetType { get; set; }
 
         /// <summary>
-        /// 方法入参
+        /// Method arguments
         /// </summary>
         public object[] Arguments { get; private set; }
 
         /// <summary>
-        /// 切入方法
+        /// Method info
         /// </summary>
         public MethodBase Method { get; private set; }
 
         /// <summary>
-        /// 方法返回类型
+        /// Method return type
         /// </summary>
         public Type ReturnType => (Method as MethodInfo)?.ReturnType;
 
         /// <summary>
-        /// 是否有返回值（非void）
+        /// Return true if return value type is not void
         /// </summary>
         public bool HasReturnValue => ReturnType != typeof(void);
 
         /// <summary>
-        /// 异常，不可修改，静态织入时设置
+        /// Method return value, if you want to assign a value to it, you'd better use <see cref="HandledException(object)"/> or <see cref="ReplaceReturnValue(object)"/>
         /// </summary>
-        public Exception Exception
-        {
-            get => _exception;
-            set
-            {
-                if (_returnValueSet) return;
-                _returnValueSet = true;
-                _exception = value;
-            }
-        }
+        public object ReturnValue { get; set; }
 
         /// <summary>
-        /// 是否有异常
+        /// Return true if return value has been replaced
+        /// </summary>
+        public bool ReturnValueReplaced { get; private set; }
+
+        /// <summary>
+        /// Exception throws by method, if you want to prevent exception, you'd better use <see cref="HandledException(object)"/>
+        /// </summary>
+        public Exception Exception { get; set; }
+
+        /// <summary>
+        /// Is there a unhandled exception
         /// </summary>
         public bool HasException => Exception != null;
 
         /// <summary>
-        /// 方法返回值，不可修改，静态织入时设置
+        /// Return true if exception has been handled
         /// </summary>
-        public object ReturnValue
+        public bool ExceptionHandled { get; private set; }
+
+        /// <summary>
+        /// Prevent exception thrown by the method and set the return value.
+        /// If the return type is void, <paramref name="returnValue"/> is ignored.
+        /// <see cref="ExceptionHandled"/> and <see cref="ReturnValueReplaced"/> will be set to true
+        /// </summary>
+        public void HandledException(object returnValue)
         {
-            get => _returnValue;
-            set
+            ReplaceReturnValue(returnValue);
+            ExceptionHandled = true;
+            Exception = null;
+        }
+
+        /// <summary>
+        /// Replace return value, if the return type is void, <paramref name="returnValue"/> is ignored.
+        /// <see cref="ReturnValueReplaced"/> will be set to true
+        /// </summary>
+        /// <param name="returnValue"></param>
+        /// <exception cref="ArgumentException"></exception>
+        public void ReplaceReturnValue(object returnValue)
+        {
+            if (HasReturnValue)
             {
-                if (_returnValueSet) return;
-                _returnValueSet = true;
-                _returnValue = value;
+                if (!ReturnType.IsAssignableFrom(returnValue.GetType()))
+                {
+                    throw new ArgumentException($"Method return type({ReturnType.FullName}) is not assignable from returnvalue({returnValue.GetType().FullName})");
+                }
+                ReturnValue = returnValue;
             }
+            ReturnValueReplaced = true;
         }
     }
 }

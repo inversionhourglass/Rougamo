@@ -58,7 +58,7 @@ namespace Rougamo.Fody
         /// </param>
         /// <param name="exceptionVariable">catch generate exception variable</param>
         /// <param name="returnVariable">method return value variable, null if void</param>
-        private void GenerateTryCatchFinally(MethodDefinition methodDef, out Instruction tryStart, out Instruction catchStart, out Instruction finallyStart, out Instruction finallyEnd, out VariableDefinition exceptionVariable, out VariableDefinition returnVariable)
+        private void GenerateTryCatchFinally(MethodDefinition methodDef, out Instruction tryStart, out Instruction catchStart, out Instruction finallyStart, out Instruction finallyEnd, out Instruction rethrow, out VariableDefinition exceptionVariable, out VariableDefinition returnVariable)
         {
             var instructions = methodDef.Body.Instructions;
             tryStart = instructions.First();
@@ -97,10 +97,11 @@ namespace Rougamo.Fody
             exceptionVariable = methodDef.Body.CreateVariable(_typeExceptionRef);
             catchStart = Instruction.Create(OpCodes.Stloc, exceptionVariable);
             finallyStart = Instruction.Create(OpCodes.Nop);
+            rethrow = Instruction.Create(OpCodes.Rethrow);
             instructions.InsertBeforeOrAppend(finallyEnd, new[]
             {
                 catchStart,
-                Instruction.Create(OpCodes.Rethrow),
+                rethrow,
                 finallyStart,
                 Instruction.Create(OpCodes.Endfinally)
             });

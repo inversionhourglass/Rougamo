@@ -30,7 +30,7 @@ namespace Rougamo.Fody
                 currentFieldRef = new FieldReference(currentFieldRef.Name, currentFieldRef.FieldType, stateTypeRef);
             }
             // finallyEnd null be null
-            GenerateTryCatchFinally(moveNextMethodDef, out var tryStart, out var catchStart, out var finallyStart, out var finallyEnd, out var exceptionVariable, out var returnVariable);
+            GenerateTryCatchFinally(moveNextMethodDef, out var tryStart, out var catchStart, out var finallyStart, out var finallyEnd, out var rethrow, out var exceptionVariable, out var returnVariable);
             SetTryCatchFinally(moveNextMethodDef, tryStart, catchStart, finallyStart, finallyEnd);
             OnExceptionFromField(moveNextMethodDef, rouMethod.Mos.Count, mosFieldRef, contextFieldRef, exceptionVariable, catchStart);
             IteratorOnExitOrMoveNext(moveNextMethodDef, rouMethod.Mos.Count, mosFieldRef, contextFieldRef, returnsFieldRef, currentFieldRef, returnVariable, finallyStart, finallyEnd);

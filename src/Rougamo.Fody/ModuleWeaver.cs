@@ -28,8 +28,15 @@ namespace Rougamo.Fody
         private MethodReference _methodMethodContextCtorRef;
         private MethodReference _methodMethodContextSetExceptionRef;
         private MethodReference _methodMethodContextSetReturnValueRef;
+        private MethodReference _methodMethodContextGetReturnValueRef;
         private MethodReference _methodMethodContextGetHasExceptionRef;
+        private MethodReference _methodMethodContextGetExceptionHandledRef;
+        private MethodReference _methodMethodContextGetReturnValueReplacedRef;
         private Dictionary<string, MethodReference> _methodIMosRef;
+
+        // Private fields cannot be accessed externally even using IL
+        //private FieldReference _fieldMethodContextExceptionRef;
+        //private FieldReference _fieldMethodContextReturnValueRef;
 
         private List<RouType> _rouTypes;
 

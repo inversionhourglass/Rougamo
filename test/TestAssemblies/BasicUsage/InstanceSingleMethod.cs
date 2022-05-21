@@ -18,9 +18,9 @@ namespace BasicUsage
         }
 
         [OnSuccess]
-        public string Success()
+        public int Success()
         {
-            return nameof(Success);
+            return nameof(Success).Length;
         }
 
         [OnExit]

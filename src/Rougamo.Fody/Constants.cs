@@ -32,9 +32,14 @@
         public const string PROP_Exception = "Exception";
         public const string PROP_HasException = "HasException";
         public const string PROP_ReturnValue = "ReturnValue";
+        public const string PROP_ExceptionHandled = "ExceptionHandled";
+        public const string PROP_ReturnValueReplaced = "ReturnValueReplaced";
 
         public const string FIELD_Flags = "<Flags>k__BackingField";
         public const string FIELD_Repulsions = "<Repulsions>k__BackingField";
+        // Private fields cannot be accessed externally even using IL
+        //public const string FIELD_Exception = "<Exception>k__BackingField";
+        //public const string FIELD_ReturnValue = "<ReturnValue>k__BackingField";
         public const string FIELD_RougamoMos = ">_<rougamo_mos";
         public const string FIELD_RougamoContext = ">_<rougamo_context";
         public const string FIELD_IteratorReturnList = ">_<returns";

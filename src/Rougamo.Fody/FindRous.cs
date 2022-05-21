@@ -83,6 +83,12 @@ namespace Rougamo.Fody
                 _methodMethodContextCtorRef = typeMethodContextDef.GetConstructors().First().ImportInto(ModuleDefinition);
                 _methodMethodContextSetExceptionRef = typeMethodContextDef.RecursionImportPropertySet(ModuleDefinition, Constants.PROP_Exception);
                 _methodMethodContextSetReturnValueRef = typeMethodContextDef.RecursionImportPropertySet(ModuleDefinition, Constants.PROP_ReturnValue);
+                _methodMethodContextGetReturnValueRef = typeMethodContextDef.RecursionImportPropertyGet(ModuleDefinition, Constants.PROP_ReturnValue);
+                _methodMethodContextGetExceptionHandledRef = typeMethodContextDef.RecursionImportPropertyGet(ModuleDefinition, Constants.PROP_ExceptionHandled);
+                _methodMethodContextGetReturnValueReplacedRef = typeMethodContextDef.RecursionImportPropertyGet(ModuleDefinition, Constants.PROP_ReturnValueReplaced);
+                // Private fields cannot be accessed externally even using IL
+                //_fieldMethodContextExceptionRef = typeMethodContextDef.Fields.Single(x => x.Name == Constants.FIELD_Exception).ImportInto(ModuleDefinition);
+                //_fieldMethodContextReturnValueRef = typeMethodContextDef.Fields.Single(x => x.Name == Constants.FIELD_ReturnValue).ImportInto(ModuleDefinition);
                 _methodMethodContextGetHasExceptionRef = typeMethodContextDef.RecursionImportPropertyGet(ModuleDefinition, Constants.PROP_HasException);
                 _typeObjectArrayRef = _methodMethodContextCtorRef.Parameters.Last().ParameterType;
             }
