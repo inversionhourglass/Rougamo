@@ -22,14 +22,14 @@ public class LoggingAttribute : MoAttribute
         Log.Error("方法执行异常", context.Exception);
     }
 
-    public override void OnExit(MethodContext context)
-    {
-        Log.Info("方法退出时，不论方法执行成功还是异常，都会执行");
-    }
-
     public override void OnSuccess(MethodContext context)
     {
         Log.Info("方法执行成功后");
+    }
+
+    public override void OnExit(MethodContext context)
+    {
+        Log.Info("方法退出时，不论方法执行成功还是异常，都会执行");
     }
 }
 
@@ -80,6 +80,28 @@ public class Service
 }
 // 2.2.应用于程序集上，该程序集所有public方法都将应用静态织入
 [assembly: Logging]
+```
+
+### 异常处理和修改返回值（v1.1.0）
+在`OnException`方法中可以通过调用`MethodContext`的`HandledException`方法表明异常已处理并设置返回值，
+在`OnSuccess`方法中可以通过调用`MethodContext`的`ReplaceReturnValue`方法修改方法实际的返回值，需要注意的是，
+不要直接通过`ReturnValue`、`ExceptionHandled`等这些属性来修改返回值和处理异常，`HandledException`和
+`ReplaceReturnValue`包含一些其他逻辑，后续可能还会更新。
+```csharp
+public class TestAttribute : MoAttribute
+{
+    public override void OnException(MethodContext context)
+    {
+        // 处理异常并将返回值设置为newReturnValue，如果方法无返回值(void)，直接传入null即可
+        context.HandledException(this, newReturnValue);
+    }
+
+    public override void OnSuccess(MethodContext context)
+    {
+        // 修改方法返回值
+        context.ReplaceReturnValue(this, newReturnValue);
+    }
+}
 ```
 
 ### 忽略织入(IgnoreMoAttribute)

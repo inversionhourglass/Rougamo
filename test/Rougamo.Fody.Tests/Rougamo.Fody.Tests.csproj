@@ -3,6 +3,7 @@
   <PropertyGroup>
     <TargetFrameworks>net461;net48;netcoreapp3.1;net6</TargetFrameworks>
     <IsPackable>false</IsPackable>
+    <DisableFody>true</DisableFody>
   </PropertyGroup>
 
   <ItemGroup>
