@@ -181,7 +181,8 @@ namespace Rougamo.Fody
             {
                 if (instruction.OpCode.Code == Code.Call && instruction.Operand is MethodReference setException &&
                     (setException.DeclaringType.FullName.StartsWith("System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1<") ||
-                    setException.DeclaringType.FullName.StartsWith("System.Runtime.CompilerServices.AsyncValueTaskMethodBuilder`1<")) &&
+                    setException.DeclaringType.FullName.StartsWith("System.Runtime.CompilerServices.AsyncValueTaskMethodBuilder`1<") ||
+                    setException.DeclaringType.FullName.StartsWith("System.Threading.Tasks.Sources.ManualResetValueTaskSourceCore`1<")) &&
                     setException.Name == "SetException")
                 {
                     setExceptionLast = instruction;
