@@ -1,4 +1,5 @@
 ﻿using Rougamo.Context;
+using System.Collections.Generic;
 
 namespace BasicUsage.Attributes
 {
@@ -7,6 +8,8 @@ namespace BasicUsage.Attributes
         public static int IntValue = nameof(OnSuccess).Length;
 
         public static string StringValue = nameof(OnSuccess);
+
+        public static IEnumerable<int> IteratorValue = new int[] { 135, 222, 790 };
 
         public override void OnSuccess(MethodContext context)
         {
@@ -18,6 +21,10 @@ namespace BasicUsage.Attributes
             else if (context.RealReturnType == typeof(string))
             {
                 context.ReplaceReturnValue(this, StringValue);
+            }
+            else if(context.RealReturnType == typeof(IEnumerable<int>))
+            {
+                context.ReplaceReturnValue(this, IteratorValue);
             }
         }
     }
