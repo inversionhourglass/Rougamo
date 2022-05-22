@@ -23,7 +23,7 @@ namespace Rougamo.Fody
         {
             var instructions = new List<Instruction>();
             moVariables = LoadMosOnStack(rouMethod, instructions);
-            contextVariable = CreateMethodContextVariable(rouMethod.MethodDef, instructions);
+            contextVariable = CreateMethodContextVariable(rouMethod.MethodDef, false, false, instructions);
             ExecuteMoMethod(Constants.METHOD_OnEntry, moVariables, contextVariable, instructions, false);
             rouMethod.MethodDef.Body.Instructions.InsertBefore(tryStart, instructions);
         }

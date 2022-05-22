@@ -338,6 +338,27 @@ namespace Rougamo.Fody
             }
         }
 
+        public static Instruction Ldloc2Stloc(this Instruction instruction, string exceptionMessage)
+        {
+            switch (instruction.OpCode.Code)
+            {
+                case Code.Ldloc_0:
+                    return Instruction.Create(OpCodes.Stloc_0);
+                case Code.Ldloc_1:
+                    return Instruction.Create(OpCodes.Stloc_1);
+                case Code.Ldloc_2:
+                    return Instruction.Create(OpCodes.Stloc_2);
+                case Code.Ldloc_3:
+                    return Instruction.Create(OpCodes.Stloc_3);
+                case Code.Ldloc:
+                    return Instruction.Create(OpCodes.Stloc, (VariableDefinition)instruction.Operand);
+                case Code.Ldloc_S:
+                    return Instruction.Create(OpCodes.Stloc_S, (VariableDefinition)instruction.Operand);
+                default:
+                    throw new RougamoException(exceptionMessage);
+            }
+        }
+
         public static TypeReference GetVariableType(this Instruction ldlocIns, MethodBody body)
         {
             switch (ldlocIns.OpCode.Code)

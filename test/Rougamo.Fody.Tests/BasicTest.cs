@@ -25,6 +25,8 @@ namespace Rougamo.Fody.Tests
             {
                 Assert.Equal(arrArg[i], instance.Context.Arguments[2][i]);
             }
+            Assert.False(instance.Context.IsAsync);
+            Assert.False(instance.Context.IsIterator);
 
             instance.Context = null;
             Assert.Throws<InvalidOperationException>(() => instance.Exception());
@@ -59,6 +61,8 @@ namespace Rougamo.Fody.Tests
             {
                 Assert.Equal(arrArg[i], instance.Context.Arguments[2][i]);
             }
+            Assert.True(instance.Context.IsAsync);
+            Assert.False(instance.Context.IsIterator);
 
             instance.Context = null;
             await Assert.ThrowsAsync<InvalidOperationException>(() => (Task)instance.ExceptionAsync());
@@ -112,6 +116,39 @@ namespace Rougamo.Fody.Tests
 
             var originValue = originInstance.SucceededUnrecognized();
             var unrecognizedValue = instance.SucceededUnrecognized();
+            Assert.Equal(originValue, unrecognizedValue);
+        }
+
+        [Fact]
+        public async Task AsyncModifyReturnValueTest()
+        {
+            var originInstance = new AsyncModifyReturnValue();
+            var instance = GetInstance("BasicUsage.AsyncModifyReturnValue");
+
+            await Assert.ThrowsAsync<InvalidOperationException>(() => originInstance.ExceptionAsync());
+            var exceptionHandledValue = await (Task<string>)instance.ExceptionAsync();
+            Assert.Equal(ExceptionHandleAttribute.StringValue, exceptionHandledValue);
+
+            await Assert.ThrowsAsync<InvalidOperationException>(() => originInstance.ExceptionWithUnboxAsync());
+            var exceptionHandledUnboxValue = await (Task<int>)instance.ExceptionWithUnboxAsync();
+            Assert.Equal(ExceptionHandleAttribute.IntValue, exceptionHandledUnboxValue);
+
+            await Assert.ThrowsAsync<InvalidOperationException>(() => originInstance.ExceptionUnhandledAsync());
+            await Assert.ThrowsAsync<InvalidOperationException>(() => (Task)instance.ExceptionUnhandledAsync());
+
+            var args = new object[] { 1, '-', nameof(ModifyReturnValueTest), 3.14 };
+            var originSuccessValue = await originInstance.SucceededAsync(args);
+            var replacedSuccessValue = await (Task<string>)instance.SucceededAsync(args);
+            Assert.NotEqual(originSuccessValue, replacedSuccessValue);
+            Assert.Equal(ReturnValueReplaceAttribute.StringValue, replacedSuccessValue);
+
+            var originUnboxValue = await originInstance.SucceededWithUnboxAsync();
+            var replacedUnboxValue = await (Task<int>)instance.SucceededWithUnboxAsync();
+            Assert.NotEqual(originUnboxValue, replacedUnboxValue);
+            Assert.Equal(ReturnValueReplaceAttribute.IntValue, replacedUnboxValue);
+
+            var originValue = await originInstance.SucceededUnrecognizedAsync();
+            var unrecognizedValue = await (Task<double>)instance.SucceededUnrecognizedAsync();
             Assert.Equal(originValue, unrecognizedValue);
         }
     }

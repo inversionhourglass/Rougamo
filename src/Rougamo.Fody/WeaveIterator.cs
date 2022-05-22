@@ -9,7 +9,7 @@ namespace Rougamo.Fody
     {
         private void IteratorMethodWeave(RouMethod rouMethod)
         {
-            IteratorOnEntry(rouMethod, Constants.TYPE_IteratorStateMachineAttribute, out var stateTypeDef, out var mosFieldDef, out var contextFieldDef, out var returnsFieldDef);
+            IteratorOnEntry(rouMethod, Constants.TYPE_IteratorStateMachineAttribute, false, out var stateTypeDef, out var mosFieldDef, out var contextFieldDef, out var returnsFieldDef);
             var moveNextMethodDef = stateTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
             FieldReference mosFieldRef = mosFieldDef;
             FieldReference contextFieldRef = contextFieldDef;
@@ -39,7 +39,7 @@ namespace Rougamo.Fody
             moveNextMethodDef.Body.OptimizePlus();
         }
 
-        private TypeReference IteratorOnEntry(RouMethod rouMethod, string stateMachineName, out TypeDefinition stateTypeDef, out FieldDefinition mosFieldDef, out FieldDefinition contextFieldDef, out FieldDefinition returnsFieldDef)
+        private TypeReference IteratorOnEntry(RouMethod rouMethod, string stateMachineName, bool isAsync, out TypeDefinition stateTypeDef, out FieldDefinition mosFieldDef, out FieldDefinition contextFieldDef, out FieldDefinition returnsFieldDef)
         {
             IteratorFieldDefinition(rouMethod, stateMachineName, out stateTypeDef, out mosFieldDef, out contextFieldDef, out returnsFieldDef);
             var stateMachineTypeRef = IteratorGetEntryStateTypeReference(rouMethod.MethodDef.Body);
@@ -50,7 +50,7 @@ namespace Rougamo.Fody
             rouMethod.MethodDef.Body.Instructions.InsertBefore(retIns, Instruction.Create(OpCodes.Stloc, stateMachineVariable));
             InitReturnsField(rouMethod, returnsFieldDef, stateMachineTypeRef, stateMachineVariable, retIns);
             InitMosField(rouMethod, mosFieldRef, stateMachineVariable, retIns);
-            InitMethodContextField(rouMethod, contextFieldRef, stateMachineVariable, retIns);
+            InitMethodContextField(rouMethod, contextFieldRef, stateMachineVariable, retIns, isAsync, true);
             rouMethod.MethodDef.Body.Instructions.InsertBefore(retIns, Instruction.Create(OpCodes.Ldloc, stateMachineVariable));
             ExecuteMoMethod(Constants.METHOD_OnEntry, rouMethod.MethodDef, rouMethod.Mos.Count, stateMachineVariable, mosFieldRef, contextFieldRef, retIns.Previous, false);
             var returnType = rouMethod.MethodDef.ReturnType;

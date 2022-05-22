@@ -11,11 +11,11 @@ namespace BasicUsage.Attributes
         public override void OnException(MethodContext context)
         {
             base.OnException(context);
-            if(context.ReturnType == typeof(int))
+            if(context.RealReturnType == typeof(int))
             {
                 context.HandledException(this, IntValue);
             }
-            else if(context.ReturnType == typeof(string))
+            else if(context.RealReturnType == typeof(string))
             {
                 context.HandledException(this, StringValue);
             }

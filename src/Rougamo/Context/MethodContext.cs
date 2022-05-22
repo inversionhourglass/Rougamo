@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace Rougamo.Context
 {
@@ -10,11 +12,13 @@ namespace Rougamo.Context
     {
         /// <summary>
         /// </summary>
-        public MethodContext(object target, Type targetType, MethodBase method, object[] args)
+        public MethodContext(object target, Type targetType, MethodBase method, bool isAsync, bool isIterator, object[] args)
         {
             Target = target;
             TargetType = targetType;
             Method = method;
+            IsAsync = isAsync;
+            IsIterator = isIterator;
             Arguments = args;
         }
 
@@ -39,14 +43,49 @@ namespace Rougamo.Context
         public MethodBase Method { get; private set; }
 
         /// <summary>
-        /// Method return type
+        /// Is method run in async
         /// </summary>
+        public bool IsAsync { get; }
+
+        /// <summary>
+        /// return true if method use yield return syntax
+        /// </summary>
+        public bool IsIterator { get; }
+
+        /// <summary>
+        /// Method decleard return type, return Task/Task&lt;&gt;/ValueTask/ValueTask&lt;&gt; even if method run in async
+        /// </summary>
+        [Obsolete("use RealReturnType to instead")]
         public Type ReturnType => (Method as MethodInfo)?.ReturnType;
+
+        /// <summary>
+        /// Method real return type, return first generic argument if current method is an async Task&lt;&gt;/ValueTask&lt;&gt; method, 
+        /// or return typeof(void) if method is an async Task/ValueTask method
+        /// </summary>
+        public Type RealReturnType
+        {
+            get
+            {
+                if(Method is MethodInfo methodInfo)
+                {
+                    if (IsAsync)
+                    {
+                        if(methodInfo.ReturnType == typeof(Task) || methodInfo.ReturnType.FullName == "System.Threading.Tasks.ValueTask")
+                        {
+                            return typeof(void);
+                        }
+                        return methodInfo.ReturnType.GetGenericArguments().Single();
+                    }
+                    return methodInfo.ReturnType;
+                }
+                return null;
+            }
+        }
 
         /// <summary>
         /// Return true if return value type is not void
         /// </summary>
-        public bool HasReturnValue => ReturnType != typeof(void);
+        public bool HasReturnValue => RealReturnType != typeof(void);
 
         /// <summary>
         /// Method return value, if you want to assign a value to it, you'd better use <see cref="HandledException(IMo, object)"/> or <see cref="ReplaceReturnValue(IMo, object)"/>
@@ -104,9 +143,9 @@ namespace Rougamo.Context
         {
             if (HasReturnValue)
             {
-                if (!ReturnType.IsAssignableFrom(returnValue.GetType()))
+                if (!RealReturnType.IsAssignableFrom(returnValue.GetType()))
                 {
-                    throw new ArgumentException($"Method return type({ReturnType.FullName}) is not assignable from returnvalue({returnValue.GetType().FullName})");
+                    throw new ArgumentException($"Method return type({RealReturnType.FullName}) is not assignable from returnvalue({returnValue.GetType().FullName})");
                 }
                 ReturnValue = returnValue;
             }

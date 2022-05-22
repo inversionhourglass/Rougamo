@@ -244,31 +244,35 @@ namespace Rougamo.Fody
 
         #endregion LoadMosOnStack
 
-        private VariableDefinition CreateMethodContextVariable(MethodDefinition methodDef, List<Instruction> instructions)
+        private VariableDefinition CreateMethodContextVariable(MethodDefinition methodDef, bool isAsync, bool isIterator, List<Instruction> instructions)
         {
             var variable = methodDef.Body.CreateVariable(_typeMethodContextRef);
 
-            InitMethodContext(methodDef, instructions);
+            InitMethodContext(methodDef, isAsync, isIterator, instructions);
             instructions.Add(Instruction.Create(OpCodes.Stloc, variable));
 
             return variable;
         }
 
-        private void InitMethodContextField(RouMethod rouMethod, FieldReference contextFieldRef, VariableDefinition variable, Instruction insertBeforeThis)
+        private void InitMethodContextField(RouMethod rouMethod, FieldReference contextFieldRef, VariableDefinition variable, Instruction insertBeforeThis, bool isAsync, bool isIterator)
         {
             var bodyInstructions = rouMethod.MethodDef.Body.Instructions;
             var instructions = new List<Instruction>();
             bodyInstructions.InsertBefore(insertBeforeThis, variable.LdlocOrA());
-            InitMethodContext(rouMethod.MethodDef, instructions);
+            InitMethodContext(rouMethod.MethodDef, isAsync, isIterator, instructions);
             bodyInstructions.InsertBefore(insertBeforeThis, instructions);
             bodyInstructions.InsertBefore(insertBeforeThis, Instruction.Create(OpCodes.Stfld, contextFieldRef));
         }
 
-        private void InitMethodContext(MethodDefinition methodDef, List<Instruction> instructions)
+        private void InitMethodContext(MethodDefinition methodDef, bool isAsync, bool isIterator, List<Instruction> instructions)
         {
+            var isAsyncCode = isAsync ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0;
+            var isIteratorCode = isIterator ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0;
             instructions.Add(LoadThisOnStack(methodDef));
             instructions.AddRange(LoadDeclaringTypeOnStack(methodDef));
             instructions.AddRange(LoadMethodBaseOnStack(methodDef));
+            instructions.Add(Instruction.Create(isAsyncCode));
+            instructions.Add(Instruction.Create(isIteratorCode));
             instructions.AddRange(LoadMethodArgumentsOnStack(methodDef));
             instructions.Add(Instruction.Create(OpCodes.Newobj, _methodMethodContextCtorRef));
         }

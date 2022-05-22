@@ -11,11 +11,11 @@ namespace BasicUsage.Attributes
         public override void OnSuccess(MethodContext context)
         {
             base.OnSuccess(context);
-            if (context.ReturnType == typeof(int))
+            if (context.RealReturnType == typeof(int))
             {
                 context.ReplaceReturnValue(this, IntValue);
             }
-            else if (context.ReturnType == typeof(string))
+            else if (context.RealReturnType == typeof(string))
             {
                 context.ReplaceReturnValue(this, StringValue);
             }

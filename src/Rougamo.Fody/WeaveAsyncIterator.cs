@@ -8,7 +8,7 @@ namespace Rougamo.Fody
     {
         private void AsyncIteratorMethodWeave(RouMethod rouMethod)
         {
-            IteratorOnEntry(rouMethod, Constants.TYPE_AsyncIteratorStateMachineAttribute, out var stateTypeDef, out var mosFieldDef, out var contextFieldDef, out var returnsFieldDef);
+            IteratorOnEntry(rouMethod, Constants.TYPE_AsyncIteratorStateMachineAttribute, true, out var stateTypeDef, out var mosFieldDef, out var contextFieldDef, out var returnsFieldDef);
             var moveNextMethodDef = stateTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
             FieldReference mosFieldRef = mosFieldDef;
             FieldReference contextFieldRef = contextFieldDef;
@@ -28,7 +28,7 @@ namespace Rougamo.Fody
                 returnsFieldRef = returnsFieldRef == null ? null : new FieldReference(returnsFieldDef.Name, returnsFieldDef.FieldType, stateTypeRef);
                 currentFieldRef = new FieldReference(currentFieldRef.Name, currentFieldRef.FieldType, stateTypeRef);
             }
-            AsyncOnExceptionWithExit(rouMethod, moveNextMethodDef, mosFieldRef, contextFieldRef);
+            AsyncOnExceptionWithExit(rouMethod, moveNextMethodDef, mosFieldRef, contextFieldRef, null, null, null);
             AsyncIteratorOnSuccessWithExit(rouMethod, moveNextMethodDef, mosFieldRef, contextFieldRef, returnsFieldRef, currentFieldRef);
 
             rouMethod.MethodDef.Body.OptimizePlus();
