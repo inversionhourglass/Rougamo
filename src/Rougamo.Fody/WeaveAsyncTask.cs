@@ -79,7 +79,7 @@ namespace Rougamo.Fody
 
             var instructions = moveNextMethodDef.Body.Instructions;
             var closeThisIns = setResultIns.ClosePreviousLdarg0(rouMethod.MethodDef);
-            var isValueType = returnTypeRef != null && returnTypeRef.IsValueType || returnTypeRef.IsEnum(out _) && !returnTypeRef.IsArray || returnTypeRef.IsGenericParameter;
+            var isValueType = returnTypeRef != null && (returnTypeRef.IsValueType || returnTypeRef.IsEnum(out _) && !returnTypeRef.IsArray || returnTypeRef.IsGenericParameter);
             if (returnTypeRef != null)
             {
                 var ldlocResult = setResultIns.Previous.Copy();
@@ -180,14 +180,12 @@ namespace Rougamo.Fody
             while (true)
             {
                 if (instruction.OpCode.Code == Code.Call && instruction.Operand is MethodReference setException &&
-                    (new[] {
+                    new[] {
                         Constants.TYPE_AsyncTaskMethodBuilder,
                         Constants.TYPE_AsyncValueTaskMethodBuilder,
-                        Constants.TYPE_AsyncVoidMethodBuilder
-                    }.Any(x => setException.DeclaringType.FullName.StartsWith(x))) &&
-                    //setException.DeclaringType.FullName.StartsWith("System.Runtime.CompilerServices.AsyncTaskMethodBuilder`1<") ||
-                    //setException.DeclaringType.FullName.StartsWith("System.Runtime.CompilerServices.AsyncValueTaskMethodBuilder`1<") ||
-                    //setException.DeclaringType.FullName.StartsWith("System.Threading.Tasks.Sources.ManualResetValueTaskSourceCore`1<")) &&
+                        Constants.TYPE_AsyncVoidMethodBuilder,
+                        Constants.TYPE_ManualResetValueTaskSourceCore
+                    }.Any(x => setException.DeclaringType.FullName.StartsWith(x)) &&
                     setException.Name == "SetException")
                 {
                     setExceptionLast = instruction;
