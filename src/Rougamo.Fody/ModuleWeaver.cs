@@ -8,6 +8,7 @@ namespace Rougamo.Fody
 {
     public partial class ModuleWeaver : BaseModuleWeaver
     {
+        private TypeReference _typeVoidRef;
         private TypeReference _typeSystemRef;
         private TypeReference _typeMethodBaseRef;
         private TypeReference _typeIntRef;

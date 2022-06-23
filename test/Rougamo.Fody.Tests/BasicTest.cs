@@ -234,5 +234,13 @@ namespace Rougamo.Fody.Tests
             await Assert.ThrowsAsync<InvalidOperationException>(() => ((IAsyncEnumerable<int>)instance.ExceptionAsync(min)).ToArrayAsync().AsTask());
 
         }
+
+        [Fact]
+        public async Task Issue8Test()
+        {
+            var instance = GetInstance("BasicUsage.Issue8");
+
+            await (Task)instance.Command();
+        }
     }
 }

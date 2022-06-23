@@ -9,6 +9,7 @@ namespace Rougamo.Fody
     {
         void LoadBasicReference()
         {
+            _typeVoidRef = FindTypeDefinition(typeof(void).FullName).ImportInto(ModuleDefinition);
             _typeSystemRef = FindTypeDefinition(typeof(Type).FullName).ImportInto(ModuleDefinition);
             _typeMethodBaseRef = FindTypeDefinition(typeof(MethodBase).FullName).ImportInto(ModuleDefinition);
             _typeIntRef = FindTypeDefinition(typeof(int).FullName).ImportInto(ModuleDefinition);

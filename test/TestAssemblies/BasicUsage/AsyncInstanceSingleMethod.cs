@@ -7,6 +7,12 @@ namespace BasicUsage
     public class AsyncInstanceSingleMethod : MoDataContainer
     {
         [OnEntry]
+        public async Task VoidAsync()
+        {
+            await Task.Yield();
+        }
+
+        [OnEntry]
 #if NET461 || NET6
         public async Task<string> EntryAsync(int number, string str, object[] array)
 #else

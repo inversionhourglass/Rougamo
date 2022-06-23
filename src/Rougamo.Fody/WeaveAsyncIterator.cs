@@ -28,7 +28,7 @@ namespace Rougamo.Fody
                 returnsFieldRef = returnsFieldRef == null ? null : new FieldReference(returnsFieldDef.Name, returnsFieldDef.FieldType, stateTypeRef);
                 currentFieldRef = new FieldReference(currentFieldRef.Name, currentFieldRef.FieldType, stateTypeRef);
             }
-            AsyncOnExceptionWithExit(rouMethod, moveNextMethodDef, mosFieldRef, contextFieldRef, null, null, null);
+            AsyncOnExceptionWithExit(rouMethod, moveNextMethodDef, mosFieldRef, contextFieldRef, null, _typeVoidRef, null);
             AsyncIteratorOnSuccessWithExit(rouMethod, moveNextMethodDef, mosFieldRef, contextFieldRef, returnsFieldRef, currentFieldRef);
 
             rouMethod.MethodDef.Body.OptimizePlus();
