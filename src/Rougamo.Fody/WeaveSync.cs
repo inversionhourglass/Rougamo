@@ -58,7 +58,7 @@ namespace Rougamo.Fody
             }
             if (finallyEnd == null)
             {// always throws exception
-                finallyEnd = Instruction.Create(OpCodes.Ldloc, returnVariable);
+                finallyEnd = returnVariable == null ? Instruction.Create(OpCodes.Nop) : Instruction.Create(OpCodes.Ldloc, returnVariable);
                 instructions.Add(finallyEnd);
                 instructions.Add(Instruction.Create(OpCodes.Ret));
                 var finallyHandler = methodDef.Body.ExceptionHandlers.Single(x => x.HandlerType == ExceptionHandlerType.Finally && x.HandlerEnd == null);

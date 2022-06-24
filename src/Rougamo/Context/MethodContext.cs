@@ -68,15 +68,16 @@ namespace Rougamo.Context
             {
                 if(Method is MethodInfo methodInfo)
                 {
+                    var returnType = methodInfo.ReturnType;
                     if (IsAsync)
                     {
-                        if(methodInfo.ReturnType == typeof(Task) || methodInfo.ReturnType.FullName == "System.Threading.Tasks.ValueTask")
+                        if (returnType == typeof(void) || returnType == typeof(Task) || returnType.FullName == "System.Threading.Tasks.ValueTask")
                         {
                             return typeof(void);
                         }
-                        return methodInfo.ReturnType.GetGenericArguments().Single();
+                        return returnType.GetGenericArguments().Single();
                     }
-                    return methodInfo.ReturnType;
+                    return returnType;
                 }
                 return null;
             }

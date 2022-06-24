@@ -241,6 +241,10 @@ namespace Rougamo.Fody.Tests
             var instance = GetInstance("BasicUsage.Issue8");
 
             await (Task)instance.Command();
+
+            instance.Command1();
+
+            await Task.Delay(1000);
         }
     }
 }

@@ -13,5 +13,18 @@ namespace BasicUsage
             await Task.Delay(500);
             throw new Exception("1231232");
         }
+
+        [Log]
+        public async void Command1()
+        {
+            await Task.Delay(500);
+            throw new Exception("1231232");
+        }
+
+        [Log]
+        public void Command2()
+        {
+            throw new Exception("1231232");
+        }
     }
 }
