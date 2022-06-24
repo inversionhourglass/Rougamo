@@ -58,9 +58,17 @@ namespace Rougamo.Fody
             }
             if (finallyEnd == null)
             {// always throws exception
-                finallyEnd = returnVariable == null ? Instruction.Create(OpCodes.Nop) : Instruction.Create(OpCodes.Ldloc, returnVariable);
-                instructions.Add(finallyEnd);
-                instructions.Add(Instruction.Create(OpCodes.Ret));
+                if(returnVariable == null)
+                {
+                    finallyEnd = Instruction.Create(OpCodes.Ret);
+                    instructions.Add(finallyEnd);
+                }
+                else
+                {
+                    finallyEnd = Instruction.Create(OpCodes.Ldloc, returnVariable);
+                    instructions.Add(finallyEnd);
+                    instructions.Add(Instruction.Create(OpCodes.Ret));
+                }
                 var finallyHandler = methodDef.Body.ExceptionHandlers.Single(x => x.HandlerType == ExceptionHandlerType.Finally && x.HandlerEnd == null);
                 finallyHandler.HandlerEnd = finallyEnd;
             }
@@ -91,11 +99,11 @@ namespace Rougamo.Fody
             }
             ExecuteMoMethod(Constants.METHOD_OnSuccess, moVariables, contextVariable, instructions, this.ConfigReverseCallEnding());
             
-            instructions.Add(Instruction.Create(OpCodes.Ldloc, contextVariable));
-            instructions.Add(Instruction.Create(OpCodes.Callvirt, _methodMethodContextGetReturnValueReplacedRef));
-            instructions.Add(Instruction.Create(OpCodes.Brfalse_S, finallyStart.Next));
             if (!returnType.Is(Constants.TYPE_Void))
             {
+                instructions.Add(Instruction.Create(OpCodes.Ldloc, contextVariable));
+                instructions.Add(Instruction.Create(OpCodes.Callvirt, _methodMethodContextGetReturnValueReplacedRef));
+                instructions.Add(Instruction.Create(OpCodes.Brfalse_S, finallyStart.Next));
                 instructions.AddRange(ReplaceReturnValue(contextVariable, returnVariable, returnType));
             }
 
