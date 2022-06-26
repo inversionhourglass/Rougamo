@@ -211,6 +211,25 @@ namespace Rougamo.Fody.Tests
             var unrecognizedValue = await (ValueTask<double>)instance.SucceededUnrecognizedAsync();
 #endif
             Assert.Equal(originValue, unrecognizedValue);
+
+
+            var originArrayValue = await originInstance.CachedArrayAsync();
+#if NET461 || NET6
+            var cachedArrayValue = await (Task<string[]>)instance.CachedArrayAsync();
+#else
+            var cachedArrayValue = await (ValueTask<string[]>)instance.CachedArrayAsync();
+#endif
+            Assert.NotEqual(originArrayValue, cachedArrayValue);
+            Assert.Equal(ReplaceValueOnEntryAttribute.ArrayValue, cachedArrayValue);
+
+#if NET461 || NET6
+            await Assert.ThrowsAsync<NullReferenceException>(() => originInstance.CachedEvenThrowsAsync());
+            var cachedArrayValueWithoutThrows = await (Task<string[]>)instance.CachedEvenThrowsAsync();
+#else
+            await Assert.ThrowsAsync<NullReferenceException>(() => originInstance.CachedEvenThrowsAsync().AsTask());
+            var cachedArrayValueWithoutThrows = await (ValueTask<string[]>)instance.CachedEvenThrowsAsync();
+#endif
+            Assert.Equal(ReplaceValueOnEntryAttribute.ArrayValue, cachedArrayValueWithoutThrows);
         }
 
         [Fact]

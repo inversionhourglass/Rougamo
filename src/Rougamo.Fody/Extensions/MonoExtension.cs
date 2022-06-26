@@ -437,6 +437,14 @@ namespace Rougamo.Fody
             return genericMethodRef.ImportInto(moduleDefinition);
         }
 
+        public static MethodReference GenericMethodReference(this MethodReference methodRef, params TypeReference[] genericTypeRefs)
+        {
+            var genericInstanceMethod = new GenericInstanceMethod(methodRef);
+            genericInstanceMethod.GenericArguments.Add(genericTypeRefs);
+
+            return genericInstanceMethod;
+        }
+
         private static Code[] _EmptyCodes = new[] {Code.Nop, Code.Ret};
         public static bool IsEmpty(this MethodDefinition methodDef)
         {

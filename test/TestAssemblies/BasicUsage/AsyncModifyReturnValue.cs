@@ -77,5 +77,25 @@ namespace BasicUsage
             await Task.Yield();
             return int.MaxValue * 1.0 / nameof(SucceededUnrecognizedAsync).Length;
         }
+
+        [ReplaceValueOnEntry]
+#if NET461 || NET6
+        public async Task<string[]> CachedArrayAsync()
+#else
+        public async ValueTask<string[]> CachedArrayAsync()
+#endif
+        {
+            return new string[0];
+        }
+
+        [ReplaceValueOnEntry]
+#if NET461 || NET6
+        public async Task<string[]> CachedEvenThrowsAsync()
+#else
+        public async ValueTask<string[]> CachedEvenThrowsAsync()
+#endif
+        {
+            throw new NullReferenceException();
+        }
     }
 }

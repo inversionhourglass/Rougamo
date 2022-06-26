@@ -1,7 +1,10 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Mono.Cecil.Rocks;
 using System;
+using System.Collections.Generic;
 using System.Linq;
+using static Mono.Cecil.Cil.Instruction;
 
 namespace Rougamo.Fody
 {
@@ -37,6 +40,7 @@ namespace Rougamo.Fody
 
         private TypeReference AsyncOnEntry(RouMethod rouMethod, out TypeDefinition stateTypeDef, out FieldDefinition mosFieldDef, out FieldDefinition contextFieldDef, out TypeDefinition builderDef)
         {
+            var returnType = rouMethod.MethodDef.ReturnType;
             AsyncFieldDefinition(rouMethod, out stateTypeDef, out mosFieldDef, out contextFieldDef);
             var tStateTypeDef = stateTypeDef;
             var stateMachineVariable = rouMethod.MethodDef.Body.Variables.Single(x => x.VariableType.Resolve() == tStateTypeDef);
@@ -45,10 +49,68 @@ namespace Rougamo.Fody
             var contextFieldRef = new FieldReference(contextFieldDef.Name, contextFieldDef.FieldType, stateMachineVariable.VariableType);
             InitMosField(rouMethod, mosFieldRef, stateMachineVariable, taskBuilderPreviousIns);
             InitMethodContextField(rouMethod, contextFieldRef, stateMachineVariable, taskBuilderPreviousIns, true, false);
-            ExecuteMoMethod(Constants.METHOD_OnEntry, rouMethod.MethodDef, rouMethod.Mos.Count, stateMachineVariable, mosFieldRef, contextFieldRef, taskBuilderPreviousIns, false);
+            var returnReplaceStartNop = Create(OpCodes.Nop);
+            rouMethod.MethodDef.Body.Instructions.InsertBefore(taskBuilderPreviousIns, returnReplaceStartNop);
+            ExecuteMoMethod(Constants.METHOD_OnEntry, rouMethod.MethodDef, rouMethod.Mos.Count, stateMachineVariable, mosFieldRef, contextFieldRef, returnReplaceStartNop, false);
 
-            var returnType = rouMethod.MethodDef.ReturnType;
+            rouMethod.MethodDef.Body.Instructions.InsertBefore(taskBuilderPreviousIns, AsyncIfReturnValueReplacedOnEntry(rouMethod.MethodDef, stateMachineVariable, contextFieldRef, taskBuilderPreviousIns, returnType));
+
             return returnType.Is(Constants.TYPE_Task) || returnType.Is(Constants.TYPE_ValueTask) || returnType.Is(Constants.TYPE_Void) ? _typeVoidRef : ((GenericInstanceType)returnType).GenericArguments[0];
+        }
+
+        private List<Instruction> AsyncIfReturnValueReplacedOnEntry(MethodDefinition methodDef, VariableDefinition stateMachineVariable, FieldReference contextFieldRef, Instruction ifNotOffset, TypeReference returnType)
+        {
+            var instructions = new List<Instruction>();
+            instructions.Add(Create(OpCodes.Ldloc, stateMachineVariable));
+            instructions.Add(Create(OpCodes.Ldfld, contextFieldRef));
+            instructions.Add(Create(OpCodes.Callvirt, _methodMethodContextGetReturnValueReplacedRef));
+            instructions.Add(Create(OpCodes.Brfalse_S, ifNotOffset));
+            if (returnType.IsTask())
+            {
+                var getCompletedTaskMethodDef = returnType.Resolve().Properties.Single(x => x.Name == "CompletedTask").GetMethod;
+                instructions.Add(Create(OpCodes.Call, Import(getCompletedTaskMethodDef)));
+            }
+            else if (returnType.IsValueTask())
+            {
+                var returnVariable = methodDef.Body.CreateVariable(returnType);
+                instructions.Add(Create(OpCodes.Ldloca, returnVariable));
+                instructions.Add(Create(OpCodes.Initobj, returnType));
+                instructions.Add(Create(OpCodes.Ldloc, returnVariable));
+            }
+            else if (returnType.IsVoid())
+            {
+                // do nothing
+            }
+            else
+            {
+                var valueType = ((GenericInstanceType)returnType).GenericArguments[0];
+                instructions.Add(Create(OpCodes.Ldloc, stateMachineVariable));
+                instructions.Add(Create(OpCodes.Ldfld, contextFieldRef));
+                instructions.Add(Create(OpCodes.Callvirt, _methodMethodContextGetReturnValueRef));
+                if (valueType.IsValueType || (!valueType.IsArray && valueType.IsEnum(out _)) || valueType.IsGenericParameter)
+                {
+                    instructions.Add(Create(OpCodes.Unbox_Any, valueType));
+                }
+                if (returnType.IsGenericTask())
+                {
+                    var fromResultMethodDef = returnType.Resolve().BaseType.Resolve().Methods.Single(x => x.Name == "FromResult");
+                    var fromResultMethodRef = Import(fromResultMethodDef).GenericMethodReference(valueType);
+                    instructions.Add(Create(OpCodes.Call, fromResultMethodRef));
+                }
+                else if (returnType.IsGenericValueTask())
+                {
+                    var ctorDef = returnType.Resolve().GetConstructors().Single(x => x.Parameters.Count == 1 && x.Parameters[0].ParameterType is GenericParameter);
+                    var ctorRef = returnType.GenericTypeMethodReference(Import(ctorDef), ModuleDefinition);
+                    instructions.Add(Create(OpCodes.Newobj, ctorRef));
+                }
+                else
+                {
+                    throw new NotImplementedException($"unknow async return type: {returnType.Resolve()?.FullName}");
+                }
+            }
+            instructions.Add(Create(OpCodes.Ret));
+
+            return instructions;
         }
 
         private void AsyncOnExceptionWithExit(RouMethod rouMethod, MethodDefinition moveNextMethodDef, FieldReference mosFieldRef, FieldReference contextFieldRef, FieldReference builderFieldRef, TypeReference returnTypeRef, Instruction setResultIns)
@@ -59,10 +121,10 @@ namespace Rougamo.Fody
 
             FindMoveNextSetExceptionFirstInstruction(moveNextMethodDef, exceptionHandler, out var setExceptionFirst, out var setExceptionLast);
 
-            instructions.InsertBefore(setExceptionFirst, Instruction.Create(OpCodes.Ldarg_0));
-            instructions.InsertBefore(setExceptionFirst, Instruction.Create(OpCodes.Ldfld, contextFieldRef));
+            instructions.InsertBefore(setExceptionFirst, Create(OpCodes.Ldarg_0));
+            instructions.InsertBefore(setExceptionFirst, Create(OpCodes.Ldfld, contextFieldRef));
             instructions.InsertBefore(setExceptionFirst, ldlocException);
-            instructions.InsertBefore(setExceptionFirst, Instruction.Create(OpCodes.Callvirt, _methodMethodContextSetExceptionRef));
+            instructions.InsertBefore(setExceptionFirst, Create(OpCodes.Callvirt, _methodMethodContextSetExceptionRef));
 
             var beforeSetException = setExceptionFirst.Previous;
             ExecuteMoMethod(Constants.METHOD_OnExit, moveNextMethodDef, rouMethod.Mos.Count, null, mosFieldRef, contextFieldRef, setExceptionLast.Next, this.ConfigReverseCallEnding());
@@ -83,14 +145,14 @@ namespace Rougamo.Fody
             if (!returnTypeRef.Is(Constants.TYPE_Void))
             {
                 var ldlocResult = setResultIns.Previous.Copy();
-                instructions.InsertBefore(closeThisIns, Instruction.Create(OpCodes.Ldarg_0));
-                instructions.InsertBefore(closeThisIns, Instruction.Create(OpCodes.Ldfld, contextFieldRef));
+                instructions.InsertBefore(closeThisIns, Create(OpCodes.Ldarg_0));
+                instructions.InsertBefore(closeThisIns, Create(OpCodes.Ldfld, contextFieldRef));
                 instructions.InsertBefore(closeThisIns, ldlocResult);
                 if (isValueType)
                 {
-                    instructions.InsertBefore(closeThisIns, Instruction.Create(OpCodes.Box, ldlocResult.GetVariableType(moveNextMethodDef.Body)));
+                    instructions.InsertBefore(closeThisIns, Create(OpCodes.Box, ldlocResult.GetVariableType(moveNextMethodDef.Body)));
                 }
-                instructions.InsertBefore(closeThisIns, Instruction.Create(OpCodes.Callvirt, _methodMethodContextSetReturnValueRef));
+                instructions.InsertBefore(closeThisIns, Create(OpCodes.Callvirt, _methodMethodContextSetReturnValueRef));
             }
             var beforeOnSuccessWeave = closeThisIns.Previous;
             ExecuteMoMethod(Constants.METHOD_OnExit, moveNextMethodDef, rouMethod.Mos.Count, null, mosFieldRef, contextFieldRef, closeThisIns, this.ConfigReverseCallEnding());
@@ -99,17 +161,17 @@ namespace Rougamo.Fody
             {
                 instructions.InsertBefore(onExitFirst, new[]
                 {
-                    Instruction.Create(OpCodes.Ldarg_0),
-                    Instruction.Create(OpCodes.Ldfld, contextFieldRef),
-                    Instruction.Create(OpCodes.Callvirt, _methodMethodContextGetReturnValueReplacedRef),
-                    Instruction.Create(OpCodes.Brfalse_S, onExitFirst),
-                    Instruction.Create(OpCodes.Ldarg_0),
-                    Instruction.Create(OpCodes.Ldfld, contextFieldRef),
-                    Instruction.Create(OpCodes.Callvirt, _methodMethodContextGetReturnValueRef),
+                    Create(OpCodes.Ldarg_0),
+                    Create(OpCodes.Ldfld, contextFieldRef),
+                    Create(OpCodes.Callvirt, _methodMethodContextGetReturnValueReplacedRef),
+                    Create(OpCodes.Brfalse_S, onExitFirst),
+                    Create(OpCodes.Ldarg_0),
+                    Create(OpCodes.Ldfld, contextFieldRef),
+                    Create(OpCodes.Callvirt, _methodMethodContextGetReturnValueRef),
                 });
                 if (isValueType)
                 {
-                    instructions.InsertBefore(onExitFirst, Instruction.Create(OpCodes.Unbox_Any, returnTypeRef));
+                    instructions.InsertBefore(onExitFirst, Create(OpCodes.Unbox_Any, returnTypeRef));
                 }
                 instructions.InsertBefore(onExitFirst, setResultIns.Previous.Ldloc2Stloc($"[{moveNextMethodDef.DeclaringType.FullName}] offset: {setResultIns.Previous.Offset}, it should be ldloc"));
             }
@@ -121,40 +183,40 @@ namespace Rougamo.Fody
             var instructions = moveNextMethodDef.Body.Instructions;
             instructions.InsertBefore(beforeThisInstruction, new[]
             {
-                Instruction.Create(OpCodes.Ldarg_0),
-                Instruction.Create(OpCodes.Ldfld, contextFieldRef),
-                Instruction.Create(OpCodes.Callvirt, _methodMethodContextGetExceptionHandledRef),
-                Instruction.Create(OpCodes.Brfalse_S, beforeThisInstruction)
+                Create(OpCodes.Ldarg_0),
+                Create(OpCodes.Ldfld, contextFieldRef),
+                Create(OpCodes.Callvirt, _methodMethodContextGetExceptionHandledRef),
+                Create(OpCodes.Brfalse_S, beforeThisInstruction)
             });
-            if (returnTypeRef.Is(Constants.TYPE_Void))
+            if (returnTypeRef.IsVoid())
             {
                 var setResultRef = builderFieldRef.FieldType.Resolve().Methods.Single(x => x.Name == "SetResult" && x.Parameters.Count == 0).ImportInto(ModuleDefinition);
                 instructions.InsertBefore(beforeThisInstruction, new[]
                 {
-                    Instruction.Create(OpCodes.Ldarg_0),
-                    Instruction.Create(OpCodes.Ldflda, builderFieldRef),
-                    Instruction.Create(OpCodes.Call, setResultRef)
+                    Create(OpCodes.Ldarg_0),
+                    Create(OpCodes.Ldflda, builderFieldRef),
+                    Create(OpCodes.Call, setResultRef)
                 });
             }
             else
             {
                 instructions.InsertBefore(beforeThisInstruction, new[]
                 {
-                    Instruction.Create(OpCodes.Ldarg_0),
-                    Instruction.Create(OpCodes.Ldfld, contextFieldRef),
-                    Instruction.Create(OpCodes.Callvirt, _methodMethodContextGetReturnValueRef),
+                    Create(OpCodes.Ldarg_0),
+                    Create(OpCodes.Ldfld, contextFieldRef),
+                    Create(OpCodes.Callvirt, _methodMethodContextGetReturnValueRef),
                 });
                 if (returnTypeRef.IsValueType || (!returnTypeRef.IsArray && returnTypeRef.IsEnum(out _)) || returnTypeRef.IsGenericParameter)
                 {
-                    instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Unbox_Any, returnTypeRef));
+                    instructions.InsertBefore(beforeThisInstruction, Create(OpCodes.Unbox_Any, returnTypeRef));
                 }
                 Instruction setReturnVariable;
                 Instruction getReturnVariable;
                 if (setResultIns == null)
                 {
                     var returnVariable = moveNextMethodDef.Body.CreateVariable(Import(returnTypeRef));
-                    setReturnVariable = Instruction.Create(OpCodes.Stloc, returnVariable);
-                    getReturnVariable = Instruction.Create(OpCodes.Ldloc, returnVariable);
+                    setReturnVariable = Create(OpCodes.Stloc, returnVariable);
+                    getReturnVariable = Create(OpCodes.Ldloc, returnVariable);
                 }
                 else
                 {
@@ -165,13 +227,13 @@ namespace Rougamo.Fody
                 instructions.InsertBefore(beforeThisInstruction, new[]
                 {
                     setReturnVariable,
-                    Instruction.Create(OpCodes.Ldarg_0),
-                    Instruction.Create(OpCodes.Ldflda, builderFieldRef),
+                    Create(OpCodes.Ldarg_0),
+                    Create(OpCodes.Ldflda, builderFieldRef),
                     getReturnVariable,
-                    Instruction.Create(OpCodes.Call, setResultRef)
+                    Create(OpCodes.Call, setResultRef)
                 });
             }
-            instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Br, leaves));
+            instructions.InsertBefore(beforeThisInstruction, Create(OpCodes.Br, leaves));
         }
 
         private void AsyncFieldDefinition(RouMethod rouMethod, out TypeDefinition stateTypeDef, out FieldDefinition mosFieldDef, out FieldDefinition contextFieldDef)

@@ -20,7 +20,7 @@ namespace Rougamo.Fody.Tests
             instance.Command1();
 
             instance.Execute();
-
+            
             await Task.Delay(1000);
         }
 
