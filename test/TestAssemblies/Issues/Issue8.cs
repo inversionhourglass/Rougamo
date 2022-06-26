@@ -1,17 +1,14 @@
-﻿using BasicUsage.Attributes;
+﻿using Issues.Attributes;
 using System;
-using System.IO;
 using System.Threading.Tasks;
 
-namespace BasicUsage
+namespace Issues
 {
     public class Issue8
     {
         private ExecuteCommand _command => new ExecuteCommand(obj =>
         {
-            File.AppendAllLines(@"D:\issue8.txt", new[] { "act in" });
             Command2();
-            File.AppendAllLines(@"D:\issue8.txt", new[] { "act out" });
         });
 
         [Log]
@@ -31,7 +28,6 @@ namespace BasicUsage
         [Log]
         public void Command2()
         {
-            File.AppendAllLines(@"D:\issue8.txt", new[] { "command2 in" });
             throw new Exception("1231232");
         }
 

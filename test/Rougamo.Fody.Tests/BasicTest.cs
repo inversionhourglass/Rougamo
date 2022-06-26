@@ -142,6 +142,15 @@ namespace Rougamo.Fody.Tests
             var originValue = originInstance.SucceededUnrecognized();
             var unrecognizedValue = instance.SucceededUnrecognized();
             Assert.Equal(originValue, unrecognizedValue);
+
+            var originArrayValue = originInstance.CachedArray();
+            var cachedArrayValue = instance.CachedArray();
+            Assert.NotEqual(originArrayValue, cachedArrayValue);
+            Assert.Equal(ReplaceValueOnEntryAttribute.ArrayValue, cachedArrayValue);
+
+            Assert.Throws<NullReferenceException>(() => originInstance.CachedEvenThrows());
+            var cachedArrayValueWithoutThrows = instance.CachedEvenThrows();
+            Assert.Equal(ReplaceValueOnEntryAttribute.ArrayValue, cachedArrayValueWithoutThrows);
         }
 
         [Fact]
@@ -232,21 +241,6 @@ namespace Rougamo.Fody.Tests
 
             await Assert.ThrowsAsync<InvalidOperationException>(() => originInstance.ExceptionAsync(min).ToArrayAsync().AsTask());
             await Assert.ThrowsAsync<InvalidOperationException>(() => ((IAsyncEnumerable<int>)instance.ExceptionAsync(min)).ToArrayAsync().AsTask());
-
-        }
-
-        [Fact]
-        public async Task Issue8Test()
-        {
-            var instance = GetInstance("BasicUsage.Issue8");
-
-            await (Task)instance.Command();
-
-            instance.Command1();
-
-            instance.Execute();
-
-            await Task.Delay(1000);
         }
     }
 }

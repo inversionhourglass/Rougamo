@@ -46,5 +46,17 @@ namespace BasicUsage
         {
             return int.MaxValue * 1.0 / nameof(SucceededUnrecognized).Length;
         }
+
+        [ReplaceValueOnEntry]
+        public string[] CachedArray()
+        {
+            return new string[0];
+        }
+
+        [ReplaceValueOnEntry]
+        public string[] CachedEvenThrows()
+        {
+            throw new NullReferenceException();
+        }
     }
 }

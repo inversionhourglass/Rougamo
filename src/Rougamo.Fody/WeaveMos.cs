@@ -1,9 +1,9 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Collections.Generic;
-using System;
 using System.Collections.Generic;
 using System.Linq;
+using static Mono.Cecil.Cil.Instruction;
 
 namespace Rougamo.Fody
 {
@@ -61,19 +61,18 @@ namespace Rougamo.Fody
         private void GenerateTryCatchFinally(MethodDefinition methodDef, out Instruction tryStart, out Instruction catchStart, out Instruction finallyStart, out Instruction finallyEnd, out Instruction rethrow, out VariableDefinition exceptionVariable, out VariableDefinition returnVariable)
         {
             var instructions = methodDef.Body.Instructions;
+            var isVoid = methodDef.ReturnType.IsVoid();
             tryStart = instructions.First();
             finallyEnd = null;
-            returnVariable = null;
+            returnVariable = isVoid ? null : methodDef.Body.CreateVariable(Import(methodDef.ReturnType));
 
-            var returns = instructions.Where(ins => ins.OpCode == OpCodes.Ret).ToArray();
+            var returns = instructions.Where(ins => ins.IsRet()).ToArray();
             if (returns.Length != 0)
             {
-                var isVoid = methodDef.ReturnType.Is(Constants.TYPE_Void);
-                finallyEnd = Instruction.Create(OpCodes.Ret);
+                finallyEnd = Create(OpCodes.Ret);
                 instructions.Add(finallyEnd);
                 if (!isVoid)
                 {
-                    returnVariable = methodDef.Body.CreateVariable(Import(methodDef.ReturnType));
                     var loadReturnValue = returnVariable.Ldloc();
                     instructions.InsertBefore(finallyEnd, loadReturnValue);
                     finallyEnd = loadReturnValue;
@@ -84,7 +83,7 @@ namespace Rougamo.Fody
                     {
                         @return.OpCode = OpCodes.Stloc;
                         @return.Operand = returnVariable;
-                        instructions.InsertAfter(@return, Instruction.Create(OpCodes.Leave, finallyEnd));
+                        instructions.InsertAfter(@return, Create(OpCodes.Leave, finallyEnd));
                     }
                     else
                     {
@@ -95,15 +94,15 @@ namespace Rougamo.Fody
             }
 
             exceptionVariable = methodDef.Body.CreateVariable(_typeExceptionRef);
-            catchStart = Instruction.Create(OpCodes.Stloc, exceptionVariable);
-            finallyStart = Instruction.Create(OpCodes.Nop);
-            rethrow = Instruction.Create(OpCodes.Rethrow);
+            catchStart = Create(OpCodes.Stloc, exceptionVariable);
+            finallyStart = Create(OpCodes.Nop);
+            rethrow = Create(OpCodes.Rethrow);
             instructions.InsertBeforeOrAppend(finallyEnd, new[]
             {
                 catchStart,
                 rethrow,
                 finallyStart,
-                Instruction.Create(OpCodes.Endfinally)
+                Create(OpCodes.Endfinally)
             });
         }
 
@@ -132,10 +131,10 @@ namespace Rougamo.Fody
         private void OnExceptionFromField(MethodDefinition methodDef, int mosCount, FieldReference moFieldRef, FieldReference contextFieldRef, VariableDefinition exceptionVariable, Instruction catchStart)
         {
             var ins = new List<Instruction>();
-            ins.Add(Instruction.Create(OpCodes.Ldarg_0));
-            ins.Add(Instruction.Create(OpCodes.Ldfld, contextFieldRef));
-            ins.Add(Instruction.Create(OpCodes.Ldloc, exceptionVariable));
-            ins.Add(Instruction.Create(OpCodes.Callvirt, _methodMethodContextSetExceptionRef));
+            ins.Add(Create(OpCodes.Ldarg_0));
+            ins.Add(Create(OpCodes.Ldfld, contextFieldRef));
+            ins.Add(Create(OpCodes.Ldloc, exceptionVariable));
+            ins.Add(Create(OpCodes.Callvirt, _methodMethodContextSetExceptionRef));
             ExecuteMoMethod(Constants.METHOD_OnException, methodDef, mosCount, null, moFieldRef, contextFieldRef, catchStart.Next, this.ConfigReverseCallEnding());
             methodDef.Body.Instructions.InsertAfter(catchStart, ins);
         }
@@ -160,8 +159,8 @@ namespace Rougamo.Fody
             {
                 variable = methodBody.CreateVariable(Import(mo.Attribute.AttributeType));
                 instructions.AddRange(LoadAttributeArgumentIns(mo.Attribute.ConstructorArguments));
-                instructions.Add(Instruction.Create(OpCodes.Newobj, Import(mo.Attribute.Constructor)));
-                instructions.Add(Instruction.Create(OpCodes.Stloc, variable));
+                instructions.Add(Create(OpCodes.Newobj, Import(mo.Attribute.Constructor)));
+                instructions.Add(Create(OpCodes.Stloc, variable));
                 if (mo.Attribute.HasProperties)
                 {
                     instructions.AddRange(LoadAttributePropertyIns(mo.Attribute.AttributeType.Resolve(), mo.Attribute.Properties, variable));
@@ -170,8 +169,8 @@ namespace Rougamo.Fody
             else
             {
                 variable = methodBody.CreateVariable(Import(mo.TypeDef));
-                instructions.Add(Instruction.Create(OpCodes.Newobj, Import(mo.TypeDef.GetZeroArgsCtor())));
-                instructions.Add(Instruction.Create(OpCodes.Stloc, variable));
+                instructions.Add(Create(OpCodes.Newobj, Import(mo.TypeDef.GetZeroArgsCtor())));
+                instructions.Add(Create(OpCodes.Stloc, variable));
             }
             return variable;
         }
@@ -180,17 +179,17 @@ namespace Rougamo.Fody
         {
             var instructions = rouMethod.MethodDef.Body.Instructions;
             instructions.InsertBefore(insertBeforeThisInstruction, variable.LdlocOrA());
-            instructions.InsertBefore(insertBeforeThisInstruction, Instruction.Create(OpCodes.Ldc_I4, rouMethod.Mos.Count));
-            instructions.InsertBefore(insertBeforeThisInstruction, Instruction.Create(OpCodes.Newarr, _typeIMoRef));
+            instructions.InsertBefore(insertBeforeThisInstruction, Create(OpCodes.Ldc_I4, rouMethod.Mos.Count));
+            instructions.InsertBefore(insertBeforeThisInstruction, Create(OpCodes.Newarr, _typeIMoRef));
             var i = 0;
             foreach (var mo in rouMethod.Mos)
             {
-                instructions.InsertBefore(insertBeforeThisInstruction, Instruction.Create(OpCodes.Dup));
-                instructions.InsertBefore(insertBeforeThisInstruction, Instruction.Create(OpCodes.Ldc_I4, i));
+                instructions.InsertBefore(insertBeforeThisInstruction, Create(OpCodes.Dup));
+                instructions.InsertBefore(insertBeforeThisInstruction, Create(OpCodes.Ldc_I4, i));
                 if (mo.Attribute != null)
                 {
                     instructions.InsertBefore(insertBeforeThisInstruction, LoadAttributeArgumentIns(mo.Attribute.ConstructorArguments));
-                    instructions.InsertBefore(insertBeforeThisInstruction, Instruction.Create(OpCodes.Newobj, Import(mo.Attribute.Constructor)));
+                    instructions.InsertBefore(insertBeforeThisInstruction, Create(OpCodes.Newobj, Import(mo.Attribute.Constructor)));
                     if (mo.Attribute.HasProperties)
                     {
                         instructions.InsertBefore(insertBeforeThisInstruction, LoadAttributePropertyDup(mo.Attribute.AttributeType.Resolve(), mo.Attribute.Properties));
@@ -198,12 +197,12 @@ namespace Rougamo.Fody
                 }
                 else
                 {
-                    instructions.InsertBefore(insertBeforeThisInstruction, Instruction.Create(OpCodes.Newobj, Import(mo.TypeDef.GetZeroArgsCtor())));
+                    instructions.InsertBefore(insertBeforeThisInstruction, Create(OpCodes.Newobj, Import(mo.TypeDef.GetZeroArgsCtor())));
                 }
-                instructions.InsertBefore(insertBeforeThisInstruction, Instruction.Create(OpCodes.Stelem_Ref));
+                instructions.InsertBefore(insertBeforeThisInstruction, Create(OpCodes.Stelem_Ref));
                 i++;
             }
-            instructions.InsertBefore(insertBeforeThisInstruction, Instruction.Create(OpCodes.Stfld, mosFieldRef));
+            instructions.InsertBefore(insertBeforeThisInstruction, Create(OpCodes.Stfld, mosFieldRef));
         }
 
         private Collection<Instruction> LoadAttributeArgumentIns(Collection<CustomAttributeArgument> arguments)
@@ -221,9 +220,9 @@ namespace Rougamo.Fody
             var ins = new Collection<Instruction>();
             for (var i = 0; i < properties.Count; i++)
             {
-                ins.Add(Instruction.Create(OpCodes.Ldloc, attributeDef));
+                ins.Add(Create(OpCodes.Ldloc, attributeDef));
                 ins.Add(LoadValueOnStack(properties[i].Argument.Type, properties[i].Argument.Value));
-                ins.Add(Instruction.Create(OpCodes.Callvirt, attrTypeDef.RecursionImportPropertySet(ModuleDefinition, properties[i].Name)));
+                ins.Add(Create(OpCodes.Callvirt, attrTypeDef.RecursionImportPropertySet(ModuleDefinition, properties[i].Name)));
             }
 
             return ins;
@@ -234,9 +233,9 @@ namespace Rougamo.Fody
             var ins = new Collection<Instruction>();
             for (var i = 0; i < properties.Count; i++)
             {
-                ins.Add(Instruction.Create(OpCodes.Dup));
+                ins.Add(Create(OpCodes.Dup));
                 ins.Add(LoadValueOnStack(properties[i].Argument.Type, properties[i].Argument.Value));
-                ins.Add(Instruction.Create(OpCodes.Callvirt, attrTypeDef.RecursionImportPropertySet(ModuleDefinition, properties[i].Name)));
+                ins.Add(Create(OpCodes.Callvirt, attrTypeDef.RecursionImportPropertySet(ModuleDefinition, properties[i].Name)));
             }
 
             return ins;
@@ -249,7 +248,7 @@ namespace Rougamo.Fody
             var variable = methodDef.Body.CreateVariable(_typeMethodContextRef);
 
             InitMethodContext(methodDef, isAsync, isIterator, instructions);
-            instructions.Add(Instruction.Create(OpCodes.Stloc, variable));
+            instructions.Add(Create(OpCodes.Stloc, variable));
 
             return variable;
         }
@@ -261,7 +260,7 @@ namespace Rougamo.Fody
             bodyInstructions.InsertBefore(insertBeforeThis, variable.LdlocOrA());
             InitMethodContext(rouMethod.MethodDef, isAsync, isIterator, instructions);
             bodyInstructions.InsertBefore(insertBeforeThis, instructions);
-            bodyInstructions.InsertBefore(insertBeforeThis, Instruction.Create(OpCodes.Stfld, contextFieldRef));
+            bodyInstructions.InsertBefore(insertBeforeThis, Create(OpCodes.Stfld, contextFieldRef));
         }
 
         private void InitMethodContext(MethodDefinition methodDef, bool isAsync, bool isIterator, List<Instruction> instructions)
@@ -271,10 +270,10 @@ namespace Rougamo.Fody
             instructions.Add(LoadThisOnStack(methodDef));
             instructions.AddRange(LoadDeclaringTypeOnStack(methodDef));
             instructions.AddRange(LoadMethodBaseOnStack(methodDef));
-            instructions.Add(Instruction.Create(isAsyncCode));
-            instructions.Add(Instruction.Create(isIteratorCode));
+            instructions.Add(Create(isAsyncCode));
+            instructions.Add(Create(isIteratorCode));
             instructions.AddRange(LoadMethodArgumentsOnStack(methodDef));
-            instructions.Add(Instruction.Create(OpCodes.Newobj, _methodMethodContextCtorRef));
+            instructions.Add(Create(OpCodes.Newobj, _methodMethodContextCtorRef));
         }
 
         private void ExecuteMoMethod(string methodName, MethodDefinition methodDef, int mosCount, VariableDefinition stateMachineVariable, FieldReference mosField, FieldReference contextField, Instruction beforeThisInstruction, bool reverseCall)
@@ -286,61 +285,61 @@ namespace Rougamo.Fody
 
             if (reverseCall)
             {
-                instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Ldc_I4, mosCount));
-                instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Ldc_I4_1));
-                instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Sub));
-                instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Stloc, flagVariable));
-                loopFirst = Instruction.Create(OpCodes.Ldloc, flagVariable);
+                instructions.InsertBefore(beforeThisInstruction, Create(OpCodes.Ldc_I4, mosCount));
+                instructions.InsertBefore(beforeThisInstruction, Create(OpCodes.Ldc_I4_1));
+                instructions.InsertBefore(beforeThisInstruction, Create(OpCodes.Sub));
+                instructions.InsertBefore(beforeThisInstruction, Create(OpCodes.Stloc, flagVariable));
+                loopFirst = Create(OpCodes.Ldloc, flagVariable);
                 instructions.InsertBefore(beforeThisInstruction, loopFirst);
-                instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Ldc_I4_0));
-                instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Clt));
-                instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Brtrue, beforeThisInstruction));
+                instructions.InsertBefore(beforeThisInstruction, Create(OpCodes.Ldc_I4_0));
+                instructions.InsertBefore(beforeThisInstruction, Create(OpCodes.Clt));
+                instructions.InsertBefore(beforeThisInstruction, Create(OpCodes.Brtrue, beforeThisInstruction));
             }
             else
             {
-                instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Ldc_I4_0));
-                instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Stloc, flagVariable));
-                loopFirst = Instruction.Create(OpCodes.Ldloc, flagVariable);
+                instructions.InsertBefore(beforeThisInstruction, Create(OpCodes.Ldc_I4_0));
+                instructions.InsertBefore(beforeThisInstruction, Create(OpCodes.Stloc, flagVariable));
+                loopFirst = Create(OpCodes.Ldloc, flagVariable);
                 instructions.InsertBefore(beforeThisInstruction, loopFirst);
-                instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Ldc_I4, mosCount));
-                instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Clt));
-                instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Brfalse_S, beforeThisInstruction));
+                instructions.InsertBefore(beforeThisInstruction, Create(OpCodes.Ldc_I4, mosCount));
+                instructions.InsertBefore(beforeThisInstruction, Create(OpCodes.Clt));
+                instructions.InsertBefore(beforeThisInstruction, Create(OpCodes.Brfalse_S, beforeThisInstruction));
             }
 
             if (stateMachineVariable == null)
             {
-                instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Ldarg_0));
+                instructions.InsertBefore(beforeThisInstruction, Create(OpCodes.Ldarg_0));
             }
             else
             {
                 instructions.InsertBefore(beforeThisInstruction, stateMachineVariable.LdlocOrA());
             }
-            instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Ldfld, mosField));
-            instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Ldloc, flagVariable));
-            instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Ldelem_Ref));
+            instructions.InsertBefore(beforeThisInstruction, Create(OpCodes.Ldfld, mosField));
+            instructions.InsertBefore(beforeThisInstruction, Create(OpCodes.Ldloc, flagVariable));
+            instructions.InsertBefore(beforeThisInstruction, Create(OpCodes.Ldelem_Ref));
             if (stateMachineVariable == null)
             {
-                instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Ldarg_0));
+                instructions.InsertBefore(beforeThisInstruction, Create(OpCodes.Ldarg_0));
             }
             else
             {
                 instructions.InsertBefore(beforeThisInstruction, stateMachineVariable.LdlocOrA());
             }
-            instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Ldfld, contextField));
-            instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Callvirt, _methodIMosRef[methodName]));
+            instructions.InsertBefore(beforeThisInstruction, Create(OpCodes.Ldfld, contextField));
+            instructions.InsertBefore(beforeThisInstruction, Create(OpCodes.Callvirt, _methodIMosRef[methodName]));
             // maybe nop
-            instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Ldloc, flagVariable));
-            instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Ldc_I4_1));
+            instructions.InsertBefore(beforeThisInstruction, Create(OpCodes.Ldloc, flagVariable));
+            instructions.InsertBefore(beforeThisInstruction, Create(OpCodes.Ldc_I4_1));
             if (reverseCall)
             {
-                instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Sub));
+                instructions.InsertBefore(beforeThisInstruction, Create(OpCodes.Sub));
             }
             else
             {
-                instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Add));
+                instructions.InsertBefore(beforeThisInstruction, Create(OpCodes.Add));
             }
-            instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Stloc, flagVariable));
-            instructions.InsertBefore(beforeThisInstruction, Instruction.Create(OpCodes.Br_S, loopFirst));
+            instructions.InsertBefore(beforeThisInstruction, Create(OpCodes.Stloc, flagVariable));
+            instructions.InsertBefore(beforeThisInstruction, Create(OpCodes.Br_S, loopFirst));
         }
 
         private void ExecuteMoMethod(string methodName, VariableDefinition[] mos, VariableDefinition methodContext, List<Instruction> instructions, bool reverseCall)
@@ -350,9 +349,9 @@ namespace Rougamo.Fody
             {
                 instructions.AddRange(new[]
                 {
-                    Instruction.Create(OpCodes.Ldloc, mo),
-                    Instruction.Create(OpCodes.Ldloc, methodContext),
-                    Instruction.Create(OpCodes.Callvirt, _methodIMosRef[methodName])
+                    Create(OpCodes.Ldloc, mo),
+                    Create(OpCodes.Ldloc, methodContext),
+                    Create(OpCodes.Callvirt, _methodIMosRef[methodName])
                 });
             }
         }
