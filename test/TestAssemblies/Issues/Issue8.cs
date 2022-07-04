@@ -11,21 +11,21 @@ namespace Issues
             Command2();
         });
 
-        [Log]
+        [_7_8_Log]
         public async Task Command()
         {
             await Task.Delay(500);
             throw new Exception("1231232");
         }
 
-        [Log]
+        [_7_8_Log]
         public async void Command1()
         {
             await Task.Delay(500);
             throw new Exception("1231232");
         }
 
-        [Log]
+        [_7_8_Log]
         public void Command2()
         {
             throw new Exception("1231232");

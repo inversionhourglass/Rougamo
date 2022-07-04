@@ -7,13 +7,13 @@ namespace Issues
 {
     public class Issue7
     {
-        [Log]
+        [_7_8_Log]
         private async Task Sleep()
         {
             await Task.Delay(500);
         }
 
-        [Log]
+        [_7_8_Log]
         private async Task<string> GenericSleep()
         {
             await Task.Delay(500);
@@ -21,19 +21,19 @@ namespace Issues
             return "abc";
         }
 
-        [Log]
+        [_7_8_Log]
         private async void VoidAsync()
         {
             await Task.Delay(500);
         }
 
-        [Log]
+        [_7_8_Log]
         private async ValueTask ValueSleep()
         {
             await Task.Delay(500);
         }
 
-        [Log]
+        [_7_8_Log]
         private async ValueTask<int> GenericValueSleep()
         {
             await Task.Delay(500);
@@ -41,13 +41,13 @@ namespace Issues
             return 13;
         }
 
-        [Log]
+        [_7_8_Log]
         private IEnumerable<string> Iterator()
         {
             yield break;
         }
 
-        [Log]
+        [_7_8_Log]
         private async IAsyncEnumerable<string> IteratorAsync()
         {
             await Task.Delay(500);
