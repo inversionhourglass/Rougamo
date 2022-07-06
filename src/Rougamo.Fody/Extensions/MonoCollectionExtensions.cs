@@ -23,6 +23,16 @@ namespace Rougamo.Fody
             return false;
         }
 
+        public static Collection<T> Insert<T>(this Collection<T> collection, int index, IList<T> items)
+        {
+            for (var i = items.Count - 1; i >= 0; i--)
+            {
+                collection.Insert(index, items[i]);
+            }
+
+            return collection;
+        }
+
         /// <summary>
         /// insert <paramref name="item"/> before <paramref name="targetItem"/>
         /// </summary>
