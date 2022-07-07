@@ -234,12 +234,6 @@ namespace Rougamo.Fody
 
         #endregion Import
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static TypeDefinition ResolveAsyncStateMachine(this MethodDefinition methodDef)
-        {
-            return methodDef.ResolveStateMachine(Constants.TYPE_AsyncStateMachineAttribute);
-        }
-
         public static TypeDefinition ResolveStateMachine(this MethodDefinition methodDef, string stateMachineAttributeName)
         {
             var stateMachineAttr = methodDef.CustomAttributes.Single(attr => attr.Is(stateMachineAttributeName));

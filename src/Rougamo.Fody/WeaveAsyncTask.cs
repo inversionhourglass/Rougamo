@@ -10,15 +10,15 @@ namespace Rougamo.Fody
     {
         private void AsyncTaskMethodWeave(RouMethod rouMethod)
         {
-            var returnType = rouMethod.MethodDef.ReturnType;
-            AsyncFieldDefinition(rouMethod, out var stateTypeDef, out var mosFieldDef, out var contextFieldDef);
+            StateMachineFieldDefinition(rouMethod, Constants.TYPE_AsyncStateMachineAttribute, out var stateTypeDef, out var mosFieldDef, out var contextFieldDef);
             var moveNextMethodDef = stateTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
             var stateMachineVariable = rouMethod.MethodDef.Body.Variables.Single(x => x.VariableType.Resolve() == stateTypeDef);
             var builderDef = ResolveBuilderTypeDef(rouMethod.MethodDef.Body, out var ldlocStateMachineIns);
             AsyncGetFiledRefs(stateTypeDef, mosFieldDef, contextFieldDef, out var mosFieldRef, out var contextFieldRef, out var builderFieldRef, out var stateFieldRef);
             InitMosField(rouMethod, mosFieldRef, stateMachineVariable, ldlocStateMachineIns);
             InitMethodContextField(rouMethod, contextFieldRef, stateMachineVariable, ldlocStateMachineIns, true, false);
-            
+
+            var returnType = rouMethod.MethodDef.ReturnType;
             var returnTypeRef = returnType.IsTask() || returnType.IsValueTask() || returnType.IsVoid() ? _typeVoidRef : ((GenericInstanceType)returnType).GenericArguments[0];
             var setResultIns = moveNextMethodDef.Body.Instructions.SingleOrDefault(x => x.Operand is MethodReference methodRef && methodRef.DeclaringType.Resolve() == builderDef && methodRef.Name == Constants.METHOD_SetResult);
             var returnValueType = returnTypeRef.IsValueType || returnTypeRef.IsEnum(out _) && !returnTypeRef.IsArray || returnTypeRef.IsGenericParameter;
@@ -244,9 +244,9 @@ namespace Rougamo.Fody
             instructions.InsertBefore(beforeThisInstruction, Create(OpCodes.Br, leaves));
         }
 
-        private void AsyncFieldDefinition(RouMethod rouMethod, out TypeDefinition stateTypeDef, out FieldDefinition mosFieldDef, out FieldDefinition contextFieldDef)
+        private void StateMachineFieldDefinition(RouMethod rouMethod, string stateMachineName, out TypeDefinition stateTypeDef, out FieldDefinition mosFieldDef, out FieldDefinition contextFieldDef)
         {
-            stateTypeDef = rouMethod.MethodDef.ResolveAsyncStateMachine();
+            stateTypeDef = rouMethod.MethodDef.ResolveStateMachine(stateMachineName);
             var fieldAttributes = FieldAttributes.Public;
             mosFieldDef = new FieldDefinition(Constants.FIELD_RougamoMos, fieldAttributes, _typeIMoArrayRef);
             contextFieldDef = new FieldDefinition(Constants.FIELD_RougamoContext, fieldAttributes, _typeMethodContextRef);
