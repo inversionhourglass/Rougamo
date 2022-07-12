@@ -15,12 +15,13 @@ namespace Rougamo.Fody
             SyncOnEntry(rouMethod, tryStart, returnVariable, out var moVariables, out var contextVariable);
             SyncOnException(rouMethod.MethodDef, moVariables, contextVariable, exceptionVariable, catchStart);
             SyncIfExceptionHandled(rouMethod.MethodDef, contextVariable, returnVariable, rethrow, ref finallyEnd);
+            if (finallyEnd == null) throw new RougamoException("sync method should set finally end after exception handler code weaved.");
             SyncOnExit(rouMethod.MethodDef, moVariables, contextVariable, finallyStart);
             SyncOnSuccess(rouMethod.MethodDef, moVariables, contextVariable, returnVariable, finallyStart, finallyEnd);
             rouMethod.MethodDef.Body.OptimizePlus();
         }
 
-        private void SyncOnEntry(RouMethod rouMethod, Instruction tryStart, VariableDefinition returnVariable, out VariableDefinition[] moVariables, out VariableDefinition contextVariable)
+        private void SyncOnEntry(RouMethod rouMethod, Instruction tryStart, VariableDefinition? returnVariable, out VariableDefinition[] moVariables, out VariableDefinition contextVariable)
         {
             var instructions = new List<Instruction>();
             moVariables = LoadMosOnStack(rouMethod, instructions);
@@ -51,7 +52,7 @@ namespace Rougamo.Fody
             methodDef.Body.Instructions.InsertAfter(catchStart, instructions);
         }
 
-        private void SyncIfExceptionHandled(MethodDefinition methodDef, VariableDefinition contextVariable, VariableDefinition returnVariable, Instruction rethrow, ref Instruction finallyEnd)
+        private void SyncIfExceptionHandled(MethodDefinition methodDef, VariableDefinition contextVariable, VariableDefinition? returnVariable, Instruction rethrow, ref Instruction? finallyEnd)
         {
             var returnType = methodDef.ReturnType;
             var instructions = methodDef.Body.Instructions;
@@ -84,7 +85,7 @@ namespace Rougamo.Fody
             instructions.InsertBefore(rethrow, Create(OpCodes.Leave, finallyEnd));
         }
 
-        private void SyncOnSuccess(MethodDefinition methodDef, VariableDefinition[] moVariables, VariableDefinition contextVariable, VariableDefinition returnVariable, Instruction finallyStart, Instruction finallyEnd)
+        private void SyncOnSuccess(MethodDefinition methodDef, VariableDefinition[] moVariables, VariableDefinition contextVariable, VariableDefinition? returnVariable, Instruction finallyStart, Instruction finallyEnd)
         {
             var returnType = methodDef.ReturnType;
             var onExitFirstInstruction = finallyStart.Next;
@@ -119,7 +120,7 @@ namespace Rougamo.Fody
             methodDef.Body.Instructions.InsertAfter(finallyStart, instructions);
         }
 
-        private void ReplaceReturnValueIfNeed(List<Instruction> instructions, Instruction ifNotOffset, VariableDefinition contextVariable, VariableDefinition returnVariable, TypeReference returnType)
+        private void ReplaceReturnValueIfNeed(List<Instruction> instructions, Instruction ifNotOffset, VariableDefinition contextVariable, VariableDefinition? returnVariable, TypeReference returnType)
         {
             if (returnVariable != null)
             {

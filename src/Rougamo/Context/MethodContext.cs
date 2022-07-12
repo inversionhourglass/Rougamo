@@ -56,13 +56,13 @@ namespace Rougamo.Context
         /// Method decleard return type, return Task/Task&lt;&gt;/ValueTask/ValueTask&lt;&gt; even if method run in async
         /// </summary>
         [Obsolete("use RealReturnType to instead")]
-        public Type ReturnType => (Method as MethodInfo)?.ReturnType;
+        public Type? ReturnType => (Method as MethodInfo)?.ReturnType;
 
         /// <summary>
         /// Method real return type, return first generic argument if current method is an async Task&lt;&gt;/ValueTask&lt;&gt; method, 
         /// or return typeof(void) if method is an async Task/ValueTask method
         /// </summary>
-        public Type RealReturnType
+        public Type? RealReturnType
         {
             get
             {
@@ -91,7 +91,7 @@ namespace Rougamo.Context
         /// <summary>
         /// Method return value, if you want to assign a value to it, you'd better use <see cref="HandledException(IMo, object)"/> or <see cref="ReplaceReturnValue(IMo, object)"/>
         /// </summary>
-        public object ReturnValue { get; set; }
+        public object? ReturnValue { get; set; }
 
         /// <summary>
         /// Return true if return value has been replaced
@@ -101,12 +101,12 @@ namespace Rougamo.Context
         /// <summary>
         /// when multiple <see cref="IMo"/> applied to the method, you will know who replace the return value
         /// </summary>
-        public IMo ReturnValueModifier { get; private set; }
+        public IMo? ReturnValueModifier { get; private set; }
 
         /// <summary>
         /// Exception throws by method, if you want to prevent exception, you'd better use <see cref="HandledException(IMo, object)"/>
         /// </summary>
-        public Exception Exception { get; set; }
+        public Exception? Exception { get; set; }
 
         /// <summary>
         /// Is there a unhandled exception
@@ -121,7 +121,7 @@ namespace Rougamo.Context
         /// <summary>
         /// when multiple <see cref="IMo"/> applied to the method, you will know who handled the exception
         /// </summary>
-        public IMo ExceptionHandler { get; private set; }
+        public IMo? ExceptionHandler { get; private set; }
 
         /// <summary>
         /// Prevent exception thrown by the method and set the return value.
@@ -144,9 +144,9 @@ namespace Rougamo.Context
         {
             if (HasReturnValue)
             {
-                if (!RealReturnType.IsAssignableFrom(returnValue.GetType()))
+                if (RealReturnType == null || !RealReturnType.IsAssignableFrom(returnValue.GetType()))
                 {
-                    throw new ArgumentException($"Method return type({RealReturnType.FullName}) is not assignable from returnvalue({returnValue.GetType().FullName})");
+                    throw new ArgumentException($"Method return type({RealReturnType?.FullName}) is not assignable from returnvalue({returnValue.GetType().FullName})");
                 }
                 ReturnValue = returnValue;
             }

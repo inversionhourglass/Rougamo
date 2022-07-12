@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 
 namespace BasicUsage
 {
+#pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
     public class AsyncModifyReturnValue : MoDataContainer
     {
         [ExceptionHandle]
@@ -98,4 +99,5 @@ namespace BasicUsage
             throw new NullReferenceException();
         }
     }
+#pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 }

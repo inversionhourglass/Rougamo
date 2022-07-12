@@ -15,8 +15,8 @@ namespace Rougamo.Fody
             var stateMachineVariable = rouMethod.MethodDef.Body.Variables.Single(x => x.VariableType.Resolve() == stateTypeDef);
             var builderDef = ResolveBuilderTypeDef(rouMethod.MethodDef.Body, out var ldlocStateMachineIns);
             AsyncGetFiledRefs(stateTypeDef, mosFieldDef, contextFieldDef, out var mosFieldRef, out var contextFieldRef, out var builderFieldRef, out var stateFieldRef);
-            InitMosField(rouMethod, mosFieldRef, stateMachineVariable, ldlocStateMachineIns);
-            InitMethodContextField(rouMethod, contextFieldRef, stateMachineVariable, ldlocStateMachineIns, true, false);
+            StateMachineInitMosField(rouMethod, mosFieldDef, stateMachineVariable, ldlocStateMachineIns);
+            StateMachineInitMethodContextField(rouMethod, contextFieldDef, stateMachineVariable, ldlocStateMachineIns, true, false);
 
             var returnType = rouMethod.MethodDef.ReturnType;
             var returnTypeRef = returnType.IsTask() || returnType.IsValueTask() || returnType.IsVoid() ? _typeVoidRef : ((GenericInstanceType)returnType).GenericArguments[0];
@@ -74,7 +74,7 @@ namespace Rougamo.Fody
                 Create(OpCodes.Callvirt, _methodMethodContextGetReturnValueReplacedRef),
                 Create(OpCodes.Brfalse_S, originFirstIns),
             });
-            Instruction ldlocResultIns = null;
+            Instruction? ldlocResultIns = null;
             if (!returnTypeRef.IsVoid())
             {
                 instructions.InsertBefore(originFirstIns, new[]
@@ -121,7 +121,7 @@ namespace Rougamo.Fody
             instructions.InsertBefore(originFirstIns, Create(OpCodes.Ret));
         }
 
-        private void AsyncOnExceptionWithExit(RouMethod rouMethod, MethodDefinition moveNextMethodDef, FieldReference mosFieldRef, FieldReference contextFieldRef, FieldReference builderFieldRef, TypeReference returnTypeRef, Instruction setResultIns, bool returnValueType)
+        private void AsyncOnExceptionWithExit(RouMethod rouMethod, MethodDefinition moveNextMethodDef, FieldReference mosFieldRef, FieldReference contextFieldRef, FieldReference? builderFieldRef, TypeReference returnTypeRef, Instruction? setResultIns, bool returnValueType)
         {
             var instructions = moveNextMethodDef.Body.Instructions;
             var exceptionHandler = GetOuterExceptionHandler(moveNextMethodDef.Body);
@@ -138,7 +138,7 @@ namespace Rougamo.Fody
             ExecuteMoMethod(Constants.METHOD_OnExit, moveNextMethodDef, rouMethod.Mos.Count, null, mosFieldRef, contextFieldRef, setExceptionLast.Next, this.ConfigReverseCallEnding());
             if (builderFieldRef != null)
             {
-                AsyncIfExceptionHandled(moveNextMethodDef, contextFieldRef, builderFieldRef, returnTypeRef, exceptionHandler, setResultIns, setExceptionFirst, setExceptionLast.Next, returnValueType);
+                AsyncIfExceptionHandled(moveNextMethodDef, contextFieldRef, builderFieldRef, returnTypeRef, setResultIns, setExceptionFirst, setExceptionLast.Next, returnValueType);
             }
             ExecuteMoMethod(Constants.METHOD_OnException, moveNextMethodDef, rouMethod.Mos.Count, null, mosFieldRef, contextFieldRef, beforeSetException.Next, this.ConfigReverseCallEnding());
         }
@@ -186,7 +186,7 @@ namespace Rougamo.Fody
             ExecuteMoMethod(Constants.METHOD_OnSuccess, moveNextMethodDef, rouMethod.Mos.Count, null, mosFieldRef, contextFieldRef, beforeOnSuccessWeave.Next, this.ConfigReverseCallEnding());
         }
 
-        private void AsyncIfExceptionHandled(MethodDefinition moveNextMethodDef, FieldReference contextFieldRef, FieldReference builderFieldRef, TypeReference returnTypeRef, ExceptionHandler exceptionHandler, Instruction setResultIns, Instruction beforeThisInstruction, Instruction leaves, bool returnValueType)
+        private void AsyncIfExceptionHandled(MethodDefinition moveNextMethodDef, FieldReference contextFieldRef, FieldReference builderFieldRef, TypeReference returnTypeRef, Instruction? setResultIns, Instruction beforeThisInstruction, Instruction leaves, bool returnValueType)
         {
             var instructions = moveNextMethodDef.Body.Instructions;
             instructions.InsertBefore(beforeThisInstruction, new[]
@@ -289,7 +289,7 @@ namespace Rougamo.Fody
 
         private ExceptionHandler GetOuterExceptionHandler(MethodBody methodBody)
         {
-            ExceptionHandler exceptionHandler = null;
+            ExceptionHandler? exceptionHandler = null;
             int offset = methodBody.Instructions.First().Offset;
             foreach (var handler in methodBody.ExceptionHandlers)
             {

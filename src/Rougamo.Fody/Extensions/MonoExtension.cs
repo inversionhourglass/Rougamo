@@ -35,7 +35,9 @@ namespace Rougamo.Fody
             do
             {
                 if (typeDef.Interfaces.Any(x => x.InterfaceType.FullName == @interface)) return true;
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
                 typeDef = typeDef.BaseType?.Resolve();
+#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
             } while (typeDef != null);
 
             return false;
@@ -45,7 +47,9 @@ namespace Rougamo.Fody
         {
             do
             {
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
                 if ((typeRef = typeRef.Resolve()?.BaseType)?.FullName == baseClass) return true;
+#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
             } while (typeRef != null);
 
             return false;
@@ -71,7 +75,7 @@ namespace Rougamo.Fody
             return DerivesFrom(typeRef, Constants.TYPE_MulticastDelegate);
         }
 
-        public static bool IsArray(this TypeReference typeRef, out TypeReference elementType)
+        public static bool IsArray(this TypeReference typeRef, out TypeReference? elementType)
         {
             elementType = null;
             if (!typeRef.IsArray)
@@ -81,7 +85,7 @@ namespace Rougamo.Fody
             return true;
         }
 
-        public static bool IsEnum(this TypeReference typeRef, out TypeReference underlyingType)
+        public static bool IsEnum(this TypeReference typeRef, out TypeReference? underlyingType)
         {
             var typeDef = typeRef.Resolve();
             if (typeDef != null && typeDef.IsEnum)
@@ -97,8 +101,8 @@ namespace Rougamo.Fody
         public static OpCode GetStElemCode(this TypeReference typeRef)
         {
             var typeDef = typeRef.Resolve();
-            if (typeDef.IsEnum(out TypeReference underlying))
-                return underlying.MetadataType.GetStElemCode();
+            if (typeDef.IsEnum(out TypeReference? underlying))
+                return underlying!.MetadataType.GetStElemCode();
             if (typeRef.IsValueType)
                 return typeRef.MetadataType.GetStElemCode();
             return OpCodes.Stelem_Ref;
@@ -202,13 +206,15 @@ namespace Rougamo.Fody
                 var titf = typeDef.Interfaces.Select(itf => itf.InterfaceType)
                     .Where(itfRef => itfRef.FullName.StartsWith(interfaceName + "<"));
                 interfaces.AddRange(titf.Cast<GenericInstanceType>());
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
                 typeDef = typeDef.BaseType?.Resolve();
+#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
             } while (typeDef != null);
 
             return interfaces;
         }
 
-        public static TypeDefinition GetInterfaceDefinition(this TypeDefinition typeDef, string interfaceName)
+        public static TypeDefinition? GetInterfaceDefinition(this TypeDefinition typeDef, string interfaceName)
         {
             do
             {
@@ -238,7 +244,7 @@ namespace Rougamo.Fody
         {
             var stateMachineAttr = methodDef.CustomAttributes.Single(attr => attr.Is(stateMachineAttributeName));
             var obj = stateMachineAttr.ConstructorArguments[0].Value;
-            return obj as TypeDefinition ?? (obj as TypeReference).Resolve();
+            return obj as TypeDefinition ?? ((TypeReference)obj).Resolve();
         }
 
         public static Instruction Ldloc(this VariableDefinition variable)

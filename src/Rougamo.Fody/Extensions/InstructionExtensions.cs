@@ -13,7 +13,7 @@ namespace Rougamo.Fody
             return instruction.OpCode.Code == Code.Ret;
         }
 
-        public static bool IsLdtoken(this Instruction instruction, string @interface, out TypeDefinition typeDef)
+        public static bool IsLdtoken(this Instruction instruction, string @interface, out TypeDefinition? typeDef)
         {
             typeDef = null;
             if (instruction.OpCode != OpCodes.Ldtoken) return false;
@@ -73,12 +73,6 @@ namespace Rougamo.Fody
         {
             while ((instruction = instruction.Previous) != null && instruction.OpCode.Code != Code.Ldarg_0) { }
             return instruction != null && instruction.OpCode.Code == Code.Ldarg_0 ? instruction : throw new RougamoException($"[{methodDef.FullName}] cannot find ldarg.0 from previouses");
-        }
-
-        public static Instruction ClosePreviousOffset(this Instruction instruction, MethodDefinition methodDef)
-        {
-            while ((instruction = instruction.Previous) != null && instruction.Offset == 0) { }
-            return instruction;
         }
 
         public static Instruction Stloc2Ldloc(this Instruction instruction, string exceptionMessage)

@@ -19,19 +19,19 @@ namespace Rougamo.Fody
                     Instruction.Create(OpCodes.Newarr, elementType)
                 };
 
-                var stelem = elementType.GetStElemCode();
+                var stelem = elementType!.GetStElemCode();
                 for (var i = 0; i < args.Length; ++i)
                 {
                     createArrayInstructions.Add(Instruction.Create(OpCodes.Dup));
                     createArrayInstructions.Add(Instruction.Create(OpCodes.Ldc_I4, i));
-                    createArrayInstructions.AddRange(LoadValueOnStack(elementType, args[i].Value));
+                    createArrayInstructions.AddRange(LoadValueOnStack(elementType!, args[i].Value));
                     createArrayInstructions.Add(Instruction.Create(stelem));
                 }
 
                 return createArrayInstructions;
             }
 
-            if (parameterType.IsEnum(out var enumUnderlyingType)) return new List<Instruction>(LoadPrimitiveConstOnStack(enumUnderlyingType.MetadataType, value));
+            if (parameterType.IsEnum(out var enumUnderlyingType)) return new List<Instruction>(LoadPrimitiveConstOnStack(enumUnderlyingType!.MetadataType, value));
 
             if (parameterType.IsPrimitive || parameterType.FullName == typeof(string).FullName) return new List<Instruction>(LoadPrimitiveConstOnStack(parameterType.MetadataType, value));
 

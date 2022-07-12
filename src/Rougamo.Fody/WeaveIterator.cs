@@ -14,7 +14,7 @@ namespace Rougamo.Fody
             var stateFieldDef = stateTypeDef.Fields.Single(x => x.Name == "<>1__state");
             FieldReference mosFieldRef = mosFieldDef;
             FieldReference contextFieldRef = contextFieldDef;
-            FieldReference returnsFieldRef = returnsFieldDef;
+            FieldReference? returnsFieldRef = returnsFieldDef;
             FieldReference stateFieldRef = stateFieldDef;
             FieldReference currentFieldRef = stateTypeDef.Fields.Single(m => m.Name.EndsWith("current"));
             if (stateTypeDef.HasGenericParameters)
@@ -28,12 +28,14 @@ namespace Rougamo.Fody
                 }
                 mosFieldRef = new FieldReference(mosFieldDef.Name, mosFieldDef.FieldType, stateTypeRef);
                 contextFieldRef = new FieldReference(contextFieldDef.Name, contextFieldDef.FieldType, stateTypeRef);
-                returnsFieldRef = returnsFieldRef == null ? null : new FieldReference(returnsFieldDef.Name, returnsFieldDef.FieldType, stateTypeRef);
+                returnsFieldRef = returnsFieldRef == null ? null : new FieldReference(returnsFieldRef.Name, returnsFieldRef.FieldType, stateTypeRef);
                 stateFieldRef = new FieldReference(stateFieldDef.Name, stateFieldDef.FieldType, stateTypeRef);
                 currentFieldRef = new FieldReference(currentFieldRef.Name, currentFieldRef.FieldType, stateTypeRef);
             }
-            // finallyEnd null be null
+            // finallyEnd may be null
             GenerateTryCatchFinally(moveNextMethodDef, out var tryStart, out var catchStart, out var finallyStart, out var finallyEnd, out var rethrow, out var exceptionVariable, out var returnVariable);
+            if (returnVariable == null) throw new RougamoException("iterator MoveNext should not return void");
+            if (finallyEnd == null) throw new RougamoException("iterator MoveNext finally should not be null");
             SetTryCatchFinally(moveNextMethodDef, tryStart, catchStart, finallyStart, finallyEnd);
             IteratorOnEntry(rouMethod, moveNextMethodDef, mosFieldRef, contextFieldRef, stateFieldRef);
             OnExceptionFromField(moveNextMethodDef, rouMethod.Mos.Count, mosFieldRef, contextFieldRef, exceptionVariable, catchStart);
@@ -43,18 +45,16 @@ namespace Rougamo.Fody
             moveNextMethodDef.Body.OptimizePlus();
         }
 
-        private TypeReference IteratorInit(RouMethod rouMethod, string stateMachineName, bool isAsync, out TypeDefinition stateTypeDef, out FieldDefinition mosFieldDef, out FieldDefinition contextFieldDef, out FieldDefinition returnsFieldDef)
+        private TypeReference IteratorInit(RouMethod rouMethod, string stateMachineName, bool isAsync, out TypeDefinition stateTypeDef, out FieldDefinition mosFieldDef, out FieldDefinition contextFieldDef, out FieldDefinition? returnsFieldDef)
         {
             IteratorFieldDefinition(rouMethod, stateMachineName, out stateTypeDef, out mosFieldDef, out contextFieldDef, out returnsFieldDef);
             var stateMachineTypeRef = IteratorGetEntryStateTypeReference(rouMethod.MethodDef.Body);
             var stateMachineVariable = rouMethod.MethodDef.Body.CreateVariable(stateMachineTypeRef);
-            var mosFieldRef = new FieldReference(mosFieldDef.Name, mosFieldDef.FieldType, stateMachineTypeRef);
-            var contextFieldRef = new FieldReference(contextFieldDef.Name, contextFieldDef.FieldType, stateMachineTypeRef);
             var retIns = rouMethod.MethodDef.Body.Instructions.Last();
             rouMethod.MethodDef.Body.Instructions.InsertBefore(retIns, Instruction.Create(OpCodes.Stloc, stateMachineVariable));
             InitReturnsField(rouMethod, returnsFieldDef, stateMachineTypeRef, stateMachineVariable, retIns);
-            InitMosField(rouMethod, mosFieldRef, stateMachineVariable, retIns);
-            InitMethodContextField(rouMethod, contextFieldRef, stateMachineVariable, retIns, isAsync, true);
+            StateMachineInitMosField(rouMethod, mosFieldDef, stateMachineVariable, retIns);
+            StateMachineInitMethodContextField(rouMethod, contextFieldDef, stateMachineVariable, retIns, isAsync, true);
             rouMethod.MethodDef.Body.Instructions.InsertBefore(retIns, Instruction.Create(OpCodes.Ldloc, stateMachineVariable));
             var returnType = rouMethod.MethodDef.ReturnType;
             return ((GenericInstanceType)returnType).GenericArguments[0];
@@ -74,7 +74,7 @@ namespace Rougamo.Fody
             ExecuteMoMethod(Constants.METHOD_OnEntry, moveNextMethodDef, rouMethod.Mos.Count, null, mosFieldRef, contextFieldRef, originFirstIns, this.ConfigReverseCallEnding());
         }
 
-        private void IteratorOnExitOrMoveNext(MethodDefinition methodDef, int mosCount, FieldReference mosFieldRef, FieldReference contextFieldRef, FieldReference returnsFieldRef, FieldReference currentFieldRef, VariableDefinition returnVariable, Instruction finallyStart, Instruction finallyEnd)
+        private void IteratorOnExitOrMoveNext(MethodDefinition methodDef, int mosCount, FieldReference mosFieldRef, FieldReference contextFieldRef, FieldReference? returnsFieldRef, FieldReference currentFieldRef, VariableDefinition returnVariable, Instruction finallyStart, Instruction finallyEnd)
         {
             var endFinally = finallyEnd.Previous;
             var yieldBrTo = endFinally;
@@ -127,7 +127,7 @@ namespace Rougamo.Fody
             ExecuteMoMethod(Constants.METHOD_OnSuccess, methodDef, mosCount, null, mosFieldRef, contextFieldRef, onExitStart, this.ConfigReverseCallEnding());
         }
 
-        private void IteratorFieldDefinition(RouMethod rouMethod, string stateMachineName, out TypeDefinition stateTypeDef, out FieldDefinition mosFieldDef, out FieldDefinition contextFieldDef, out FieldDefinition returnFieldDef)
+        private void IteratorFieldDefinition(RouMethod rouMethod, string stateMachineName, out TypeDefinition stateTypeDef, out FieldDefinition mosFieldDef, out FieldDefinition contextFieldDef, out FieldDefinition? returnFieldDef)
         {
             StateMachineFieldDefinition(rouMethod, stateMachineName, out stateTypeDef, out mosFieldDef, out contextFieldDef);
 
@@ -141,7 +141,7 @@ namespace Rougamo.Fody
             }
         }
 
-        private void InitReturnsField(RouMethod rouMethod, FieldDefinition returnsFieldDef, TypeReference stateMachineTypeRef, VariableDefinition stateMachineVariable, Instruction insertBeforeThisIns)
+        private void InitReturnsField(RouMethod rouMethod, FieldDefinition? returnsFieldDef, TypeReference stateMachineTypeRef, VariableDefinition stateMachineVariable, Instruction insertBeforeThisIns)
         {
             if (returnsFieldDef != null)
             {

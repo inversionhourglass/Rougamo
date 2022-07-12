@@ -17,18 +17,18 @@ namespace Rougamo.Fody
             Ignores = ignores;
         }
 
-        public CustomAttribute[] Directs { get; }
+        public CustomAttribute[]? Directs { get; }
 
-        public Dictionary<string, TypeDefinition> Proxies { get; }
+        public Dictionary<string, TypeDefinition>? Proxies { get; }
 
-        public string[] Ignores { get; }
+        public string[]? Ignores { get; }
 
         public bool GlobalIgnore => Ignores == null;
     }
 
     internal sealed class GlobalMos
     {
-        public GlobalMos(Dictionary<string, CustomAttribute> directs, Dictionary<string, TypeDefinition> proxies, Dictionary<string, TypeDefinition> ignores)
+        public GlobalMos(Dictionary<string, CustomAttribute> directs, Dictionary<string, TypeDefinition> proxies, Dictionary<string, TypeDefinition>? ignores)
         {
             Directs = directs;
             Proxies = proxies;
@@ -39,7 +39,7 @@ namespace Rougamo.Fody
 
         public Dictionary<string, TypeDefinition> Proxies { get; }
 
-        public Dictionary<string, TypeDefinition> Ignores { get; }
+        public Dictionary<string, TypeDefinition>? Ignores { get; }
 
         public bool GlobalIgnore => Ignores == null;
     }

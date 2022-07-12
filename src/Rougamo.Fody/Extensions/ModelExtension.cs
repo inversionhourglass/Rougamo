@@ -14,9 +14,9 @@ namespace Rougamo.Fody
 
         public static AccessFlags ExtractFlagsFromAttribute(this Mo mo)
         {
-            if (mo.Attribute.Properties.TryGet(Constants.PROP_Flags, out var property))
+            if (mo.Attribute!.Properties.TryGet(Constants.PROP_Flags, out var property))
             {
-                return (AccessFlags)(sbyte)property.Value.Argument.Value;
+                return (AccessFlags)(sbyte)property!.Value.Argument.Value;
             }
             var flags = ExtractFlagsFromIl(mo.Attribute.AttributeType.Resolve());
             return flags.HasValue ? flags.Value : AccessFlags.InstancePublic;
@@ -24,7 +24,7 @@ namespace Rougamo.Fody
 
         public static AccessFlags ExtractFlagsFromType(this Mo mo)
         {
-            var flags = ExtractFlagsFromIl(mo.TypeDef);
+            var flags = ExtractFlagsFromIl(mo.TypeDef!);
             return flags.HasValue ? flags.Value : AccessFlags.InstancePublic;
         }
 
@@ -50,7 +50,9 @@ namespace Rougamo.Fody
                     // 因为已经override的属性，父类的赋值操作没有意义，直接进行后续的构造方法查找即可
                     return null;
                 }
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
                 typeDef = typeDef.BaseType?.Resolve();
+#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
             } while (typeDef != null);
             return null;
         }
@@ -66,11 +68,13 @@ namespace Rougamo.Fody
                     {
                         if (instruction.IsStfld(Constants.FIELD_Flags, Constants.TYPE_AccessFlags))
                         {
-                            return ParseFlags(instruction.Previous).Value;
+                            return ParseFlags(instruction.Previous);
                         }
                     }
                 }
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
                 typeDef = typeDef.BaseType?.Resolve();
+#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
             } while (typeDef != null);
             return null;
         }

@@ -33,7 +33,7 @@ namespace Rougamo.Fody
 
                 var rouType = new RouType(typeDef);
                 var implementations = ExtractClassImplementations(typeDef);
-                var classExtracts = ExtractAttributes(typeDef.CustomAttributes, globalMos.Proxies, $"class[{typeDef.FullName}]");
+                var classExtracts = ExtractAttributes(typeDef.CustomAttributes, globalMos.Proxies!, $"class[{typeDef.FullName}]");
 
                 foreach (var methodDef in typeDef.Methods)
                 {
@@ -42,8 +42,8 @@ namespace Rougamo.Fody
                     var methodIgnores = ExtractIgnores(methodDef.CustomAttributes);
                     if (methodIgnores == null) continue;
 
-                    var methodExtracts = ExtractAttributes(methodDef.CustomAttributes, globalMos.Proxies, $"method[{methodDef.FullName}]");
-                    rouType.Initialize(methodDef, globalMos.Directs, implementations, classExtracts.Mos, classExtracts.Proxied, methodExtracts.Mos, methodExtracts.Proxied, globalMos.Ignores, typeIgnores, methodIgnores);
+                    var methodExtracts = ExtractAttributes(methodDef.CustomAttributes, globalMos.Proxies!, $"method[{methodDef.FullName}]");
+                    rouType.Initialize(methodDef, globalMos.Directs!, implementations, classExtracts.Mos, classExtracts.Proxied, methodExtracts.Mos, methodExtracts.Proxied, globalMos.Ignores!, typeIgnores, methodIgnores);
                 }
                 if (rouType.HasMo)
                 {
@@ -60,10 +60,10 @@ namespace Rougamo.Fody
             if(_rouTypes.Count > 0)
             {
                 var sampleMo = _rouTypes.First().Methods.First().Mos.First();
-                var typeDef = sampleMo.Attribute == null ? sampleMo.TypeDef : sampleMo.Attribute.AttributeType.Resolve();
+                var typeDef = sampleMo.Attribute == null ? sampleMo.TypeDef! : sampleMo.Attribute.AttributeType.Resolve();
                 var imoTypeDef = typeDef.GetInterfaceDefinition(Constants.TYPE_IMo);
                 _methodIMosRef = new Dictionary<string, MethodReference>(4);
-                foreach (var methodDef in imoTypeDef.Methods)
+                foreach (var methodDef in imoTypeDef!.Methods)
                 {
                     if(methodDef.Name == Constants.METHOD_OnEntry ||
                         methodDef.Name == Constants.METHOD_OnSuccess ||
@@ -127,9 +127,10 @@ namespace Rougamo.Fody
                 assemblyMos.Proxies[proxy.Key] = proxy.Value;
             }
 
-            assemblyMos.Ignores.AddRange(moduleMos.Ignores);
+            // above GlobalIgnore has been checked null reference
+            assemblyMos.Ignores!.AddRange(moduleMos.Ignores!);
 
-            foreach (var ignore in assemblyMos.Ignores.Keys)
+            foreach (var ignore in assemblyMos.Ignores!.Keys)
             {
                 if (assemblyMos.Directs.ContainsKey(ignore))
                 {
@@ -241,28 +242,30 @@ namespace Rougamo.Fody
         /// </summary>
         /// <param name="typeDef">IRepulsionsRougamo</param>
         /// <returns>互斥类型</returns>
-        private TypeDefinition[] ExtractRepulsionFromProp(TypeDefinition typeDef)
+        private TypeDefinition[]? ExtractRepulsionFromProp(TypeDefinition typeDef)
         {
             do
             {
                 var property = typeDef.Properties.FirstOrDefault(prop => prop.Name == Constants.PROP_Repulsions);
                 if(property != null)
                 {
-                    Dictionary<string, TypeDefinition> repulsions = null;
+                    Dictionary<string, TypeDefinition>? repulsions = null;
                     foreach (var instruction in property.GetMethod.Body.Instructions)
                     {
                         if(instruction.OpCode == OpCodes.Newarr)
                         {
                             repulsions = new Dictionary<string, TypeDefinition>();
                         }
-                        else if(repulsions != null && instruction.IsLdtoken(Constants.TYPE_IMo, out var def) && !repulsions.ContainsKey(def.FullName))
+                        else if(repulsions != null && instruction.IsLdtoken(Constants.TYPE_IMo, out var def) && !repulsions.ContainsKey(def!.FullName))
                         {
                             repulsions.Add(def.FullName, def);
                         }
                     }
                     return repulsions == null ? null : repulsions.Values.ToArray();
                 }
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
                 typeDef = typeDef.BaseType?.Resolve();
+#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
             } while (typeDef != null);
             return null;
         }
@@ -272,14 +275,14 @@ namespace Rougamo.Fody
         /// </summary>
         /// <param name="typeDef">IRepulsionsRougamo</param>
         /// <returns>互斥类型</returns>
-        private TypeDefinition[] ExtractRepulsionFromCtor(TypeDefinition typeDef)
+        private TypeDefinition[]? ExtractRepulsionFromCtor(TypeDefinition typeDef)
         {
             do
             {
                 var nonCtor = typeDef.GetConstructors().FirstOrDefault(ctor => !ctor.HasParameters);
                 if (nonCtor != null)
                 {
-                    Dictionary<string, TypeDefinition> repulsions = null;
+                    Dictionary<string, TypeDefinition>? repulsions = null;
                     var instructions = nonCtor.Body.Instructions;
                     for (int i = instructions.Count - 1; i >= 0; i--)
                     {
@@ -287,7 +290,7 @@ namespace Rougamo.Fody
                         {
                             repulsions = new Dictionary<string, TypeDefinition>();
                         }
-                        else if(repulsions != null && instructions[i].IsLdtoken(Constants.TYPE_IMo, out var def) && !repulsions.ContainsKey(def.FullName))
+                        else if(repulsions != null && instructions[i].IsLdtoken(Constants.TYPE_IMo, out var def) && !repulsions.ContainsKey(def!.FullName))
                         {
                             repulsions.Add(def.FullName, def);
                         }
@@ -297,7 +300,9 @@ namespace Rougamo.Fody
                         }
                     }
                 }
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
                 typeDef = typeDef.BaseType?.Resolve();
+#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
             } while (typeDef != null);
             return null;
         }
@@ -355,7 +360,7 @@ namespace Rougamo.Fody
         /// </summary>
         /// <param name="attributes">一堆Attribute</param>
         /// <returns>忽略的织入类型，如果返回null表示忽略全部</returns>
-        private string[] ExtractIgnores(Collection<CustomAttribute> attributes)
+        private string[]? ExtractIgnores(Collection<CustomAttribute> attributes)
         {
             var ignores = new Dictionary<string, TypeDefinition>();
             foreach (var attribute in attributes)
@@ -371,7 +376,7 @@ namespace Rougamo.Fody
         /// <param name="ignores">已有的忽略类型</param>
         /// <param name="attribute">IgnoreAttribute</param>
         /// <returns>如果忽略全部返回false，否则返回true</returns>
-        private bool ExtractIgnores(ref Dictionary<string, TypeDefinition> ignores, CustomAttribute attribute)
+        private bool ExtractIgnores(ref Dictionary<string, TypeDefinition>? ignores, CustomAttribute attribute)
         {
             if (!attribute.HasProperties || !attribute.Properties.TryGet(Constants.PROP_MoTypes, out var property))
             {
@@ -379,7 +384,7 @@ namespace Rougamo.Fody
                 return false;
             }
 
-            var enumerable = (IEnumerable)property.Value.Argument.Value;
+            var enumerable = (IEnumerable)property!.Value.Argument.Value;
             foreach (CustomAttributeArgument item in enumerable)
             {
                 var value = item.Value;
@@ -390,7 +395,7 @@ namespace Rougamo.Fody
                 }
                 if (def != null && def.Implement(Constants.TYPE_IMo))
                 {
-                    ignores.TryAdd(def.FullName, def);
+                    ignores!.TryAdd(def.FullName, def);
                 }
             }
             return true;

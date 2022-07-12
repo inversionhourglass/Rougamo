@@ -15,6 +15,8 @@
     <PackageIconUrl>https://raw.githubusercontent.com/inversionhourglass/Rougamo/master/Rougamo.png</PackageIconUrl>
     <RepositoryType>git</RepositoryType>
     <PackageReleaseNotes>fix #8, add async Task/ValueTask (without return value) exception handle logic.</PackageReleaseNotes>
+	<LangVersion>latest</LangVersion>
+	<Nullable>enable</Nullable>
     <!--<PackageReadmeFile>README.md</PackageReadmeFile>-->
   </PropertyGroup>
   <ItemGroup>

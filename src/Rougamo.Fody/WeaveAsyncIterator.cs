@@ -13,7 +13,7 @@ namespace Rougamo.Fody
             var stateFieldDef = stateTypeDef.Fields.Single(x => x.Name == "<>1__state");
             FieldReference mosFieldRef = mosFieldDef;
             FieldReference contextFieldRef = contextFieldDef;
-            FieldReference returnsFieldRef = returnsFieldDef;
+            FieldReference? returnsFieldRef = returnsFieldDef;
             FieldReference stateFieldRef = stateFieldDef;
             FieldReference currentFieldRef = stateTypeDef.Fields.Single(m => m.Name.EndsWith("current"));
             if (stateTypeDef.HasGenericParameters)
@@ -27,7 +27,7 @@ namespace Rougamo.Fody
                 }
                 mosFieldRef = new FieldReference(mosFieldDef.Name, mosFieldDef.FieldType, stateTypeRef);
                 contextFieldRef = new FieldReference(contextFieldDef.Name, contextFieldDef.FieldType, stateTypeRef);
-                returnsFieldRef = returnsFieldRef == null ? null : new FieldReference(returnsFieldDef.Name, returnsFieldDef.FieldType, stateTypeRef);
+                returnsFieldRef = returnsFieldRef == null ? null : new FieldReference(returnsFieldRef.Name, returnsFieldRef.FieldType, stateTypeRef);
                 stateFieldRef = new FieldReference(stateFieldDef.Name, stateFieldDef.FieldType, stateTypeRef);
                 currentFieldRef = new FieldReference(currentFieldRef.Name, currentFieldRef.FieldType, stateTypeRef);
             }
@@ -39,7 +39,7 @@ namespace Rougamo.Fody
             moveNextMethodDef.Body.OptimizePlus();
         }
 
-        private void AsyncIteratorOnSuccessWithExit(RouMethod rouMethod, MethodDefinition moveNextMethodDef, FieldReference mosFieldRef, FieldReference contextFieldRef, FieldReference returnsFieldRef, FieldReference currentFieldRef)
+        private void AsyncIteratorOnSuccessWithExit(RouMethod rouMethod, MethodDefinition moveNextMethodDef, FieldReference mosFieldRef, FieldReference contextFieldRef, FieldReference? returnsFieldRef, FieldReference currentFieldRef)
         {
             var instructions = moveNextMethodDef.Body.Instructions;
             var setResults = instructions.Where(x => (x.OpCode.Code == Code.Call || x.OpCode.Code == Code.Callvirt) && x.Operand is MethodReference methodRef && methodRef.DeclaringType.FullName == "System.Threading.Tasks.Sources.ManualResetValueTaskSourceCore`1<System.Boolean>" && methodRef.Name == Constants.METHOD_SetResult).ToArray();

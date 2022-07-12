@@ -9,6 +9,7 @@ namespace Rougamo.Fody
 {
     public partial class ModuleWeaver : BaseModuleWeaver
     {
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
         private TypeReference _typeVoidRef;
         private TypeReference _typeSystemRef;
         private TypeReference _typeMethodBaseRef;
@@ -41,6 +42,7 @@ namespace Rougamo.Fody
         //private FieldReference _fieldMethodContextReturnValueRef;
 
         private List<RouType> _rouTypes;
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
         public override void Execute()
         {

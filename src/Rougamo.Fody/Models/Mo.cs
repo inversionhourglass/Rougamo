@@ -21,9 +21,9 @@ namespace Rougamo.Fody
 
         public static IEqualityComparer<Mo> Comparer { get; } = new EqualityComparer();
 
-        public CustomAttribute Attribute { get; }
+        public CustomAttribute? Attribute { get; }
 
-        public TypeDefinition TypeDef { get; }
+        public TypeDefinition? TypeDef { get; }
 
         public MoFrom From { get; }
 
@@ -39,7 +39,7 @@ namespace Rougamo.Fody
             }
         }
 
-        public string FullName => Attribute?.AttributeType?.FullName ?? TypeDef?.FullName;
+        public string FullName => Attribute?.AttributeType?.FullName ?? TypeDef!.FullName;
 
         class EqualityComparer : IEqualityComparer<Mo>
         {
