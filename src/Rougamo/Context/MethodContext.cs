@@ -144,9 +144,11 @@ namespace Rougamo.Context
         {
             if (HasReturnValue)
             {
-                if (RealReturnType == null || !RealReturnType.IsAssignableFrom(returnValue.GetType()))
+                if (RealReturnType == null ||
+                    returnValue == null && RealReturnType.IsValueType && (!RealReturnType.IsGenericType || RealReturnType.GetGenericTypeDefinition() != typeof(Nullable<>)) ||
+                    returnValue != null && !RealReturnType.IsAssignableFrom(returnValue.GetType()))
                 {
-                    throw new ArgumentException($"Method return type({RealReturnType?.FullName}) is not assignable from returnvalue({returnValue.GetType().FullName})");
+                    throw new ArgumentException($"Method return type({RealReturnType?.FullName}) is not assignable from returnvalue({returnValue?.GetType().FullName})");
                 }
                 ReturnValue = returnValue;
             }

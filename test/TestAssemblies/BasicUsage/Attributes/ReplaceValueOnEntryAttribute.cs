@@ -13,6 +13,14 @@ namespace BasicUsage.Attributes
             {
                 context.ReplaceReturnValue(this, ArrayValue);
             }
+            else if(context.RealReturnType == typeof(long))
+            {
+                context.ReplaceReturnValue(this, null);
+            }
+            else if(context.RealReturnType == typeof(long?))
+            {
+                context.ReplaceReturnValue(this, null);
+            }
         }
     }
 }

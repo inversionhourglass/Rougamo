@@ -98,6 +98,28 @@ namespace BasicUsage
         {
             throw new NullReferenceException();
         }
+
+        [ReplaceValueOnEntry]
+#if NET461 || NET6
+        public async Task<long> TryReplaceLongToNullAsync()
+#else
+        public async ValueTask<long> TryReplaceLongToNullAsync()
+#endif
+        {
+            await Task.Yield();
+            return 123;
+        }
+
+        [ReplaceValueOnEntry]
+#if NET461 || NET6
+        public async Task<long?> TryReplaceNullableToNullAsync()
+#else
+        public async ValueTask<long?> TryReplaceNullableToNullAsync()
+#endif
+        {
+            await Task.Yield();
+            return 321;
+        }
     }
 #pragma warning restore CS1998 // Async method lacks 'await' operators and will run synchronously
 }

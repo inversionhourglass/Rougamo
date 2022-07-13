@@ -64,5 +64,17 @@ namespace BasicUsage
         {
             throw new NullReferenceException();
         }
+
+        [ReplaceValueOnEntry]
+        public long TryReplaceLongToNull()
+        {
+            return 123;
+        }
+
+        [ReplaceValueOnEntry]
+        public long? TryReplaceNullableToNull()
+        {
+            return 321;
+        }
     }
 }
