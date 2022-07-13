@@ -24,7 +24,7 @@ namespace BasicUsage.Attributes
             }
             else if (context.RealReturnType == typeof(IEnumerable<int>))
             {
-                context.ReplaceReturnValue(this, IteratorValue);
+                context.HandledException(this, IteratorValue);
             }
         }
     }

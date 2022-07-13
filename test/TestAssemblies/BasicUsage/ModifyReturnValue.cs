@@ -47,6 +47,12 @@ namespace BasicUsage
             return int.MaxValue * 1.0 / nameof(SucceededUnrecognized).Length;
         }
 
+        [ReturnValueReplace]
+        public int? Nullable()
+        {
+            return null;
+        }
+
         [ReplaceValueOnEntry]
         public string[] CachedArray()
         {

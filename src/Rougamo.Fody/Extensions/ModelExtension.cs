@@ -155,5 +155,12 @@ namespace Rougamo.Fody
         }
 
         #endregion Mo
+
+        public static ReturnType ToReturnType(this TypeReference returnTypeRef)
+        {
+            if (returnTypeRef.IsVoid()) return ReturnType.Void;
+
+            return returnTypeRef.IsValueType || returnTypeRef.IsEnum(out _) && !returnTypeRef.IsArray || returnTypeRef.IsGenericParameter ? ReturnType.ValueType : ReturnType.ReferenceType;
+        }
     }
 }

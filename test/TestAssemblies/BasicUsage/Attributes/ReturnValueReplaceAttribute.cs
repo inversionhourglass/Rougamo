@@ -22,9 +22,13 @@ namespace BasicUsage.Attributes
             {
                 context.ReplaceReturnValue(this, StringValue);
             }
-            else if(context.RealReturnType == typeof(IEnumerable<int>))
+            else if (context.RealReturnType == typeof(IEnumerable<int>))
             {
                 context.ReplaceReturnValue(this, IteratorValue);
+            }
+            else if (context.RealReturnType == typeof(int?))
+            {
+                context.ReplaceReturnValue(this, IntValue);
             }
         }
     }

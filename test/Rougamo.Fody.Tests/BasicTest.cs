@@ -143,6 +143,11 @@ namespace Rougamo.Fody.Tests
             var unrecognizedValue = instance.SucceededUnrecognized();
             Assert.Equal(originValue, unrecognizedValue);
 
+            var originNullableValue = originInstance.Nullable();
+            var replacedNullableValue = instance.Nullable();
+            Assert.Null(originNullableValue);
+            Assert.Equal(ReturnValueReplaceAttribute.IntValue, replacedNullableValue);
+
             var originArrayValue = originInstance.CachedArray();
             var cachedArrayValue = instance.CachedArray();
             Assert.NotEqual(originArrayValue, cachedArrayValue);
@@ -233,7 +238,7 @@ namespace Rougamo.Fody.Tests
         }
 
         [Fact]
-        public async Task ModifyIteratorReturnValue()
+        public async Task ModifyIteratorReturnValueTest()
         {
             // iterator can not handle exception and modify return value
             var originInstance = new ModifyIteratorReturnValue();
@@ -260,6 +265,72 @@ namespace Rougamo.Fody.Tests
 
             await Assert.ThrowsAsync<InvalidOperationException>(() => originInstance.ExceptionAsync(min).ToArrayAsync().AsTask());
             await Assert.ThrowsAsync<InvalidOperationException>(() => ((IAsyncEnumerable<int>)instance.ExceptionAsync(min)).ToArrayAsync().AsTask());
+        }
+
+        [Fact]
+        public void SyncTest()
+        {
+            var instance = GetInstance("BasicUsage.SyncExecution");
+
+            var input = new List<string>();
+            instance.Void(input);
+            Assert.Equal(new[] { nameof(IMo.OnEntry), nameof(SyncExecution.Void), nameof(IMo.OnSuccess), nameof(IMo.OnExit) }, input);
+
+            input = new List<string>();
+            Assert.Throws<InvalidOperationException>(() => { instance.VoidThrows(input); });
+            Assert.Equal(new[] { nameof(IMo.OnEntry), nameof(SyncExecution.VoidThrows), nameof(IMo.OnException), nameof(IMo.OnExit) }, input);
+
+            input = new List<string>();
+            var output = instance.ReplaceOnEntry(input);
+            Assert.Equal(new[] { nameof(IMo.OnEntry), nameof(IMo.OnExit) }, input);
+            Assert.Equal(nameof(IMo.OnEntry), output);
+
+            input = new List<string>();
+            output = instance.ReplaceOnException(input);
+            Assert.Equal(new[] { nameof(IMo.OnEntry), nameof(SyncExecution.ReplaceOnException), nameof(IMo.OnException), nameof(IMo.OnExit) }, input);
+            Assert.Equal(nameof(IMo.OnException), output);
+
+            input = new List<string>();
+            output = instance.ReplaceOnSuccess(input);
+            Assert.Equal(new[] { nameof(IMo.OnEntry), nameof(SyncExecution.ReplaceOnSuccess), nameof(IMo.OnSuccess), nameof(IMo.OnExit) }, input);
+            Assert.Equal(nameof(IMo.OnSuccess), output);
+        }
+
+        [Fact]
+        public async Task AsyncTest()
+        {
+            var instance = GetInstance("BasicUsage.AsyncExecution");
+
+            var input = new List<string>();
+            await (Task)instance.Void1(input);
+            Assert.Equal(new[] { nameof(IMo.OnEntry), nameof(AsyncExecution.Void1), nameof(IMo.OnSuccess), nameof(IMo.OnExit) }, input);
+
+            input = new List<string>();
+            await (Task)instance.Void2(input);
+            Assert.Equal(new[] { nameof(IMo.OnEntry), nameof(AsyncExecution.Void2), nameof(IMo.OnSuccess), nameof(IMo.OnExit) }, input);
+
+            input = new List<string>();
+            await Assert.ThrowsAsync<InvalidOperationException>(() => instance.VoidThrows1(input));
+            Assert.Equal(new[] { nameof(IMo.OnEntry), nameof(AsyncExecution.VoidThrows1), nameof(IMo.OnException), nameof(IMo.OnExit) }, input);
+
+            input = new List<string>();
+            await Assert.ThrowsAsync<InvalidOperationException>(() => instance.VoidThrows2(input));
+            Assert.Equal(new[] { nameof(IMo.OnEntry), nameof(AsyncExecution.VoidThrows2), nameof(IMo.OnException), nameof(IMo.OnExit) }, input);
+
+            input = new List<string>();
+            var output = await (Task<string>)instance.ReplaceOnEntry(input);
+            Assert.Equal(new[] { nameof(IMo.OnEntry), nameof(IMo.OnExit) }, input);
+            Assert.Equal(nameof(IMo.OnEntry), output);
+
+            input = new List<string>();
+            output = await (Task<string>)instance.ReplaceOnException(input);
+            Assert.Equal(new[] { nameof(IMo.OnEntry), nameof(SyncExecution.ReplaceOnException), nameof(IMo.OnException), nameof(IMo.OnExit) }, input.ToArray());
+            Assert.Equal(nameof(IMo.OnException), output);
+
+            input = new List<string>();
+            output = await (Task<string>)instance.ReplaceOnSuccess(input);
+            Assert.Equal(new[] { nameof(IMo.OnEntry), nameof(SyncExecution.ReplaceOnSuccess), nameof(IMo.OnSuccess), nameof(IMo.OnExit) }, input);
+            Assert.Equal(nameof(IMo.OnSuccess), output);
         }
     }
 }

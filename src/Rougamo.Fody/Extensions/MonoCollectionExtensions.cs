@@ -23,33 +23,32 @@ namespace Rougamo.Fody
             return false;
         }
 
-        public static Collection<T> Insert<T>(this Collection<T> collection, int index, IList<T> items)
+        public static void Insert<T>(this Collection<T> collection, int index, IList<T> items)
         {
             for (var i = items.Count - 1; i >= 0; i--)
             {
                 collection.Insert(index, items[i]);
             }
-
-            return collection;
         }
 
         /// <summary>
         /// insert <paramref name="item"/> before <paramref name="targetItem"/>
         /// </summary>
-        public static Collection<T> InsertBefore<T>(this Collection<T> collection, T targetItem, T item)
+        /// <returns><paramref name="item"/></returns>
+        public static T InsertBefore<T>(this Collection<T> collection, T targetItem, T item)
         {
             var index = collection.IndexOf(targetItem);
             if (index < 0) throw new System.IndexOutOfRangeException("could not found targetItem from collection");
 
             collection.Insert(index, item);
 
-            return collection;
+            return item;
         }
 
         /// <summary>
         /// insert <paramref name="items"/> before <paramref name="targetItem"/>
         /// </summary>
-        public static Collection<T> InsertBefore<T>(this Collection<T> collection, T targetItem, IList<T> items)
+        public static void InsertBefore<T>(this Collection<T> collection, T targetItem, IList<T> items)
         {
             var index = collection.IndexOf(targetItem);
             if (index < 0) throw new System.IndexOutOfRangeException("could not found targetItem from collection");
@@ -58,92 +57,125 @@ namespace Rougamo.Fody
             {
                 collection.Insert(index, items[i]);
             }
-
-            return collection;
         }
 
         /// <summary>
         /// insert <paramref name="item"/> before <paramref name="targetItem"/> or append to tail if <paramref name="targetItem"/> is null
         /// </summary>
-        public static Collection<T> InsertBeforeOrAppend<T>(this Collection<T> collection, T targetItem, T item)
+        /// <returns><paramref name="item"/></returns>
+        public static T InsertBeforeOrAppend<T>(this Collection<T> collection, T? targetItem, T item)
         {
-            if(targetItem == null)
+            if (targetItem == null)
             {
                 collection.Add(item);
-                return collection;
             }
-            return collection.InsertBefore(targetItem, item);
+            else
+            {
+                collection.InsertBefore(targetItem, item);
+            }
+
+            return item;
         }
 
         /// <summary>
         /// insert <paramref name="items"/> before <paramref name="targetItem"/> or append to tail if <paramref name="targetItem"/> is null
         /// </summary>
-        public static Collection<T> InsertBeforeOrAppend<T>(this Collection<T> collection, T targetItem, IList<T> items)
+        public static void InsertBeforeOrAppend<T>(this Collection<T> collection, T? targetItem, IList<T> items)
         {
-            return targetItem == null ? collection.Add(items) : collection.InsertBefore(targetItem, items);
+            if (targetItem == null)
+            {
+                collection.Add(items);
+            }
+            else
+            {
+                collection.InsertBefore(targetItem, items);
+            }
         }
 
         /// <summary>
         /// insert <paramref name="item"/> after <paramref name="targetItem"/>
         /// </summary>
-        public static Collection<T> InsertAfter<T>(this Collection<T> collection, T targetItem, T item)
+        /// <returns><paramref name="item"/></returns>
+        public static T InsertAfter<T>(this Collection<T> collection, T targetItem, T item)
         {
             var index = collection.IndexOf(targetItem);
             if (index < 0) throw new System.IndexOutOfRangeException("could not found targetItem from collection");
 
-            collection.Insert(index + 1, item);
+            if (++index == collection.Count)
+            {
+                collection.Add(item);
+            }
+            else
+            {
+                collection.Insert(index, item);
+            }
 
-            return collection;
+            return item;
         }
 
         /// <summary>
         /// insert <paramref name="items"/> after <paramref name="targetItem"/>
         /// </summary>
-        public static Collection<T> InsertAfter<T>(this Collection<T> collection, T targetItem, IList<T> items)
+        public static void InsertAfter<T>(this Collection<T> collection, T targetItem, IList<T> items)
         {
             var index = collection.IndexOf(targetItem);
             if (index < 0) throw new System.IndexOutOfRangeException("could not found targetItem from collection");
 
-            for (int i = items.Count - 1; i >= 0; i--)
+            if (++index == collection.Count)
             {
-                collection.Insert(index + 1, items[i]);
+                collection.Add(items);
             }
-
-            return collection;
+            else
+            {
+                for (int i = items.Count - 1; i >= 0; i--)
+                {
+                    collection.Insert(index, items[i]);
+                }
+            }
         }
 
         /// <summary>
         /// insert <paramref name="item"/> after <paramref name="targetItem"/> or append to tail if <paramref name="targetItem"/> is null
         /// </summary>
-        public static Collection<T> InsertAfterOrAppend<T>(this Collection<T> collection, T targetItem, T item)
+        /// <returns><paramref name="item"/></returns>
+        public static T InsertAfterOrAppend<T>(this Collection<T> collection, T? targetItem, T item)
         {
             if (targetItem == null)
             {
                 collection.Add(item);
-                return collection;
             }
-            return collection.InsertAfter(targetItem, item);
+            else
+            {
+                collection.InsertAfter(targetItem, item);
+            }
+
+            return item;
         }
 
         /// <summary>
         /// insert <paramref name="items"/> after <paramref name="targetItem"/> or append to tail if <paramref name="targetItem"/> is null
         /// </summary>
-        public static Collection<T> InsertAfterOrAppend<T>(this Collection<T> collection, T targetItem, IList<T> items)
+        public static void InsertAfterOrAppend<T>(this Collection<T> collection, T? targetItem, IList<T> items)
         {
-            return targetItem == null ? collection.Add(items) : collection.InsertAfter(targetItem, items);
+            if (targetItem == null)
+            {
+                collection.Add(items);
+            }
+            else
+            {
+                collection.InsertAfter(targetItem, items);
+            }
         }
 
         /// <summary>
         /// add <paramref name="items"/> into <paramref name="collection"/>
         /// </summary>
-        public static Collection<T> Add<T>(this Collection<T> collection, IList<T> items)
+        public static void Add<T>(this Collection<T> collection, IList<T> items)
         {
             foreach (var item in items)
             {
                 collection.Add(item);
             }
-
-            return collection;
         }
     }
 }
