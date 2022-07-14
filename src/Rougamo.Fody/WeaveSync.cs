@@ -35,6 +35,7 @@ namespace Rougamo.Fody
             if (returnVariable != null)
             {
                 instructions.AddRange(ReplaceReturnValue(contextVariable, returnVariable, rouMethod.MethodDef.ReturnType));
+                ExecuteMoMethod(Constants.METHOD_OnExit, moVariables, contextVariable, instructions, this.ConfigReverseCallEnding());
                 instructions.Add(Create(OpCodes.Ldloc, returnVariable));
             }
             instructions.Add(Create(OpCodes.Ret));
@@ -96,6 +97,9 @@ namespace Rougamo.Fody
 
             var instructions = new List<Instruction>();
             instructions.Add(Create(OpCodes.Callvirt, _methodMethodContextGetHasExceptionRef));
+            instructions.Add(Create(OpCodes.Brtrue_S, onExitFirstInstruction));
+            instructions.Add(Create(OpCodes.Ldloc, contextVariable));
+            instructions.Add(Create(OpCodes.Callvirt, _methodMethodContextGetExceptionHandledRef));
             instructions.Add(Create(OpCodes.Brtrue_S, onExitFirstInstruction));
             if (finallyEnd != null && finallyEnd.OpCode.Code != Code.Ret)
             {

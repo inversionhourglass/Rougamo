@@ -99,9 +99,6 @@ namespace Rougamo.Fody.Tests
             Assert.NotNull(instance.Context.Exception);
 
             instance.Context = null;
-            // What a strange thing, instance.Context will retain the result of ExitWithExceptionAsync after execute ExitWithSuccessAsync,
-            // it's only happen in .netcoreapp3.1 and .net6 debug mode, and will be fixed after the following Yield or any await operation.
-            await Task.Yield();
 #if NET461 || NET6
             var exitWithSuccessValue = await (Task<string>)instance.ExitWithSuccessAsync();
 #else
