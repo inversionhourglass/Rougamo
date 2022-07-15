@@ -1,6 +1,7 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System.Linq;
+using static Mono.Cecil.Cil.Instruction;
 
 namespace Rougamo.Fody
 {
@@ -32,7 +33,8 @@ namespace Rougamo.Fody
                 currentFieldRef = new FieldReference(currentFieldRef.Name, currentFieldRef.FieldType, stateTypeRef);
             }
             IteratorOnEntry(rouMethod, moveNextMethodDef, mosFieldRef, contextFieldRef, stateFieldRef);
-            AsyncOnException(rouMethod, moveNextMethodDef, mosFieldRef, contextFieldRef, out _, out _);
+            AsyncOnException(rouMethod, moveNextMethodDef, mosFieldRef, contextFieldRef, out var setExceptionFirst, out _);
+            ExecuteMoMethod(Constants.METHOD_OnExit, moveNextMethodDef, rouMethod.Mos.Count, null, mosFieldRef, contextFieldRef, setExceptionFirst, this.ConfigReverseCallEnding());
             AsyncIteratorOnSuccessWithExit(rouMethod, moveNextMethodDef, mosFieldRef, contextFieldRef, returnsFieldRef, currentFieldRef);
 
             rouMethod.MethodDef.Body.OptimizePlus();
@@ -45,36 +47,40 @@ namespace Rougamo.Fody
             var setResults = instructions.Where(x => (x.OpCode.Code == Code.Call || x.OpCode.Code == Code.Callvirt) && x.Operand is MethodReference methodRef && methodRef.DeclaringType.FullName == "System.Threading.Tasks.Sources.ManualResetValueTaskSourceCore`1<System.Boolean>" && methodRef.Name == Constants.METHOD_SetResult).ToArray();
             foreach (var setResult in setResults)
             {
+                var setResultLdarg0 = setResult.Previous.Previous.Previous;
+                if (setResultLdarg0.OpCode.Code != Code.Ldarg_0) throw new RougamoException($"Offset {setResultLdarg0.Offset} of {rouMethod.MethodDef.FullName}'s MoveNext is {setResultLdarg0.OpCode.Code}, it should be Ldarg0 of SetResult which offset is {setResult.Offset}");
+
                 switch (setResult.Previous.OpCode.Code)
                 {
                     case Code.Ldc_I4_0: // finished
-                        ExecuteMoMethod(Constants.METHOD_OnExit, moveNextMethodDef, rouMethod.Mos.Count, null, mosFieldRef, contextFieldRef, setResult.Next, this.ConfigReverseCallEnding());
-                        ExecuteMoMethod(Constants.METHOD_OnSuccess, moveNextMethodDef, rouMethod.Mos.Count, null, mosFieldRef, contextFieldRef, setResult.Next, this.ConfigReverseCallEnding());
                         if(returnsFieldRef != null)
                         {
                             var listToArrayMethodRef = returnsFieldRef.FieldType.GenericTypeMethodReference(_methodListToArrayRef, ModuleDefinition);
-                            instructions.InsertAfter(setResult, new[]
+                            instructions.InsertBefore(setResultLdarg0, new[]
                             {
-                                Instruction.Create(OpCodes.Ldarg_0),
-                                Instruction.Create(OpCodes.Ldfld, contextFieldRef),
-                                Instruction.Create(OpCodes.Ldarg_0),
-                                Instruction.Create(OpCodes.Ldfld, returnsFieldRef),
-                                Instruction.Create(OpCodes.Callvirt, listToArrayMethodRef),
-                                Instruction.Create(OpCodes.Callvirt, _methodMethodContextSetReturnValueRef)
+                                Create(OpCodes.Ldarg_0),
+                                Create(OpCodes.Ldfld, contextFieldRef),
+                                Create(OpCodes.Ldarg_0),
+                                Create(OpCodes.Ldfld, returnsFieldRef),
+                                Create(OpCodes.Callvirt, listToArrayMethodRef),
+                                Create(OpCodes.Callvirt, _methodMethodContextSetReturnValueRef)
                             });
                         }
+                        var afterOnSuccessNop = instructions.InsertBefore(setResultLdarg0, Create(OpCodes.Nop));
+                        ExecuteMoMethod(Constants.METHOD_OnSuccess, moveNextMethodDef, rouMethod.Mos.Count, null, mosFieldRef, contextFieldRef, afterOnSuccessNop, this.ConfigReverseCallEnding());
+                        ExecuteMoMethod(Constants.METHOD_OnExit, moveNextMethodDef, rouMethod.Mos.Count, null, mosFieldRef, contextFieldRef, setResultLdarg0, this.ConfigReverseCallEnding());
                         break;
                     case Code.Ldc_I4_1: // yield
                         if(returnsFieldRef != null)
                         {
                             var listAddMethodRef = returnsFieldRef.FieldType.GenericTypeMethodReference(_methodListAddRef, ModuleDefinition);
-                            instructions.InsertAfter(setResult, new[]
+                            instructions.InsertAfter(setResultLdarg0, new[]
                             {
-                                Instruction.Create(OpCodes.Ldarg_0),
-                                Instruction.Create(OpCodes.Ldfld, returnsFieldRef),
-                                Instruction.Create(OpCodes.Ldarg_0),
-                                Instruction.Create(OpCodes.Ldfld, currentFieldRef),
-                                Instruction.Create(OpCodes.Callvirt, listAddMethodRef)
+                                Create(OpCodes.Ldfld, returnsFieldRef),
+                                Create(OpCodes.Ldarg_0),
+                                Create(OpCodes.Ldfld, currentFieldRef),
+                                Create(OpCodes.Callvirt, listAddMethodRef),
+                                Create(OpCodes.Ldarg_0)
                             });
                         }
                         break;

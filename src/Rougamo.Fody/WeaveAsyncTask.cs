@@ -293,17 +293,8 @@ namespace Rougamo.Fody
                 instruction = instruction.Next;
                 if (instruction == null || instruction == exceptionHandler.HandlerEnd) throw new InvalidOperationException($"[{moveNextMethodDef.DeclaringType.FullName}] SetException instruction not found");
             }
-            while (true)
-            {
-                if (instruction.OpCode.Code == Code.Ldarg_0)
-                {
-                    setExceptionFirst = instruction;
-                    break;
-                }
-
-                instruction = instruction.Previous;
-                if (instruction == null || instruction == exceptionHandler.HandlerStart) throw new InvalidOperationException($"[{moveNextMethodDef.DeclaringType.FullName}] SetException' ldarg.0 not found");
-            }
+            setExceptionFirst = instruction.Previous.Previous.Previous;
+            if (setExceptionFirst.OpCode.Code != Code.Ldarg_0) throw new RougamoException($"Offset {setExceptionFirst.Offset} of {moveNextMethodDef.FullName} is {setExceptionFirst.OpCode.Code}, it should be Ldarg0 of SetResult which offset is {instruction.Offset}");
         }
 
         private ExceptionHandler GetOuterExceptionHandler(MethodBody methodBody)
