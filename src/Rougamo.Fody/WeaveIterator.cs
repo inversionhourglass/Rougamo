@@ -2,6 +2,7 @@
 using Mono.Cecil.Cil;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using static Mono.Cecil.Cil.Instruction;
 
 namespace Rougamo.Fody
 {
@@ -51,11 +52,11 @@ namespace Rougamo.Fody
             var stateMachineTypeRef = IteratorGetEntryStateTypeReference(rouMethod.MethodDef.Body);
             var stateMachineVariable = rouMethod.MethodDef.Body.CreateVariable(stateMachineTypeRef);
             var retIns = rouMethod.MethodDef.Body.Instructions.Last();
-            rouMethod.MethodDef.Body.Instructions.InsertBefore(retIns, Instruction.Create(OpCodes.Stloc, stateMachineVariable));
+            rouMethod.MethodDef.Body.Instructions.InsertBefore(retIns, Create(OpCodes.Stloc, stateMachineVariable));
             InitReturnsField(rouMethod, returnsFieldDef, stateMachineTypeRef, stateMachineVariable, retIns);
             StateMachineInitMosField(rouMethod, mosFieldDef, stateMachineVariable, retIns);
             StateMachineInitMethodContextField(rouMethod, contextFieldDef, stateMachineVariable, retIns, isAsync, true);
-            rouMethod.MethodDef.Body.Instructions.InsertBefore(retIns, Instruction.Create(OpCodes.Ldloc, stateMachineVariable));
+            rouMethod.MethodDef.Body.Instructions.InsertBefore(retIns, Create(OpCodes.Ldloc, stateMachineVariable));
             var returnType = rouMethod.MethodDef.ReturnType;
             return ((GenericInstanceType)returnType).GenericArguments[0];
         }
@@ -66,10 +67,10 @@ namespace Rougamo.Fody
             var originFirstIns = instructions.First();
             instructions.Insert(0, new[]
             {
-                Instruction.Create(OpCodes.Ldarg_0),
-                Instruction.Create(OpCodes.Ldfld, stateFieldRef),
-                Instruction.Create(OpCodes.Ldc_I4, -1),
-                Instruction.Create(OpCodes.Bne_Un, originFirstIns)
+                Create(OpCodes.Ldarg_0),
+                Create(OpCodes.Ldfld, stateFieldRef),
+                Create(OpCodes.Ldc_I4, -1),
+                Create(OpCodes.Bne_Un, originFirstIns)
             });
             ExecuteMoMethod(Constants.METHOD_OnEntry, moveNextMethodDef, rouMethod.Mos.Count, null, mosFieldRef, contextFieldRef, originFirstIns, this.ConfigReverseCallEnding());
         }
@@ -81,14 +82,14 @@ namespace Rougamo.Fody
             if (returnsFieldRef != null)
             {
                 var listAddMethodRef = returnsFieldRef.FieldType.GenericTypeMethodReference(_methodListAddRef, ModuleDefinition);
-                yieldBrTo = Instruction.Create(OpCodes.Ldarg_0);
+                yieldBrTo = Create(OpCodes.Ldarg_0);
                 var addCurrentToReturns = new[]
                 {
                     yieldBrTo,
-                    Instruction.Create(OpCodes.Ldfld, returnsFieldRef),
-                    Instruction.Create(OpCodes.Ldarg_0),
-                    Instruction.Create(OpCodes.Ldfld, currentFieldRef),
-                    Instruction.Create(OpCodes.Callvirt, listAddMethodRef)
+                    Create(OpCodes.Ldfld, returnsFieldRef),
+                    Create(OpCodes.Ldarg_0),
+                    Create(OpCodes.Ldfld, currentFieldRef),
+                    Create(OpCodes.Callvirt, listAddMethodRef)
                 };
                 methodDef.Body.Instructions.InsertBefore(endFinally, addCurrentToReturns);
             }
@@ -96,19 +97,19 @@ namespace Rougamo.Fody
             ExecuteMoMethod(Constants.METHOD_OnExit, methodDef, mosCount, null, mosFieldRef, contextFieldRef, yieldBrTo, this.ConfigReverseCallEnding());
             if (returnsFieldRef != null)
             {
-                methodDef.Body.Instructions.InsertBefore(yieldBrTo, Instruction.Create(OpCodes.Br_S, endFinally));
+                methodDef.Body.Instructions.InsertBefore(yieldBrTo, Create(OpCodes.Br_S, endFinally));
             }
             if (finallyStart.OpCode.Code != Code.Nop) throw new RougamoException("finally start is not nop");
             finallyStart.OpCode = OpCodes.Ldloc;
             finallyStart.Operand = returnVariable;
             var onExitStart = finallyStart.Next;
-            var hasException = Instruction.Create(OpCodes.Brtrue_S, onExitStart);
+            var hasException = Create(OpCodes.Brtrue_S, onExitStart);
             methodDef.Body.Instructions.InsertAfter(finallyStart, new[]
             {
-                Instruction.Create(OpCodes.Brtrue_S, yieldBrTo),
-                Instruction.Create(OpCodes.Ldarg_0),
-                Instruction.Create(OpCodes.Ldfld, contextFieldRef),
-                Instruction.Create(OpCodes.Callvirt, _methodMethodContextGetHasExceptionRef),
+                Create(OpCodes.Brtrue_S, yieldBrTo),
+                Create(OpCodes.Ldarg_0),
+                Create(OpCodes.Ldfld, contextFieldRef),
+                Create(OpCodes.Callvirt, _methodMethodContextGetHasExceptionRef),
                 hasException
             });
             if (returnsFieldRef != null)
@@ -116,12 +117,12 @@ namespace Rougamo.Fody
                 var listToArrayMethodRef = returnsFieldRef.FieldType.GenericTypeMethodReference(_methodListToArrayRef, ModuleDefinition);
                 methodDef.Body.Instructions.InsertAfter(hasException, new[]
                 {
-                    Instruction.Create(OpCodes.Ldarg_0),
-                    Instruction.Create(OpCodes.Ldfld, contextFieldRef),
-                    Instruction.Create(OpCodes.Ldarg_0),
-                    Instruction.Create(OpCodes.Ldfld, returnsFieldRef),
-                    Instruction.Create(OpCodes.Callvirt, listToArrayMethodRef),
-                    Instruction.Create(OpCodes.Callvirt, _methodMethodContextSetReturnValueRef)
+                    Create(OpCodes.Ldarg_0),
+                    Create(OpCodes.Ldfld, contextFieldRef),
+                    Create(OpCodes.Ldarg_0),
+                    Create(OpCodes.Ldfld, returnsFieldRef),
+                    Create(OpCodes.Callvirt, listToArrayMethodRef),
+                    Create(OpCodes.Callvirt, _methodMethodContextSetReturnValueRef)
                 });
             }
             ExecuteMoMethod(Constants.METHOD_OnSuccess, methodDef, mosCount, null, mosFieldRef, contextFieldRef, onExitStart, this.ConfigReverseCallEnding());
@@ -150,8 +151,8 @@ namespace Rougamo.Fody
                 var returnsTypeCtorDef = _typeListDef.GetZeroArgsCtor();
                 var returnsTypeCtorRef = returnsFieldDef.FieldType.GenericTypeMethodReference(returnsTypeCtorDef, ModuleDefinition);
                 instructions.InsertBefore(insertBeforeThisIns, stateMachineVariable.LdlocOrA());
-                instructions.InsertBefore(insertBeforeThisIns, Instruction.Create(OpCodes.Newobj, returnsTypeCtorRef));
-                instructions.InsertBefore(insertBeforeThisIns, Instruction.Create(OpCodes.Stfld, returnsFieldRef));
+                instructions.InsertBefore(insertBeforeThisIns, Create(OpCodes.Newobj, returnsTypeCtorRef));
+                instructions.InsertBefore(insertBeforeThisIns, Create(OpCodes.Stfld, returnsFieldRef));
             }
         }
 
