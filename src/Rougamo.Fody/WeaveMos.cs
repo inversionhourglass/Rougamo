@@ -17,7 +17,7 @@ namespace Rougamo.Fody
                 {
                     if (rouMethod.MethodDef.IsEmpty())
                     {
-                        EmptyMethodWeave();
+                        EmptyMethodWeave(rouMethod);
                     }
                     else if (rouMethod.IsIterator)
                     {
@@ -39,9 +39,39 @@ namespace Rougamo.Fody
             }
         }
 
-        private void EmptyMethodWeave()
+        private void EmptyMethodWeave(RouMethod rouMethod)
         {
-            // todo: empty method weave
+            var bodyInstructions = rouMethod.MethodDef.Body.Instructions;
+            var ret = bodyInstructions.Last();
+            Instruction afterOnSuccessNop;
+            if(bodyInstructions.Count > 1)
+            {
+                afterOnSuccessNop = ret.Previous;
+            }
+            else
+            {
+                afterOnSuccessNop = Create(OpCodes.Nop);
+                bodyInstructions.Insert(bodyInstructions.Count - 1, afterOnSuccessNop);
+            }
+
+            var instructions = new List<Instruction>();
+            var moVariables = LoadMosOnStack(rouMethod, instructions);
+            var contextVariable = CreateMethodContextVariable(rouMethod.MethodDef, false, false, instructions);
+
+            ExecuteMoMethod(Constants.METHOD_OnEntry, moVariables, contextVariable, instructions, false);
+
+            instructions.Add(Create(OpCodes.Ldloc, contextVariable));
+            instructions.Add(Create(OpCodes.Callvirt, _methodMethodContextGetReturnValueReplacedRef));
+            instructions.Add(Create(OpCodes.Brtrue_S, afterOnSuccessNop));
+
+            ExecuteMoMethod(Constants.METHOD_OnSuccess, moVariables, contextVariable, instructions, this.ConfigReverseCallEnding());
+
+            rouMethod.MethodDef.Body.Instructions.InsertBefore(afterOnSuccessNop, instructions);
+
+            instructions = new List<Instruction>();
+            ExecuteMoMethod(Constants.METHOD_OnExit, moVariables, contextVariable, instructions, this.ConfigReverseCallEnding());
+            rouMethod.MethodDef.Body.Instructions.InsertAfter(afterOnSuccessNop, instructions);
+            rouMethod.MethodDef.Body.OptimizePlus();
         }
 
         /// <summary>

@@ -19,6 +19,18 @@ namespace BasicUsage
             throw new InvalidOperationException();
         }
 
+        [Sync]
+        public void Empty(List<string> datas)
+        {
+
+        }
+
+        [SyncEntryModifier]
+        public void EmptyReplaceOnEntry(List<string> datas)
+        {
+
+        }
+
         [SyncEntryModifier]
         public string ReplaceOnEntry(List<string> datas)
         {

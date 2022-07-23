@@ -10,7 +10,14 @@ namespace BasicUsage.Attributes
         {
             var datas = (List<string>)context.Arguments[0];
             datas.Add(nameof(OnEntry));
-            context.ReplaceReturnValue(this, nameof(OnEntry));
+            if (context.RealReturnType == typeof(string))
+            {
+                context.ReplaceReturnValue(this, nameof(OnEntry));
+            }
+            else if(context.RealReturnType == typeof(void))
+            {
+                context.ReplaceReturnValue(this, null);
+            }
         }
 
         public override void OnException(MethodContext context)

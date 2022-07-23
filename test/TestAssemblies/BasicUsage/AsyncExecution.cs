@@ -37,7 +37,19 @@ namespace BasicUsage
             throw new InvalidOperationException();
         }
 
-        [SyncEntryModifier]
+        [Async]
+        public async Task Empty(List<string> datas)
+        {
+
+        }
+
+        [AsyncEntryModifier]
+        public async Task EmptyReplaceOnEntry(List<string> datas)
+        {
+
+        }
+
+        [AsyncEntryModifier]
         public async Task<string> ReplaceOnEntry(List<string> datas)
         {
             datas.Add(nameof(ReplaceOnEntry));
@@ -45,7 +57,7 @@ namespace BasicUsage
             return null;
         }
 
-        [SyncExceptionModifier]
+        [AsyncExceptionModifier]
         public async Task<string> ReplaceOnException(List<string> datas)
         {
             datas.Add(nameof(ReplaceOnException));
@@ -53,7 +65,7 @@ namespace BasicUsage
             throw new InvalidOperationException();
         }
 
-        [SyncSuccessModifier]
+        [AsyncSuccessModifier]
         public async Task<string> ReplaceOnSuccess(List<string> datas)
         {
             datas.Add(nameof(ReplaceOnSuccess));

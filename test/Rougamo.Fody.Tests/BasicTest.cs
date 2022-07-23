@@ -302,6 +302,14 @@ namespace Rougamo.Fody.Tests
             output = instance.ReplaceOnSuccess(input);
             Assert.Equal(new[] { nameof(IMo.OnEntry), nameof(SyncExecution.ReplaceOnSuccess), nameof(IMo.OnSuccess), nameof(IMo.OnExit) }, input);
             Assert.Equal(nameof(IMo.OnSuccess), output);
+
+            input = new List<string>();
+            instance.Empty(input);
+            Assert.Equal(new[] { nameof(IMo.OnEntry), nameof(IMo.OnSuccess), nameof(IMo.OnExit) }, input);
+
+            input = new List<string>();
+            instance.EmptyReplaceOnEntry(input);
+            Assert.Equal(new[] { nameof(IMo.OnEntry), nameof(IMo.OnExit) }, input);
         }
 
         [Fact]
@@ -339,6 +347,14 @@ namespace Rougamo.Fody.Tests
             output = await (Task<string>)instance.ReplaceOnSuccess(input);
             Assert.Equal(new[] { nameof(IMo.OnEntry), nameof(SyncExecution.ReplaceOnSuccess), nameof(IMo.OnSuccess), nameof(IMo.OnExit) }, input);
             Assert.Equal(nameof(IMo.OnSuccess), output);
+
+            input = new List<string>();
+            await (Task)instance.Empty(input);
+            Assert.Equal(new[] { nameof(IMo.OnEntry), nameof(IMo.OnSuccess), nameof(IMo.OnExit) }, input);
+
+            input = new List<string>();
+            await (Task)instance.EmptyReplaceOnEntry(input);
+            Assert.Equal(new[] { nameof(IMo.OnEntry), nameof(IMo.OnExit) }, input);
         }
     }
 }
