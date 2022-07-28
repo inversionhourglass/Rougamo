@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>1.1.0-beta</Version>
+    <Version>1.1.0</Version>
     <Authors>ihourglass</Authors>
     <Description>ilweaver, aop at compile time</Description>
     <PackageTags>AOP</PackageTags>
@@ -14,7 +14,7 @@
     <RepositoryUrl>https://github.com/inversionhourglass/Rougamo.git</RepositoryUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/inversionhourglass/Rougamo/master/Rougamo.png</PackageIconUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageReleaseNotes>fix #8, add async Task/ValueTask (without return value) exception handle logic.</PackageReleaseNotes>
+    <PackageReleaseNotes>Support replace return at OnEntry and OnSuccess, support handle exception at OnException.</PackageReleaseNotes>
 	<LangVersion>latest</LangVersion>
 	<Nullable>enable</Nullable>
     <!--<PackageReadmeFile>README.md</PackageReadmeFile>-->
