@@ -23,6 +23,11 @@ namespace Rougamo.Context
         }
 
         /// <summary>
+        /// user defined state data
+        /// </summary>
+        public object? Data { get; set; }
+
+        /// <summary>
         /// Method' declaring type instance, null if method is a static method
         /// </summary>
         public object Target { get; private set; }
