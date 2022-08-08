@@ -1,4 +1,7 @@
+
 # Rougamo - 肉夹馍
+
+中文 | [English](docs/README_en.md)
 
 ## rougamo是什么
 静态代码织入AOP，.NET最常用的AOP应该是Castle DynamicProxy，rougamo的功能与其类似，但是实现却截然不同，
@@ -326,6 +329,3 @@ Rougamo是在[fody](https://github.com/Fody/Fody)的基础上研发的，引用Rougamo后首次
   <Rougamo enumerable-returns="true" />
 </Weavers>
 ```
-
-## todo
-1. 英文文档
