@@ -1,8 +1,8 @@
 
-# Rougamo - Èâ¼ÐâÉ
+# Rougamo - è‚‰å¤¹é¦
 > Translated by google
 
-[ÖÐÎÄ](..\README.md) | English
+[ä¸­æ–‡](..\README.md) | English
 
 ## Quick start
 ```csharp
@@ -125,7 +125,7 @@ public interface IRepository<TModel, TId> : ILoggingRougamo
 }
 ```
 
-## Exception handling and modifying return values£¨v1.1.0£©
+## Exception handling and modifying return values(v1.1.0)
 In the `OnException` method, you can call the `HandledException` method of `MethodContext` to indicate that the exception has been handled and set the return value.
 In the `OnEntry` and `OnSuccess` methods, you can modify the actual method by calling the `ReplaceReturnValue` method of `MethodContext` The return value of
 `ReturnValue`, `ExceptionHandled` and other attributes should not be used to modify the return value and handle exceptions directly. `HandledException` and
@@ -186,7 +186,7 @@ public class ObsoleteProxyMoAttribute : MoAttribute
 {
     public override void OnEntry(MethodContext context)
     {
-        Log.Warning("expired method was called£º" + Environment.StackTrace);
+        Log.Warning("expired method was called." + Environment.StackTrace);
     }
 }
 
