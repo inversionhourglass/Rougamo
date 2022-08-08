@@ -4,6 +4,8 @@
 
 [中文](..\README.md) | English
 
+Rougamo, a Chinese snack, perhaps somewhat similar to a hamburger. Wrapping important logic code to provide AOP is like wrapping delicious stuffing in buns.
+
 ## Quick start
 ```csharp
 // 1. Install-Package Rougamo.Fody
