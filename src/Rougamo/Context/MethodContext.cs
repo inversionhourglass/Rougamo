@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -6,7 +8,7 @@ using System.Threading.Tasks;
 namespace Rougamo.Context
 {
     /// <summary>
-    /// 方法执行上下文共享部分
+    /// Method execution context
     /// </summary>
     public sealed class MethodContext
     {
@@ -20,12 +22,19 @@ namespace Rougamo.Context
             IsAsync = isAsync;
             IsIterator = isIterator;
             Arguments = args;
+            Datas = new Dictionary<object, object>();
         }
 
         /// <summary>
         /// user defined state data
         /// </summary>
+        [Obsolete("The Dictionary type is more suitable for multi-developer scenarios, use Datas property instead")]
         public object? Data { get; set; }
+
+        /// <summary>
+        /// user defined state datas
+        /// </summary>
+        public IDictionary Datas { get; }
 
         /// <summary>
         /// Method' declaring type instance, null if method is a static method
