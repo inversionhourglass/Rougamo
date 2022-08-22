@@ -28,14 +28,14 @@ namespace Rougamo.Fody
 
     internal sealed class GlobalMos
     {
-        public GlobalMos(Dictionary<string, CustomAttribute> directs, Dictionary<string, TypeDefinition> proxies, Dictionary<string, TypeDefinition>? ignores)
+        public GlobalMos(Dictionary<string, List<CustomAttribute>> directs, Dictionary<string, TypeDefinition> proxies, Dictionary<string, TypeDefinition>? ignores)
         {
             Directs = directs;
             Proxies = proxies;
             Ignores = ignores;
         }
 
-        public Dictionary<string, CustomAttribute> Directs { get; }
+        public Dictionary<string, List<CustomAttribute>> Directs { get; }
 
         public Dictionary<string, TypeDefinition> Proxies { get; }
 

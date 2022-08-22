@@ -143,7 +143,7 @@ namespace Rougamo.Fody
                 }
             }
 
-            return new SimplifyGlobalMos(assemblyMos.Directs.Values.ToArray(), assemblyMos.Proxies, assemblyMos.Ignores.Keys.ToArray());
+            return new SimplifyGlobalMos(assemblyMos.Directs.Values.SelectMany(x => x).ToArray(), assemblyMos.Proxies, assemblyMos.Ignores.Keys.ToArray());
         }
 
         /// <summary>
@@ -158,7 +158,7 @@ namespace Rougamo.Fody
         /// </returns>
         private GlobalMos FindGlobalAttributes(Collection<CustomAttribute> attributes, string locationName)
         {
-            var directs = new Dictionary<string, CustomAttribute>();
+            var directs = new Dictionary<string, List<CustomAttribute>>();
             var proxies = new Dictionary<string, ProxyReleation>();
             var ignores = new Dictionary<string, TypeDefinition>();
 
@@ -167,7 +167,7 @@ namespace Rougamo.Fody
                 var attrType = attribute.AttributeType;
                 if (attrType.DerivesFrom(Constants.TYPE_MoAttribute))
                 {
-                    ExtractMoAttributeUniq(directs, attribute, locationName);
+                    ExtractMoAttributeUniq(directs, attribute);
                 }
                 else if (attrType.Is(Constants.TYPE_MoProxyAttribute))
                 {
@@ -319,13 +319,13 @@ namespace Rougamo.Fody
         /// </returns>
         private ExtractMos ExtractAttributes(Collection<CustomAttribute> attributes, Dictionary<string, TypeDefinition> proxies, string locationName, params string[][] ignores)
         {
-            var mos = new Dictionary<string, CustomAttribute>();
+            var mos = new Dictionary<string, List<CustomAttribute>>();
             var proxied = new Dictionary<string, TypeDefinition>();
             foreach (var attribute in attributes)
             {
                 if (attribute.AttributeType.DerivesFrom(Constants.TYPE_MoAttribute))
                 {
-                    ExtractMoAttributeUniq(mos, attribute, locationName);
+                    ExtractMoAttributeUniq(mos, attribute);
                 }
                 else if (proxies.TryGetValue(attribute.AttributeType.FullName, out var proxy))
                 {
@@ -334,7 +334,7 @@ namespace Rougamo.Fody
             }
 
             // proxies在FindGlobalAttributes中已经过滤了
-            return new ExtractMos(mos.Values.ToArray(), proxied.Values.ToArray());
+            return new ExtractMos(mos.Values.SelectMany(x => x).ToArray(), proxied.Values.ToArray());
         }
 
         /// <summary>
@@ -343,16 +343,14 @@ namespace Rougamo.Fody
         /// <param name="mos">已有的MoAttribute子类</param>
         /// <param name="attribute">CustomAttribute</param>
         /// <param name="locationName">CustomAttribute的来源</param>
-        private void ExtractMoAttributeUniq(Dictionary<string, CustomAttribute> mos, CustomAttribute attribute, string locationName)
+        private void ExtractMoAttributeUniq(Dictionary<string, List<CustomAttribute>> mos, CustomAttribute attribute)
         {
-            if(mos.TryAdd(attribute.AttributeType.FullName, attribute))
+            if (!mos.TryGetValue(attribute.AttributeType.FullName, out var list))
             {
-                WriteInfo($"{locationName} MoAttribute found: {attribute.AttributeType.FullName}");
+                list = new List<CustomAttribute>();
+                mos.Add(attribute.AttributeType.FullName, list);
             }
-            else
-            {
-                WriteError($"duplicate {locationName} MoAttribute found: {attribute.AttributeType.FullName}");
-            }
+            list.Add(attribute);
         }
 
         /// <summary>

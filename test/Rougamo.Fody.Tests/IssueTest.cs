@@ -1,5 +1,5 @@
 ﻿using Issues;
-using Issues.Attributes;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
@@ -36,6 +36,20 @@ namespace Rougamo.Fody.Tests
             await (Task)instance.WeaveTestAsync();
 
             Assert.Equal(Issue9.Nodestrings, (List<string>)instance.Nodestrings);
+        }
+
+        [Fact]
+        public async Task Issue16Test()
+        {
+            var instance = GetIssuesInstance(nameof(Issue16));
+
+            var items = new List<string>();
+            await (Task)instance.TestAsync(items);
+
+            var expected = new[] { Issue16.Flag1, Issue16.Flag1, Issue16.Flag2, Issue16.Flag2 };
+            Array.Sort(expected);
+            items.Sort();
+            Assert.Equal(expected, items);
         }
 
         private dynamic GetIssuesInstance(string className) => GetInstance($"Issues.{className}");
