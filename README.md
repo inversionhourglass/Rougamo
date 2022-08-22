@@ -1,7 +1,7 @@
 
 # Rougamo - 肉夹馍
 
-中文 | [English](docs/README_en.md)
+中文 | [English](README_en.md)
 
 ## rougamo是什么
 静态代码织入AOP，.NET最常用的AOP应该是Castle DynamicProxy，rougamo的功能与其类似，但是实现却截然不同，
