@@ -26,6 +26,11 @@ namespace Rougamo.Context
         }
 
         /// <summary>
+        /// Verify the return value type of the replacement, default is true
+        /// </summary>
+        internal bool VerifyReplacement { get; set; } = true;
+
+        /// <summary>
         /// user defined state data
         /// </summary>
         [Obsolete("The Dictionary type is more suitable for multi-developer scenarios, use Datas property instead")]
@@ -97,6 +102,27 @@ namespace Rougamo.Context
             }
         }
 
+        public Type? ExReturnType
+        {
+            get
+            {
+                if (Method is MethodInfo methodInfo)
+                {
+                    var returnType = methodInfo.ReturnType;
+                    if (returnType == typeof(Task) || returnType.FullName == "System.Threading.Tasks.ValueTask")
+                    {
+                        return typeof(void);
+                    }
+                    if (typeof(Task).IsAssignableFrom(returnType) || returnType.FullName.StartsWith("System.Threading.Tasks.ValueTask"))
+                    {
+                        return returnType.GetGenericArguments().Single();
+                    }
+                    return returnType;
+                }
+                return null;
+            }
+        }
+
         /// <summary>
         /// Return true if return value type is not void
         /// </summary>
@@ -158,9 +184,7 @@ namespace Rougamo.Context
         {
             if (HasReturnValue)
             {
-                if (RealReturnType == null ||
-                    returnValue == null && RealReturnType.IsValueType && (!RealReturnType.IsGenericType || RealReturnType.GetGenericTypeDefinition() != typeof(Nullable<>)) ||
-                    returnValue != null && !RealReturnType.IsAssignableFrom(returnValue.GetType()))
+                if (VerifyReplacement && (RealReturnType == null || !RealReturnType.Setable(returnValue)))
                 {
                     throw new ArgumentException($"Method return type({RealReturnType?.FullName}) is not assignable from returnvalue({returnValue?.GetType().FullName})");
                 }

@@ -28,5 +28,7 @@
   <ItemGroup>
     <PackageReference Include="Fody" Version="6.2.5" PrivateAssets="none" />
     <PackageReference Include="FodyPackaging" Version="6.2.5" PrivateAssets="All" />
+    <PackageReference Include="System.Reflection.Emit.Lightweight" Version="4.7.0" />
+    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
   </ItemGroup>
 </Project>
