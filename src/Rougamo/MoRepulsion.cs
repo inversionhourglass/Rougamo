@@ -3,12 +3,13 @@
 namespace Rougamo
 {
     /// <summary>
-    /// 多互斥类型，与<see cref="IRepulsionsRougamo{TMo, TRepulsion}"/>配合使用
+    /// Multiple mutex types, used with <see cref="IRepulsionsRougamo{TMo, TRepulsion}"/>.
     /// </summary>
     public abstract class MoRepulsion
     {
         /// <summary>
-        /// 类型必须继承自<see cref="IMo"/>，同时实现该类时，该字段必须一次性初始化，不能包含逻辑处理
+        /// The type must implements <see cref="IMo"/>, and when implementing this class,
+        /// the field must be initialized once and cannot contain logic processing.
         /// </summary>
         /// <example>
         /// Repulsions = new [] { typeof(Abc), typeof(Bcd) };

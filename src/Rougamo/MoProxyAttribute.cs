@@ -3,7 +3,7 @@
 namespace Rougamo
 {
     /// <summary>
-    /// 使用一个已有Attribute作为代理类型进行织入
+    /// Weaving using an existing Attribute as the proxy type.
     /// </summary>
     [AttributeUsage(AttributeTargets.Assembly|AttributeTargets.Module, AllowMultiple = true)]
     public class MoProxyAttribute : Attribute
@@ -17,12 +17,12 @@ namespace Rougamo
         }
 
         /// <summary>
-        /// 被代理的Attribute类型
+        /// Attribute type being proxied.
         /// </summary>
         public Type OriginAttributeType { get; set; }
 
         /// <summary>
-        /// 继承自<see cref="MoAttribute"/>的代理Attribute
+        /// Proxy Attribute inherited from <see cref="MoAttribute"/>.
         /// </summary>
         public Type MoAttribtueType { get; set; }
     }

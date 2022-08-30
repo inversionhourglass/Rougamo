@@ -7,27 +7,27 @@ namespace Rougamo
     public interface IMo
     {
         /// <summary>
-        /// 可织入方法类型，应用于方法级别时，该属性无效
+        /// Weavable method type, this attribute has no effect when applied at the method level.
         /// </summary>
         AccessFlags Flags { get; }
 
         /// <summary>
-        /// 方法执行前切入执行
+        /// Before the method executing.
         /// </summary>
         void OnEntry(MethodContext context);
 
         /// <summary>
-        /// 方法执行成功后切入执行
+        /// After the method executes successfully
         /// </summary>
         void OnSuccess(MethodContext context);
 
         /// <summary>
-        /// 方法执行引发异常后切入执行
+        /// When an exception occurs when the method is executed.
         /// </summary>
         void OnException(MethodContext context);
 
         /// <summary>
-        /// 方法执行完成后切入执行
+        /// After the method is executed, whether it succeeds or an exception occurs.
         /// </summary>
         void OnExit(MethodContext context);
     }

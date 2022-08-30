@@ -1,28 +1,33 @@
 ﻿namespace Rougamo
 {
     /// <summary>
-    /// 对实现该接口的类型，使用<typeparamref name="T"/>进行代码织入
+    /// For types that implement this interface, use <typeparamref name="T"/> for code weaving.
     /// </summary>
-    /// <typeparam name="T">实现<see cref="IMo"/>的具体类型</typeparam>
+    /// <typeparam name="T">The type implements <see cref="IMo"/>.</typeparam>
     public interface IRougamo<in T> where T : IMo, new()
     {
     }
 
     /// <summary>
-    /// 对于实现该接口的类型，使用<typeparamref name="TMo"/>进行代码织入
+    /// For types that implement this interface, use <typeparamref name="TMo"/> for code weaving.
     /// </summary>
-    /// <typeparam name="TMo">实现<see cref="IMo"/>的具体类型</typeparam>
-    /// <typeparam name="TRepulsion">继承自<see cref="IMo"/>，与<typeparamref name="TMo"/>互斥，根据优先级关系同时仅一个生效</typeparam>
+    /// <typeparam name="TMo">The type implements <see cref="IMo"/>.</typeparam>
+    /// <typeparam name="TRepulsion">
+    /// The type implements <see cref="IMo"/>, mutually exclusive with <typeparamref name="TMo"/>, 
+    /// only one takes effect at the same time according to the priority relationship.
+    /// </typeparam>
     public interface IRougamo<in TMo, in TRepulsion> where TMo : IMo, new() where TRepulsion : IMo
     {
     }
 
     /// <summary>
-    /// 对于实现该接口的类型，使用<typeparamref name="TMo"/>进行代码织入
+    /// For types that implement this interface, use <typeparamref name="TMo"/> for code weaving.
     /// </summary>
-    /// <typeparam name="TMo">实现<see cref="IMo"/>的具体类型</typeparam>
+    /// <typeparam name="TMo">The type implements <see cref="IMo"/>.</typeparam>
     /// <typeparam name="TRepulsion">
-    /// 继承自<see cref="MoRepulsion"/>，其<see cref="MoRepulsion.Repulsions"/>定义了多个与<typeparamref name="TMo"/>互斥类型，根据优先级关系同时仅一个生效
+    /// The type implements <see cref="MoRepulsion"/>, its <see cref="MoRepulsion.Repulsions"/> defines
+    /// multiple mutually exclusive types with <typeparamref name="TMo"/>, and only one takes effect at
+    /// the same time according to the priority relationship.
     /// </typeparam>
     public interface IRepulsionsRougamo<in TMo, in TRepulsion> where TMo : IMo, new() where TRepulsion : MoRepulsion
     {
