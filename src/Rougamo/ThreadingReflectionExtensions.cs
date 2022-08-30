@@ -8,8 +8,8 @@ namespace Rougamo
 {
     internal static class ThreadingReflectionExtensions
     {
-        private static ConcurrentDictionary<Type, Func<object, object>> _taskCache = new();
-        private static ConcurrentDictionary<Type, Func<object, object>> _valueTaskCache = new();
+        private static readonly ConcurrentDictionary<Type, Func<object, object>> _taskCache = new();
+        private static readonly ConcurrentDictionary<Type, Func<object, object>> _valueTaskCache = new();
 
         public static object NewTaskResult(this Type taskType, object returnValue)
         {
