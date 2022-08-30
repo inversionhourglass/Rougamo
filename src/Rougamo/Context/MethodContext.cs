@@ -12,6 +12,9 @@ namespace Rougamo.Context
     /// </summary>
     public sealed class MethodContext
     {
+        private Type? _realReturnType;
+        private Type? _exReturnType;
+
         /// <summary>
         /// </summary>
         public MethodContext(object target, Type targetType, MethodBase method, bool isAsync, bool isIterator, object[] args)
@@ -24,11 +27,6 @@ namespace Rougamo.Context
             Arguments = args;
             Datas = new Dictionary<object, object>();
         }
-
-        /// <summary>
-        /// Verify the return value type of the replacement, default is true
-        /// </summary>
-        internal bool VerifyReplacement { get; set; } = true;
 
         /// <summary>
         /// user defined state data
@@ -72,54 +70,67 @@ namespace Rougamo.Context
         public bool IsIterator { get; }
 
         /// <summary>
-        /// Method decleard return type, return Task/Task&lt;&gt;/ValueTask/ValueTask&lt;&gt; even if method run in async
+        /// Method decleard return type, return <see cref="Task"/>/<see cref="Task{TResult}"/>/<see cref="ValueTask"/>/<see cref="ValueTask{TResult}"/> even if method run in async
         /// </summary>
         [Obsolete("use RealReturnType to instead")]
         public Type? ReturnType => (Method as MethodInfo)?.ReturnType;
 
         /// <summary>
-        /// Method real return type, return first generic argument if current method is an async Task&lt;&gt;/ValueTask&lt;&gt; method, 
-        /// or return typeof(void) if method is an async Task/ValueTask method
+        /// Method real return type, return first generic argument if current method is an async <see cref="Task{TResult}"/>/<see cref="ValueTask{TResult}"/> method, 
+        /// or return typeof(void) if method is an async <see cref="Task"/>/<see cref="ValueTask"/> method
         /// </summary>
         public Type? RealReturnType
         {
             get
             {
-                if(Method is MethodInfo methodInfo)
+                if(_realReturnType == null && Method is MethodInfo methodInfo)
                 {
                     var returnType = methodInfo.ReturnType;
                     if (IsAsync)
                     {
-                        if (returnType == typeof(void) || returnType == typeof(Task) || returnType.FullName == "System.Threading.Tasks.ValueTask")
+                        if (returnType == typeof(void) || returnType == typeof(Task) || returnType == typeof(ValueTask))
                         {
-                            return typeof(void);
+                            _realReturnType = typeof(void);
                         }
-                        return returnType.GetGenericArguments().Single();
+                        else
+                        {
+                            _realReturnType = returnType.GetGenericArguments().Single();
+                        }
                     }
-                    return returnType;
+                    else
+                    {
+                        _realReturnType = returnType;
+                    }
                 }
-                return null;
+                return _realReturnType;
             }
         }
 
+        /// <summary>
+        /// <see cref="Task"/> and <see cref="ValueTask"/> return typeof(void), and <see cref="Task{TResult}"/> and <see cref="ValueTask{TResult}"/> return typeof(T),
+        /// whether or not the async syntax is used. Others return the actual method return value type.
+        /// </summary>
         public Type? ExReturnType
         {
             get
             {
-                if (Method is MethodInfo methodInfo)
+                if (_exReturnType == null && Method is MethodInfo methodInfo)
                 {
                     var returnType = methodInfo.ReturnType;
-                    if (returnType == typeof(Task) || returnType.FullName == "System.Threading.Tasks.ValueTask")
+                    if (returnType == typeof(Task) || returnType == typeof(ValueTask))
                     {
-                        return typeof(void);
+                        _exReturnType = typeof(void);
                     }
-                    if (typeof(Task).IsAssignableFrom(returnType) || returnType.FullName.StartsWith("System.Threading.Tasks.ValueTask"))
+                    else if (typeof(Task).IsAssignableFrom(returnType) || returnType.FullName.StartsWith(Constants.FULLNAME_ValueTask))
                     {
-                        return returnType.GetGenericArguments().Single();
+                        _exReturnType = returnType.GetGenericArguments().Single();
                     }
-                    return returnType;
+                    else
+                    {
+                        _exReturnType = returnType;
+                    }
                 }
-                return null;
+                return _exReturnType;
             }
         }
 
@@ -184,10 +195,6 @@ namespace Rougamo.Context
         {
             if (HasReturnValue)
             {
-                if (VerifyReplacement && (RealReturnType == null || !RealReturnType.Setable(returnValue)))
-                {
-                    throw new ArgumentException($"Method return type({RealReturnType?.FullName}) is not assignable from returnvalue({returnValue?.GetType().FullName})");
-                }
                 ReturnValue = returnValue;
             }
             ReturnValueModifier = modifier;
