@@ -1,6 +1,7 @@
 ﻿using Rougamo.Context;
 using System;
 using System.Collections.Concurrent;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace Rougamo
@@ -81,6 +82,7 @@ namespace Rougamo
         /// </summary>
         public sealed override void OnEntry(MethodContext context)
         {
+            context.ExMode = true;
             _OnEntry(context);
             if (context.ReturnValueReplaced)
             {
@@ -175,7 +177,7 @@ namespace Rougamo
 
         private static Func<object, ExMoAttribute, MethodContext, object> ResolveGenericTask(Type type)
         {
-            var methodInfo = typeof(ExMoAttribute).GetMethod(nameof(GenericTaskContinueWith));
+            var methodInfo = typeof(ExMoAttribute).GetMethod(nameof(GenericTaskContinueWith), BindingFlags.NonPublic | BindingFlags.Static);
             var genericMethodInfo = methodInfo.MakeGenericMethod(type.GetGenericArguments()[0]);
             var @delegate = genericMethodInfo.CreateDelegate(typeof(Func<object, ExMoAttribute, MethodContext, object>));
             return (Func<object, ExMoAttribute, MethodContext, object>)@delegate;
@@ -183,7 +185,7 @@ namespace Rougamo
 
         private static Func<object, ExMoAttribute, MethodContext, object> ResolveGenericValueTask(Type type)
         {
-            var methodInfo = typeof(ExMoAttribute).GetMethod(nameof(GenericValueTaskContinueWith));
+            var methodInfo = typeof(ExMoAttribute).GetMethod(nameof(GenericValueTaskContinueWith), BindingFlags.NonPublic | BindingFlags.Static);
             var genericMethodInfo = methodInfo.MakeGenericMethod(type.GetGenericArguments()[0]);
             var @delegate = genericMethodInfo.CreateDelegate(typeof(Func<object, ExMoAttribute, MethodContext, object>));
             return (Func<object, ExMoAttribute, MethodContext, object>)@delegate;

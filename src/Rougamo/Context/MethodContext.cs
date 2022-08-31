@@ -29,6 +29,11 @@ namespace Rougamo.Context
         }
 
         /// <summary>
+        /// When exmode is true, the return value type needs to match <see cref="ExReturnType"/>, otherwise it matches <see cref="RealReturnType"/>.
+        /// </summary>
+        internal bool ExMode { get; set; }
+
+        /// <summary>
         /// user defined state data
         /// </summary>
         [Obsolete("The Dictionary type is more suitable for multi-developer scenarios, use Datas property instead")]
@@ -195,6 +200,14 @@ namespace Rougamo.Context
         {
             if (HasReturnValue)
             {
+                if (!ExMode && (RealReturnType == null || !RealReturnType.Setable(returnValue)))
+                {
+                    throw new ArgumentException($"Method real return type({RealReturnType?.FullName}) is not assignable from returnvalue({returnValue?.GetType().FullName})");
+                }
+                if (ExMode && (ExReturnType == null || !ExReturnType.Setable(returnValue)))
+                {
+                    throw new ArgumentException($"Method ex return type({ExReturnType?.FullName}) is not assignable from returnvalue({returnValue?.GetType().FullName})");
+                }
                 ReturnValue = returnValue;
             }
             ReturnValueModifier = modifier;
