@@ -110,7 +110,10 @@ namespace Rougamo
             if (TryResolve(context.RealReturnType!, out var func))
             {
                 var returnValue = func!(context.ReturnValue!, this, context);
+                context.ExBarrier.AddParticipants(2);
+                context.ExMode = false;
                 context.ReplaceReturnValue(this, returnValue);
+                context.ExMode = true;
             }
             else
             {
@@ -126,6 +129,10 @@ namespace Rougamo
             if(context.RealReturnType == context.ExReturnType)
             {
                 _OnExit(context);
+            }
+            else
+            {
+                context.ExBarrier.RemoveParticipant();
             }
         }
 
@@ -198,6 +205,7 @@ namespace Rougamo
             var tcs = new TaskCompletionSource<bool>();
             ((Task)taskObject).ContinueWith(t =>
             {
+                context.ExBarrier.SignalAndWait();
                 if (t.IsFaulted)
                 {
                     var exception = t.Exception.InnerExceptions.Count == 1 ? t.Exception.InnerException : t.Exception;
@@ -233,6 +241,7 @@ namespace Rougamo
             var tcs = new TaskCompletionSource<T>();
             ((Task<T>)taskObject).ContinueWith(t =>
             {
+                context.ExBarrier.SignalAndWait();
                 if (t.IsFaulted)
                 {
                     var exception = t.Exception.InnerExceptions.Count == 1 ? t.Exception.InnerException : t.Exception;

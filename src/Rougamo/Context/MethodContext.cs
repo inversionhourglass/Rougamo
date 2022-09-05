@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Rougamo.Context
@@ -26,12 +27,18 @@ namespace Rougamo.Context
             IsIterator = isIterator;
             Arguments = args;
             Datas = new Dictionary<object, object>();
+            ExBarrier = new Barrier(0);
         }
 
         /// <summary>
         /// When exmode is true, the return value type needs to match <see cref="ExReturnType"/>, otherwise it matches <see cref="RealReturnType"/>.
         /// </summary>
         internal bool ExMode { get; set; }
+
+        /// <summary>
+        /// Provides synchronous operation for <see cref="ExMode"/>
+        /// </summary>
+        internal Barrier ExBarrier { get; set; }
 
         /// <summary>
         /// user defined state data
