@@ -11,7 +11,7 @@ namespace Rougamo.Context
     /// <summary>
     /// Method execution context
     /// </summary>
-    public sealed class MethodContext
+    public sealed class MethodContext : IDisposable
     {
         private Type? _realReturnType;
         private Type? _exReturnType;
@@ -219,6 +219,21 @@ namespace Rougamo.Context
             }
             ReturnValueModifier = modifier;
             ReturnValueReplaced = true;
+        }
+
+        /// <summary>
+        /// <inheritdoc/>
+        /// </summary>
+        public void Dispose()
+        {
+            try
+            {
+                ExBarrier.Dispose();
+            }
+            catch
+            {
+                // ignore
+            }
         }
     }
 }

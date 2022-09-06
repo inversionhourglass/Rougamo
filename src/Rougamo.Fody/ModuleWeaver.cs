@@ -26,6 +26,7 @@ namespace Rougamo.Fody
 
         private MethodReference _methodGetTypeFromHandleRef;
         private MethodReference _methodGetMethodFromHandleRef;
+        private MethodReference _methodDisposableDispose;
         private MethodReference _methodListAddRef;
         private MethodReference _methodListToArrayRef;
         private MethodReference _methodMethodContextCtorRef;

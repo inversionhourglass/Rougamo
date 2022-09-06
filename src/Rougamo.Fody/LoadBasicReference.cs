@@ -21,6 +21,7 @@ namespace Rougamo.Fody
 
             _methodGetTypeFromHandleRef = typeof(Type).GetMethod("GetTypeFromHandle", new[] { typeof(RuntimeTypeHandle) }).ImportInto(ModuleDefinition);
             _methodGetMethodFromHandleRef = typeof(MethodBase).GetMethod("GetMethodFromHandle", new[] { typeof(RuntimeMethodHandle), typeof(RuntimeTypeHandle) }).ImportInto(ModuleDefinition);
+            _methodDisposableDispose = typeof(IDisposable).GetMethod(nameof(IDisposable.Dispose), new Type[0]).ImportInto(ModuleDefinition);
             _methodListAddRef = _typeListDef.Methods.Single(x => x.Name == "Add" && x.Parameters.Count == 1 && x.Parameters[0].ParameterType == _typeListDef.GenericParameters[0]);
             _methodListToArrayRef = _typeListDef.Methods.Single(x => x.Name == "ToArray" && !x.HasParameters);
         }

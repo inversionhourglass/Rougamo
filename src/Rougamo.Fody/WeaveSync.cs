@@ -121,6 +121,11 @@ namespace Rougamo.Fody
         {
             var instructions = new List<Instruction>();
             ExecuteMoMethod(Constants.METHOD_OnExit, moVariables, contextVariable, instructions, this.ConfigReverseCallEnding());
+            methodDef.Body.Instructions.InsertAfter(finallyStart, new[]
+            {
+                Create(OpCodes.Ldloc, contextVariable),
+                Create(OpCodes.Callvirt, _methodDisposableDispose)
+            });
             methodDef.Body.Instructions.InsertAfter(finallyStart, instructions);
         }
 
