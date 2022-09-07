@@ -1,6 +1,7 @@
 ﻿using Rougamo.Context;
 using System;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -36,7 +37,10 @@ namespace Rougamo
     /// </summary>
     public class ExMoAttribute : MoAttribute
     {
-        private static readonly ConcurrentDictionary<Type, Func<object, ExMoAttribute, MethodContext, object>> _cache = new();
+        private const string EX_MOS_DATA_KEY = "rougamo.ex.mos";
+        private const string EX_SYNC_EXCEPTION = "rougamo.ex.syncException";
+        private const string REVERSE_CALL_KEY = "rougamo.reverse";
+        private static readonly ConcurrentDictionary<Type, Func<object, MethodContext, object>> _cache = new();
 
         static ExMoAttribute()
         {
@@ -82,6 +86,7 @@ namespace Rougamo
         /// </summary>
         public sealed override void OnEntry(MethodContext context)
         {
+            AttachSelf(context);
             context.ExMode = true;
             _OnEntry(context);
             if (context.ReturnValueReplaced)
@@ -95,6 +100,7 @@ namespace Rougamo
         /// </summary>
         public sealed override void OnException(MethodContext context)
         {
+            context.Datas[EX_SYNC_EXCEPTION] = true;
             _OnException(context);
             if (context.ExceptionHandled)
             {
@@ -107,20 +113,15 @@ namespace Rougamo
         /// </summary>
         public sealed override void OnSuccess(MethodContext context)
         {
+            SetReverse(context);
             if (TryResolve(context.RealReturnType!, out var func))
             {
-                try
+                if (context.Datas.Contains(EX_MOS_DATA_KEY))
                 {
-                    context.ExBarrier.AddParticipants(2);
+                    var returnValue = func!(context.ReturnValue!, context);
+                    context.ReplaceReturnValue(this, returnValue, false);
+                    context.Datas.Remove(EX_MOS_DATA_KEY);
                 }
-                catch
-                {
-                    // ignore
-                }
-                var returnValue = func!(context.ReturnValue!, this, context);
-                context.ExMode = false;
-                context.ReplaceReturnValue(this, returnValue);
-                context.ExMode = true;
             }
             else
             {
@@ -133,20 +134,9 @@ namespace Rougamo
         /// </summary>
         public sealed override void OnExit(MethodContext context)
         {
-            if(context.RealReturnType == context.ExReturnType)
+            if(context.RealReturnType == context.ExReturnType || context.Datas.Contains(EX_SYNC_EXCEPTION))
             {
                 _OnExit(context);
-            }
-            else
-            {
-                try
-                {
-                    context.ExBarrier.RemoveParticipant();
-                }
-                catch
-                {
-                    // ignore
-                }
             }
         }
 
@@ -160,7 +150,7 @@ namespace Rougamo
                 }
                 else if (typeof(Task).IsAssignableFrom(context.RealReturnType))
                 {
-                    context.ReturnValue = context.RealReturnType!.NewTaskResult(context.ReturnValue!);
+                    context.ReturnValue = context.RealReturnType!.NewTaskResult(context.ExReturnValue!);
                 }
                 else if (typeof(ValueTask) == context.RealReturnType)
                 {
@@ -168,13 +158,31 @@ namespace Rougamo
                 }
                 else if (context.RealReturnType!.FullName.StartsWith(Constants.FULLNAME_ValueTask))
                 {
-                    context.ReturnValue = context.RealReturnType!.NewValueTaskResult(context.ReturnValue!);
+                    context.ReturnValue = context.RealReturnType!.NewValueTaskResult(context.ExReturnValue!);
                 }
             }
         }
 
+        private void AttachSelf(MethodContext context)
+        {
+            if (!context.Datas.Contains(EX_MOS_DATA_KEY))
+            {
+                context.Datas.Add(EX_MOS_DATA_KEY, new List<ExMoAttribute>());
+            }
+            var mos = (List<ExMoAttribute>)context.Datas[EX_MOS_DATA_KEY];
+            mos.Add(this);
+        }
+
+        private void SetReverse(MethodContext context)
+        {
+            if (!context.Datas.Contains(REVERSE_CALL_KEY))
+            {
+                context.Datas[REVERSE_CALL_KEY] = ((List<ExMoAttribute>)context.Datas[EX_MOS_DATA_KEY])[0] != this;
+            }
+        }
+
         #region Resolve
-        private static bool TryResolve(Type type, out Func<object, ExMoAttribute, MethodContext, object>? func)
+        private static bool TryResolve(Type type, out Func<object, MethodContext, object>? func)
         {
             if (typeof(Task) == type || typeof(ValueTask) == type)
             {
@@ -196,89 +204,95 @@ namespace Rougamo
             return false;
         }
 
-        private static Func<object, ExMoAttribute, MethodContext, object> ResolveGenericTask(Type type)
+        private static Func<object, MethodContext, object> ResolveGenericTask(Type type)
         {
             var methodInfo = typeof(ExMoAttribute).GetMethod(nameof(GenericTaskContinueWith), BindingFlags.NonPublic | BindingFlags.Static);
             var genericMethodInfo = methodInfo.MakeGenericMethod(type.GetGenericArguments()[0]);
-            var @delegate = genericMethodInfo.CreateDelegate(typeof(Func<object, ExMoAttribute, MethodContext, object>));
-            return (Func<object, ExMoAttribute, MethodContext, object>)@delegate;
+            var @delegate = genericMethodInfo.CreateDelegate(typeof(Func<object, MethodContext, object>));
+            return (Func<object, MethodContext, object>)@delegate;
         }
 
-        private static Func<object, ExMoAttribute, MethodContext, object> ResolveGenericValueTask(Type type)
+        private static Func<object, MethodContext, object> ResolveGenericValueTask(Type type)
         {
             var methodInfo = typeof(ExMoAttribute).GetMethod(nameof(GenericValueTaskContinueWith), BindingFlags.NonPublic | BindingFlags.Static);
             var genericMethodInfo = methodInfo.MakeGenericMethod(type.GetGenericArguments()[0]);
-            var @delegate = genericMethodInfo.CreateDelegate(typeof(Func<object, ExMoAttribute, MethodContext, object>));
-            return (Func<object, ExMoAttribute, MethodContext, object>)@delegate;
+            var @delegate = genericMethodInfo.CreateDelegate(typeof(Func<object, MethodContext, object>));
+            return (Func<object, MethodContext, object>)@delegate;
         }
         #endregion Resolve
 
         #region ContinueWith
-        private static object TaskContinueWith(object taskObject, ExMoAttribute mo, MethodContext context)
+        private static object TaskContinueWith(object taskObject, MethodContext context)
         {
+            var mos = (List<ExMoAttribute>)context.Datas[EX_MOS_DATA_KEY];
+            var reverse = (bool)context.Datas[REVERSE_CALL_KEY];
             var tcs = new TaskCompletionSource<bool>();
             ((Task)taskObject).ContinueWith(t =>
             {
-                try
-                {
-                    context.ExBarrier.SignalAndWait();
-                }
-                catch
-                {
-                    // ignore
-                }
                 if (t.IsFaulted)
                 {
                     var exception = t.Exception.InnerExceptions.Count == 1 ? t.Exception.InnerException : t.Exception;
                     context.Exception = exception;
-                    mo._OnException(context);
+                    mos.ForEach(reverse, mo =>
+                    {
+                        mo._OnException(context);
+                    });
                     if (!context.ExceptionHandled)
                     {
-                        mo._OnExit(context);
+                        mos.ForEach(reverse, mo =>
+                        {
+                            mo._OnExit(context);
+                        });
                         tcs.TrySetException(exception);
                         return;
                     }
                 }
                 else
                 {
-                    mo._OnSuccess(context);
+                    mos.ForEach(reverse, mo =>
+                    {
+                        mo._OnSuccess(context);
+                    });
                 }
-                mo._OnExit(context);
+                mos.ForEach(reverse, mo =>
+                {
+                    mo._OnExit(context);
+                });
                 tcs.TrySetResult(true);
             });
 
             return tcs.Task;
         }
 
-        private static object ValueTaskContinueWith(object valueTaskObject, ExMoAttribute mo, MethodContext context)
+        private static object ValueTaskContinueWith(object valueTaskObject, MethodContext context)
         {
             var task = ((ValueTask)valueTaskObject).AsTask();
-            task = (Task)TaskContinueWith(task, mo, context);
+            task = (Task)TaskContinueWith(task, context);
             return new ValueTask(task);
         }
 
-        private static object GenericTaskContinueWith<T>(object taskObject, ExMoAttribute mo, MethodContext context)
+        private static object GenericTaskContinueWith<T>(object taskObject, MethodContext context)
         {
+            var mos = (List<ExMoAttribute>)context.Datas[EX_MOS_DATA_KEY];
+            var reverse = (bool)context.Datas[REVERSE_CALL_KEY];
             var tcs = new TaskCompletionSource<T>();
             ((Task<T>)taskObject).ContinueWith(t =>
             {
-                try
-                {
-                    context.ExBarrier.SignalAndWait();
-                }
-                catch
-                {
-                    // ignore
-                }
                 if (t.IsFaulted)
                 {
                     var exception = t.Exception.InnerExceptions.Count == 1 ? t.Exception.InnerException : t.Exception;
                     context.Exception = exception;
-                    mo._OnException(context);
-                    mo._OnExit(context);
+                    mos.ForEach(reverse, mo =>
+                    {
+                        mo._OnException(context);
+                    });
+                    mos.ForEach(reverse, mo =>
+                    {
+                        mo._OnExit(context);
+                    });
                     if (context.ExceptionHandled)
                     {
-                        tcs.TrySetResult((T)context.ReturnValue!);
+                        tcs.TrySetResult((T)context.ExReturnValue!);
                     }
                     else
                     {
@@ -287,19 +301,25 @@ namespace Rougamo
                 }
                 else
                 {
-                    mo._OnSuccess(context);
-                    mo._OnExit(context);
-                    tcs.TrySetResult((T)context.ReturnValue!);
+                    mos.ForEach(reverse, mo =>
+                    {
+                        mo._OnSuccess(context);
+                    });
+                    mos.ForEach(reverse, mo =>
+                    {
+                        mo._OnExit(context);
+                    });
+                    tcs.TrySetResult((T)context.ExReturnValue!);
                 }
             });
 
             return tcs.Task;
         }
 
-        private static object GenericValueTaskContinueWith<T>(object valueTaskObject, ExMoAttribute mo, MethodContext context)
+        private static object GenericValueTaskContinueWith<T>(object valueTaskObject, MethodContext context)
         {
             var task = ((ValueTask<T>)valueTaskObject).AsTask();
-            task = (Task<T>)GenericTaskContinueWith<T>(task, mo, context);
+            task = (Task<T>)GenericTaskContinueWith<T>(task, context);
             return new ValueTask<T>(task);
         }
         #endregion ContinueWith

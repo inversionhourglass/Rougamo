@@ -11,7 +11,7 @@ namespace Rougamo.Context
     /// <summary>
     /// Method execution context
     /// </summary>
-    public sealed class MethodContext : IDisposable
+    public sealed class MethodContext
     {
         private Type? _realReturnType;
         private Type? _exReturnType;
@@ -27,18 +27,12 @@ namespace Rougamo.Context
             IsIterator = isIterator;
             Arguments = args;
             Datas = new Dictionary<object, object>();
-            ExBarrier = new Barrier(0);
         }
 
         /// <summary>
         /// When exmode is true, the return value type needs to match <see cref="ExReturnType"/>, otherwise it matches <see cref="RealReturnType"/>.
         /// </summary>
         internal bool ExMode { get; set; }
-
-        /// <summary>
-        /// Provides synchronous operation for <see cref="ExMode"/>
-        /// </summary>
-        internal Barrier ExBarrier { get; set; }
 
         /// <summary>
         /// user defined state data
@@ -156,6 +150,8 @@ namespace Rougamo.Context
         /// </summary>
         public object? ReturnValue { get; set; }
 
+        internal object? ExReturnValue { get; set; }
+
         /// <summary>
         /// Return true if return value has been replaced
         /// </summary>
@@ -205,35 +201,36 @@ namespace Rougamo.Context
         /// </summary>
         public void ReplaceReturnValue(IMo modifier, object returnValue)
         {
-            if (HasReturnValue)
-            {
-                if (!ExMode && (RealReturnType == null || !RealReturnType.Setable(returnValue)))
-                {
-                    throw new ArgumentException($"Method real return type({RealReturnType?.FullName}) is not assignable from returnvalue({returnValue?.GetType().FullName})");
-                }
-                if (ExMode && (ExReturnType == null || !ExReturnType.Setable(returnValue)))
-                {
-                    throw new ArgumentException($"Method ex return type({ExReturnType?.FullName}) is not assignable from returnvalue({returnValue?.GetType().FullName})");
-                }
-                ReturnValue = returnValue;
-            }
-            ReturnValueModifier = modifier;
-            ReturnValueReplaced = true;
+            ReplaceReturnValue(modifier, returnValue, ExMode);
         }
 
         /// <summary>
-        /// <inheritdoc/>
+        /// Replace return value, if the return type is void, <paramref name="returnValue"/> is ignored.
+        /// <see cref="ReturnValueReplaced"/> will be set to true
         /// </summary>
-        public void Dispose()
+        internal void ReplaceReturnValue(IMo modifier, object returnValue, bool exMode)
         {
-            try
+            if (HasReturnValue)
             {
-                ExBarrier.Dispose();
+                if (exMode)
+                {
+                    if (ExReturnType == null || !ExReturnType.Setable(returnValue))
+                    {
+                        throw new ArgumentException($"Method ex return type({ExReturnType?.FullName}) is not assignable from returnvalue({returnValue?.GetType().FullName})");
+                    }
+                    ExReturnValue = returnValue;
+                }
+                else
+                {
+                    if (RealReturnType == null || !RealReturnType.Setable(returnValue))
+                    {
+                        throw new ArgumentException($"Method real return type({RealReturnType?.FullName}) is not assignable from returnvalue({returnValue?.GetType().FullName})");
+                    }
+                    ReturnValue = returnValue;
+                }
             }
-            catch
-            {
-                // ignore
-            }
+            ReturnValueModifier = modifier;
+            ReturnValueReplaced = true;
         }
     }
 }
