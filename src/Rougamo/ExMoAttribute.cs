@@ -64,22 +64,22 @@ namespace Rougamo
         /// <summary>
         /// <inheritdoc cref="MoAttribute.OnEntry(MethodContext)"/>
         /// </summary>
-        protected virtual void _OnEntry(MethodContext context) { }
+        protected virtual void ExOnEntry(MethodContext context) { }
 
         /// <summary>
         /// <inheritdoc cref="MoAttribute.OnException(MethodContext)"/>
         /// </summary>
-        protected virtual void _OnException(MethodContext context) { }
+        protected virtual void ExOnException(MethodContext context) { }
 
         /// <summary>
         /// <inheritdoc cref="MoAttribute.OnSuccess(MethodContext)"/>
         /// </summary>
-        protected virtual void _OnSuccess(MethodContext context) { }
+        protected virtual void ExOnSuccess(MethodContext context) { }
 
         /// <summary>
         /// <inheritdoc cref="MoAttribute.OnExit(MethodContext)"/>
         /// </summary>
-        protected virtual void _OnExit(MethodContext context) { }
+        protected virtual void ExOnExit(MethodContext context) { }
 
         /// <summary>
         /// <inheritdoc/>
@@ -88,7 +88,7 @@ namespace Rougamo
         {
             AttachSelf(context);
             context.ExMode = true;
-            _OnEntry(context);
+            ExOnEntry(context);
             if (context.ReturnValueReplaced)
             {
                 SetReturnValue(context);
@@ -101,7 +101,7 @@ namespace Rougamo
         public sealed override void OnException(MethodContext context)
         {
             context.Datas[EX_SYNC_EXCEPTION] = true;
-            _OnException(context);
+            ExOnException(context);
             if (context.ExceptionHandled)
             {
                 SetReturnValue(context);
@@ -125,7 +125,7 @@ namespace Rougamo
             }
             else
             {
-                _OnSuccess(context);
+                ExOnSuccess(context);
             }
         }
 
@@ -136,7 +136,7 @@ namespace Rougamo
         {
             if(context.RealReturnType == context.ExReturnType || context.Datas.Contains(EX_SYNC_EXCEPTION))
             {
-                _OnExit(context);
+                ExOnExit(context);
             }
         }
 
@@ -235,13 +235,13 @@ namespace Rougamo
                     context.Exception = exception;
                     mos.ForEach(reverse, mo =>
                     {
-                        mo._OnException(context);
+                        mo.ExOnException(context);
                     });
                     if (!context.ExceptionHandled)
                     {
                         mos.ForEach(reverse, mo =>
                         {
-                            mo._OnExit(context);
+                            mo.ExOnExit(context);
                         });
                         tcs.TrySetException(exception);
                         return;
@@ -251,12 +251,12 @@ namespace Rougamo
                 {
                     mos.ForEach(reverse, mo =>
                     {
-                        mo._OnSuccess(context);
+                        mo.ExOnSuccess(context);
                     });
                 }
                 mos.ForEach(reverse, mo =>
                 {
-                    mo._OnExit(context);
+                    mo.ExOnExit(context);
                 });
                 tcs.TrySetResult(true);
             });
@@ -284,11 +284,11 @@ namespace Rougamo
                     context.Exception = exception;
                     mos.ForEach(reverse, mo =>
                     {
-                        mo._OnException(context);
+                        mo.ExOnException(context);
                     });
                     mos.ForEach(reverse, mo =>
                     {
-                        mo._OnExit(context);
+                        mo.ExOnExit(context);
                     });
                     if (context.ExceptionHandled)
                     {
@@ -303,11 +303,11 @@ namespace Rougamo
                 {
                     mos.ForEach(reverse, mo =>
                     {
-                        mo._OnSuccess(context);
+                        mo.ExOnSuccess(context);
                     });
                     mos.ForEach(reverse, mo =>
                     {
-                        mo._OnExit(context);
+                        mo.ExOnExit(context);
                     });
                     tcs.TrySetResult((T)context.ExReturnValue!);
                 }
