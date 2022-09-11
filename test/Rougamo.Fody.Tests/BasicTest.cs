@@ -11,15 +11,16 @@ namespace Rougamo.Fody.Tests
 {
     public class BasicTest : TestBase
     {
-        public BasicTest()
+        public BasicTest() : base("BasicUsage.dll")
         {
-            WeaveAssembly("BasicUsage.dll");
         }
+
+        protected override string RootNamespace => "BasicUsage";
 
         [Fact]
         public void InstanceSingleMethodTest()
         {
-            var instance = GetInstance("BasicUsage.InstanceSingleMethod");
+            var instance = GetInstance("InstanceSingleMethod");
             var arrArg = new object[] { Guid.NewGuid(), 1.2, new object() };
             instance.Entry(1, "2", arrArg);
             Assert.Equal(instance.Context.Arguments.Length, 3);
@@ -55,7 +56,7 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task AsyncInstanceSingleMethodTest()
         {
-            var instance = GetInstance("BasicUsage.AsyncInstanceSingleMethod");
+            var instance = GetInstance("AsyncInstanceSingleMethod");
             var arrArg = new object[] { Guid.NewGuid(), 1.2, new object() };
 #if NET461 || NET6
             await (Task)instance.EntryAsync(1, "2", arrArg);
@@ -112,7 +113,7 @@ namespace Rougamo.Fody.Tests
         public void ModifyReturnValueTest()
         {
             var originInstance = new ModifyReturnValue();
-            var instance = GetInstance("BasicUsage.ModifyReturnValue");
+            var instance = GetInstance("ModifyReturnValue");
 
             Assert.Throws<InvalidOperationException>(() => originInstance.Exception());
             var exceptionHandledValue = instance.Exception();
@@ -162,7 +163,7 @@ namespace Rougamo.Fody.Tests
         public async Task AsyncModifyReturnValueTest()
         {
             var originInstance = new AsyncModifyReturnValue();
-            var instance = GetInstance("BasicUsage.AsyncModifyReturnValue");
+            var instance = GetInstance("AsyncModifyReturnValue");
 
 #if NET461 || NET6
             await Assert.ThrowsAsync<InvalidOperationException>(() => originInstance.ExceptionAsync());
@@ -250,7 +251,7 @@ namespace Rougamo.Fody.Tests
         {
             // iterator can not handle exception and modify return value
             var originInstance = new ModifyIteratorReturnValue();
-            var instance = GetInstance("BasicUsage.ModifyIteratorReturnValue");
+            var instance = GetInstance("ModifyIteratorReturnValue");
 
             var min = 5;
             var max = 30;
@@ -278,7 +279,7 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public void SyncTest()
         {
-            var instance = GetInstance("BasicUsage.SyncExecution");
+            var instance = GetInstance("SyncExecution");
 
             var input = new List<string>();
             instance.Void(input);
@@ -315,7 +316,7 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task AsyncTest()
         {
-            var instance = GetInstance("BasicUsage.AsyncExecution");
+            var instance = GetInstance("AsyncExecution");
 
             var input = new List<string>();
             await (Task)instance.Void1(input);

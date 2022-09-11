@@ -26,6 +26,7 @@
     <ProjectReference Include="..\..\src\Rougamo.Fody\Rougamo.Fody.csproj" />
     <ProjectReference Include="..\..\src\Rougamo\Rougamo.csproj" />
     <ProjectReference Include="..\TestAssemblies\BasicUsage\BasicUsage.csproj" />
+    <ProjectReference Include="..\TestAssemblies\ExUsage\ExUsage.csproj" />
     <ProjectReference Include="..\TestAssemblies\Issues\Issues.csproj" />
   </ItemGroup>
 

@@ -8,15 +8,16 @@ namespace Rougamo.Fody.Tests
 {
     public class IssueTest : TestBase
     {
-        public IssueTest()
+        public IssueTest() : base("Issues.dll")
         {
-            WeaveAssembly("Issues.dll");
         }
+
+        protected override string RootNamespace => "Issues";
 
         [Fact]
         public async Task Issue8Test()
         {
-            var instance = GetIssuesInstance(nameof(Issue8));
+            var instance = GetInstance(nameof(Issue8));
 
             await (Task)instance.Command();
 
@@ -30,7 +31,7 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task Issue9Test()
         {
-            var instance = GetIssuesStaticInstance(nameof(Issue9));
+            var instance = GetStaticInstance(nameof(Issue9));
 
             await Issue9.ManualTestAsync();
             await (Task)instance.WeaveTestAsync();
@@ -41,7 +42,7 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task Issue16Test()
         {
-            var instance = GetIssuesInstance(nameof(Issue16));
+            var instance = GetInstance(nameof(Issue16));
 
             var items = new List<string>();
             await (Task)instance.TestAsync(items);
@@ -55,16 +56,12 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task Issue20Test()
         {
-            var instance = GetIssuesInstance(nameof(Issue20));
+            var instance = GetInstance(nameof(Issue20));
             var expected = new[] { "OnEntry-1", "OnEntry-2", "OnExit-2", "OnExit-1" };
 
             var items = new List<string>();
             await (Task)instance.M(items);
             Assert.Equal(expected, items);
         }
-
-        private dynamic GetIssuesInstance(string className) => GetInstance($"Issues.{className}");
-
-        private dynamic GetIssuesStaticInstance(string className) => GetStaticInstance($"Issues.{className}");
     }
 }
