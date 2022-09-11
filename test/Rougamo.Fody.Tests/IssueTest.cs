@@ -52,6 +52,17 @@ namespace Rougamo.Fody.Tests
             Assert.Equal(expected, items);
         }
 
+        [Fact]
+        public async Task Issue20Test()
+        {
+            var instance = GetIssuesInstance(nameof(Issue20));
+            var expected = new[] { "OnEntry-1", "OnEntry-2", "OnExit-2", "OnExit-1" };
+
+            var items = new List<string>();
+            await (Task)instance.M(items);
+            Assert.Equal(expected, items);
+        }
+
         private dynamic GetIssuesInstance(string className) => GetInstance($"Issues.{className}");
 
         private dynamic GetIssuesStaticInstance(string className) => GetStaticInstance($"Issues.{className}");
