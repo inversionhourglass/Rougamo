@@ -72,7 +72,7 @@ namespace Rougamo.Fody
                 Create(OpCodes.Ldc_I4, -1),
                 Create(OpCodes.Bne_Un, originFirstIns)
             });
-            ExecuteMoMethod(Constants.METHOD_OnEntry, moveNextMethodDef, rouMethod.Mos.Count, null, mosFieldRef, contextFieldRef, originFirstIns, this.ConfigReverseCallEnding());
+            ExecuteMoMethod(Constants.METHOD_OnEntry, moveNextMethodDef, rouMethod.Mos.Count, null, mosFieldRef, contextFieldRef, originFirstIns, !this.ConfigReverseCallEnding());
         }
 
         private void IteratorOnExitOrMoveNext(MethodDefinition methodDef, int mosCount, FieldReference mosFieldRef, FieldReference contextFieldRef, FieldReference? returnsFieldRef, FieldReference currentFieldRef, VariableDefinition returnVariable, Instruction finallyStart, Instruction finallyEnd)
