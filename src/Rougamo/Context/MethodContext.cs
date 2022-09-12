@@ -152,6 +152,8 @@ namespace Rougamo.Context
 
         internal object? ExReturnValue { get; set; }
 
+        internal bool ExReturnValueReplaced { get; private set; }
+
         /// <summary>
         /// Return true if return value has been replaced
         /// </summary>
@@ -229,8 +231,15 @@ namespace Rougamo.Context
                     ReturnValue = returnValue;
                 }
             }
+            if (exMode)
+            {
+                ExReturnValueReplaced = true;
+            }
+            else
+            {
+                ReturnValueReplaced = true;
+            }
             ReturnValueModifier = modifier;
-            ReturnValueReplaced = true;
         }
     }
 }

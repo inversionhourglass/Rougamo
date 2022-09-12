@@ -89,7 +89,7 @@ namespace Rougamo
             AttachSelf(context);
             context.ExMode = true;
             ExOnEntry(context);
-            if (context.ReturnValueReplaced)
+            if (context.ExReturnValueReplaced)
             {
                 SetReturnValue(context);
             }
@@ -100,6 +100,7 @@ namespace Rougamo
         /// </summary>
         public sealed override void OnException(MethodContext context)
         {
+            SetReverse(context);
             context.Datas[EX_SYNC_EXCEPTION] = true;
             ExOnException(context);
             if (context.ExceptionHandled)
@@ -126,6 +127,10 @@ namespace Rougamo
             else
             {
                 ExOnSuccess(context);
+                if (context.ExReturnValueReplaced)
+                {
+                    context.ReplaceReturnValue(this, context.ExReturnValue!, false);
+                }
             }
         }
 
@@ -146,20 +151,28 @@ namespace Rougamo
             {
                 if (typeof(Task) == context.RealReturnType)
                 {
-                    context.ReturnValue = Task.CompletedTask;
+                    context.ReplaceReturnValue(this, Task.CompletedTask, false);
                 }
                 else if (typeof(Task).IsAssignableFrom(context.RealReturnType))
                 {
-                    context.ReturnValue = context.RealReturnType!.NewTaskResult(context.ExReturnValue!);
+                    context.ReplaceReturnValue(this, context.RealReturnType!.NewTaskResult(context.ExReturnValue!), false);
                 }
                 else if (typeof(ValueTask) == context.RealReturnType)
                 {
-                    context.ReturnValue = default(ValueTask);
+                    context.ReplaceReturnValue(this, default(ValueTask), false);
                 }
                 else if (context.RealReturnType!.FullName.StartsWith(Constants.FULLNAME_ValueTask))
                 {
-                    context.ReturnValue = context.RealReturnType!.NewValueTaskResult(context.ExReturnValue!);
+                    context.ReplaceReturnValue(this, context.RealReturnType!.NewValueTaskResult(context.ExReturnValue!), false);
                 }
+                else
+                {
+                    context.ReplaceReturnValue(this, context.ExReturnValue!, false);
+                }
+            }
+            else
+            {
+                context.ReplaceReturnValue(this, context.ExReturnValue!, false);
             }
         }
 
@@ -309,7 +322,14 @@ namespace Rougamo
                     {
                         mo.ExOnExit(context);
                     });
-                    tcs.TrySetResult((T)context.ExReturnValue!);
+                    if (context.ExReturnValueReplaced)
+                    {
+                        tcs.TrySetResult((T)context.ExReturnValue!);
+                    }
+                    else
+                    {
+                        tcs.TrySetResult(t.Result);
+                    }
                 }
             });
 
