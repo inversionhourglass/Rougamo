@@ -34,7 +34,7 @@ namespace Rougamo.Fody
             }
             IteratorOnEntry(rouMethod, moveNextMethodDef, mosFieldRef, contextFieldRef, stateFieldRef);
             AsyncOnException(rouMethod, moveNextMethodDef, mosFieldRef, contextFieldRef, out var setExceptionFirst, out _);
-            ExecuteMoMethod(Constants.METHOD_OnExit, moveNextMethodDef, rouMethod.Mos.Count, null, mosFieldRef, contextFieldRef, setExceptionFirst, this.ConfigReverseCallEnding());
+            ExecuteMoMethod(Constants.METHOD_OnExit, moveNextMethodDef, rouMethod.Mos.Count, mosFieldRef, contextFieldRef, setExceptionFirst, this.ConfigReverseCallEnding());
             AsyncIteratorOnSuccessWithExit(rouMethod, moveNextMethodDef, mosFieldRef, contextFieldRef, returnsFieldRef, currentFieldRef);
 
             rouMethod.MethodDef.Body.OptimizePlus();
@@ -67,8 +67,8 @@ namespace Rougamo.Fody
                             });
                         }
                         var afterOnSuccessNop = instructions.InsertBefore(setResultLdarg0, Create(OpCodes.Nop));
-                        ExecuteMoMethod(Constants.METHOD_OnSuccess, moveNextMethodDef, rouMethod.Mos.Count, null, mosFieldRef, contextFieldRef, afterOnSuccessNop, this.ConfigReverseCallEnding());
-                        ExecuteMoMethod(Constants.METHOD_OnExit, moveNextMethodDef, rouMethod.Mos.Count, null, mosFieldRef, contextFieldRef, setResultLdarg0, this.ConfigReverseCallEnding());
+                        ExecuteMoMethod(Constants.METHOD_OnSuccess, moveNextMethodDef, rouMethod.Mos.Count, mosFieldRef, contextFieldRef, afterOnSuccessNop, this.ConfigReverseCallEnding());
+                        ExecuteMoMethod(Constants.METHOD_OnExit, moveNextMethodDef, rouMethod.Mos.Count, mosFieldRef, contextFieldRef, setResultLdarg0, this.ConfigReverseCallEnding());
                         break;
                     case Code.Ldc_I4_1: // yield
                         if(returnsFieldRef != null)

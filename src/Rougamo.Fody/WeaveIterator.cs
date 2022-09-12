@@ -72,7 +72,7 @@ namespace Rougamo.Fody
                 Create(OpCodes.Ldc_I4, -1),
                 Create(OpCodes.Bne_Un, originFirstIns)
             });
-            ExecuteMoMethod(Constants.METHOD_OnEntry, moveNextMethodDef, rouMethod.Mos.Count, null, mosFieldRef, contextFieldRef, originFirstIns, !this.ConfigReverseCallEnding());
+            ExecuteMoMethod(Constants.METHOD_OnEntry, moveNextMethodDef, rouMethod.Mos.Count, mosFieldRef, contextFieldRef, originFirstIns, !this.ConfigReverseCallEnding());
         }
 
         private void IteratorOnExitOrMoveNext(MethodDefinition methodDef, int mosCount, FieldReference mosFieldRef, FieldReference contextFieldRef, FieldReference? returnsFieldRef, FieldReference currentFieldRef, VariableDefinition returnVariable, Instruction finallyStart, Instruction finallyEnd)
@@ -94,7 +94,7 @@ namespace Rougamo.Fody
                 methodDef.Body.Instructions.InsertBefore(endFinally, addCurrentToReturns);
             }
 
-            ExecuteMoMethod(Constants.METHOD_OnExit, methodDef, mosCount, null, mosFieldRef, contextFieldRef, yieldBrTo, this.ConfigReverseCallEnding());
+            ExecuteMoMethod(Constants.METHOD_OnExit, methodDef, mosCount, mosFieldRef, contextFieldRef, yieldBrTo, this.ConfigReverseCallEnding());
             if (returnsFieldRef != null)
             {
                 methodDef.Body.Instructions.InsertBefore(yieldBrTo, Create(OpCodes.Br_S, endFinally));
@@ -125,7 +125,7 @@ namespace Rougamo.Fody
                     Create(OpCodes.Callvirt, _methodMethodContextSetReturnValueRef)
                 });
             }
-            ExecuteMoMethod(Constants.METHOD_OnSuccess, methodDef, mosCount, null, mosFieldRef, contextFieldRef, onExitStart, this.ConfigReverseCallEnding());
+            ExecuteMoMethod(Constants.METHOD_OnSuccess, methodDef, mosCount, mosFieldRef, contextFieldRef, onExitStart, this.ConfigReverseCallEnding());
         }
 
         private void IteratorFieldDefinition(RouMethod rouMethod, string stateMachineName, out TypeDefinition stateTypeDef, out FieldDefinition mosFieldDef, out FieldDefinition contextFieldDef, out FieldDefinition? returnFieldDef)

@@ -31,7 +31,7 @@ namespace Rougamo.Fody
             var afterOnExceptionNop = AsyncOnException(rouMethod, moveNextMethodDef, mosFieldRef, contextFieldRef, out var setExceptionFirst, out var setExceptionLast);
             var afterOnExitNop = moveNextInstructions.InsertBefore(setExceptionFirst, Create(OpCodes.Nop));
             moveNextInstructions.InsertAfter(afterOnExceptionNop, AsyncSaveExceptionHandleStatus(moveNextMethodDef, contextFieldRef, returnTypeRef, returnValueType, out var exceptionHandledVariable, out var returnValueVariable));
-            ExecuteMoMethod(Constants.METHOD_OnExit, moveNextMethodDef, rouMethod.Mos.Count, null, mosFieldRef, contextFieldRef, afterOnExitNop, this.ConfigReverseCallEnding());
+            ExecuteMoMethod(Constants.METHOD_OnExit, moveNextMethodDef, rouMethod.Mos.Count, mosFieldRef, contextFieldRef, afterOnExitNop, this.ConfigReverseCallEnding());
             AsyncIfExceptionHandled(moveNextMethodDef, exceptionHandledVariable, returnValueVariable, builderFieldRef, returnTypeRef, setExceptionFirst, setExceptionLast.Next, returnValueType);
 
             AsyncOnSuccessWithExit(rouMethod, moveNextMethodDef, mosFieldRef, contextFieldRef, setResultIns, returnTypeRef);
@@ -97,7 +97,7 @@ namespace Rougamo.Fody
             });
             var afterOnEntryNop = Create(OpCodes.Nop);
             instructions.InsertBefore(originFirstIns, afterOnEntryNop);
-            ExecuteMoMethod(Constants.METHOD_OnEntry, moveNextMethodDef, rouMethod.Mos.Count, null, mosFieldRef, contextFieldRef, afterOnEntryNop, !this.ConfigReverseCallEnding());
+            ExecuteMoMethod(Constants.METHOD_OnEntry, moveNextMethodDef, rouMethod.Mos.Count, mosFieldRef, contextFieldRef, afterOnEntryNop, !this.ConfigReverseCallEnding());
             instructions.InsertBefore(originFirstIns, new[]
             {
                 Create(OpCodes.Ldarg_0),
@@ -129,7 +129,7 @@ namespace Rougamo.Fody
             });
             var afterOnExitNop = Create(OpCodes.Nop);
             instructions.InsertBefore(originFirstIns, afterOnExitNop);
-            ExecuteMoMethod(Constants.METHOD_OnExit, moveNextMethodDef, rouMethod.Mos.Count, null, mosFieldRef, contextFieldRef, afterOnExitNop, this.ConfigReverseCallEnding());
+            ExecuteMoMethod(Constants.METHOD_OnExit, moveNextMethodDef, rouMethod.Mos.Count, mosFieldRef, contextFieldRef, afterOnExitNop, this.ConfigReverseCallEnding());
             instructions.InsertBefore(originFirstIns, new[]
             {
                 Create(OpCodes.Ldarg_0),
@@ -155,7 +155,7 @@ namespace Rougamo.Fody
             instructions.InsertBefore(setExceptionFirst, Create(OpCodes.Callvirt, _methodMethodContextSetExceptionRef));
 
             var afterOnExceptionNop = instructions.InsertBefore(setExceptionFirst, Create(OpCodes.Nop));
-            ExecuteMoMethod(Constants.METHOD_OnException, moveNextMethodDef, rouMethod.Mos.Count, null, mosFieldRef, contextFieldRef, afterOnExceptionNop, this.ConfigReverseCallEnding());
+            ExecuteMoMethod(Constants.METHOD_OnException, moveNextMethodDef, rouMethod.Mos.Count, mosFieldRef, contextFieldRef, afterOnExceptionNop, this.ConfigReverseCallEnding());
 
             return afterOnExceptionNop;
         }
@@ -180,7 +180,7 @@ namespace Rougamo.Fody
                 instructions.InsertBefore(beforeSetResultLdarg0Ins, Create(OpCodes.Callvirt, _methodMethodContextSetReturnValueRef));
             }
             var beforeOnSuccessWeave = beforeSetResultLdarg0Ins.Previous;
-            ExecuteMoMethod(Constants.METHOD_OnExit, moveNextMethodDef, rouMethod.Mos.Count, null, mosFieldRef, contextFieldRef, beforeSetResultLdarg0Ins, this.ConfigReverseCallEnding());
+            ExecuteMoMethod(Constants.METHOD_OnExit, moveNextMethodDef, rouMethod.Mos.Count, mosFieldRef, contextFieldRef, beforeSetResultLdarg0Ins, this.ConfigReverseCallEnding());
             var onExitFirst = beforeOnSuccessWeave.Next;
             if (!returnTypeRef.IsVoid())
             {
@@ -200,7 +200,7 @@ namespace Rougamo.Fody
                 }
                 instructions.InsertBefore(onExitFirst, setResultIns.Previous.Ldloc2Stloc($"[{moveNextMethodDef.DeclaringType.FullName}] offset: {setResultIns.Previous.Offset}, it should be ldloc"));
             }
-            ExecuteMoMethod(Constants.METHOD_OnSuccess, moveNextMethodDef, rouMethod.Mos.Count, null, mosFieldRef, contextFieldRef, beforeOnSuccessWeave.Next, this.ConfigReverseCallEnding());
+            ExecuteMoMethod(Constants.METHOD_OnSuccess, moveNextMethodDef, rouMethod.Mos.Count, mosFieldRef, contextFieldRef, beforeOnSuccessWeave.Next, this.ConfigReverseCallEnding());
         }
 
         private Instruction[] AsyncSaveExceptionHandleStatus(MethodDefinition moveNextMethodDef, FieldReference contextFieldRef, TypeReference returnTypeRef, ReturnType returnValueType, out VariableDefinition exceptionHandledVariable, out VariableDefinition returnValueVariable)
