@@ -3,7 +3,6 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Rougamo.Context
@@ -18,13 +17,15 @@ namespace Rougamo.Context
 
         /// <summary>
         /// </summary>
-        public MethodContext(object target, Type targetType, MethodBase method, bool isAsync, bool isIterator, object[] args)
+        public MethodContext(object target, Type targetType, MethodBase method, bool isAsync, bool isIterator, bool mosNonEntryFIFO, IMo[] mos, object[] args)
         {
             Target = target;
             TargetType = targetType;
             Method = method;
             IsAsync = isAsync;
             IsIterator = isIterator;
+            MosNonEntryFIFO = mosNonEntryFIFO;
+            Mos = mos;
             Arguments = args;
             Datas = new Dictionary<object, object>();
         }
@@ -33,6 +34,21 @@ namespace Rougamo.Context
         /// When exmode is true, the return value type needs to match <see cref="ExReturnType"/>, otherwise it matches <see cref="RealReturnType"/>.
         /// </summary>
         internal bool ExMode { get; set; }
+
+        /// <summary>
+        /// ContinueWith executes only once.
+        /// </summary>
+        internal bool ExContinueOnce { get; set; }
+
+        /// <summary>
+        /// Array of IMos to which the current method applies.
+        /// </summary>
+        public IReadOnlyList<IMo> Mos { get; }
+
+        /// <summary>
+        /// Whether the execution order of multiple IMo non-OnEntry methods is consistent with OnEntry, the default false indicates that the execution order is opposite to OnEntry.
+        /// </summary>
+        public bool MosNonEntryFIFO { get; }
 
         /// <summary>
         /// user defined state data
@@ -146,13 +162,10 @@ namespace Rougamo.Context
         public bool HasReturnValue => RealReturnType != typeof(void);
 
         /// <summary>
-        /// Method return value, if you want to assign a value to it, you'd better use <see cref="HandledException(IMo, object)"/> or <see cref="ReplaceReturnValue(IMo, object)"/>
+        /// Method return value, if you want to assign a value to it, you'd better use <see cref="HandledException(IMo, object)"/> or <see cref="ReplaceReturnValue(IMo, object)"/>, 
+        /// the type of this value is equals to <see cref="RealReturnType"/>
         /// </summary>
         public object? ReturnValue { get; set; }
-
-        internal object? ExReturnValue { get; set; }
-
-        internal bool ExReturnValueReplaced { get; private set; }
 
         /// <summary>
         /// Return true if return value has been replaced
@@ -160,9 +173,19 @@ namespace Rougamo.Context
         public bool ReturnValueReplaced { get; private set; }
 
         /// <summary>
-        /// when multiple <see cref="IMo"/> applied to the method, you will know who replace the return value
+        /// When multiple <see cref="IMo"/> applied to the method, you will know who replace the return value
         /// </summary>
         public IMo? ReturnValueModifier { get; private set; }
+
+        /// <summary>
+        /// The return value set by <see cref="ExMoAttribute"/>, the type of this value is equals to <see cref="ExReturnType"/>
+        /// </summary>
+        public object? ExReturnValue { get; set; }
+
+        /// <summary>
+        /// Is <see cref="ExReturnValue"/> has been set
+        /// </summary>
+        public bool ExReturnValueReplaced { get; private set; }
 
         /// <summary>
         /// Exception throws by method, if you want to prevent exception, you'd better use <see cref="HandledException(IMo, object)"/>

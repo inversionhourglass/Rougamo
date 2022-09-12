@@ -37,9 +37,9 @@ namespace Rougamo
     /// </summary>
     public class ExMoAttribute : MoAttribute
     {
-        private const string EX_MOS_DATA_KEY = "rougamo.ex.mos";
+        //private const string EX_MOS_DATA_KEY = "rougamo.ex.mos";
         private const string EX_SYNC_EXCEPTION = "rougamo.ex.syncException";
-        private const string REVERSE_CALL_KEY = "rougamo.reverse";
+        //private const string REVERSE_CALL_KEY = "rougamo.reverse";
         private static readonly ConcurrentDictionary<Type, Func<object, MethodContext, object>> _cache = new();
 
         static ExMoAttribute()
@@ -86,7 +86,6 @@ namespace Rougamo
         /// </summary>
         public sealed override void OnEntry(MethodContext context)
         {
-            AttachSelf(context);
             context.ExMode = true;
             ExOnEntry(context);
             if (context.ExReturnValueReplaced)
@@ -100,7 +99,6 @@ namespace Rougamo
         /// </summary>
         public sealed override void OnException(MethodContext context)
         {
-            SetReverse(context);
             context.Datas[EX_SYNC_EXCEPTION] = true;
             ExOnException(context);
             if (context.ExceptionHandled)
@@ -114,14 +112,13 @@ namespace Rougamo
         /// </summary>
         public sealed override void OnSuccess(MethodContext context)
         {
-            SetReverse(context);
             if (TryResolve(context.RealReturnType!, out var func))
             {
-                if (context.Datas.Contains(EX_MOS_DATA_KEY))
+                if (!context.ExContinueOnce)
                 {
                     var returnValue = func!(context.ReturnValue!, context);
                     context.ReplaceReturnValue(this, returnValue, false);
-                    context.Datas.Remove(EX_MOS_DATA_KEY);
+                    context.ExContinueOnce = true;
                 }
             }
             else
@@ -176,24 +173,6 @@ namespace Rougamo
             }
         }
 
-        private void AttachSelf(MethodContext context)
-        {
-            if (!context.Datas.Contains(EX_MOS_DATA_KEY))
-            {
-                context.Datas.Add(EX_MOS_DATA_KEY, new List<ExMoAttribute>());
-            }
-            var mos = (List<ExMoAttribute>)context.Datas[EX_MOS_DATA_KEY];
-            mos.Add(this);
-        }
-
-        private void SetReverse(MethodContext context)
-        {
-            if (!context.Datas.Contains(REVERSE_CALL_KEY))
-            {
-                context.Datas[REVERSE_CALL_KEY] = ((List<ExMoAttribute>)context.Datas[EX_MOS_DATA_KEY])[0] != this;
-            }
-        }
-
         #region Resolve
         private static bool TryResolve(Type type, out Func<object, MethodContext, object>? func)
         {
@@ -237,8 +216,6 @@ namespace Rougamo
         #region ContinueWith
         private static object TaskContinueWith(object taskObject, MethodContext context)
         {
-            var mos = (List<ExMoAttribute>)context.Datas[EX_MOS_DATA_KEY];
-            var reverse = (bool)context.Datas[REVERSE_CALL_KEY];
             var tcs = new TaskCompletionSource<bool>();
             ((Task)taskObject).ContinueWith(t =>
             {
@@ -246,15 +223,21 @@ namespace Rougamo
                 {
                     var exception = t.Exception.InnerExceptions.Count == 1 ? t.Exception.InnerException : t.Exception;
                     context.Exception = exception;
-                    mos.ForEach(reverse, mo =>
+                    context.Mos.ForEach(!context.MosNonEntryFIFO, mo =>
                     {
-                        mo.ExOnException(context);
+                        if (mo is ExMoAttribute exmo)
+                        {
+                            exmo.ExOnException(context);
+                        }
                     });
                     if (!context.ExceptionHandled)
                     {
-                        mos.ForEach(reverse, mo =>
+                        context.Mos.ForEach(!context.MosNonEntryFIFO, mo =>
                         {
-                            mo.ExOnExit(context);
+                            if (mo is ExMoAttribute exmo)
+                            {
+                                exmo.ExOnExit(context);
+                            }
                         });
                         tcs.TrySetException(exception);
                         return;
@@ -262,14 +245,20 @@ namespace Rougamo
                 }
                 else
                 {
-                    mos.ForEach(reverse, mo =>
+                    context.Mos.ForEach(!context.MosNonEntryFIFO, mo =>
                     {
-                        mo.ExOnSuccess(context);
+                        if (mo is ExMoAttribute exmo)
+                        {
+                            exmo.ExOnSuccess(context);
+                        }
                     });
                 }
-                mos.ForEach(reverse, mo =>
+                context.Mos.ForEach(!context.MosNonEntryFIFO, mo =>
                 {
-                    mo.ExOnExit(context);
+                    if (mo is ExMoAttribute exmo)
+                    {
+                        exmo.ExOnExit(context);
+                    }
                 });
                 tcs.TrySetResult(true);
             });
@@ -286,8 +275,6 @@ namespace Rougamo
 
         private static object GenericTaskContinueWith<T>(object taskObject, MethodContext context)
         {
-            var mos = (List<ExMoAttribute>)context.Datas[EX_MOS_DATA_KEY];
-            var reverse = (bool)context.Datas[REVERSE_CALL_KEY];
             var tcs = new TaskCompletionSource<T>();
             ((Task<T>)taskObject).ContinueWith(t =>
             {
@@ -295,13 +282,19 @@ namespace Rougamo
                 {
                     var exception = t.Exception.InnerExceptions.Count == 1 ? t.Exception.InnerException : t.Exception;
                     context.Exception = exception;
-                    mos.ForEach(reverse, mo =>
+                    context.Mos.ForEach(!context.MosNonEntryFIFO, mo =>
                     {
-                        mo.ExOnException(context);
+                        if (mo is ExMoAttribute exmo)
+                        {
+                            exmo.ExOnException(context);
+                        }
                     });
-                    mos.ForEach(reverse, mo =>
+                    context.Mos.ForEach(!context.MosNonEntryFIFO, mo =>
                     {
-                        mo.ExOnExit(context);
+                        if (mo is ExMoAttribute exmo)
+                        {
+                            exmo.ExOnExit(context);
+                        }
                     });
                     if (context.ExceptionHandled)
                     {
@@ -314,13 +307,19 @@ namespace Rougamo
                 }
                 else
                 {
-                    mos.ForEach(reverse, mo =>
+                    context.Mos.ForEach(!context.MosNonEntryFIFO, mo =>
                     {
-                        mo.ExOnSuccess(context);
+                        if (mo is ExMoAttribute exmo)
+                        {
+                            exmo.ExOnSuccess(context);
+                        }
                     });
-                    mos.ForEach(reverse, mo =>
+                    context.Mos.ForEach(!context.MosNonEntryFIFO, mo =>
                     {
-                        mo.ExOnExit(context);
+                        if (mo is ExMoAttribute exmo)
+                        {
+                            exmo.ExOnExit(context);
+                        }
                     });
                     if (context.ExReturnValueReplaced)
                     {

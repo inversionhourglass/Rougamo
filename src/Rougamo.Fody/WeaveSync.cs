@@ -24,7 +24,7 @@ namespace Rougamo.Fody
         private void SyncOnEntry(RouMethod rouMethod, Instruction tryStart, VariableDefinition? returnVariable, out VariableDefinition mosVariable, out VariableDefinition contextVariable)
         {
             var instructions = InitMosArrayVariable(rouMethod, out mosVariable);
-            contextVariable = CreateMethodContextVariable(rouMethod.MethodDef, false, false, instructions);
+            contextVariable = CreateMethodContextVariable(rouMethod.MethodDef, mosVariable, false, false, instructions);
 
             ExecuteMoMethod(Constants.METHOD_OnEntry, rouMethod.MethodDef, rouMethod.Mos.Count, mosVariable, contextVariable, instructions, false);
 

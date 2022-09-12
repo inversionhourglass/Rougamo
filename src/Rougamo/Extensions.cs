@@ -14,7 +14,7 @@ namespace Rougamo
             return type.IsAssignableFrom(value.GetType());
         }
 
-        public static void ForEach<T>(this List<T> items, bool reverse, Action<T> action)
+        public static void ForEach<T>(this IReadOnlyList<T> items, bool reverse, Action<T> action)
         {
             if (reverse)
             {

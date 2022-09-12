@@ -55,7 +55,7 @@ namespace Rougamo.Fody
             rouMethod.MethodDef.Body.Instructions.InsertBefore(retIns, Create(OpCodes.Stloc, stateMachineVariable));
             InitReturnsField(rouMethod, returnsFieldDef, stateMachineTypeRef, stateMachineVariable, retIns);
             StateMachineInitMosField(rouMethod, mosFieldDef, stateMachineVariable, retIns);
-            StateMachineInitMethodContextField(rouMethod, contextFieldDef, stateMachineVariable, retIns, isAsync, true);
+            StateMachineInitMethodContextField(rouMethod, mosFieldDef, contextFieldDef, stateMachineVariable, retIns, isAsync, true);
             rouMethod.MethodDef.Body.Instructions.InsertBefore(retIns, Create(OpCodes.Ldloc, stateMachineVariable));
             var returnType = rouMethod.MethodDef.ReturnType;
             return ((GenericInstanceType)returnType).GenericArguments[0];

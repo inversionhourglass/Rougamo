@@ -55,7 +55,7 @@ namespace Rougamo.Fody
             }
 
             var instructions = InitMosArrayVariable(rouMethod, out var mosVariable);
-            var contextVariable = CreateMethodContextVariable(rouMethod.MethodDef, false, false, instructions);
+            var contextVariable = CreateMethodContextVariable(rouMethod.MethodDef, mosVariable, false, false, instructions);
 
             ExecuteMoMethod(Constants.METHOD_OnEntry, rouMethod.MethodDef, rouMethod.Mos.Count, mosVariable, contextVariable, instructions, false);
 
@@ -291,36 +291,48 @@ namespace Rougamo.Fody
 
         #endregion LoadMosOnStack
 
-        private VariableDefinition CreateMethodContextVariable(MethodDefinition methodDef, bool isAsync, bool isIterator, List<Instruction> instructions)
+        private VariableDefinition CreateMethodContextVariable(MethodDefinition methodDef, VariableDefinition mosVariable, bool isAsync, bool isIterator, List<Instruction> instructions)
         {
             var variable = methodDef.Body.CreateVariable(_typeMethodContextRef);
 
-            InitMethodContext(methodDef, isAsync, isIterator, instructions);
+            InitMethodContext(methodDef, isAsync, isIterator, mosVariable, null, null, instructions);
             instructions.Add(Create(OpCodes.Stloc, variable));
 
             return variable;
         }
 
-        private void StateMachineInitMethodContextField(RouMethod rouMethod, FieldDefinition contextFieldDef, VariableDefinition stateMachineVariable, Instruction insertBeforeThis, bool isAsync, bool isIterator)
+        private void StateMachineInitMethodContextField(RouMethod rouMethod, FieldDefinition mosFieldDef, FieldDefinition contextFieldDef, VariableDefinition stateMachineVariable, Instruction insertBeforeThis, bool isAsync, bool isIterator)
         {
+            var mosFieldRef = new FieldReference(mosFieldDef.Name, mosFieldDef.FieldType, stateMachineVariable.VariableType);
             var contextFieldRef = new FieldReference(contextFieldDef.Name, contextFieldDef.FieldType, stateMachineVariable.VariableType);
             var bodyInstructions = rouMethod.MethodDef.Body.Instructions;
             var instructions = new List<Instruction>();
             bodyInstructions.InsertBefore(insertBeforeThis, stateMachineVariable.LdlocOrA());
-            InitMethodContext(rouMethod.MethodDef, isAsync, isIterator, instructions);
+            InitMethodContext(rouMethod.MethodDef, isAsync, isIterator, null, stateMachineVariable, mosFieldRef, instructions);
             bodyInstructions.InsertBefore(insertBeforeThis, instructions);
             bodyInstructions.InsertBefore(insertBeforeThis, Create(OpCodes.Stfld, contextFieldRef));
         }
 
-        private void InitMethodContext(MethodDefinition methodDef, bool isAsync, bool isIterator, List<Instruction> instructions)
+        private void InitMethodContext(MethodDefinition methodDef, bool isAsync, bool isIterator, VariableDefinition? mosVariable, VariableDefinition? stateMachineVariable, FieldReference? mosFieldRef, List<Instruction> instructions)
         {
             var isAsyncCode = isAsync ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0;
             var isIteratorCode = isIterator ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0;
+            var mosNonEntryFIFO = this.ConfigReverseCallEnding() ? OpCodes.Ldc_I4_0 : OpCodes.Ldc_I4_1;
             instructions.Add(LoadThisOnStack(methodDef));
             instructions.AddRange(LoadDeclaringTypeOnStack(methodDef));
             instructions.AddRange(LoadMethodBaseOnStack(methodDef));
             instructions.Add(Create(isAsyncCode));
             instructions.Add(Create(isIteratorCode));
+            instructions.Add(Create(mosNonEntryFIFO));
+            if (stateMachineVariable == null)
+            {
+                instructions.Add(Create(OpCodes.Ldloc, mosVariable));
+            }
+            else
+            {
+                instructions.Add(stateMachineVariable.LdlocOrA());
+                instructions.Add(Create(OpCodes.Ldfld, mosFieldRef));
+            }
             instructions.AddRange(LoadMethodArgumentsOnStack(methodDef));
             instructions.Add(Create(OpCodes.Newobj, _methodMethodContextCtorRef));
         }

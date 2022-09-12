@@ -18,7 +18,7 @@ namespace Rougamo.Fody
             var builderDef = ResolveBuilderTypeDef(rouMethod.MethodDef.Body, out var ldlocStateMachineIns);
             AsyncGetFiledRefs(stateTypeDef, mosFieldDef, contextFieldDef, out var mosFieldRef, out var contextFieldRef, out var builderFieldRef, out var stateFieldRef);
             StateMachineInitMosField(rouMethod, mosFieldDef, stateMachineVariable, ldlocStateMachineIns);
-            StateMachineInitMethodContextField(rouMethod, contextFieldDef, stateMachineVariable, ldlocStateMachineIns, true, false);
+            StateMachineInitMethodContextField(rouMethod, mosFieldDef, contextFieldDef, stateMachineVariable, ldlocStateMachineIns, true, false);
 
             var returnType = rouMethod.MethodDef.ReturnType;
             var returnTypeRef = returnType.IsTask() || returnType.IsValueTask() || returnType.IsVoid() ? _typeVoidRef : ((GenericInstanceType)returnType).GenericArguments[0];
