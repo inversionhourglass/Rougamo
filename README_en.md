@@ -150,6 +150,139 @@ public class TestAttribute : MoAttribute
 }
 ```
 
+## Unified processing logic for async/non-async methods(v1.2.0)
+Before version 1.2.0, for methods with similar method signatures `Task<int> M()`, when using async syntax, the type of the return value obtained through `MethodContext.ReturnValue`
+is `int`, while in The type of the return value obtained when the async syntax is not used is `Task<int>`. This is not a bug, but the initial setting. Just as when we use the sync
+syntax, the return value of the code is `int`, but without the When using the async syntax, the return value of the code is like `Task<int>`. But when you first came into contact
+with the project, it may be difficult to notice this setting and in the process of using it, you also hope that there is no method using async syntax to execute `OnSuccess/OnExit`
+after the Task is executed, so 1.2.0 introduced ExMoAttribute `, Use the processing logic of the previous async syntax method for the `Task/ValueTask` return value method with and
+without async syntax.
+
+**Note that `ExMoAttribute` and `MoAttribute` have the following differences:**
+- `ExMoAttribute` overridable method named `ExOnEntry/ExOnException/ExOnSuccess/ExOnExit`
+- The return value of `ExMoAttribute` is obtained through `MethodContext.ExReturnValue`, and the value obtained through `MethodContext.ReturnValue` will be the value of `Task/ValueTask`
+- Whether the return value of `ExMoAttribute` is replaced/set, it is obtained through `MethodContext.ExReturnValueReplaced`, and the value obtained through `MethodContext.ReturnValueReplaced` is generally true (because it is replaced with the Task returned by ContinueWith)
+- The return value type of `ExMoAttribute` is obtained through `MethodContext.ExReturnType`. What is the difference between `ReturnType/RealReturnType/ExReturnType` can be seen in the description of the respective attribute document or the type document description of `ExMoAttribute`
+
+```csharp
+[Fact]
+public async Task Test()
+{
+    Assert.Equal(1, Sync());
+    Assert.Equal(-1, SyncFailed1());
+    Assert.Throws<InvalidOperationException>(() => SyncFailed3());
+
+    Assert.Equal(1, await NonAsync());
+    Assert.Equal(-1, await NonAsyncFailed1());
+    Assert.Equal(-1, await NonAsyncFailed2());
+    await Assert.ThrowsAsync<InvalidOperationException>(() => NonAsyncFailed3());
+    await Assert.ThrowsAsync<InvalidOperationException>(() => NonAsyncFailed4());
+
+    Assert.Equal(1, await Async());
+    Assert.Equal(-1, await AsyncFailed1());
+    Assert.Equal(-1, await AsyncFailed2());
+    await Assert.ThrowsAsync<InvalidOperationException>(() => AsyncFailed3());
+    await Assert.ThrowsAsync<InvalidOperationException>(() => AsyncFailed4());
+}
+
+[FixedInt]
+static int Sync()
+{
+    return int.MaxValue;
+}
+
+[FixedInt]
+static int SyncFailed1()
+{
+    throw new NotImplementedException();
+}
+
+[FixedInt]
+static int SyncFailed3()
+{
+    throw new InvalidOperationException();
+}
+
+[FixedInt]
+static Task<int> NonAsync()
+{
+    return Task.FromResult(int.MinValue);
+}
+
+[FixedInt]
+static Task<int> NonAsyncFailed1()
+{
+    throw new NotImplementedException();
+}
+
+[FixedInt]
+static Task<int> NonAsyncFailed2()
+{
+    return Task.Run(int () => throw new NotImplementedException());
+}
+
+[FixedInt]
+static Task<int> NonAsyncFailed3()
+{
+    throw new InvalidOperationException();
+}
+
+[FixedInt]
+static Task<int> NonAsyncFailed4()
+{
+    return Task.Run(int () => throw new InvalidOperationException());
+}
+
+[FixedInt]
+static async Task<int> Async()
+{
+    await Task.Yield();
+    return int.MaxValue / 2;
+}
+
+[FixedInt]
+static async Task<int> AsyncFailed1()
+{
+    throw new NotImplementedException();
+}
+
+[FixedInt]
+static async Task<int> AsyncFailed2()
+{
+    await Task.Yield();
+    throw new NotImplementedException();
+}
+
+[FixedInt]
+static async Task<int> AsyncFailed3()
+{
+    throw new InvalidOperationException();
+}
+
+[FixedInt]
+static async Task<int> AsyncFailed4()
+{
+    await Task.Yield();
+    throw new InvalidOperationException();
+}
+
+class FixedIntAttribute : ExMoAttribute
+{
+    protected override void ExOnException(MethodContext context)
+    {
+        if (context.Exception is NotImplementedException)
+        {
+            context.HandledException(this, -1);
+        }
+    }
+
+    protected override void ExOnSuccess(MethodContext context)
+    {
+        context.ReplaceReturnValue(this, 1);
+    }
+}
+```
+
 ## Ignore weaving(IgnoreMoAttribute)
 In the quick start, we introduced how to apply in batches. Since the rules of batch references only limit the accessibility of methods, there may be some methods that
 meet the rules and do not want to apply weaving. At this time, you can use `IgnoreMoAttribute` to specify method/ class, then that method/class (all methods) will

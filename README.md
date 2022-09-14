@@ -150,6 +150,138 @@ public class TestAttribute : MoAttribute
 }
 ```
 
+## 对async/non-async方法统一处理逻辑（v1.2.0）
+在1.2.0版本之前，对类似方法签名为`Task<int> M()`的方法，在使用async语法时，通过`MethodContext.ReturnValue`获取到的返回值的类型为`int`，
+而在没有使用async语法时获取到的返回值的类型为`Task<int>`这个并不是bug，而是最初的设定，正如我们在使用async语法时代码return的值为`int`，而
+在没有使用async语法时代码return的值为`Task<int>`那样。但在刚接触该项目时，可能很难注意到这个设定并且在使用过程中也希望没有使用async语法的方
+法能在Task执行完之后再执行`OnSuccess/OnExit`，所以1.2.0推出了`ExMoAttribute`，对使用和不使用async语法的`Task/ValueTask`返回值方法采用
+此前使用async语法方法的处理逻辑。
+
+**需要注意`ExMoAttribute`和`MoAttribute`有以下区别：**
+- `ExMoAttribute`可重写的方法名为`ExOnEntry/ExOnException/ExOnSuccess/ExOnExit`
+- `ExMoAttribute`的返回值通过`MethodContext.ExReturnValue`获取，通过`MethodContext.ReturnValue`获取到的会是`Task/ValueTask`值
+- `ExMoAttribute`返回值是否被替换/设置，通过`MethodContext.ExReturnValueReplaced`获取，通过`MethodContext.ReturnValueReplaced`获取到的一般都为true（因为替换为ContinueWith返回的Task了）
+- `ExMoAttribute`的返回值类型通过`MethodContext.ExReturnType`获取，`ReturnType/RealReturnType/ExReturnType`三者之间有什么区别可以看各自的属性文档描述或`ExMoAttribute`的类型文档描述
+
+```csharp
+[Fact]
+public async Task Test()
+{
+    Assert.Equal(1, Sync());
+    Assert.Equal(-1, SyncFailed1());
+    Assert.Throws<InvalidOperationException>(() => SyncFailed3());
+
+    Assert.Equal(1, await NonAsync());
+    Assert.Equal(-1, await NonAsyncFailed1());
+    Assert.Equal(-1, await NonAsyncFailed2());
+    await Assert.ThrowsAsync<InvalidOperationException>(() => NonAsyncFailed3());
+    await Assert.ThrowsAsync<InvalidOperationException>(() => NonAsyncFailed4());
+
+    Assert.Equal(1, await Async());
+    Assert.Equal(-1, await AsyncFailed1());
+    Assert.Equal(-1, await AsyncFailed2());
+    await Assert.ThrowsAsync<InvalidOperationException>(() => AsyncFailed3());
+    await Assert.ThrowsAsync<InvalidOperationException>(() => AsyncFailed4());
+}
+
+[FixedInt]
+static int Sync()
+{
+    return int.MaxValue;
+}
+
+[FixedInt]
+static int SyncFailed1()
+{
+    throw new NotImplementedException();
+}
+
+[FixedInt]
+static int SyncFailed3()
+{
+    throw new InvalidOperationException();
+}
+
+[FixedInt]
+static Task<int> NonAsync()
+{
+    return Task.FromResult(int.MinValue);
+}
+
+[FixedInt]
+static Task<int> NonAsyncFailed1()
+{
+    throw new NotImplementedException();
+}
+
+[FixedInt]
+static Task<int> NonAsyncFailed2()
+{
+    return Task.Run(int () => throw new NotImplementedException());
+}
+
+[FixedInt]
+static Task<int> NonAsyncFailed3()
+{
+    throw new InvalidOperationException();
+}
+
+[FixedInt]
+static Task<int> NonAsyncFailed4()
+{
+    return Task.Run(int () => throw new InvalidOperationException());
+}
+
+[FixedInt]
+static async Task<int> Async()
+{
+    await Task.Yield();
+    return int.MaxValue / 2;
+}
+
+[FixedInt]
+static async Task<int> AsyncFailed1()
+{
+    throw new NotImplementedException();
+}
+
+[FixedInt]
+static async Task<int> AsyncFailed2()
+{
+    await Task.Yield();
+    throw new NotImplementedException();
+}
+
+[FixedInt]
+static async Task<int> AsyncFailed3()
+{
+    throw new InvalidOperationException();
+}
+
+[FixedInt]
+static async Task<int> AsyncFailed4()
+{
+    await Task.Yield();
+    throw new InvalidOperationException();
+}
+
+class FixedIntAttribute : ExMoAttribute
+{
+    protected override void ExOnException(MethodContext context)
+    {
+        if (context.Exception is NotImplementedException)
+        {
+            context.HandledException(this, -1);
+        }
+    }
+
+    protected override void ExOnSuccess(MethodContext context)
+    {
+        context.ReplaceReturnValue(this, 1);
+    }
+}
+```
+
 ## 忽略织入(IgnoreMoAttribute)
 在快速开始中，我们介绍了如何批量应用，由于批量引用的规则只限定了方法可访问性，所以可能有些符合规则的方法并不想应用织入，
 此时便可使用`IgnoreMoAttribute`对指定方法/类进行标记，那么该方法/类(的所有方法)都将忽略织入。如果将`IgnoreMoAttribute`
