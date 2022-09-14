@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 using System.Threading.Tasks;
 
 namespace Rougamo
@@ -16,20 +17,10 @@ namespace Rougamo
             var func = _taskCache.GetOrAdd(taskType, type =>
             {
                 var returnType = type.GetGenericArguments().Single();
-                var methodFromResult = typeof(Task).GetMethod("FromResult").MakeGenericMethod(returnType);
-                var parameterExpression = Expression.Parameter(typeof(object), "obj");
-                var convertExpression = Expression.Convert(parameterExpression, returnType);
-                var callExpression = Expression.Call(methodFromResult, convertExpression);
-
-                var targetFuncType = typeof(Func<,>).MakeGenericType(typeof(object), typeof(object));
-                var targetExpressionType = typeof(Expression<>).MakeGenericType(targetFuncType);
-                var lambdaMethod = typeof(Expression).GetMethod("Lambda", 1, typeof(Expression), typeof(ParameterExpression[]));
-                var genericLambdaMethod = lambdaMethod.MakeGenericMethod(targetFuncType);
-                var lambda = genericLambdaMethod.Invoke(null, new object[] { callExpression, new ParameterExpression[] { parameterExpression } });
-
-                var compileMethod = targetExpressionType.GetMethod("Compile", new Type[0]);
-                var res = compileMethod.Invoke(lambda, null);
-                return (Func<object, object>)res;
+                var methodInfo = typeof(ThreadingReflectionExtensions).GetMethod(nameof(NewTaskResult), BindingFlags.NonPublic | BindingFlags.Static);
+                var genericMethodInfo = methodInfo.MakeGenericMethod(returnType);
+                var @delegate = genericMethodInfo.CreateDelegate(typeof(Func<object, object>));
+                return (Func<object, object>)@delegate;
             });
 
             return func(returnValue);
@@ -40,24 +31,17 @@ namespace Rougamo
             var func = _valueTaskCache.GetOrAdd(valueTaskType, type =>
             {
                 var returnType = type.GetGenericArguments().Single();
-                var valueTaskCtor = type.GetConstructor(new[] { returnType });
-                var parameterExpression = Expression.Parameter(typeof(object), "obj");
-                var aimConvertExpression = Expression.Convert(parameterExpression, returnType);
-                var newExpression = Expression.New(valueTaskCtor, aimConvertExpression);
-                var objConvertExpression = Expression.Convert(newExpression, typeof(object));
-
-                var targetFuncType = typeof(Func<,>).MakeGenericType(typeof(object), typeof(object));
-                var targetExpressionType = typeof(Expression<>).MakeGenericType(targetFuncType);
-                var lambdaMethod = typeof(Expression).GetMethod("Lambda", 1, typeof(Expression), typeof(ParameterExpression[]));
-                var genericLambdaMethod = lambdaMethod.MakeGenericMethod(targetFuncType);
-                var lambda = genericLambdaMethod.Invoke(null, new object[] { objConvertExpression, new ParameterExpression[] { parameterExpression } });
-
-                var compileMethod = targetExpressionType.GetMethod("Compile", new Type[0]);
-                var res = compileMethod.Invoke(lambda, null);
-                return (Func<object, object>)res;
+                var methodInfo = typeof(ThreadingReflectionExtensions).GetMethod(nameof(NewValueTaskResult), BindingFlags.NonPublic | BindingFlags.Static);
+                var genericMethodInfo = methodInfo.MakeGenericMethod(returnType);
+                var @delegate = genericMethodInfo.CreateDelegate(typeof(Func<object, object>));
+                return (Func<object, object>)@delegate;
             });
 
             return func(returnValue);
         }
+
+        private static object NewTaskResult<T>(object value) => Task.FromResult((T)value);
+
+        private static object NewValueTaskResult<T>(object value) => new ValueTask<T>((T)value);
     }
 }
