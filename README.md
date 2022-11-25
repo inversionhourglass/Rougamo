@@ -89,7 +89,7 @@ public class Service
 如果每个方法通过`Attribute`进行标记感觉太过繁琐或侵入性太大，而通过方法可访问性进行批量织入又太过泛化不够自定义，那么通过空接口
 进行织入将提供侵入性和便捷性适中的方式。
 ```csharp
-// 1.定义需要织入的代码，也可以直接使用快速开始中定义的LoggingAttribute
+// 1.定义需要织入的代码（因为LoggingMo最终是作为接口的泛型参数，所以这里可以简单的实现IMo接口，当然也可以像快速开始里的LoggingAttribute那样继承MoAttribute）
 public class LoggingMo : IMo
 {
     public override AccessFlags Flags => AccessFlags.All;

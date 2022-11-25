@@ -88,7 +88,7 @@ If marking each method via Attribute feels too cumbersome or intrusive, and batc
 weaving via an empty interface will provide intrusiveness and convenient way.
 
 ```csharp
-// 1. Define the code that needs to be woven, or you can directly use the LoggingAttribute defined in the quick start.
+// 1. Define the code that needs to be woven.(Because LoggingMo is used as a generic parameter of the IRougamo interface, you can simply implement the IMo interface here, and of course you can inherit MoAttribute like LoggingAttribute in Quick Start)
 public class LoggingMo : IMo
 {
     public override AccessFlags Flags => AccessFlags.All;
