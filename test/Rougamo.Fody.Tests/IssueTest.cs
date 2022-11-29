@@ -63,5 +63,14 @@ namespace Rougamo.Fody.Tests
             await (Task)instance.M(items);
             Assert.Equal(expected, items);
         }
+
+        [Fact]
+        public async Task Issue25Test()
+        {
+            var instance = GetInstance(nameof(Issue25));
+
+            instance.GenericMethod<System.IO.MemoryStream>();
+            await (Task)instance.AsyncGenericMethod<System.IO.MemoryStream>();
+        }
     }
 }

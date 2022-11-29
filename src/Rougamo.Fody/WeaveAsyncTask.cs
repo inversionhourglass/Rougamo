@@ -21,7 +21,7 @@ namespace Rougamo.Fody
             StateMachineInitMethodContextField(rouMethod, mosFieldDef, contextFieldDef, stateMachineVariable, ldlocStateMachineIns, true, false);
 
             var returnType = rouMethod.MethodDef.ReturnType;
-            var returnTypeRef = returnType.IsTask() || returnType.IsValueTask() || returnType.IsVoid() ? _typeVoidRef : ((GenericInstanceType)returnType).GenericArguments[0];
+            var returnTypeRef = returnType.IsTask() || returnType.IsValueTask() || returnType.IsVoid() ? _typeVoidRef : ((GenericInstanceType)builderFieldRef.FieldType).GenericArguments[0];
             var setResultIns = moveNextInstructions.SingleOrDefault(x => x.Operand is MethodReference methodRef && methodRef.DeclaringType.Resolve() == builderDef && methodRef.Name == Constants.METHOD_SetResult);
             var returnValueType = returnTypeRef.ToReturnType();
 
