@@ -22,15 +22,23 @@ namespace Rougamo.Fody.Tests
             Assembly = result.Assembly;
         }
 
-        protected dynamic GetInstance(string className)
+        protected dynamic GetInstance(string className, bool fullName = false)
         {
-            var type = Assembly.GetType($"{RootNamespace}.{className}", true);
+            if (!fullName)
+            {
+                className = $"{RootNamespace}.{className}";
+            }
+            var type = Assembly.GetType(className, true);
             return Activator.CreateInstance(type);
         }
 
-        protected dynamic GetStaticInstance(string className)
+        protected dynamic GetStaticInstance(string className, bool fullName = false)
         {
-            var type = Assembly.GetType($"{RootNamespace}.{className}", true);
+            if (!fullName)
+            {
+                className = $"{RootNamespace}.{className}";
+            }
+            var type = Assembly.GetType(className, true);
             return new StaticMembersDynamicWrapper(type);
         }
     }

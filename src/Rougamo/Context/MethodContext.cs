@@ -77,6 +77,11 @@ namespace Rougamo.Context
         public object[] Arguments { get; private set; }
 
         /// <summary>
+        /// When set to true, <see cref="Arguments"/> will rewrite method parameter values after <see cref="IMo.OnEntry(MethodContext)"/> is executed
+        /// </summary>
+        public bool RewriteArguments { get; set; }
+
+        /// <summary>
         /// Method info
         /// </summary>
         public MethodBase Method { get; private set; }

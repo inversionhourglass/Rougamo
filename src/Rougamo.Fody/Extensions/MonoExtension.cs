@@ -4,7 +4,6 @@ using Mono.Cecil.Rocks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 
 namespace Rougamo.Fody
 {
@@ -81,7 +80,7 @@ namespace Rougamo.Fody
             if (!typeRef.IsArray)
                 return false;
 
-            elementType = ((ArrayType) typeRef).ElementType;
+            elementType = ((ArrayType)typeRef).ElementType;
             return true;
         }
 
@@ -96,6 +95,21 @@ namespace Rougamo.Fody
 
             underlyingType = null;
             return false;
+        }
+
+        public static bool IsString(this TypeReference typeRef)
+        {
+            return typeRef.Resolve().FullName == typeof(string).FullName;
+        }
+
+        public static bool IsNullable(this TypeReference typeRef)
+        {
+            return typeRef.Resolve().FullName.StartsWith("System.Nullable");
+        }
+
+        public static bool IsUnboxable(this TypeReference typeRef)
+        {
+            return typeRef.IsValueType || typeRef.IsEnum(out _) && !typeRef.IsArray || typeRef.IsGenericParameter;
         }
 
         public static OpCode GetStElemCode(this TypeReference typeRef)
@@ -279,7 +293,27 @@ namespace Rougamo.Fody
                 if (typeDef.Fields.Count == 0) return Instruction.Create(OpCodes.Ldind_I);
                 return Ldind(typeDef.Fields[0].FieldType);
             }
-            return Instruction.Create(OpCodes.Ldobj, typeRef); // struct
+            return Instruction.Create(OpCodes.Ldobj, typeRef); // struct & enum & generic parameter
+        }
+
+        public static Instruction Stind(this TypeReference typeRef)
+        {
+            if (typeRef == null) throw new ArgumentNullException(nameof(typeRef), "Stind argument null");
+            if (typeRef.IsGenericParameter) return Instruction.Create(OpCodes.Stobj, typeRef);
+            var typeDef = typeRef.Resolve();
+            if (!typeRef.IsValueType) return Instruction.Create(OpCodes.Stind_Ref);
+            if (typeDef.Is(typeof(byte).FullName) || typeDef.Is(typeof(sbyte).FullName)) return Instruction.Create(OpCodes.Stind_I1);
+            if (typeDef.Is(typeof(short).FullName) || typeDef.Is(typeof(ushort).FullName)) return Instruction.Create(OpCodes.Stind_I2);
+            if (typeDef.Is(typeof(int).FullName) || typeDef.Is(typeof(uint).FullName)) return Instruction.Create(OpCodes.Stind_I4);
+            if (typeDef.Is(typeof(long).FullName) || typeDef.Is(typeof(ulong).FullName)) return Instruction.Create(OpCodes.Stind_I8);
+            if (typeDef.Is(typeof(float).FullName)) return Instruction.Create(OpCodes.Stind_R4);
+            if (typeDef.Is(typeof(double).FullName)) return Instruction.Create(OpCodes.Stind_R8);
+            if (typeDef.IsEnum)
+            {
+                if (typeDef.Fields.Count == 0) return Instruction.Create(OpCodes.Stind_I);
+                return Stind(typeDef.Fields[0].FieldType);
+            }
+            return Instruction.Create(OpCodes.Stobj, typeRef); // struct & enum & generic parameter
         }
 
         public static MethodReference GenericTypeMethodReference(this TypeReference typeRef, MethodReference methodRef, ModuleDefinition moduleDefinition)
@@ -310,7 +344,7 @@ namespace Rougamo.Fody
             return genericInstanceMethod;
         }
 
-        private static Code[] _EmptyCodes = new[] {Code.Nop, Code.Ret};
+        private static Code[] _EmptyCodes = new[] { Code.Nop, Code.Ret };
         public static bool IsEmpty(this MethodDefinition methodDef)
         {
             foreach (var instruction in methodDef.Body.Instructions)

@@ -3,6 +3,7 @@ using BasicUsage.Attributes;
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Data;
 using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
@@ -356,6 +357,48 @@ namespace Rougamo.Fody.Tests
             input = new List<string>();
             await (Task)instance.EmptyReplaceOnEntry(input);
             Assert.Equal(new[] { nameof(IMo.OnEntry), nameof(IMo.OnExit) }, input);
+        }
+
+        [Fact]
+        public void ArgumentRewriteTest()
+        {
+            var instance = GetInstance(nameof(ModifyArguments));
+            var attribute = GetStaticInstance(typeof(RewriteArgsAttribute).FullName, true);
+
+            string a = string.Empty;
+            sbyte b = 1;
+            int? c = -1;
+            object d = new object();
+            Type e = null;
+            DbType f = DbType.VarNumeric;
+            DbType[] g = new DbType[0];
+            DateTime h = DateTime.Now;
+            double i = -1;
+
+            sbyte j = 0;
+            int? k = 0;
+            DbType l = DbType.Currency;
+            DbType[] m = new DbType[0];
+            double n = 1;
+
+            string o;
+            object p;
+            Type q = typeof(BasicTest);
+            DateTime r;
+            double s = 0;
+            var objs = (object[])instance.Sync<double>(a, b, c, d, e, f, g, h, i, ref j, ref k, ref l, ref m, ref n, out o, out p, out q, out r, out s);
+
+            var values = (IReadOnlyDictionary<Type, object>)attribute.Values;
+            for (var x = 0; x < 14; x++)
+            {
+                var obj = objs[x];
+                if (obj == null) continue;
+
+                var type = obj.GetType();
+                if (type == typeof(int)) type = typeof(int?);
+                else if (type.FullName == "System.RuntimeType") type = typeof(Type);
+                Assert.Equal(values[type], obj);
+            }
         }
     }
 }
