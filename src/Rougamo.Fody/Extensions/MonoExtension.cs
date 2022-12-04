@@ -262,6 +262,7 @@ namespace Rougamo.Fody
         {
             if (typeRef == null) throw new ArgumentNullException(nameof(typeRef), "Ldind argument null");
             var typeDef = typeRef.Resolve();
+            if (typeDef == null) return Instruction.Create(OpCodes.Ldobj, typeRef);
             if (!typeRef.IsValueType) return Instruction.Create(OpCodes.Ldind_Ref);
             if (typeDef.Is(typeof(byte).FullName)) return Instruction.Create(OpCodes.Ldind_I1);
             if (typeDef.Is(typeof(short).FullName)) return Instruction.Create(OpCodes.Ldind_I2);
