@@ -360,7 +360,7 @@ namespace Rougamo.Fody.Tests
         }
 
         [Fact]
-        public void ArgumentRewriteTest()
+        public async Task ArgumentRewriteTest()
         {
             var instance = GetInstance(nameof(ModifyArguments));
             var attribute = GetStaticInstance(typeof(RewriteArgsAttribute).FullName, true);
@@ -386,18 +386,25 @@ namespace Rougamo.Fody.Tests
             Type q = typeof(BasicTest);
             DateTime r;
             double s = 0;
-            var objs = (object[])instance.Sync<double>(a, b, c, d, e, f, g, h, i, ref j, ref k, ref l, ref m, ref n, out o, out p, out q, out r, out s);
+            var returns = (object[])instance.Sync<double>(a, b, c, d, e, f, g, h, i, ref j, ref k, ref l, ref m, ref n, out o, out p, out q, out r, out s);
+            DoAssert(returns, 14);
 
-            var values = (IReadOnlyDictionary<Type, object>)attribute.Values;
-            for (var x = 0; x < 14; x++)
+            returns = await (Task<object[]>)instance.Async<double>(a, b, c, d, e, f, g, h, i);
+            DoAssert(returns, returns.Length);
+
+            void DoAssert(object[] objs, int count)
             {
-                var obj = objs[x];
-                if (obj == null) continue;
+                var values = (IReadOnlyDictionary<Type, object>)attribute.Values;
+                for (var x = 0; x < count; x++)
+                {
+                    var obj = objs[x];
+                    if (obj == null) continue;
 
-                var type = obj.GetType();
-                if (type == typeof(int)) type = typeof(int?);
-                else if (type.FullName == "System.RuntimeType") type = typeof(Type);
-                Assert.Equal(values[type], obj);
+                    var type = obj.GetType();
+                    if (type == typeof(int)) type = typeof(int?);
+                    else if (type.FullName == "System.RuntimeType") type = typeof(Type);
+                    Assert.Equal(values[type], obj);
+                }
             }
         }
     }

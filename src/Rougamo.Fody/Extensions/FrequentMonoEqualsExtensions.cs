@@ -1,4 +1,6 @@
 ﻿using Mono.Cecil;
+using Mono.Cecil.Cil;
+using System.Linq;
 
 namespace Rougamo.Fody
 {
@@ -35,6 +37,12 @@ namespace Rougamo.Fody
             if (fullName == null) return false;
 
             return fullName.StartsWith(Constants.TYPE_ValueTask) && fullName.Length != Constants.TYPE_ValueTask.Length;
+        }
+
+        public static bool IsLdarg(this OpCode opCode)
+        {
+            var code = opCode.Code;
+            return new[] { Code.Ldarg, Code.Ldarg_S, Code.Ldarg_0, Code.Ldarg_1, Code.Ldarg_2, Code.Ldarg_3 }.Contains(code);
         }
     }
 }

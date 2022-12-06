@@ -67,7 +67,7 @@ namespace Rougamo.Fody
             {
                 parameterTypeRef = ((ByReferenceType)parameterDef.ParameterType).ElementType.ImportInto(ModuleDefinition);
             }
-            Instruction afterNullNop = null;
+            Instruction? afterNullNop = null;
             if(parameterTypeRef.MetadataType == MetadataType.Class ||
                 parameterTypeRef.MetadataType == MetadataType.Array ||
                 parameterTypeRef.IsGenericParameter ||
