@@ -9,7 +9,10 @@ namespace Rougamo.Fody
     {
         private void AsyncIteratorMethodWeave(RouMethod rouMethod)
         {
+            var parameterFieldDefs = StateMachineParameterFields(rouMethod);
             IteratorInit(rouMethod, Constants.TYPE_AsyncIteratorStateMachineAttribute, true, out var stateTypeDef, out var mosFieldDef, out var contextFieldDef, out var returnsFieldDef);
+            var getEnumeratorMethodDef = stateTypeDef.Methods.Single(x => x.Name.StartsWith("System.Collections.Generic.IAsyncEnumerable<") && x.Name.EndsWith(">.GetAsyncEnumerator"));
+            parameterFieldDefs = GetPrivateParameterFields(getEnumeratorMethodDef, parameterFieldDefs);
             var moveNextMethodDef = stateTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
             var stateFieldDef = stateTypeDef.Fields.Single(x => x.Name == "<>1__state");
             FieldReference mosFieldRef = mosFieldDef;
@@ -17,6 +20,7 @@ namespace Rougamo.Fody
             FieldReference? returnsFieldRef = returnsFieldDef;
             FieldReference stateFieldRef = stateFieldDef;
             FieldReference currentFieldRef = stateTypeDef.Fields.Single(m => m.Name.EndsWith("current"));
+            var parameterFieldRefs = parameterFieldDefs.Select(x => (FieldReference)x);
             if (stateTypeDef.HasGenericParameters)
             {
                 // generic return type will get in
@@ -26,13 +30,15 @@ namespace Rougamo.Fody
                 {
                     stateTypeRef.GenericArguments.Add(parameter);
                 }
+                parameterFieldRefs = parameterFieldDefs.Select(x => new FieldReference(x.Name, x.FieldType, stateTypeRef));
                 mosFieldRef = new FieldReference(mosFieldDef.Name, mosFieldDef.FieldType, stateTypeRef);
                 contextFieldRef = new FieldReference(contextFieldDef.Name, contextFieldDef.FieldType, stateTypeRef);
                 returnsFieldRef = returnsFieldRef == null ? null : new FieldReference(returnsFieldRef.Name, returnsFieldRef.FieldType, stateTypeRef);
                 stateFieldRef = new FieldReference(stateFieldDef.Name, stateFieldDef.FieldType, stateTypeRef);
                 currentFieldRef = new FieldReference(currentFieldRef.Name, currentFieldRef.FieldType, stateTypeRef);
             }
-            IteratorOnEntry(rouMethod, moveNextMethodDef, mosFieldRef, contextFieldRef, stateFieldRef);
+            var onEntryNextIns = IteratorOnEntry(rouMethod, moveNextMethodDef, mosFieldRef, contextFieldRef, stateFieldRef);
+            StateMachineRewriteArguments(moveNextMethodDef, contextFieldRef, parameterFieldRefs.ToArray(), onEntryNextIns);
             AsyncOnException(rouMethod, moveNextMethodDef, mosFieldRef, contextFieldRef, out var setExceptionFirst, out _);
             ExecuteMoMethod(Constants.METHOD_OnExit, moveNextMethodDef, rouMethod.Mos.Count, mosFieldRef, contextFieldRef, setExceptionFirst, this.ConfigReverseCallEnding());
             AsyncIteratorOnSuccessWithExit(rouMethod, moveNextMethodDef, mosFieldRef, contextFieldRef, returnsFieldRef, currentFieldRef);

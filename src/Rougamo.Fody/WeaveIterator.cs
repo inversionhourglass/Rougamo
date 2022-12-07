@@ -1,5 +1,6 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
+using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using static Mono.Cecil.Cil.Instruction;
@@ -10,7 +11,10 @@ namespace Rougamo.Fody
     {
         private void IteratorMethodWeave(RouMethod rouMethod)
         {
+            var parameterFieldDefs = StateMachineParameterFields(rouMethod);
             IteratorInit(rouMethod, Constants.TYPE_IteratorStateMachineAttribute, false, out var stateTypeDef, out var mosFieldDef, out var contextFieldDef, out var returnsFieldDef);
+            var getEnumeratorMethodDef = stateTypeDef.Methods.Single(x => x.Name.StartsWith("System.Collections.Generic.IEnumerable<") && x.Name.EndsWith(">.GetEnumerator"));
+            parameterFieldDefs = GetPrivateParameterFields(getEnumeratorMethodDef, parameterFieldDefs);
             var moveNextMethodDef = stateTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
             var stateFieldDef = stateTypeDef.Fields.Single(x => x.Name == "<>1__state");
             FieldReference mosFieldRef = mosFieldDef;
@@ -18,6 +22,7 @@ namespace Rougamo.Fody
             FieldReference? returnsFieldRef = returnsFieldDef;
             FieldReference stateFieldRef = stateFieldDef;
             FieldReference currentFieldRef = stateTypeDef.Fields.Single(m => m.Name.EndsWith("current"));
+            var parameterFieldRefs = parameterFieldDefs.Select(x => (FieldReference)x);
             if (stateTypeDef.HasGenericParameters)
             {
                 // generic return type will get in
@@ -27,6 +32,7 @@ namespace Rougamo.Fody
                 {
                     stateTypeRef.GenericArguments.Add(parameter);
                 }
+                parameterFieldRefs = parameterFieldDefs.Select(x => new FieldReference(x.Name, x.FieldType, stateTypeRef));
                 mosFieldRef = new FieldReference(mosFieldDef.Name, mosFieldDef.FieldType, stateTypeRef);
                 contextFieldRef = new FieldReference(contextFieldDef.Name, contextFieldDef.FieldType, stateTypeRef);
                 returnsFieldRef = returnsFieldRef == null ? null : new FieldReference(returnsFieldRef.Name, returnsFieldRef.FieldType, stateTypeRef);
@@ -38,7 +44,8 @@ namespace Rougamo.Fody
             if (returnVariable == null) throw new RougamoException("iterator MoveNext should not return void");
             if (finallyEnd == null) throw new RougamoException("iterator MoveNext finally should not be null");
             SetTryCatchFinally(moveNextMethodDef, tryStart, catchStart, finallyStart, finallyEnd);
-            IteratorOnEntry(rouMethod, moveNextMethodDef, mosFieldRef, contextFieldRef, stateFieldRef);
+            var onEntryNextIns = IteratorOnEntry(rouMethod, moveNextMethodDef, mosFieldRef, contextFieldRef, stateFieldRef);
+            StateMachineRewriteArguments(moveNextMethodDef, contextFieldRef, parameterFieldRefs.ToArray(), onEntryNextIns);
             OnExceptionFromField(moveNextMethodDef, rouMethod.Mos.Count, mosFieldRef, contextFieldRef, exceptionVariable, catchStart);
             IteratorOnExitOrMoveNext(moveNextMethodDef, rouMethod.Mos.Count, mosFieldRef, contextFieldRef, returnsFieldRef, currentFieldRef, returnVariable, finallyStart, finallyEnd);
 
@@ -61,7 +68,7 @@ namespace Rougamo.Fody
             return ((GenericInstanceType)returnType).GenericArguments[0];
         }
 
-        private void IteratorOnEntry(RouMethod rouMethod, MethodDefinition moveNextMethodDef, FieldReference mosFieldRef, FieldReference contextFieldRef, FieldReference stateFieldRef)
+        private Instruction IteratorOnEntry(RouMethod rouMethod, MethodDefinition moveNextMethodDef, FieldReference mosFieldRef, FieldReference contextFieldRef, FieldReference stateFieldRef)
         {
             var instructions = moveNextMethodDef.Body.Instructions;
             var originFirstIns = instructions.First();
@@ -69,10 +76,32 @@ namespace Rougamo.Fody
             {
                 Create(OpCodes.Ldarg_0),
                 Create(OpCodes.Ldfld, stateFieldRef),
-                Create(OpCodes.Ldc_I4, -1),
+                Create(OpCodes.Ldc_I4_0),
                 Create(OpCodes.Bne_Un, originFirstIns)
             });
-            ExecuteMoMethod(Constants.METHOD_OnEntry, moveNextMethodDef, rouMethod.Mos.Count, mosFieldRef, contextFieldRef, originFirstIns, !this.ConfigReverseCallEnding());
+            var afterOnEntryNop = instructions.InsertBefore(originFirstIns, Create(OpCodes.Nop));
+            ExecuteMoMethod(Constants.METHOD_OnEntry, moveNextMethodDef, rouMethod.Mos.Count, mosFieldRef, contextFieldRef, afterOnEntryNop, !this.ConfigReverseCallEnding());
+
+            return originFirstIns;
+        }
+
+        private FieldDefinition[] GetPrivateParameterFields(MethodDefinition getEnumeratorMethodDef, FieldDefinition[] parameterFieldDefs)
+        {
+            var map = new Dictionary<FieldDefinition, int>();
+            for (var i = 0; i < parameterFieldDefs.Length; i++)
+            {
+                map.Add(parameterFieldDefs[i], i);
+            }
+
+            foreach (var instruction in getEnumeratorMethodDef.Body.Instructions)
+            {
+                if (instruction.OpCode.Code == Code.Ldfld && map.TryGetValue(((FieldReference)instruction.Operand).Resolve(), out var index))
+                {
+                    parameterFieldDefs[index] = ((FieldReference)instruction.Next.Operand).Resolve();
+                }
+            }
+
+            return parameterFieldDefs;
         }
 
         private void IteratorOnExitOrMoveNext(MethodDefinition methodDef, int mosCount, FieldReference mosFieldRef, FieldReference contextFieldRef, FieldReference? returnsFieldRef, FieldReference currentFieldRef, VariableDefinition returnVariable, Instruction finallyStart, Instruction finallyEnd)

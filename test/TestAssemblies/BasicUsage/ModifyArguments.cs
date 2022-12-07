@@ -1,5 +1,6 @@
 ﻿using BasicUsage.Attributes;
 using System;
+using System.Collections.Generic;
 using System.Data;
 using System.Threading.Tasks;
 
@@ -26,6 +27,25 @@ namespace BasicUsage
         {
             await Task.Yield();
             return new object[] { a, b, c, d, e, f, g, h, i };
+        }
+
+        [RewriteArgs]
+        public IEnumerable<object[]> Iterator<T>(string a, sbyte b, int? c, object d, Type e, DbType f, DbType[] g, DateTime h, T i)
+        {
+            yield return new object[] { a, b, c, d, e, f, g, h, i };
+            yield return null;
+            yield return new object[0];
+        }
+
+        [RewriteArgs]
+        public async IAsyncEnumerable<object[]> AsyncIterator<T>(string a, sbyte b, int? c, object d, Type e, DbType f, DbType[] g, DateTime h, T i)
+        {
+            await Task.Yield();
+            yield return new object[] { a, b, c, d, e, f, g, h, i };
+            await Task.Delay(0);
+            yield return null;
+            await Task.Delay(1);
+            yield return new object[0];
         }
     }
 }

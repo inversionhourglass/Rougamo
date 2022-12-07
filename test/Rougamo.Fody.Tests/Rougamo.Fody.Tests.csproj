@@ -1,9 +1,10 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>net461;net48;netcoreapp3.1;net6</TargetFrameworks>
     <IsPackable>false</IsPackable>
     <DisableFody>true</DisableFody>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>

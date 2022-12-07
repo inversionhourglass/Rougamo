@@ -392,6 +392,15 @@ namespace Rougamo.Fody.Tests
             returns = await (Task<object[]>)instance.Async<double>(a, b, c, d, e, f, g, h, i);
             DoAssert(returns, returns.Length);
 
+            returns = ((IEnumerable<object[]>)instance.Iterator<double>(a, b, c, d, e, f, g, h, i)).ToArray()[0];
+            DoAssert(returns, returns.Length);
+
+            await foreach (var item in (IAsyncEnumerable<object[]>)instance.AsyncIterator<double>(a, b, c, d, e, f, g, h, i))
+            {
+                DoAssert(item, returns.Length);
+                break;
+            }
+
             void DoAssert(object[] objs, int count)
             {
                 var values = (IReadOnlyDictionary<Type, object>)attribute.Values;

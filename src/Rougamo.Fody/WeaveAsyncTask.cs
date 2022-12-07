@@ -148,16 +148,16 @@ namespace Rougamo.Fody
             StateMachineRewriteArguments(moveNextMethodDef, contextFieldRef, parameterFieldRefs, originFirstIns);
         }
 
-        private void StateMachineRewriteArguments(MethodDefinition moveNextMethodDef, FieldReference contextFieldRef, FieldReference[] parameterFieldRefs, Instruction originFirstIns)
+        private void StateMachineRewriteArguments(MethodDefinition moveNextMethodDef, FieldReference contextFieldRef, FieldReference[] parameterFieldRefs, Instruction brFalseToIns)
         {
             var instructions = moveNextMethodDef.Body.Instructions;
-            instructions.InsertBefore(originFirstIns, Create(OpCodes.Ldarg_0));
-            instructions.InsertBefore(originFirstIns, Create(OpCodes.Ldfld, contextFieldRef));
-            instructions.InsertBefore(originFirstIns, Create(OpCodes.Callvirt, _methodMethodContextGetRewriteArgumentsRef));
-            instructions.InsertBefore(originFirstIns, Create(OpCodes.Brfalse_S, originFirstIns));
+            instructions.InsertBefore(brFalseToIns, Create(OpCodes.Ldarg_0));
+            instructions.InsertBefore(brFalseToIns, Create(OpCodes.Ldfld, contextFieldRef));
+            instructions.InsertBefore(brFalseToIns, Create(OpCodes.Callvirt, _methodMethodContextGetRewriteArgumentsRef));
+            instructions.InsertBefore(brFalseToIns, Create(OpCodes.Brfalse_S, brFalseToIns));
             for (var i = 0; i < parameterFieldRefs.Length; i++)
             {
-                StateMachineRewriteArgument(i, contextFieldRef, parameterFieldRefs[i], instruction => instructions.InsertBefore(originFirstIns, instruction));
+                StateMachineRewriteArgument(i, contextFieldRef, parameterFieldRefs[i], instruction => instructions.InsertBefore(brFalseToIns, instruction));
             }
         }
 
