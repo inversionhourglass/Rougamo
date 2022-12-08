@@ -17,6 +17,7 @@
         public const string TYPE_Task = "System.Threading.Tasks.Task";
         public const string TYPE_ValueTask = "System.Threading.Tasks.ValueTask";
         public const string TYPE_MulticastDelegate = "System.MulticastDelegate";
+        public const string TYPE_ObsoleteAttribute = "System.ObsoleteAttribute";
         public const string TYPE_AsyncStateMachineAttribute = "System.Runtime.CompilerServices.AsyncStateMachineAttribute";
         public const string TYPE_IteratorStateMachineAttribute = "System.Runtime.CompilerServices.IteratorStateMachineAttribute";
         public const string TYPE_AsyncIteratorStateMachineAttribute = "System.Runtime.CompilerServices.AsyncIteratorStateMachineAttribute";

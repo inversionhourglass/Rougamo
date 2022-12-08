@@ -16,6 +16,13 @@ namespace Rougamo.Context
         private Type? _exReturnType;
 
         /// <summary>
+        /// Compatibility with versions prior to 1.2.0
+        /// </summary>
+        [Obsolete]
+        public MethodContext(object target, Type targetType, MethodBase method, bool isAsync, bool isIterator, object[] args)
+            : this(target, targetType, method, isAsync, isIterator, false, new IMo[0], args) { }
+
+        /// <summary>
         /// </summary>
         public MethodContext(object target, Type targetType, MethodBase method, bool isAsync, bool isIterator, bool mosNonEntryFIFO, IMo[] mos, object[] args)
         {
