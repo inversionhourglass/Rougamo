@@ -30,6 +30,13 @@ namespace BasicUsage
         }
 
         [RewriteArgs]
+        public async ValueTask<object[]> AsyncValue<T>(string a, sbyte b, int? c, object d, Type e, DbType f, DbType[] g, DateTime h, T i)
+        {
+            await Task.Yield();
+            return new object[] { a, b, c, d, e, f, g, h, i };
+        }
+
+        [RewriteArgs]
         public IEnumerable<object[]> Iterator<T>(string a, sbyte b, int? c, object d, Type e, DbType f, DbType[] g, DateTime h, T i)
         {
             yield return new object[] { a, b, c, d, e, f, g, h, i };

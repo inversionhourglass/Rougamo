@@ -132,7 +132,7 @@ public interface IRepository<TModel, TId> : ILoggingRougamo
 在`OnException`方法中可以通过调用`MethodContext`的`HandledException`方法表明异常已处理并设置返回值，
 在`OnEntry`和`OnSuccess`方法中可以通过调用`MethodContext`的`ReplaceReturnValue`方法修改方法实际的返回值，需要注意的是，
 不要直接通过`ReturnValue`、`ExceptionHandled`等这些属性来修改返回值和处理异常，`HandledException`和
-`ReplaceReturnValue`包含一些其他逻辑，后续可能还会更新。
+`ReplaceReturnValue`包含一些其他逻辑，后续可能还会更新。同时还需要注意，`Iterator/AsyncIterator`没有该功能。
 ```csharp
 public class TestAttribute : MoAttribute
 {
@@ -147,6 +147,37 @@ public class TestAttribute : MoAttribute
         // 修改方法返回值
         context.ReplaceReturnValue(this, newReturnValue);
     }
+}
+```
+
+## 重写方法参数（v1.3.0）
+在`OnEntry`中可以通过修改`MethodContext.Arguments`中的元素来修改方法的参数值，为了兼容在没有该功能的老版本中可能使用`MethodContext.Arguments`
+存储一些临时值的情况（虽然可能性很小），所以还需要将`MethodContext.RewriteArguments`设置为`true`来确认重写参数。
+```csharp
+public class DefaultValueAttribute : MoAttribute
+{
+    public override void OnEntry(MethodContext context)
+    {
+        context.RewriteArguments = true;
+
+        // 判断参数类型最好通过下面ParameterInfo来判断，而不要通过context.Arguments[i].GetType()
+        // 因为context.Arguments[i]可能为null
+        var parameters = context.Method.GetParameters();
+        for (var i = 0; i < parameters.Length; i++)
+        {
+            if (parameters[i].ParameterType == typeof(string) && context.Arguments[i] == null)
+            {
+                context.Arguments[i] = string.Empty;
+            }
+        }
+    }
+}
+
+public class Test
+{
+    // 当传入null值时将返回空字符串
+    [DefaultValue]
+    public string EmptyIfNull(string value) => value;
 }
 ```
 

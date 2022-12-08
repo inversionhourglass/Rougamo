@@ -131,7 +131,7 @@ public interface IRepository<TModel, TId> : ILoggingRougamo
 In the `OnException` method, you can call the `HandledException` method of `MethodContext` to indicate that the exception has been handled and set the return value.
 In the `OnEntry` and `OnSuccess` methods, you can modify the actual method by calling the `ReplaceReturnValue` method of `MethodContext` The return value of
 `ReturnValue`, `ExceptionHandled` and other attributes should not be used to modify the return value and handle exceptions directly. `HandledException` and
-`ReplaceReturnValue` contain some other logic, which may be updated in the future.
+`ReplaceReturnValue` contain some other logic, which may be updated in the future. Also note that `Iterator/AsyncIterator` does not have this functionality.
 
 ```csharp
 public class TestAttribute : MoAttribute
@@ -147,6 +147,35 @@ public class TestAttribute : MoAttribute
         // Modify method return value
         context.ReplaceReturnValue(this, newReturnValue);
     }
+}
+```
+
+## rewrite method arguments(v1.3.0)
+In `OnEntry`, you can modify the arguments of the method by modifying the elements of `MethodContext.Arguments`. In order to be compatible with the situation where `MethodContext.Arguments` may be used to store some temporary values in the old version (although the possibility is very small),
+so you also need to set `MethodContext.RewriteArguments` to `true` to confirm the rewrite arguments.
+```csharp
+public class DefaultValueAttribute : MoAttribute
+{
+    public override void OnEntry(MethodContext context)
+    {
+        context.RewriteArguments = true;
+
+        var parameters = context.Method.GetParameters();
+        for (var i = 0; i < parameters.Length; i++)
+        {
+            if (parameters[i].ParameterType == typeof(string) && context.Arguments[i] == null)
+            {
+                context.Arguments[i] = string.Empty;
+            }
+        }
+    }
+}
+
+public class Test
+{
+    // When the value is null, an empty string will be returned
+    [DefaultValue]
+    public string EmptyIfNull(string value) => value;
 }
 ```
 
