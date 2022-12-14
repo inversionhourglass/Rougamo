@@ -72,5 +72,14 @@ namespace Rougamo.Fody.Tests
             instance.GenericMethod<System.IO.MemoryStream>();
             await (Task)instance.AsyncGenericMethod<System.IO.MemoryStream>();
         }
+
+        [Fact]
+        public async Task Issue27Test()
+        {
+            var instance = GetInstance(nameof(Issue27));
+
+            instance.Get<object>();
+            await (Task<object>)instance.GetAsync<object>();
+        }
     }
 }

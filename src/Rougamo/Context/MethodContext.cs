@@ -143,7 +143,7 @@ namespace Rougamo.Context
                     {
                         _exReturnType = typeof(void);
                     }
-                    else if (typeof(Task).IsAssignableFrom(returnType) || returnType.FullName.StartsWith(Constants.FULLNAME_ValueTask))
+                    else if (typeof(Task).IsAssignableFrom(returnType) || !returnType.IsGenericParameter && returnType.FullName.StartsWith(Constants.FULLNAME_ValueTask))
                     {
                         _exReturnType = returnType.GetGenericArguments().Single();
                     }
@@ -237,20 +237,12 @@ namespace Rougamo.Context
         {
             if (HasReturnValue)
             {
-                if (exMode)
+                if (exMode)        
                 {
-                    if (ExReturnType == null || !ExReturnType.Setable(returnValue))
-                    {
-                        throw new ArgumentException($"Method ex return type({ExReturnType?.FullName}) is not assignable from returnvalue({returnValue?.GetType().FullName})");
-                    }
                     ExReturnValue = returnValue;
                 }
                 else
                 {
-                    if (RealReturnType == null || !RealReturnType.Setable(returnValue))
-                    {
-                        throw new ArgumentException($"Method real return type({RealReturnType?.FullName}) is not assignable from returnvalue({returnValue?.GetType().FullName})");
-                    }
                     ReturnValue = returnValue;
                 }
             }
