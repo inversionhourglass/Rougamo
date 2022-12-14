@@ -1,7 +1,6 @@
 ﻿using Rougamo.Context;
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -92,6 +91,7 @@ namespace Rougamo
             {
                 SetReturnValue(context);
             }
+            context.ExMode = false;
         }
 
         /// <summary>
@@ -99,12 +99,14 @@ namespace Rougamo
         /// </summary>
         public sealed override void OnException(MethodContext context)
         {
+            context.ExMode = true;
             context.Datas[EX_SYNC_EXCEPTION] = true;
             ExOnException(context);
             if (context.ExceptionHandled)
             {
                 SetReturnValue(context);
             }
+            context.ExMode = false;
         }
 
         /// <summary>
@@ -112,7 +114,11 @@ namespace Rougamo
         /// </summary>
         public sealed override void OnSuccess(MethodContext context)
         {
-            if (TryResolve(context.RealReturnType!, out var func))
+            context.ExMode = true;
+            // todo: 对于泛型Task<>/ValueTask<>返回值，目前通过context.ReturnValue来获取实际泛型类型，但如果返回值时null，那么将抛出NullReferenceException，
+            // 预计将在MethodContext中新增一个属性记录泛型返回值类型，在初始化MethodContext时传入，但此种方式将会产生较大改动，在考虑到Task<>/ValueTask<>返回
+            // null值场景几乎没有，暂时使用该方法临时修复泛型产生的bug
+            if (TryResolve(context.RealReturnType!, context.ReturnValue!, out var func))
             {
                 if (!context.ExContinueOnce)
                 {
@@ -129,6 +135,7 @@ namespace Rougamo
                     context.ReplaceReturnValue(this, context.ExReturnValue!, false);
                 }
             }
+            context.ExMode = false;
         }
 
         /// <summary>
@@ -136,10 +143,12 @@ namespace Rougamo
         /// </summary>
         public sealed override void OnExit(MethodContext context)
         {
-            if(context.RealReturnType == context.ExReturnType || context.Datas.Contains(EX_SYNC_EXCEPTION))
+            context.ExMode = true;
+            if (context.RealReturnType == context.ExReturnType || context.Datas.Contains(EX_SYNC_EXCEPTION))
             {
                 ExOnExit(context);
             }
+            context.ExMode = false;
         }
 
         private void SetReturnValue(MethodContext context)
@@ -174,8 +183,11 @@ namespace Rougamo
         }
 
         #region Resolve
-        private static bool TryResolve(Type type, out Func<object, MethodContext, object>? func)
+        private static bool TryResolve(Type type, object returnValue, out Func<object, MethodContext, object>? func)
         {
+            // todo: 对于泛型Task<>/ValueTask<>返回值，目前通过context.ReturnValue来获取实际泛型类型，但如果返回值时null，那么将抛出NullReferenceException，
+            // 预计将在MethodContext中新增一个属性记录泛型返回值类型，在初始化MethodContext时传入，但此种方式将会产生较大改动，在考虑到Task<>/ValueTask<>返回
+            // null值场景几乎没有，暂时使用该方法临时修复泛型产生的bug
             if (typeof(Task) == type || typeof(ValueTask) == type)
             {
                 _cache.TryGetValue(type, out func);
@@ -183,12 +195,12 @@ namespace Rougamo
             }
             if (typeof(Task).IsAssignableFrom(type))
             {
-                func = _cache.GetOrAdd(type, ResolveGenericTask);
+                func = _cache.GetOrAdd(returnValue.GetType(), ResolveGenericTask);
                 return true;
             }
-            if (type.FullName.StartsWith(Constants.FULLNAME_ValueTask))
+            if (!type.IsGenericParameter && type.FullName.StartsWith(Constants.FULLNAME_ValueTask))
             {
-                func = _cache.GetOrAdd(type, ResolveGenericValueTask);
+                func = _cache.GetOrAdd(returnValue.GetType(), ResolveGenericValueTask);
                 return true;
             }
 
@@ -227,7 +239,9 @@ namespace Rougamo
                     {
                         if (mo is ExMoAttribute exmo)
                         {
+                            context.ExMode = true;
                             exmo.ExOnException(context);
+                            context.ExMode = false;
                         }
                     });
                     if (!context.ExceptionHandled)
@@ -236,7 +250,9 @@ namespace Rougamo
                         {
                             if (mo is ExMoAttribute exmo)
                             {
+                                context.ExMode = true;
                                 exmo.ExOnExit(context);
+                                context.ExMode = false;
                             }
                         });
                         tcs.TrySetException(exception);
@@ -249,7 +265,9 @@ namespace Rougamo
                     {
                         if (mo is ExMoAttribute exmo)
                         {
+                            context.ExMode = true;
                             exmo.ExOnSuccess(context);
+                            context.ExMode = false;
                         }
                     });
                 }
@@ -257,7 +275,9 @@ namespace Rougamo
                 {
                     if (mo is ExMoAttribute exmo)
                     {
+                        context.ExMode = true;
                         exmo.ExOnExit(context);
+                        context.ExMode = false;
                     }
                 });
                 tcs.TrySetResult(true);
@@ -286,14 +306,18 @@ namespace Rougamo
                     {
                         if (mo is ExMoAttribute exmo)
                         {
+                            context.ExMode = true;
                             exmo.ExOnException(context);
+                            context.ExMode = false;
                         }
                     });
                     context.Mos.ForEach(!context.MosNonEntryFIFO, mo =>
                     {
                         if (mo is ExMoAttribute exmo)
                         {
+                            context.ExMode = true;
                             exmo.ExOnExit(context);
+                            context.ExMode = false;
                         }
                     });
                     if (context.ExceptionHandled)
@@ -311,14 +335,18 @@ namespace Rougamo
                     {
                         if (mo is ExMoAttribute exmo)
                         {
+                            context.ExMode = true;
                             exmo.ExOnSuccess(context);
+                            context.ExMode = false;
                         }
                     });
                     context.Mos.ForEach(!context.MosNonEntryFIFO, mo =>
                     {
                         if (mo is ExMoAttribute exmo)
                         {
+                            context.ExMode = true;
                             exmo.ExOnExit(context);
+                            context.ExMode = false;
                         }
                     });
                     if (context.ExReturnValueReplaced)

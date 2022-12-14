@@ -156,7 +156,7 @@ namespace Rougamo.Fody.Tests
             var cachedArrayValueWithoutThrows = instance.CachedEvenThrows();
             Assert.Equal(ReplaceValueOnEntryAttribute.ArrayValue, cachedArrayValueWithoutThrows);
 
-            Assert.Throws<ArgumentException>(() => instance.TryReplaceLongToNull());
+            Assert.Throws<NullReferenceException>(() => instance.TryReplaceLongToNull());
             Assert.Null(instance.TryReplaceNullableToNull());
         }
 
@@ -242,7 +242,7 @@ namespace Rougamo.Fody.Tests
             await Assert.ThrowsAsync<ArgumentException>(() => (Task<long>)instance.TryReplaceLongToNullAsync());
             Assert.Null(await (Task<long?>)instance.TryReplaceNullableToNullAsync());
 #else
-            await Assert.ThrowsAsync<ArgumentException>(() => ((ValueTask<long>)instance.TryReplaceLongToNullAsync()).AsTask());
+            await Assert.ThrowsAsync<NullReferenceException>(() => ((ValueTask<long>)instance.TryReplaceLongToNullAsync()).AsTask());
             Assert.Null(await (ValueTask<long?>)instance.TryReplaceNullableToNullAsync());
 #endif
         }
