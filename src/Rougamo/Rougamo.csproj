@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>1.2.1</Version>
+    <Version>1.2.2</Version>
     <Authors>ihourglass</Authors>
     <Description>Weave code before method execution, on sucessful and on exception. You can replace return value and handle exception. It's both support sync and async method</Description>
     <PackageTags>AOP Fody IL</PackageTags>
@@ -14,9 +14,12 @@
     <RepositoryUrl>https://github.com/inversionhourglass/Rougamo.git</RepositoryUrl>
     <PackageIconUrl>https://raw.githubusercontent.com/inversionhourglass/Rougamo/master/Rougamo.png</PackageIconUrl>
     <RepositoryType>git</RepositoryType>
-    <PackageReleaseNotes>fix #25, Take return type of async method from TaskMethodBuilder field.</PackageReleaseNotes>
-	<LangVersion>latest</LangVersion>
-	<Nullable>enable</Nullable>
+    <PackageReleaseNotes>
+      #27, Fix bugs when ExMoAttribute is applied to generic return values.
+      修复ExMoAttribute在应用于泛型返回值方法时出现的运行时异常。
+    </PackageReleaseNotes>
+	  <LangVersion>latest</LangVersion>
+	  <Nullable>enable</Nullable>
     <PackageReadmeFile>README_en.md</PackageReadmeFile>
   </PropertyGroup>
   <ItemGroup>
