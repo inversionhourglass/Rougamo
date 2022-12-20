@@ -348,15 +348,15 @@ namespace Rougamo.Fody
             {
                 var index = -1;
                 var code = instruction.OpCode.Code;
-                if (isStaticMethod && code == Code.Ldarg_0 || code == Code.Ldarg_1)
+                if (isStaticMethod && code == Code.Ldarg_0 || !isStaticMethod && code == Code.Ldarg_1)
                 {
                     index = 0;
                 }
-                else if (isStaticMethod && code == Code.Ldarg_1 || code == Code.Ldarg_2)
+                else if (isStaticMethod && code == Code.Ldarg_1 || !isStaticMethod && code == Code.Ldarg_2)
                 {
                     index = 1;
                 }
-                else if (isStaticMethod && code == Code.Ldarg_2 || code == Code.Ldarg_3)
+                else if (isStaticMethod && code == Code.Ldarg_2 || !isStaticMethod && code == Code.Ldarg_3)
                 {
                     index = 2;
                 }
