@@ -10,7 +10,6 @@ namespace Issues.Attributes
     {
         public override void OnSuccess(MethodContext context)
         {
-            Console.WriteLine("success");
             if (typeof(Task).IsAssignableFrom(((MethodInfo)context.Method).ReturnType))
             {
                 context.ReplaceReturnValue(this, Task.FromResult(new object()));
