@@ -82,6 +82,17 @@ namespace Rougamo.Fody.Tests
             await (Task<object>)instance.GetAsync<object>();
         }
 
+#if !DEBUG
+        // This issue only appears in release mode
+        [Fact]
+        public async Task Issue29Test()
+        {
+            var instancee = GetInstance(nameof(Issue29));
+
+            await (Task)instancee.Test(null);
+        }
+#endif
+
         [Fact]
         public async Task Issue30Test()
         {
