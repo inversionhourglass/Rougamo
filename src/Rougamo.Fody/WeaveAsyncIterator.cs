@@ -12,7 +12,7 @@ namespace Rougamo.Fody
             var parameterFieldDefs = StateMachineParameterFields(rouMethod);
             IteratorInit(rouMethod, Constants.TYPE_AsyncIteratorStateMachineAttribute, true, out var stateTypeDef, out var mosFieldDef, out var contextFieldDef, out var returnsFieldDef);
             var getEnumeratorMethodDef = stateTypeDef.Methods.Single(x => x.Name.StartsWith("System.Collections.Generic.IAsyncEnumerable<") && x.Name.EndsWith(">.GetAsyncEnumerator"));
-            parameterFieldDefs = GetPrivateParameterFields(getEnumeratorMethodDef, parameterFieldDefs);
+            parameterFieldDefs = GetIteratorPrivateParameterFields(getEnumeratorMethodDef, parameterFieldDefs);
             var moveNextMethodDef = stateTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
             var stateFieldDef = stateTypeDef.Fields.Single(x => x.Name == "<>1__state");
             FieldReference mosFieldRef = mosFieldDef;
@@ -20,7 +20,7 @@ namespace Rougamo.Fody
             FieldReference? returnsFieldRef = returnsFieldDef;
             FieldReference stateFieldRef = stateFieldDef;
             FieldReference currentFieldRef = stateTypeDef.Fields.Single(m => m.Name.EndsWith("current"));
-            var parameterFieldRefs = parameterFieldDefs.Select(x => (FieldReference)x);
+            var parameterFieldRefs = parameterFieldDefs.Select(x =>  x == null ? null : (FieldReference)x);
             if (stateTypeDef.HasGenericParameters)
             {
                 // generic return type will get in
@@ -30,7 +30,7 @@ namespace Rougamo.Fody
                 {
                     stateTypeRef.GenericArguments.Add(parameter);
                 }
-                parameterFieldRefs = parameterFieldDefs.Select(x => new FieldReference(x.Name, x.FieldType, stateTypeRef));
+                parameterFieldRefs = parameterFieldDefs.Select(x =>  x == null ? null : new FieldReference(x.Name, x.FieldType, stateTypeRef));
                 mosFieldRef = new FieldReference(mosFieldDef.Name, mosFieldDef.FieldType, stateTypeRef);
                 contextFieldRef = new FieldReference(contextFieldDef.Name, contextFieldDef.FieldType, stateTypeRef);
                 returnsFieldRef = returnsFieldRef == null ? null : new FieldReference(returnsFieldRef.Name, returnsFieldRef.FieldType, stateTypeRef);
