@@ -87,7 +87,7 @@ namespace Rougamo.Fody.Tests
         {
             var sInstance = GetStaticInstance(nameof(Issue30));
 
-            var v = sInstance.Test(" 123");
+            var v = await (Task<string>)sInstance.Test(" 123");
             Assert.Equal("123", v);
         }
     }

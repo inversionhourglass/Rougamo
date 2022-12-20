@@ -342,7 +342,7 @@ namespace Rougamo.Fody
             var parameterFieldDefs = new List<FieldDefinition>();
             foreach (var instruction in rouMethod.MethodDef.Body.Instructions)
             {
-                if (instruction.OpCode.IsLdarg() && instruction.OpCode.Code != Code.Ldarg_0)
+                if (instruction.OpCode.IsLdarg() && (rouMethod.MethodDef.IsStatic || instruction.OpCode.Code != Code.Ldarg_0))
                 {
                     parameterFieldDefs.Add(((FieldReference)instruction.Next.Operand).Resolve());
                 }
