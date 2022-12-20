@@ -81,5 +81,14 @@ namespace Rougamo.Fody.Tests
             instance.Get<object>();
             await (Task<object>)instance.GetAsync<object>();
         }
+
+        [Fact]
+        public async Task Issue30Test()
+        {
+            var sInstance = GetStaticInstance(nameof(Issue30));
+
+            var v = sInstance.Test(" 123");
+            Assert.Equal("123", v);
+        }
     }
 }
