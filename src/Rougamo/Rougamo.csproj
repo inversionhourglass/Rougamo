@@ -15,7 +15,7 @@
     <PackageIconUrl>https://raw.githubusercontent.com/inversionhourglass/Rougamo/master/Rougamo.png</PackageIconUrl>
     <RepositoryType>git</RepositoryType>
     <PackageReleaseNotes>
-Fix #30 again.
+#31, ValueTuple is no longer used.
     </PackageReleaseNotes>
 	  <LangVersion>latest</LangVersion>
 	  <Nullable>enable</Nullable>
