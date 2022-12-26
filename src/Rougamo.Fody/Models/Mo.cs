@@ -46,8 +46,8 @@ namespace Rougamo.Fody
         {
             public bool Equals(Mo x, Mo y)
             {
-                (var typeX, var argsX) = ExtractTypeArgs(x);
-                (var typeY, var argsY) = ExtractTypeArgs(y);
+                var argsX = ExtractTypeArgs(x, out var typeX);
+                var argsY = ExtractTypeArgs(y, out var typeY);
                 if (typeX.FullName != typeY.FullName || argsX.Count != argsY.Count) return false;
                 for (var i = 0; i < argsX.Count; i++)
                 {
@@ -58,7 +58,7 @@ namespace Rougamo.Fody
 
             public int GetHashCode(Mo obj)
             {
-                (var type, var args) = ExtractTypeArgs(obj);
+                var args = ExtractTypeArgs(obj, out var type);
                 var hash = type.GetHashCode();
                 unchecked
                 {
@@ -89,13 +89,15 @@ namespace Rougamo.Fody
                 return hash;
             }
 
-            private (TypeDefinition, Collection<CustomAttributeArgument>) ExtractTypeArgs(Mo mo)
+            private Collection<CustomAttributeArgument> ExtractTypeArgs(Mo mo, out TypeDefinition typeDef)
             {
                 if (mo.Attribute != null)
                 {
-                    return (mo.Attribute.AttributeType.Resolve(), mo.Attribute.ConstructorArguments);
+                    typeDef = mo.Attribute.AttributeType.Resolve();
+                    return mo.Attribute.ConstructorArguments;
                 }
-                return (mo.TypeDef!, new Collection<CustomAttributeArgument>());
+                typeDef = mo.TypeDef!;
+                return new Collection<CustomAttributeArgument>();
             }
 
             private bool Equals(CustomAttributeArgument arg1, CustomAttributeArgument arg2)
