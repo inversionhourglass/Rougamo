@@ -136,5 +136,24 @@ namespace Rougamo.Fody.Tests
             var actualString = await (Task<string>)instance.UnmatchTypeNonAsync();
             Assert.Equal(originString, actualString);
         }
+
+        [Fact]
+        public async Task MultiApplyTest()
+        {
+            var instance = GetInstance(nameof(MultiApplyCase));
+
+            var r = await (Task<int>)instance.OkAsync();
+            Assert.Equal(MultiApplyAttribute.SecondChangedValue, r);
+
+            r = await (Task<int>)instance.Ok();
+            Assert.Equal(MultiApplyAttribute.SecondChangedValue, r);
+
+            r = await (Task<int>)instance.OopsAsync();
+            Assert.Equal(MultiApplyAttribute.SecondChangedValue, r);
+
+            r = await (Task<int>)instance.Oops();
+            Assert.Equal(MultiApplyAttribute.SecondChangedValue, r);
+
+        }
     }
 }
