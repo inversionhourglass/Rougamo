@@ -1,4 +1,5 @@
 ﻿using Issues;
+using Issues.Attributes;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -100,6 +101,18 @@ namespace Rougamo.Fody.Tests
 
             var v = await (Task<string>)sInstance.Test(" 123");
             Assert.Equal("123", v);
+        }
+
+        [Fact]
+        public async Task Issue32Test()
+        {
+            var instance = GetInstance(nameof(Issue32));
+
+            var r1 = await(Task<int>)instance.WithoutAsync();
+            var r2 = await (Task<int>)instance.WithAsync();
+
+            Assert.Equal(_32_Attribute.IntValue, r1);
+            Assert.Equal(_32_Attribute.IntValue, r2);
         }
     }
 }

@@ -129,6 +129,7 @@ namespace Rougamo
             }
             else
             {
+                context.ExReturnValue = context.ReturnValue;
                 ExOnSuccess(context);
                 if (context.ExReturnValueReplaced)
                 {
@@ -331,6 +332,7 @@ namespace Rougamo
                 }
                 else
                 {
+                    context.ExReturnValue = t.Result;
                     context.Mos.ForEach(!context.MosNonEntryFIFO, mo =>
                     {
                         if (mo is ExMoAttribute exmo)
