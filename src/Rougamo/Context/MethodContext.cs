@@ -155,7 +155,7 @@ namespace Rougamo.Context
                     {
                         _exReturnType = typeof(void);
                     }
-                    else if (typeof(Task).IsAssignableFrom(returnType) || !returnType.IsGenericParameter && returnType.FullName.StartsWith(Constants.FULLNAME_ValueTask))
+                    else if (typeof(Task).IsAssignableFrom(returnType) || !returnType.IsGenericParameter && returnType.FullName != null && returnType.FullName.StartsWith(Constants.FULLNAME_ValueTask))
                     {
                         _exReturnType = returnType.GetGenericArguments().Single();
                     }

@@ -199,7 +199,7 @@ namespace Rougamo
                 func = _cache.GetOrAdd(returnValue.GetType(), ResolveGenericTask);
                 return true;
             }
-            if (!type.IsGenericParameter && type.FullName.StartsWith(Constants.FULLNAME_ValueTask))
+            if (!type.IsGenericParameter && type.FullName != null && type.FullName.StartsWith(Constants.FULLNAME_ValueTask))
             {
                 func = _cache.GetOrAdd(returnValue.GetType(), ResolveGenericValueTask);
                 return true;
