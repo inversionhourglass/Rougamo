@@ -114,5 +114,13 @@ namespace Rougamo.Fody.Tests
             Assert.Equal(_32_Attribute.IntValue, r1);
             Assert.Equal(_32_Attribute.IntValue, r2);
         }
+
+        [Fact]
+        public void Issue35Test()
+        {
+            var instance = GetInstance("Issue35`1", false, t => t.MakeGenericType(typeof(int)));
+
+            instance.PopulateData();
+        }
     }
 }
