@@ -37,6 +37,7 @@ namespace Rougamo.Fody
         private MethodReference _methodMethodContextGetReturnValueReplacedRef;
         private MethodReference _methodMethodContextGetArgumentsRef;
         private MethodReference _methodMethodContextGetRewriteArgumentsRef;
+        private MethodReference _methodMethodContextGetRetryCountRef;
         private Dictionary<string, MethodReference> _methodIMosRef;
 
         // Private fields cannot be accessed externally even using IL

@@ -220,6 +220,12 @@ namespace Rougamo.Context
         public IMo? ExceptionHandler { get; private set; }
 
         /// <summary>
+        /// This property will be checked after <see cref="MoAttribute.OnSuccess(MethodContext)"/> and <see cref="MoAttribute.OnException(MethodContext)"/>,
+        /// and the method will be re-executed when the value is greater than 0 (skipping the OnEntry method execution).
+        /// </summary>
+        public int RetryCount { get; set; }
+
+        /// <summary>
         /// Prevent exception thrown by the method and set the return value.
         /// If the return type is void, <paramref name="returnValue"/> is ignored.
         /// <see cref="ExceptionHandled"/> and <see cref="ReturnValueReplaced"/> will be set to true
@@ -267,6 +273,7 @@ namespace Rougamo.Context
                 ReturnValueReplaced = true;
             }
             ReturnValueModifier = modifier;
+            RetryCount = 0;
         }
     }
 }

@@ -87,24 +87,27 @@ namespace Rougamo.Fody
         /// </param>
         /// <param name="exceptionVariable">catch generate exception variable</param>
         /// <param name="returnVariable">method return value variable, null if void</param>
-        private void GenerateTryCatchFinally(MethodDefinition methodDef, out Instruction tryStart, out Instruction catchStart, out Instruction finallyStart, out Instruction? finallyEnd, out Instruction rethrow, out VariableDefinition exceptionVariable, out VariableDefinition? returnVariable)
+        private void GenerateTryCatchFinally(MethodDefinition methodDef, out Instruction tryStart, out Instruction catchStart, out Instruction finallyStart, out Instruction? finallyEnd, out Instruction? returnStart, out Instruction rethrow, out VariableDefinition exceptionVariable, out VariableDefinition? returnVariable)
         {
             var instructions = methodDef.Body.Instructions;
             var isVoid = methodDef.ReturnType.IsVoid();
             tryStart = instructions.First();
             finallyEnd = null;
+            returnStart = null;
             returnVariable = isVoid ? null : methodDef.Body.CreateVariable(Import(methodDef.ReturnType));
 
             var returns = instructions.Where(ins => ins.IsRet()).ToArray();
             if (returns.Length != 0)
             {
-                finallyEnd = Create(OpCodes.Ret);
+                finallyEnd = Create(OpCodes.Nop);
+                returnStart = Create(OpCodes.Ret);
                 instructions.Add(finallyEnd);
+                instructions.Add(returnStart);
                 if (returnVariable != null)
                 {
                     var loadReturnValue = returnVariable.Ldloc();
-                    instructions.InsertBefore(finallyEnd, loadReturnValue);
-                    finallyEnd = loadReturnValue;
+                    instructions.InsertBefore(returnStart, loadReturnValue);
+                    returnStart = loadReturnValue;
                 }
                 foreach (var @return in returns)
                 {

@@ -11,16 +11,24 @@ namespace Rougamo.Fody
     {
         private void SyncMethodWeave(RouMethod rouMethod)
         {
-            GenerateTryCatchFinally(rouMethod.MethodDef, out var tryStart, out var catchStart, out var finallyStart, out var finallyEnd, out var rethrow, out var exceptionVariable, out var returnVariable);
+            var instructions = rouMethod.MethodDef.Body.Instructions;
+            GenerateTryCatchFinally(rouMethod.MethodDef, out var tryStart, out var catchStart, out var finallyStart, out var finallyEnd, out var returnStart, out var rethrow, out var exceptionVariable, out var returnVariable);
             SetTryCatchFinally(rouMethod.MethodDef, tryStart, catchStart, finallyStart, finallyEnd);
-            var rewriteArgStart = rouMethod.MethodDef.Body.Instructions.InsertBefore(tryStart, Create(OpCodes.Nop));
+
+            var rewriteArgStart = instructions.InsertBefore(tryStart, Create(OpCodes.Nop));
+            var retryStart = instructions.InsertBefore(tryStart, Create(OpCodes.Nop));
+            var retryVariable = rouMethod.MethodDef.Body.CreateVariable(_typeBoolRef);
+
             SyncOnEntry(rouMethod, rewriteArgStart, returnVariable, out var moVariables, out var contextVariable);
-            SyncRewriteArguments(rouMethod, tryStart, contextVariable);
+            SyncRewriteArguments(rouMethod, retryStart, contextVariable);
+            SyncResetRetryVariable(instructions, retryVariable, retryStart);
             SyncOnException(rouMethod, moVariables, contextVariable, exceptionVariable, catchStart);
-            SyncIfExceptionHandled(rouMethod.MethodDef, contextVariable, returnVariable, rethrow, ref finallyEnd);
+            var unhandleRethrow = instructions.InsertBefore(rethrow, Create(OpCodes.Nop));
+            SyncExceptionIfRetry(rouMethod, contextVariable, tryStart, unhandleRethrow);
+            SyncIfExceptionHandled(rouMethod.MethodDef, contextVariable, returnVariable, rethrow, ref finallyEnd, ref returnStart);
             if (finallyEnd == null) throw new RougamoException("sync method should set finally end after exception handler code weaved.");
             SyncOnExit(rouMethod, moVariables, contextVariable, finallyStart);
-            SyncOnSuccess(rouMethod, moVariables, contextVariable, returnVariable, finallyStart, finallyEnd);
+            SyncOnSuccess(rouMethod, moVariables, contextVariable, returnVariable, retryVariable, retryStart, finallyStart, finallyEnd, returnStart);
             rouMethod.MethodDef.Body.OptimizePlus();
         }
 
@@ -138,6 +146,15 @@ namespace Rougamo.Fody
             }
         }
 
+        private void SyncResetRetryVariable(Mono.Collections.Generic.Collection<Instruction> instructions, VariableDefinition retryVariable, Instruction retryStart)
+        {
+            instructions.InsertAfter(retryStart, new[]
+            {
+                Create(OpCodes.Ldc_I4_0),
+                Create(OpCodes.Stloc, retryVariable)
+            });
+        }
+
         private void SyncOnException(RouMethod rouMethod, VariableDefinition mosVariable, VariableDefinition contextVariable, VariableDefinition exceptionVariable, Instruction catchStart)
         {
             var instructions = new List<Instruction>();
@@ -148,7 +165,20 @@ namespace Rougamo.Fody
             rouMethod.MethodDef.Body.Instructions.InsertAfter(catchStart, instructions);
         }
 
-        private void SyncIfExceptionHandled(MethodDefinition methodDef, VariableDefinition contextVariable, VariableDefinition? returnVariable, Instruction rethrow, ref Instruction? finallyEnd)
+        private void SyncExceptionIfRetry(RouMethod rouMethod, VariableDefinition contextVariable, Instruction tryStart, Instruction unhandleRethrow)
+        {
+            rouMethod.MethodDef.Body.Instructions.InsertBefore(unhandleRethrow, new[]
+            {
+                Create(OpCodes.Ldloc, contextVariable),
+                Create(OpCodes.Callvirt, _methodMethodContextGetRetryCountRef),
+                Create(OpCodes.Ldc_I4_0),
+                Create(OpCodes.Cgt),
+                Create(OpCodes.Brfalse_S, unhandleRethrow),
+                Create(OpCodes.Leave_S, tryStart)
+            });
+        }
+
+        private void SyncIfExceptionHandled(MethodDefinition methodDef, VariableDefinition contextVariable, VariableDefinition? returnVariable, Instruction rethrow, ref Instruction? finallyEnd, ref Instruction? returnStart)
         {
             var returnType = methodDef.ReturnType;
             var instructions = methodDef.Body.Instructions;
@@ -166,13 +196,17 @@ namespace Rougamo.Fody
             {// always throws exception
                 if(returnVariable == null)
                 {
-                    finallyEnd = Create(OpCodes.Ret);
+                    finallyEnd = Create(OpCodes.Nop);
+                    returnStart = Create(OpCodes.Ret);
                     instructions.Add(finallyEnd);
+                    instructions.Add(returnStart);
                 }
                 else
                 {
-                    finallyEnd = Create(OpCodes.Ldloc, returnVariable);
+                    finallyEnd = Create(OpCodes.Nop);
+                    returnStart = Create(OpCodes.Ldloc, returnVariable);
                     instructions.Add(finallyEnd);
+                    instructions.Add(returnStart);
                     instructions.Add(Create(OpCodes.Ret));
                 }
                 var finallyHandler = methodDef.Body.ExceptionHandlers.Single(x => x.HandlerType == ExceptionHandlerType.Finally && x.HandlerEnd == null);
@@ -181,7 +215,7 @@ namespace Rougamo.Fody
             instructions.InsertBefore(rethrow, Create(OpCodes.Leave, finallyEnd));
         }
 
-        private void SyncOnSuccess(RouMethod rouMethod, VariableDefinition mosVariable, VariableDefinition contextVariable, VariableDefinition? returnVariable, Instruction finallyStart, Instruction finallyEnd)
+        private void SyncOnSuccess(RouMethod rouMethod, VariableDefinition mosVariable, VariableDefinition contextVariable, VariableDefinition? returnVariable, VariableDefinition retryVariable, Instruction retryStart, Instruction finallyStart, Instruction finallyEnd, Instruction returnStart)
         {
             var returnType = rouMethod.MethodDef.ReturnType;
             var onExitFirstInstruction = finallyStart.Next;
@@ -196,10 +230,10 @@ namespace Rougamo.Fody
             instructions.Add(Create(OpCodes.Ldloc, contextVariable));
             instructions.Add(Create(OpCodes.Callvirt, _methodMethodContextGetExceptionHandledRef));
             instructions.Add(Create(OpCodes.Brtrue_S, onExitFirstInstruction));
-            if (finallyEnd != null && finallyEnd.OpCode.Code != Code.Ret)
+            if (returnStart.OpCode.Code != Code.Ret)
             {
                 instructions.Add(Create(OpCodes.Ldloc, contextVariable));
-                instructions.Add(finallyEnd.Copy());
+                instructions.Add(returnStart.Copy());
                 if (returnType.IsValueType || returnType.IsEnum(out _) && !returnType.IsArray || returnType.IsGenericParameter)
                 {
                     instructions.Add(Create(OpCodes.Box, returnType.ImportInto(ModuleDefinition)));
@@ -207,7 +241,8 @@ namespace Rougamo.Fody
                 instructions.Add(Create(OpCodes.Callvirt, _methodMethodContextSetReturnValueRef));
             }
             ExecuteMoMethod(Constants.METHOD_OnSuccess, rouMethod.MethodDef, rouMethod.Mos.Count, mosVariable, contextVariable, instructions, this.ConfigReverseCallEnding());
-            ReplaceReturnValueIfNeed(instructions, finallyStart.Next, contextVariable, returnVariable, returnType);
+            ReplaceReturnValueIfNeed(rouMethod.MethodDef, instructions, finallyStart.Next, finallyEnd, contextVariable, returnVariable, retryVariable, returnType);
+            SyncSuccessIfRetryStep2(rouMethod.MethodDef, retryVariable, retryStart, finallyEnd, returnStart);
 
             rouMethod.MethodDef.Body.Instructions.InsertAfter(finallyStart, instructions);
         }
@@ -219,14 +254,20 @@ namespace Rougamo.Fody
             rouMethod.MethodDef.Body.Instructions.InsertAfter(finallyStart, instructions);
         }
 
-        private void ReplaceReturnValueIfNeed(List<Instruction> instructions, Instruction ifNotOffset, VariableDefinition contextVariable, VariableDefinition? returnVariable, TypeReference returnType)
+        private void ReplaceReturnValueIfNeed(MethodDefinition methodDef, List<Instruction> instructions, Instruction ifNotOffset, Instruction finallyEnd, VariableDefinition contextVariable, VariableDefinition? returnVariable, VariableDefinition retryVariable, TypeReference returnType)
         {
             if (returnVariable != null)
             {
-                instructions.Add(Create(OpCodes.Ldloc, contextVariable));
+                var tryReplaceReturn = Create(OpCodes.Ldloc, contextVariable);
+                SyncSuccessIfRetryStep1(methodDef, contextVariable, retryVariable, instructions, tryReplaceReturn, finallyEnd.Previous);
+                instructions.Add(tryReplaceReturn);
                 instructions.Add(Create(OpCodes.Callvirt, _methodMethodContextGetReturnValueReplacedRef));
                 instructions.Add(Create(OpCodes.Brfalse_S, ifNotOffset));
                 instructions.AddRange(ReplaceReturnValue(contextVariable, returnVariable, returnType));
+            }
+            else
+            {
+                SyncSuccessIfRetryStep1(methodDef, contextVariable, retryVariable, instructions, ifNotOffset, finallyEnd.Previous);
             }
         }
 
@@ -241,6 +282,30 @@ namespace Rougamo.Fody
             }
             instructions.Add(Create(OpCodes.Stloc, returnVariable));
             return instructions;
+        }
+
+        private void SyncSuccessIfRetryStep1(MethodDefinition methodDef, VariableDefinition contextVariable, VariableDefinition retryVariable, List<Instruction> instructions, Instruction ifNotRetry, Instruction endFinally)
+        {
+            instructions.Add(Create(OpCodes.Ldloc, contextVariable));
+            instructions.Add(Create(OpCodes.Callvirt, _methodMethodContextGetRetryCountRef));
+            instructions.Add(Create(OpCodes.Ldc_I4_0));
+            instructions.Add(Create(OpCodes.Cgt));
+            instructions.Add(Create(OpCodes.Brfalse_S, ifNotRetry));
+            instructions.Add(Create(OpCodes.Ldc_I4_1));
+            instructions.Add(Create(OpCodes.Stloc, retryVariable));
+            instructions.Add(Create(OpCodes.Leave_S, endFinally));
+        }
+
+        private void SyncSuccessIfRetryStep2(MethodDefinition methodDef, VariableDefinition retryVariable, Instruction retry, Instruction finallyEnd, Instruction returnStart)
+        {
+            var instructions = methodDef.Body.Instructions;
+
+            instructions.InsertAfter(finallyEnd, new[]
+            {
+                Create(OpCodes.Ldloc, retryVariable),
+                Create(OpCodes.Brfalse, returnStart),
+                Create(OpCodes.Br_S, retry)
+            });
         }
     }
 }

@@ -419,5 +419,27 @@ namespace Rougamo.Fody.Tests
                 }
             }
         }
+
+        [Fact]
+        public void RetryTest()
+        {
+            var instance = GetInstance(nameof(SyncExecution));
+
+            var datas = new List<int>();
+
+            try
+            {
+                instance.RetryException(datas);
+            }
+            catch
+            {
+                // ignore
+            }
+            Assert.Equal(3, datas.Count);
+
+            datas.Clear();
+            instance.RetrySuccess(datas);
+            Assert.Equal(3, datas.Count);
+        }
     }
 }

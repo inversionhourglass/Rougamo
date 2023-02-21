@@ -51,5 +51,18 @@ namespace BasicUsage
             datas.Add(nameof(ReplaceOnSuccess));
             return null;
         }
+
+        [Retry]
+        public void RetryException(List<int> datas)
+        {
+            datas.Add(1);
+            throw new Exception();
+        }
+
+        [Retry]
+        public void RetrySuccess(List<int> datas)
+        {
+            datas.Add(1);
+        }
     }
 }

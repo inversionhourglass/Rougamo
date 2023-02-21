@@ -38,6 +38,7 @@
         public const string PROP_ReturnValueReplaced = "ReturnValueReplaced";
         public const string PROP_Arguments = "Arguments";
         public const string PROP_RewriteArguments = "RewriteArguments";
+        public const string PROP_RetryCount = "RetryCount";
 
         public const string FIELD_Flags = "<Flags>k__BackingField";
         public const string FIELD_Repulsions = "<Repulsions>k__BackingField";

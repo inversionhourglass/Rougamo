@@ -88,6 +88,7 @@ namespace Rougamo.Fody
                 _methodMethodContextGetReturnValueReplacedRef = typeMethodContextDef.RecursionImportPropertyGet(ModuleDefinition, Constants.PROP_ReturnValueReplaced);
                 _methodMethodContextGetArgumentsRef = typeMethodContextDef.RecursionImportPropertyGet(ModuleDefinition, Constants.PROP_Arguments);
                 _methodMethodContextGetRewriteArgumentsRef = typeMethodContextDef.RecursionImportPropertyGet(ModuleDefinition, Constants.PROP_RewriteArguments);
+                _methodMethodContextGetRetryCountRef = typeMethodContextDef.RecursionImportPropertyGet(ModuleDefinition, Constants.PROP_RetryCount);
                 // Private fields cannot be accessed externally even using IL
                 //_fieldMethodContextExceptionRef = typeMethodContextDef.Fields.Single(x => x.Name == Constants.FIELD_Exception).ImportInto(ModuleDefinition);
                 //_fieldMethodContextReturnValueRef = typeMethodContextDef.Fields.Single(x => x.Name == Constants.FIELD_ReturnValue).ImportInto(ModuleDefinition);

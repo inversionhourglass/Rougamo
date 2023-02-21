@@ -40,7 +40,7 @@ namespace Rougamo.Fody
                 currentFieldRef = new FieldReference(currentFieldRef.Name, currentFieldRef.FieldType, stateTypeRef);
             }
             // finallyEnd may be null
-            GenerateTryCatchFinally(moveNextMethodDef, out var tryStart, out var catchStart, out var finallyStart, out var finallyEnd, out var rethrow, out var exceptionVariable, out var returnVariable);
+            GenerateTryCatchFinally(moveNextMethodDef, out var tryStart, out var catchStart, out var finallyStart, out var finallyEnd, out _, out var rethrow, out var exceptionVariable, out var returnVariable);
             if (returnVariable == null) throw new RougamoException("iterator MoveNext should not return void");
             if (finallyEnd == null) throw new RougamoException("iterator MoveNext finally should not be null");
             SetTryCatchFinally(moveNextMethodDef, tryStart, catchStart, finallyStart, finallyEnd);
