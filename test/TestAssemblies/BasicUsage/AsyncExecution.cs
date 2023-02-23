@@ -72,5 +72,20 @@ namespace BasicUsage
             await Task.Yield();
             return null;
         }
+
+        [Retry]
+        public async Task RetryException(List<int> datas)
+        {
+            datas.Add(1);
+            await Task.Yield();
+            throw new Exception();
+        }
+
+        [Retry]
+        public async Task RetrySuccess(List<int> datas)
+        {
+            await Task.Yield();
+            datas.Add(1);
+        }
     }
 }

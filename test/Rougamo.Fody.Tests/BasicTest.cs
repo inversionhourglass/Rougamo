@@ -421,9 +421,10 @@ namespace Rougamo.Fody.Tests
         }
 
         [Fact]
-        public void RetryTest()
+        public async Task RetryTest()
         {
             var instance = GetInstance(nameof(SyncExecution));
+            var asyncInstance = GetInstance(nameof(AsyncExecution));
 
             var datas = new List<int>();
 
@@ -439,6 +440,21 @@ namespace Rougamo.Fody.Tests
 
             datas.Clear();
             instance.RetrySuccess(datas);
+            Assert.Equal(3, datas.Count);
+
+            try
+            {
+                datas.Clear();
+                await (Task)asyncInstance.RetryException(datas);
+            }
+            catch
+            {
+                // ignore
+            }
+            Assert.Equal(3, datas.Count);
+
+            datas.Clear();
+            await (Task)asyncInstance.RetrySuccess(datas);
             Assert.Equal(3, datas.Count);
         }
     }

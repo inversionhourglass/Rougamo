@@ -37,9 +37,10 @@ namespace Rougamo.Fody
                 stateFieldRef = new FieldReference(stateFieldDef.Name, stateFieldDef.FieldType, stateTypeRef);
                 currentFieldRef = new FieldReference(currentFieldRef.Name, currentFieldRef.FieldType, stateTypeRef);
             }
+            var outerTryCatch = GetOuterExceptionHandler(moveNextMethodDef.Body);
             var onEntryNextIns = IteratorOnEntry(rouMethod, moveNextMethodDef, mosFieldRef, contextFieldRef, stateFieldRef);
             StateMachineRewriteArguments(moveNextMethodDef, contextFieldRef, parameterFieldRefs.ToArray(), onEntryNextIns);
-            AsyncOnException(rouMethod, moveNextMethodDef, mosFieldRef, contextFieldRef, out var setExceptionFirst, out _);
+            AsyncOnException(rouMethod, moveNextMethodDef, outerTryCatch, mosFieldRef, contextFieldRef, out var setExceptionFirst, out _);
             ExecuteMoMethod(Constants.METHOD_OnExit, moveNextMethodDef, rouMethod.Mos.Count, mosFieldRef, contextFieldRef, setExceptionFirst, this.ConfigReverseCallEnding());
             AsyncIteratorOnSuccessWithExit(rouMethod, moveNextMethodDef, mosFieldRef, contextFieldRef, returnsFieldRef, currentFieldRef);
 

@@ -28,14 +28,17 @@ namespace Rougamo.Fody
 
             AsyncResolveReturnOperations(moveNextMethodDef, returnTypeRef, setResultIns, returnValueType, out var returnLdlocFunc, out var returnStlocFunc);
             AsyncOnEntry(rouMethod, moveNextMethodDef, mosFieldRef, contextFieldRef, builderFieldRef, stateFieldRef, parameterFieldRefs, returnTypeRef, returnValueType, returnLdlocFunc, returnStlocFunc);
-            
-            var afterOnExceptionNop = AsyncOnException(rouMethod, moveNextMethodDef, mosFieldRef, contextFieldRef, out var setExceptionFirst, out var setExceptionLast);
+
+            var outerTryCatch = GetOuterExceptionHandler(moveNextMethodDef.Body);
+            var tempStateInitStart = StateMachineTempStateInitStart(moveNextMethodDef, outerTryCatch, stateFieldRef.Resolve());
+            var afterOnExceptionNop = AsyncOnException(rouMethod, moveNextMethodDef, outerTryCatch, mosFieldRef, contextFieldRef, out var setExceptionFirst, out var setExceptionLast);
+            var afterExceptionRetryNop = AsyncExceptionIfRetry(moveNextMethodDef, contextFieldRef, stateFieldRef, afterOnExceptionNop, tempStateInitStart);
             var afterOnExitNop = moveNextInstructions.InsertBefore(setExceptionFirst, Create(OpCodes.Nop));
-            moveNextInstructions.InsertAfter(afterOnExceptionNop, AsyncSaveExceptionHandleStatus(moveNextMethodDef, contextFieldRef, returnTypeRef, returnValueType, out var exceptionHandledVariable, out var returnValueVariable));
+            moveNextInstructions.InsertAfter(afterExceptionRetryNop, AsyncSaveExceptionHandleStatus(moveNextMethodDef, contextFieldRef, returnTypeRef, returnValueType, out var exceptionHandledVariable, out var returnValueVariable));
             ExecuteMoMethod(Constants.METHOD_OnExit, moveNextMethodDef, rouMethod.Mos.Count, mosFieldRef, contextFieldRef, afterOnExitNop, this.ConfigReverseCallEnding());
             AsyncIfExceptionHandled(moveNextMethodDef, exceptionHandledVariable, returnValueVariable, builderFieldRef, returnTypeRef, setExceptionFirst, setExceptionLast.Next, returnValueType);
 
-            AsyncOnSuccessWithExit(rouMethod, moveNextMethodDef, mosFieldRef, contextFieldRef, setResultIns, returnTypeRef);
+            AsyncOnSuccessWithExit(rouMethod, moveNextMethodDef, mosFieldRef, contextFieldRef, stateFieldRef, setResultIns, tempStateInitStart, returnTypeRef);
 
             moveNextMethodDef.Body.OptimizePlus();
             rouMethod.MethodDef.Body.OptimizePlus();
@@ -218,10 +221,9 @@ namespace Rougamo.Fody
             }
         }
 
-        private Instruction AsyncOnException(RouMethod rouMethod, MethodDefinition moveNextMethodDef, FieldReference mosFieldRef, FieldReference contextFieldRef, out Instruction setExceptionFirst, out Instruction setExceptionLast)
+        private Instruction AsyncOnException(RouMethod rouMethod, MethodDefinition moveNextMethodDef, ExceptionHandler exceptionHandler, FieldReference mosFieldRef, FieldReference contextFieldRef, out Instruction setExceptionFirst, out Instruction setExceptionLast)
         {
             var instructions = moveNextMethodDef.Body.Instructions;
-            var exceptionHandler = GetOuterExceptionHandler(moveNextMethodDef.Body);
             var ldlocException = exceptionHandler.HandlerStart.Stloc2Ldloc($"[{rouMethod.MethodDef.FullName}] exception handler first instruction is not stloc.s exception");
 
             FindMoveNextSetExceptionFirstInstruction(moveNextMethodDef, exceptionHandler, out setExceptionFirst, out setExceptionLast);
@@ -237,7 +239,28 @@ namespace Rougamo.Fody
             return afterOnExceptionNop;
         }
 
-        private void AsyncOnSuccessWithExit(RouMethod rouMethod, MethodDefinition moveNextMethodDef, FieldReference mosFieldRef, FieldReference contextFieldRef, Instruction setResultIns, TypeReference returnTypeRef)
+        private Instruction AsyncExceptionIfRetry(MethodDefinition moveNextMethodDef, FieldReference contextFieldRef, FieldReference stateFieldRef, Instruction afterThis, Instruction tempStateInitStart)
+        {
+            var afterRetryNop = Create(OpCodes.Nop);
+            moveNextMethodDef.Body.Instructions.InsertAfter(afterThis, new[]
+            {
+                Create(OpCodes.Ldarg_0),
+                Create(OpCodes.Ldfld, contextFieldRef),
+                Create(OpCodes.Callvirt, _methodMethodContextGetRetryCountRef),
+                Create(OpCodes.Ldc_I4_0),
+                Create(OpCodes.Cgt),
+                Create(OpCodes.Brfalse_S, afterRetryNop),
+                Create(OpCodes.Ldarg_0),
+                Create(OpCodes.Ldc_I4_M1),
+                Create(OpCodes.Stfld, stateFieldRef),
+                Create(OpCodes.Leave_S, tempStateInitStart),
+                afterRetryNop
+            });
+
+            return afterRetryNop;
+        }
+
+        private void AsyncOnSuccessWithExit(RouMethod rouMethod, MethodDefinition moveNextMethodDef, FieldReference mosFieldRef, FieldReference contextFieldRef, FieldReference stateFieldRef, Instruction setResultIns, Instruction tempStateInitStart, TypeReference returnTypeRef)
         {
             if (setResultIns == null) return; // 100% throw exception
 
@@ -258,12 +281,16 @@ namespace Rougamo.Fody
             }
             var beforeOnSuccessWeave = beforeSetResultLdarg0Ins.Previous;
             ExecuteMoMethod(Constants.METHOD_OnExit, moveNextMethodDef, rouMethod.Mos.Count, mosFieldRef, contextFieldRef, beforeSetResultLdarg0Ins, this.ConfigReverseCallEnding());
+
             var onExitFirst = beforeOnSuccessWeave.Next;
+            var succeedReplaceFirst = onExitFirst;
+
             if (!returnTypeRef.IsVoid())
             {
+                succeedReplaceFirst = Create(OpCodes.Ldarg_0);
                 instructions.InsertBefore(onExitFirst, new[]
                 {
-                    Create(OpCodes.Ldarg_0),
+                    succeedReplaceFirst,
                     Create(OpCodes.Ldfld, contextFieldRef),
                     Create(OpCodes.Callvirt, _methodMethodContextGetReturnValueReplacedRef),
                     Create(OpCodes.Brfalse_S, onExitFirst),
@@ -277,7 +304,23 @@ namespace Rougamo.Fody
                 }
                 instructions.InsertBefore(onExitFirst, setResultIns.Previous.Ldloc2Stloc($"[{moveNextMethodDef.DeclaringType.FullName}] offset: {setResultIns.Previous.Offset}, it should be ldloc"));
             }
-            ExecuteMoMethod(Constants.METHOD_OnSuccess, moveNextMethodDef, rouMethod.Mos.Count, mosFieldRef, contextFieldRef, beforeOnSuccessWeave.Next, this.ConfigReverseCallEnding());
+
+            var onRetryFirst = Create(OpCodes.Ldarg_0);
+            instructions.InsertBefore(succeedReplaceFirst, new[]
+            {
+                onRetryFirst,
+                Create(OpCodes.Ldfld, contextFieldRef),
+                Create(OpCodes.Callvirt, _methodMethodContextGetRetryCountRef),
+                Create(OpCodes.Ldc_I4_0),
+                Create(OpCodes.Cgt),
+                Create(OpCodes.Brfalse_S, succeedReplaceFirst),
+                Create(OpCodes.Ldarg_0),
+                Create(OpCodes.Ldc_I4_M1),
+                Create(OpCodes.Stfld, stateFieldRef),
+                Create(OpCodes.Leave_S, tempStateInitStart),
+            });
+
+            ExecuteMoMethod(Constants.METHOD_OnSuccess, moveNextMethodDef, rouMethod.Mos.Count, mosFieldRef, contextFieldRef, onRetryFirst, this.ConfigReverseCallEnding());
         }
 
         private Instruction[] AsyncSaveExceptionHandleStatus(MethodDefinition moveNextMethodDef, FieldReference contextFieldRef, TypeReference returnTypeRef, ReturnType returnValueType, out VariableDefinition exceptionHandledVariable, out VariableDefinition returnValueVariable)
@@ -386,6 +429,18 @@ namespace Rougamo.Fody
             contextFieldDef = new FieldDefinition(Constants.FIELD_RougamoContext, fieldAttributes, _typeMethodContextRef);
             stateTypeDef.Fields.Add(mosFieldDef);
             stateTypeDef.Fields.Add(contextFieldDef);
+        }
+
+        private Instruction StateMachineTempStateInitStart(MethodDefinition moveNextMethodDef, ExceptionHandler outerTryCatch, FieldDefinition stateFieldDef)
+        {
+            var start = outerTryCatch.TryStart.Previous.Previous;
+            while (start.OpCode.Code != Code.Ldfld || start.Previous.OpCode.Code != Code.Ldarg_0 || start.Operand is not FieldReference fieldRef || fieldRef.Resolve() != stateFieldDef)
+            {
+                start = start.Previous;
+                if (start == null) throw new RougamoException("unable find instruction of initialize temp state variable.");
+            }
+
+            return start.Previous;
         }
 
         private void FindMoveNextSetExceptionFirstInstruction(MethodDefinition moveNextMethodDef, ExceptionHandler exceptionHandler, out Instruction setExceptionFirst, out Instruction setExceptionLast)
