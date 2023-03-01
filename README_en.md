@@ -312,6 +312,49 @@ class FixedIntAttribute : ExMoAttribute
 }
 ```
 
+## Retry(v1.4.0)
+Starting from version 1.4.0, methods can be re-executed when a specified exception occurs or the return value is unexpected. Set the value of `MethodContext.RetryCount` in `OnException` or `OnSuccess`, and the method will be re-execute after `OnException` and `OnSuccess` are executed if the value of `MethodContext.RetryCount` is greater than 0.
+```csharp
+internal class RetryAttribute : MoAttribute
+{
+    public override void OnEntry(MethodContext context)
+    {
+        context.RetryCount = 3;
+    }
+
+    public override void OnException(MethodContext context)
+    {
+        context.RetryCount--;
+    }
+
+    public override void OnSuccess(MethodContext context)
+    {
+        context.RetryCount--;
+    }
+}
+
+// After apply the RetryAttribute，Test method will be re-execute three times
+[Retry]
+public void Test()
+{
+    throw new Exception();
+}
+```
+**For the scenario of retrying exception handling, I created the [Rougamo.Retry](https://github.com/inversionhourglass/Rougamo.Retry) project independently. If you only want to retry for some kind of exception, you can directly use [Rougamo. Retry](https://github.com/inversionhourglass/Rougamo.Retry)**
+
+Note the following when using the retry feature:
+- When handling exceptions through `MethodContext.HandledException()` or modifying the return value through `MethodContext.ReplaceReturnValue()`, it will directly set `MethodContext.RetryCount` to 0, because manually handling exceptions and modifying the return value means that you have decided the final result of the method, so there is no need to retry
+- `OnEntry` and `OnExit` of `MoAttribute` will only be executed once, and will not be executed multiple times due to retries.
+- Try not to use the retry feature in `ExMoAttribute` unless you really know the actual processing logic. Consider the following codes, `ExMoAttribute` cannot re-execute the entire external method after the internal error of `Task`.
+  ```csharp
+  public Task Test()
+  {
+    DoSomething();
+
+    return Task.Run(() => DoOtherThings());
+  }
+  ```
+
 ## Ignore weaving(IgnoreMoAttribute)
 In the quick start, we introduced how to apply in batches. Since the rules of batch references only limit the accessibility of methods, there may be some methods that
 meet the rules and do not want to apply weaving. At this time, you can use `IgnoreMoAttribute` to specify method/ class, then that method/class (all methods) will

@@ -313,6 +313,49 @@ class FixedIntAttribute : ExMoAttribute
 }
 ```
 
+## 重试（v1.4.0）
+从1.4.0版本开始，可以在遇到指定异常或者返回值非预期值的情况下重新执行当前方法，实现方式是在`OnException`和`OnSuccess`中设置`MethodContext.RetryCount`值，在`OnException`和`OnSuccess`执行完毕后如果`MethodContext.RetryCount`值大于0那么就会重新执行当前方法。
+```csharp
+internal class RetryAttribute : MoAttribute
+{
+    public override void OnEntry(MethodContext context)
+    {
+        context.RetryCount = 3;
+    }
+
+    public override void OnException(MethodContext context)
+    {
+        context.RetryCount--;
+    }
+
+    public override void OnSuccess(MethodContext context)
+    {
+        context.RetryCount--;
+    }
+}
+
+// 应用RetryAttribute后，Test方法将会重试3次
+[Retry]
+public void Test()
+{
+    throw new Exception();
+}
+```
+**针对异常处理重试的场景，我独立了 [Rougamo.Retry](https://github.com/inversionhourglass/Rougamo.Retry) 这个项目，如果只是针对某种异常进行重试操作可以直接使用 [Rougamo.Retry](https://github.com/inversionhourglass/Rougamo.Retry)**
+
+使用重试功能需要注意以下几点：
+- 在通过`MethodContext.HandledException()`处理异常或通过`MethodContext.ReplaceReturnValue()`修改返回值时会直接将`MethodContext.RetryCount`置为0，因为手动处理异常和修改返回值就表示你已经决定了该方法的最终结果，所以就不再需要重试了
+- `MoAttribute`的`OnEntry`和`OnExit`只会执行一次，不会因为重试而多次执行
+- 尽量不要在`ExMoAttribute`中使用重试功能，除非你真的知道实际的处理逻辑。思考下面这段代码，`ExMoAttribute`无法在`Task`内部报错后重新执行整个外部方法
+  ```csharp
+  public Task Test()
+  {
+    DoSomething();
+
+    return Task.Run(() => DoOtherThings());
+  }
+  ```
+
 ## 忽略织入(IgnoreMoAttribute)
 在快速开始中，我们介绍了如何批量应用，由于批量引用的规则只限定了方法可访问性，所以可能有些符合规则的方法并不想应用织入，
 此时便可使用`IgnoreMoAttribute`对指定方法/类进行标记，那么该方法/类(的所有方法)都将忽略织入。如果将`IgnoreMoAttribute`
