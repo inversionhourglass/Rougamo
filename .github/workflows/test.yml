@@ -1,0 +1,73 @@
+name: Test
+on:
+  push:
+    paths:
+      - 'src/**'
+      - 'test/**'
+      - '.github/workflows/**'
+jobs:
+  windows:
+    name: Windows
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3.0.3
+        with:
+          dotnet-version: 6.0.x
+          
+      - name: Restore NuGets
+        run: dotnet restore Rougamo.sln
+        
+      - name: Build Solution in DEBUG
+        run: dotnet build --configuration Debug --no-restore Rougamo.sln
+        
+      - name: Test in DEBUG
+        run: dotnet test --configuration Debug --no-build Rougamo.sln
+        
+      - name: Build Solution in RELEASE
+        run: dotnet build --configuration Release --no-restore Rougamo.sln
+        
+      - name: Test in RELEASE
+        run: dotnet test --configuration Release --no-build Rougamo.sln
+        
+  linux:
+    name: Linux
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3.0.3
+        with:
+          dotnet-version: 6.0.x
+          
+      - name: Restore NuGets
+        run: dotnet restore Rougamo.sln
+        
+      - name: Build Solution in DEBUG
+        run: dotnet build --configuration Debug --no-restore Rougamo.sln
+        
+      - name: Test in DEBUG with net48
+        run: dotnet test --configuration Debug --no-build -framework net48 Rougamo.sln
+        
+      - name: Test in DEBUG with netcoreapp3.1
+        run: dotnet test --configuration Debug --no-build -framework netcoreapp3.1 Rougamo.sln
+        
+      - name: Test in DEBUG with net6
+        run: dotnet test --configuration Debug --no-build -framework net6 Rougamo.sln
+        
+      - name: Build Solution in RELEASE
+        run: dotnet build --configuration Release --no-restore -framework net48 Rougamo.sln
+        
+      - name: Test in RELEASE with net48
+        run: dotnet test --configuration Release --no-build -framework net48 Rougamo.sln
+        
+      - name: Test in RELEASE with netcoreapp3.1
+        run: dotnet test --configuration Release --no-build -framework netcoreapp3.1 Rougamo.sln
+        
+      - name: Test in RELEASE with net6
+        run: dotnet test --configuration Release --no-build -framework net6 Rougamo.sln
