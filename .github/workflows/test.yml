@@ -16,7 +16,11 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v3.0.3
         with:
-          dotnet-version: 6.0.x
+          dotnet-version: |
+            3.1.x
+            5.0.x
+            6.0.x
+            7.0.x
           
       - name: Restore NuGets
         run: dotnet restore Rougamo.sln
@@ -43,7 +47,11 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v3.0.3
         with:
-          dotnet-version: 6.0.x
+          dotnet-version: |
+            3.1.x
+            5.0.x
+            6.0.x
+            7.0.x
           
       - name: Restore NuGets
         run: dotnet restore Rougamo.sln
@@ -52,16 +60,16 @@ jobs:
         run: dotnet build --configuration Debug --no-restore Rougamo.sln
         
       - name: Test in DEBUG with netcoreapp3.1
-        run: dotnet test --configuration Debug --no-build -framework netcoreapp3.1 Rougamo.sln
+        run: dotnet test --configuration Debug --no-build --framework netcoreapp3.1 Rougamo.sln
         
       - name: Test in DEBUG with net6
-        run: dotnet test --configuration Debug --no-build -framework net6 Rougamo.sln
+        run: dotnet test --configuration Debug --no-build --framework net6 Rougamo.sln
         
       - name: Build Solution in RELEASE
-        run: dotnet build --configuration Release --no-restore -framework net48 Rougamo.sln
+        run: dotnet build --configuration Release --no-restore --framework net48 Rougamo.sln
         
       - name: Test in RELEASE with netcoreapp3.1
-        run: dotnet test --configuration Release --no-build -framework netcoreapp3.1 Rougamo.sln
+        run: dotnet test --configuration Release --no-build --framework netcoreapp3.1 Rougamo.sln
         
       - name: Test in RELEASE with net6
-        run: dotnet test --configuration Release --no-build -framework net6 Rougamo.sln
+        run: dotnet test --configuration Release --no-build --framework net6 Rougamo.sln
