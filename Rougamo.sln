@@ -16,7 +16,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rougamo.Fody", "src\Rougamo
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{BCA66129-FEC9-4244-B53E-931B928C723E}"
 	ProjectSection(SolutionItems) = preProject
-		deploy.bat = deploy.bat
+		CHANGELOG.md = CHANGELOG.md
 		README.md = README.md
 		README_en.md = README_en.md
 		Rougamo.png = Rougamo.png
@@ -30,7 +30,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Rougamo.Fody.Tests", "test\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Issues", "test\TestAssemblies\Issues\Issues.csproj", "{0D22AE69-6F02-4890-BEF1-1D391E15FEF4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ExUsage", "test\TestAssemblies\ExUsage\ExUsage.csproj", "{D7059485-5568-4815-8BD7-AFAE43D2F742}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExUsage", "test\TestAssemblies\ExUsage\ExUsage.csproj", "{D7059485-5568-4815-8BD7-AFAE43D2F742}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

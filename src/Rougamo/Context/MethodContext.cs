@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Rougamo.Threading;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -41,6 +42,8 @@ namespace Rougamo.Context
         /// When exmode is true, the return value type needs to match <see cref="ExReturnType"/>, otherwise it matches <see cref="RealReturnType"/>.
         /// </summary>
         internal bool ExMode { get; set; }
+
+        internal SpinLocker ExLocker { get; } = new SpinLocker();
 
         /// <summary>
         /// ContinueWith executes only once.
@@ -244,7 +247,8 @@ namespace Rougamo.Context
         /// </summary>
         public void ReplaceReturnValue(IMo modifier, object returnValue)
         {
-            ReplaceReturnValue(modifier, returnValue, ExMode);
+            var exReplace = ExMode && modifier is ExMoAttribute;
+            ReplaceReturnValue(modifier, returnValue, exReplace);
         }
 
         /// <summary>

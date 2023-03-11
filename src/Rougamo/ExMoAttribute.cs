@@ -91,7 +91,6 @@ namespace Rougamo
             {
                 SetReturnValue(context);
             }
-            context.ExMode = false;
         }
 
         /// <summary>
@@ -106,7 +105,6 @@ namespace Rougamo
             {
                 SetReturnValue(context);
             }
-            context.ExMode = false;
         }
 
         /// <summary>
@@ -122,6 +120,7 @@ namespace Rougamo
             {
                 if (!context.ExContinueOnce)
                 {
+                    using var _ = context.ExLocker.Enter();
                     var returnValue = func!(context.ReturnValue!, context);
                     context.ReplaceReturnValue(this, returnValue, false);
                     context.ExContinueOnce = true;
@@ -136,7 +135,6 @@ namespace Rougamo
                     context.ReplaceReturnValue(this, context.ExReturnValue!, false);
                 }
             }
-            context.ExMode = false;
         }
 
         /// <summary>
@@ -149,7 +147,6 @@ namespace Rougamo
             {
                 ExOnExit(context);
             }
-            context.ExMode = false;
         }
 
         private void SetReturnValue(MethodContext context)
@@ -232,6 +229,7 @@ namespace Rougamo
             var tcs = new TaskCompletionSource<bool>();
             ((Task)taskObject).ContinueWith(t =>
             {
+                using var _ = context.ExLocker.Enter();
                 if (t.IsFaulted)
                 {
                     var exception = t.Exception.InnerExceptions.Count == 1 ? t.Exception.InnerException : t.Exception;
@@ -242,7 +240,6 @@ namespace Rougamo
                         {
                             context.ExMode = true;
                             exmo.ExOnException(context);
-                            context.ExMode = false;
                         }
                     });
                     if (!context.ExceptionHandled)
@@ -253,7 +250,6 @@ namespace Rougamo
                             {
                                 context.ExMode = true;
                                 exmo.ExOnExit(context);
-                                context.ExMode = false;
                             }
                         });
                         tcs.TrySetException(exception);
@@ -268,7 +264,6 @@ namespace Rougamo
                         {
                             context.ExMode = true;
                             exmo.ExOnSuccess(context);
-                            context.ExMode = false;
                         }
                     });
                 }
@@ -278,7 +273,6 @@ namespace Rougamo
                     {
                         context.ExMode = true;
                         exmo.ExOnExit(context);
-                        context.ExMode = false;
                     }
                 });
                 tcs.TrySetResult(true);
@@ -299,6 +293,7 @@ namespace Rougamo
             var tcs = new TaskCompletionSource<T>();
             ((Task<T>)taskObject).ContinueWith(t =>
             {
+                using var _ = context.ExLocker.Enter();
                 if (t.IsFaulted)
                 {
                     var exception = t.Exception.InnerExceptions.Count == 1 ? t.Exception.InnerException : t.Exception;
@@ -309,7 +304,6 @@ namespace Rougamo
                         {
                             context.ExMode = true;
                             exmo.ExOnException(context);
-                            context.ExMode = false;
                         }
                     });
                     context.Mos.ForEach(!context.MosNonEntryFIFO, mo =>
@@ -318,7 +312,6 @@ namespace Rougamo
                         {
                             context.ExMode = true;
                             exmo.ExOnExit(context);
-                            context.ExMode = false;
                         }
                     });
                     if (context.ExceptionHandled)
@@ -339,7 +332,6 @@ namespace Rougamo
                         {
                             context.ExMode = true;
                             exmo.ExOnSuccess(context);
-                            context.ExMode = false;
                         }
                     });
                     context.Mos.ForEach(!context.MosNonEntryFIFO, mo =>
@@ -348,7 +340,6 @@ namespace Rougamo
                         {
                             context.ExMode = true;
                             exmo.ExOnExit(context);
-                            context.ExMode = false;
                         }
                     });
                     if (context.ExReturnValueReplaced)

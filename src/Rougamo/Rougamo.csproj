@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <Version>1.4.0</Version>
+    <Version>1.4.1</Version>
     <Authors>ihourglass</Authors>
     <Description>Weave code before method execution, on sucessful and on exception. You can replace return value, handle exception and rewrite method arguments. It's both support sync and async method</Description>
     <PackageTags>AOP Fody IL</PackageTags>
@@ -12,21 +12,17 @@
     <PackageOutputPath>$(SolutionDir)nugets</PackageOutputPath>
     <PackageProjectUrl>https://github.com/inversionhourglass/Rougamo</PackageProjectUrl>
     <RepositoryUrl>https://github.com/inversionhourglass/Rougamo.git</RepositoryUrl>
-    <PackageIconUrl>https://raw.githubusercontent.com/inversionhourglass/Rougamo/master/Rougamo.png</PackageIconUrl>
+    <PackageIcon>Rougamo.png</PackageIcon>
     <RepositoryType>git</RepositoryType>
-    <PackageReleaseNotes>
-Now we can re-execute method after exception thows or return value is not expected.
-现在我们可以在出现异常或返回值非预期时重新执行方法了。
-    </PackageReleaseNotes>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
+    <PackageReleaseNotes>CHANGELOG.md</PackageReleaseNotes>
     <PackageReadmeFile>README_en.md</PackageReadmeFile>
   </PropertyGroup>
   <ItemGroup>
-    <None Include="..\..\README_en.md">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-    </None>
+    <None Include="..\..\Rougamo.png" Pack="true" PackagePath="\" />
+    <None Include="..\..\README_en.md" Pack="true" PackagePath="\" />
+    <None Include="..\..\CHANGELOG.md" Pack="true" PackagePath="\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Fody" Version="6.2.5" PrivateAssets="none" />
