@@ -6,7 +6,7 @@ on:
       - 'test/**'
       - '.github/workflows/**'
 env:
-  SOLUTION: ${{ env.SOLUTION }}
+  SOLUTION: Rougamo.sln
 jobs:
   windows:
     name: Windows

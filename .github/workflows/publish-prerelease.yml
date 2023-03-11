@@ -5,7 +5,7 @@ on:
       - prerelease
 env:
   TIMESTAMP: $(date +'%s')
-  SOLUTION: ${{ env.SOLUTION }}
+  SOLUTION: Rougamo.sln
 jobs:
   publish:
     name: Build and publish on windows

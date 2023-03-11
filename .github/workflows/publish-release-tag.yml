@@ -4,7 +4,7 @@ on:
     tags:
       - '*'
 env:
-  SOLUTION: ${{ env.SOLUTION }}
+  SOLUTION: Rougamo.sln
 jobs:
   publish:
     name: Build and publish on windows
