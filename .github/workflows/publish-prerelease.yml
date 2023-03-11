@@ -8,8 +8,8 @@ env:
   SOLUTION: Rougamo.sln
 jobs:
   publish:
-    name: Build and publish on windows
-    runs-on: windows-latest
+    name: Build and Publish
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -28,9 +28,12 @@ jobs:
 
       - name: Restore NuGets
         run: dotnet restore ${{ env.SOLUTION }}
+        
+      - name: Build Solution
+        run: dotnet build --configuration Release --no-restore ${{ env.SOLUTION }} --version-suffix priview-${{ env.TIMESTAMP }}
 
-      - name: Build and Pack Solution
-        run: dotnet pack ${{ env.SOLUTION }} --configuration Release --no-restore --version-suffix priview-${{ env.TIMESTAMP }}
+      - name: Pack Solution
+        run: dotnet pack ${{ env.SOLUTION }} --configuration Release --no-build --version-suffix priview-${{ env.TIMESTAMP }}
 
       - name: Publish
         run: dotnet nuget push nugets/**.nupkg -k ${{ secrets.API_KEY }} -s https://api.nuget.org/v3/index.json
