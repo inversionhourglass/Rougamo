@@ -5,6 +5,8 @@ on:
       - 'src/**'
       - 'test/**'
       - '.github/workflows/**'
+env:
+  SOLUTION: ${{ env.SOLUTION }}
 jobs:
   windows:
     name: Windows
@@ -23,19 +25,19 @@ jobs:
             7.0.x
           
       - name: Restore NuGets
-        run: dotnet restore Rougamo.sln
+        run: dotnet restore ${{ env.SOLUTION }}
         
       - name: Build Solution in DEBUG
-        run: dotnet build --configuration Debug --no-restore Rougamo.sln
+        run: dotnet build --configuration Debug --no-restore ${{ env.SOLUTION }}
         
       - name: Test in DEBUG
-        run: dotnet test --configuration Debug --no-build Rougamo.sln
+        run: dotnet test --configuration Debug --no-build ${{ env.SOLUTION }}
         
       - name: Build Solution in RELEASE
-        run: dotnet build --configuration Release --no-restore Rougamo.sln
+        run: dotnet build --configuration Release --no-restore ${{ env.SOLUTION }}
         
       - name: Test in RELEASE
-        run: dotnet test --configuration Release --no-build Rougamo.sln
+        run: dotnet test --configuration Release --no-build ${{ env.SOLUTION }}
         
   linux:
     name: Linux
@@ -54,22 +56,22 @@ jobs:
             7.0.x
           
       - name: Restore NuGets
-        run: dotnet restore Rougamo.sln
+        run: dotnet restore ${{ env.SOLUTION }}
         
       - name: Build Solution in DEBUG
-        run: dotnet build --configuration Debug --no-restore Rougamo.sln
+        run: dotnet build --configuration Debug --no-restore ${{ env.SOLUTION }}
         
       - name: Test in DEBUG with netcoreapp3.1
-        run: dotnet test --configuration Debug --no-build --framework netcoreapp3.1 Rougamo.sln
+        run: dotnet test --configuration Debug --no-build --framework netcoreapp3.1 ${{ env.SOLUTION }}
         
       - name: Test in DEBUG with net6
-        run: dotnet test --configuration Debug --no-build --framework net6 Rougamo.sln
+        run: dotnet test --configuration Debug --no-build --framework net6 ${{ env.SOLUTION }}
         
       - name: Build Solution in RELEASE
-        run: dotnet build --configuration Release --no-restore Rougamo.sln
+        run: dotnet build --configuration Release --no-restore ${{ env.SOLUTION }}
         
       - name: Test in RELEASE with netcoreapp3.1
-        run: dotnet test --configuration Release --no-build --framework netcoreapp3.1 Rougamo.sln
+        run: dotnet test --configuration Release --no-build --framework netcoreapp3.1 ${{ env.SOLUTION }}
         
       - name: Test in RELEASE with net6
-        run: dotnet test --configuration Release --no-build --framework net6 Rougamo.sln
+        run: dotnet test --configuration Release --no-build --framework net6 ${{ env.SOLUTION }}

@@ -1,0 +1,36 @@
+name: Publish Prerelease NuGets
+on:
+  push:
+    branches:
+      - prerelease
+env:
+  TIMESTAMP: $(date +'%s')
+  SOLUTION: ${{ env.SOLUTION }}
+jobs:
+  publish:
+    name: Build and publish on windows
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3.0.3
+        with:
+          dotnet-version: |
+            3.1.x
+            5.0.x
+            6.0.x
+            7.0.x
+
+      - name: Remove Tests
+        run: dotnet sln ${{ env.SOLUTION }} remove (ls -r test/**/*.csproj)
+
+      - name: Restore NuGets
+        run: dotnet restore ${{ env.SOLUTION }}
+
+      - name: Build and Pack Solution
+        run: dotnet pack ${{ env.SOLUTION }} --configuration Release --no-restore --version-suffix priview-${{ env.TIMESTAMP }}
+
+      - name: Publish
+        run: dotnet nuget push nugets/**.nupkg -k ${{ secrets.API_KEY }} -s https://api.nuget.org/v3/index.json
