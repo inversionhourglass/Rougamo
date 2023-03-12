@@ -16,7 +16,7 @@
     <RepositoryType>git</RepositoryType>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
-    <PackageReleaseNotes>CHANGELOG.md</PackageReleaseNotes>
+    <PackageReleaseNotes>$([System.IO.File]::ReadAllText("$(SolutionDir)CHANGELOG.md"))</PackageReleaseNotes>
     <PackageReadmeFile>README_en.md</PackageReadmeFile>
   </PropertyGroup>
   <ItemGroup>

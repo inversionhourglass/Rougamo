@@ -1,5 +1,3 @@
-# English
 - Fix `ExMoAttribute` concurrent logical probability replacement return value failed
 ---
-# ¼òÌåÖĞÎÄ
-- ĞŞ¸´`ExMoAttribute`²¢·¢Âß¼­¸ÅÂÊÌæ»»·µ»ØÖµÊ§°Ü
+- ä¿®å¤`ExMoAttribute`å¹¶å‘é€»è¾‘æ¦‚ç‡æ›¿æ¢è¿”å›å€¼å¤±è´¥

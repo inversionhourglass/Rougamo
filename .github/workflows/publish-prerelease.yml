@@ -32,6 +32,9 @@ jobs:
       - name: Build Solution
         run: dotnet build --configuration Release --no-restore ${{ env.SOLUTION }} --version-suffix priview-${{ env.TIMESTAMP }}
 
+      - name: Delete exists packages
+        run: '@rd /s /q nugets'
+
       - name: Pack Solution
         run: dotnet pack ${{ env.SOLUTION }} --configuration Release --no-build --version-suffix priview-${{ env.TIMESTAMP }}
 
