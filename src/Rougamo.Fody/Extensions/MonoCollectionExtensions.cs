@@ -23,6 +23,13 @@ namespace Rougamo.Fody
             return false;
         }
 
+        public static T AddGet<T>(this Collection<T> collection, T item)
+        {
+            collection.Add(item);
+
+            return item;
+        }
+
         public static void Insert<T>(this Collection<T> collection, int index, IList<T> items)
         {
             for (var i = items.Count - 1; i >= 0; i--)

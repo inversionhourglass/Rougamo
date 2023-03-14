@@ -91,51 +91,50 @@ namespace Rougamo.Fody
         {
             var instructions = methodDef.Body.Instructions;
             var isVoid = methodDef.ReturnType.IsVoid();
+
+            exceptionVariable = methodDef.Body.CreateVariable(_typeExceptionRef);
+            returnVariable = isVoid ? null : methodDef.Body.CreateVariable(Import(methodDef.ReturnType));
+
             tryStart = instructions.First();
+
+            instructions.Add(new[]
+            {
+                catchStart = Create(OpCodes.Stloc, exceptionVariable),
+                rethrow = Create(OpCodes.Rethrow),
+                finallyStart = Create(OpCodes.Nop),
+                Create(OpCodes.Endfinally)
+            });
+
             finallyEnd = null;
             returnStart = null;
-            returnVariable = isVoid ? null : methodDef.Body.CreateVariable(Import(methodDef.ReturnType));
 
             var returns = instructions.Where(ins => ins.IsRet()).ToArray();
             if (returns.Length != 0)
             {
-                finallyEnd = Create(OpCodes.Nop);
-                returnStart = Create(OpCodes.Ret);
-                instructions.Add(finallyEnd);
-                instructions.Add(returnStart);
-                if (returnVariable != null)
+                instructions.Add(new[]
                 {
-                    var loadReturnValue = returnVariable.Ldloc();
-                    instructions.InsertBefore(returnStart, loadReturnValue);
-                    returnStart = loadReturnValue;
+                    finallyEnd = Create(OpCodes.Nop),
+                    returnStart = Create(OpCodes.Ret)
+                });
+                if (!isVoid)
+                {
+                    returnStart = instructions.InsertBefore(returnStart, returnVariable!.Ldloc()); ;
                 }
                 foreach (var @return in returns)
                 {
-                    if (!isVoid)
+                    if (isVoid)
+                    {
+                        @return.OpCode = OpCodes.Leave;
+                        @return.Operand = finallyEnd;
+                    }
+                    else
                     {
                         @return.OpCode = OpCodes.Stloc;
                         @return.Operand = returnVariable;
                         instructions.InsertAfter(@return, Create(OpCodes.Leave, finallyEnd));
                     }
-                    else
-                    {
-                        @return.OpCode = OpCodes.Leave;
-                        @return.Operand = finallyEnd;
-                    }
                 }
             }
-
-            exceptionVariable = methodDef.Body.CreateVariable(_typeExceptionRef);
-            catchStart = Create(OpCodes.Stloc, exceptionVariable);
-            finallyStart = Create(OpCodes.Nop);
-            rethrow = Create(OpCodes.Rethrow);
-            instructions.InsertBeforeOrAppend(finallyEnd, new[]
-            {
-                catchStart,
-                rethrow,
-                finallyStart,
-                Create(OpCodes.Endfinally)
-            });
         }
 
         private void SetTryCatchFinally(MethodDefinition methodDef, Instruction tryStart, Instruction catchStart, Instruction finallyStart, Instruction? finallyEnd)
