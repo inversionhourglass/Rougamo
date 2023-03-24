@@ -1,6 +1,7 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Collections.Generic;
+using Rougamo.Fody.Enhances;
 using System.Collections.Generic;
 using System.Linq;
 using static Mono.Cecil.Cil.Instruction;
@@ -209,7 +210,7 @@ namespace Rougamo.Fody
         private List<Instruction> InitMosArrayVariable(RouMethod rouMethod, out VariableDefinition mosVariable)
         {
             mosVariable = rouMethod.MethodDef.Body.CreateVariable(_typeIMoArrayRef);
-            var instructions = InitMosArray(rouMethod);
+            var instructions = InitMosArray(rouMethod.Mos);
             instructions.Add(Create(OpCodes.Stloc, mosVariable));
 
             return instructions;
@@ -219,19 +220,20 @@ namespace Rougamo.Fody
         {
             var instructions = rouMethod.MethodDef.Body.Instructions;
             instructions.InsertBefore(insertBeforeThisInstruction, stateMachineVariable.LdlocOrA());
-            instructions.InsertBefore(insertBeforeThisInstruction, InitMosArray(rouMethod));
+            instructions.InsertBefore(insertBeforeThisInstruction, InitMosArray(rouMethod.Mos));
             var mosFieldRef = new FieldReference(mosFieldDef.Name, mosFieldDef.FieldType, stateMachineVariable.VariableType);
             instructions.InsertBefore(insertBeforeThisInstruction, Create(OpCodes.Stfld, mosFieldRef));
         }
 
-        private List<Instruction> InitMosArray(RouMethod rouMethod)
+        private List<Instruction> InitMosArray(HashSet<Mo> mos)
         {
-            var instructions = new List<Instruction>();
-
-            instructions.Add(Create(OpCodes.Ldc_I4, rouMethod.Mos.Count));
-            instructions.Add(Create(OpCodes.Newarr, _typeIMoRef));
+            var instructions = new List<Instruction>
+            {
+                Create(OpCodes.Ldc_I4, mos.Count),
+                Create(OpCodes.Newarr, _typeIMoRef)
+            };
             var i = 0;
-            foreach (var mo in rouMethod.Mos)
+            foreach (var mo in mos)
             {
                 instructions.Add(Create(OpCodes.Dup));
                 instructions.Add(Create(OpCodes.Ldc_I4, i));
@@ -337,6 +339,34 @@ namespace Rougamo.Fody
             }
             instructions.AddRange(LoadMethodArgumentsOnStack(methodDef));
             instructions.Add(Create(OpCodes.Newobj, _methodMethodContextCtorRef));
+        }
+
+        private List<Instruction> InitMethodContext(MethodDefinition methodDef, bool isAsync, bool isIterator, VariableDefinition? mosVariable, VariableDefinition? stateMachineVariable, FieldReference? mosFieldRef)
+        {
+            var instructions = new List<Instruction>();
+
+            var isAsyncCode = isAsync ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0;
+            var isIteratorCode = isIterator ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0;
+            var mosNonEntryFIFO = this.ConfigReverseCallEnding() ? OpCodes.Ldc_I4_0 : OpCodes.Ldc_I4_1;
+            instructions.Add(LoadThisOnStack(methodDef));
+            instructions.AddRange(LoadDeclaringTypeOnStack(methodDef));
+            instructions.AddRange(LoadMethodBaseOnStack(methodDef));
+            instructions.Add(Create(isAsyncCode));
+            instructions.Add(Create(isIteratorCode));
+            instructions.Add(Create(mosNonEntryFIFO));
+            if (stateMachineVariable == null)
+            {
+                instructions.Add(Create(OpCodes.Ldloc, mosVariable));
+            }
+            else
+            {
+                instructions.Add(stateMachineVariable.LdlocOrA());
+                instructions.Add(Create(OpCodes.Ldfld, mosFieldRef));
+            }
+            instructions.AddRange(LoadMethodArgumentsOnStack(methodDef));
+            instructions.Add(Create(OpCodes.Newobj, _methodMethodContextCtorRef));
+
+            return instructions;
         }
 
         private void ExecuteMoMethod(string methodName, MethodDefinition methodDef, int mosCount, FieldReference mosField, FieldReference contextField, Instruction beforeThisInstruction, bool reverseCall)
