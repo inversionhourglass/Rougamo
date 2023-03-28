@@ -171,14 +171,19 @@ namespace Rougamo.Fody
                 Create(OpCodes.Callvirt, _methodMethodContextGetReturnValueReplacedRef),
                 Create(OpCodes.Brfalse_S, endAnchor)
             };
+            var ret = Create(OpCodes.Ret);
+            var onExitEndAnchor = ret;
             if (variables.Return != null)
             {
-                var ldlocReturn = Create(OpCodes.Ldloc, variables.Return);
+                onExitEndAnchor = Create(OpCodes.Ldloc, variables.Return);
                 instructions.AddRange(ReplaceReturnValue(variables.MethodContext, variables.Return, returnBoxTypeRef));
-                instructions.AddRange(ExecuteMoMethod(Constants.METHOD_OnExit, rouMethod.MethodDef, rouMethod.Mos.Count, ldlocReturn, variables.Mos, variables.MethodContext, null, null, this.ConfigReverseCallEnding()));
-                instructions.Add(ldlocReturn);
             }
-            instructions.Add(Create(OpCodes.Ret));
+            instructions.AddRange(ExecuteMoMethod(Constants.METHOD_OnExit, rouMethod.MethodDef, rouMethod.Mos.Count, onExitEndAnchor, variables.Mos, variables.MethodContext, null, null, this.ConfigReverseCallEnding()));
+            if (variables.Return != null)
+            {
+                instructions.Add(onExitEndAnchor);
+            }
+            instructions.Add(ret);
 
             return instructions;
         }
