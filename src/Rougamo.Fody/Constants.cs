@@ -47,6 +47,8 @@
         //public const string FIELD_ReturnValue = "<ReturnValue>k__BackingField";
         public const string FIELD_RougamoMos = ">_<rougamo_mos";
         public const string FIELD_RougamoContext = ">_<rougamo_context";
+        public const string FIELD_Builder = "<>t__builder";
+        public const string FIELD_State = "<>1__state";
         public const string FIELD_IteratorReturnList = ">_<returns";
 
         public const string METHOD_OnEntry = "OnEntry";
@@ -56,5 +58,6 @@
         public const string METHOD_Create = "Create";
         public const string METHOD_MoveNext = "MoveNext";
         public const string METHOD_SetResult = "SetResult";
+        public const string METHOD_SetException = "SetException";
     }
 }

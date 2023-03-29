@@ -12,5 +12,15 @@ namespace Rougamo.Fody
                 action(item);
             }
         }
+
+        public static bool StartsWithAny(this string value, params string[] prefixes)
+        {
+            foreach (var prefix in prefixes)
+            {
+                if (value.StartsWith(prefix)) return true;
+            }
+
+            return false;
+        }
     }
 }

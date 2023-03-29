@@ -29,7 +29,7 @@ namespace Rougamo.Fody
             instructions.InsertAfter(anchors.RetryStart, SyncResetRetryVariable(variables));
             instructions.InsertAfter(anchors.CatchStart, SyncSaveException(variables));
             instructions.InsertAfter(anchors.OnExceptionStart, SyncOnException(rouMethod, anchors.IfOnExceptionRetryStart, variables));
-            instructions.InsertAfter(anchors.IfOnExceptionRetryStart, SyncExceptionIfRetry(anchors.RetryStart, anchors.IfOnExceptionHandledStart, variables));
+            instructions.InsertAfter(anchors.IfOnExceptionRetryStart, SyncIfExceptionRetry(anchors.RetryStart, anchors.IfOnExceptionHandledStart, variables));
             instructions.InsertAfter(anchors.IfOnExceptionHandledStart, SyncIfExceptionHandled(returnBoxTypeRef, anchors.FinallyEnd, anchors.Rethrow, variables));
             instructions.InsertAfter(anchors.FinallyStart, SyncHasExceptionCheck(anchors.OnExitStart, variables));
             instructions.InsertAfter(anchors.SetBackReturnStart, SyncSetBackReturnValue(returnBoxTypeRef, variables));
@@ -309,7 +309,7 @@ namespace Rougamo.Fody
             return ExecuteMoMethod(Constants.METHOD_OnException, rouMethod.MethodDef, rouMethod.Mos.Count, endAnchor, variables.Mos, variables.MethodContext, null, null, this.ConfigReverseCallEnding());
         }
 
-        private IList<Instruction> SyncExceptionIfRetry(Instruction retryAnchor, Instruction endAnchor, SyncVariables variables)
+        private IList<Instruction> SyncIfExceptionRetry(Instruction retryAnchor, Instruction endAnchor, SyncVariables variables)
         {
             return new[]
             {
