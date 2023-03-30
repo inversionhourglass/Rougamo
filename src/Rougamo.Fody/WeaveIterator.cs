@@ -347,7 +347,7 @@ namespace Rougamo.Fody
                 Create(OpCodes.Bne_Un, originFirstIns)
             });
             var afterOnEntryNop = instructions.InsertBefore(originFirstIns, Create(OpCodes.Nop));
-            ExecuteMoMethod(Constants.METHOD_OnEntry, moveNextMethodDef, rouMethod.Mos.Count, mosFieldRef, contextFieldRef, afterOnEntryNop, !this.ConfigReverseCallEnding());
+            ExecuteMoMethod(Constants.METHOD_OnEntry, moveNextMethodDef, rouMethod.Mos.Count, mosFieldRef, contextFieldRef, afterOnEntryNop, false);
 
             return originFirstIns;
         }

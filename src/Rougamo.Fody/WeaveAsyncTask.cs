@@ -285,7 +285,7 @@ namespace Rougamo.Fody
                 Create(OpCodes.Stfld, fields.State)
             });
             var onExitEndAnchor = Create(OpCodes.Ldarg_0);
-            instructions.AddRange(ExecuteMoMethod(Constants.METHOD_OnExit, moveNextMethodDef, rouMethod.Mos.Count, onExitEndAnchor, null, null, fields.Mos, fields.MethodContext, !this.ConfigReverseCallEnding()));
+            instructions.AddRange(ExecuteMoMethod(Constants.METHOD_OnExit, moveNextMethodDef, rouMethod.Mos.Count, onExitEndAnchor, null, null, fields.Mos, fields.MethodContext, this.ConfigReverseCallEnding()));
             instructions.Add(onExitEndAnchor);
             instructions.Add(Create(OpCodes.Ldflda, fields.Builder));
             if (variables.ReplacedReturn != null)
