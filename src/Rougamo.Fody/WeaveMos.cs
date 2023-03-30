@@ -160,17 +160,6 @@ namespace Rougamo.Fody
             methodDef.Body.ExceptionHandlers.Add(finallyHandler);
         }
 
-        private void OnExceptionFromField(MethodDefinition methodDef, int mosCount, FieldReference moFieldRef, FieldReference contextFieldRef, VariableDefinition exceptionVariable, Instruction catchStart)
-        {
-            var ins = new List<Instruction>();
-            ins.Add(Create(OpCodes.Ldarg_0));
-            ins.Add(Create(OpCodes.Ldfld, contextFieldRef));
-            ins.Add(Create(OpCodes.Ldloc, exceptionVariable));
-            ins.Add(Create(OpCodes.Callvirt, _methodMethodContextSetExceptionRef));
-            ExecuteMoMethod(Constants.METHOD_OnException, methodDef, mosCount, moFieldRef, contextFieldRef, catchStart.Next, this.ConfigReverseCallEnding());
-            methodDef.Body.Instructions.InsertAfter(catchStart, ins);
-        }
-
         #region LoadMosOnStack
 
         private VariableDefinition[] LoadMosOnStack(RouMethod rouMethod, List<Instruction> instructions)

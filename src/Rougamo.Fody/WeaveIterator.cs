@@ -1,5 +1,6 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Rougamo.Fody.Enhances;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -11,46 +12,312 @@ namespace Rougamo.Fody
     {
         private void IteratorMethodWeave(RouMethod rouMethod)
         {
-            var parameterFieldDefs = StateMachineParameterFields(rouMethod);
-            IteratorInit(rouMethod, Constants.TYPE_IteratorStateMachineAttribute, false, out var stateTypeDef, out var mosFieldDef, out var contextFieldDef, out var returnsFieldDef);
-            var getEnumeratorMethodDef = stateTypeDef.Methods.Single(x => x.Name.StartsWith("System.Collections.Generic.IEnumerable<") && x.Name.EndsWith(">.GetEnumerator"));
-            parameterFieldDefs = GetIteratorPrivateParameterFields(getEnumeratorMethodDef, parameterFieldDefs);
-            var moveNextMethodDef = stateTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
-            var stateFieldDef = stateTypeDef.Fields.Single(x => x.Name == "<>1__state");
-            FieldReference mosFieldRef = mosFieldDef;
-            FieldReference contextFieldRef = contextFieldDef;
-            FieldReference? returnsFieldRef = returnsFieldDef;
-            FieldReference stateFieldRef = stateFieldDef;
-            FieldReference currentFieldRef = stateTypeDef.Fields.Single(m => m.Name.EndsWith("current"));
-            var parameterFieldRefs = parameterFieldDefs.Select(x => x == null ? null : (FieldReference)x);
-            if (stateTypeDef.HasGenericParameters)
-            {
-                // generic return type will get in
-                // public IEnumerable<MyClass<T>> Mt<T>()
-                var stateTypeRef = new GenericInstanceType(stateTypeDef);
-                foreach (var parameter in stateTypeDef.GenericParameters)
-                {
-                    stateTypeRef.GenericArguments.Add(parameter);
-                }
-                parameterFieldRefs = parameterFieldDefs.Select(x => x == null ? null : new FieldReference(x.Name, x.FieldType, stateTypeRef));
-                mosFieldRef = new FieldReference(mosFieldDef.Name, mosFieldDef.FieldType, stateTypeRef);
-                contextFieldRef = new FieldReference(contextFieldDef.Name, contextFieldDef.FieldType, stateTypeRef);
-                returnsFieldRef = returnsFieldRef == null ? null : new FieldReference(returnsFieldRef.Name, returnsFieldRef.FieldType, stateTypeRef);
-                stateFieldRef = new FieldReference(stateFieldDef.Name, stateFieldDef.FieldType, stateTypeRef);
-                currentFieldRef = new FieldReference(currentFieldRef.Name, currentFieldRef.FieldType, stateTypeRef);
-            }
-            // finallyEnd may be null
-            GenerateTryCatchFinally(moveNextMethodDef, out var tryStart, out var catchStart, out var finallyStart, out var finallyEnd, out _, out var rethrow, out var exceptionVariable, out var returnVariable);
-            if (returnVariable == null) throw new RougamoException("iterator MoveNext should not return void");
-            if (finallyEnd == null) throw new RougamoException("iterator MoveNext finally should not be null");
-            SetTryCatchFinally(moveNextMethodDef, tryStart, catchStart, finallyStart, finallyEnd);
-            var onEntryNextIns = IteratorOnEntry(rouMethod, moveNextMethodDef, mosFieldRef, contextFieldRef, stateFieldRef);
-            StateMachineRewriteArguments(moveNextMethodDef, contextFieldRef, parameterFieldRefs.ToArray(), onEntryNextIns);
-            OnExceptionFromField(moveNextMethodDef, rouMethod.Mos.Count, mosFieldRef, contextFieldRef, exceptionVariable, catchStart);
-            IteratorOnExitOrMoveNext(moveNextMethodDef, rouMethod.Mos.Count, mosFieldRef, contextFieldRef, returnsFieldRef, currentFieldRef, returnVariable, finallyStart, finallyEnd);
+            var stateMachineTypeDef = rouMethod.MethodDef.ResolveStateMachine(Constants.TYPE_IteratorStateMachineAttribute);
+            var moveNextMethodDef = stateMachineTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
+            var moveNextMethodName = stateMachineTypeDef.DeclaringType.FullName;
+
+            var fields = IteratorResolveFields(rouMethod, stateMachineTypeDef);
+            var variables = IteratorResolveVariables(rouMethod, moveNextMethodDef, stateMachineTypeDef);
+            var anchors = IteratorCreateAnchors(rouMethod.MethodDef, moveNextMethodDef, variables);
+            IteratorSetAnchors(rouMethod.MethodDef, moveNextMethodDef, variables, anchors);
+            IteratorSetTryCatchFinally(moveNextMethodDef, anchors);
+
+            rouMethod.MethodDef.Body.Instructions.InsertAfter(anchors.InitMosStart, IteratorInitMos(rouMethod, fields, variables));
+            rouMethod.MethodDef.Body.Instructions.InsertAfter(anchors.InitContextStart, IteratorInitMethodContext(rouMethod, fields, variables));
+            if (fields.RecordedReturn != null) rouMethod.MethodDef.Body.Instructions.InsertAfter(anchors.InitRecordedReturnStart, IteratorInitRecordedReturn(fields, variables));
+
+            var instructions = moveNextMethodDef.Body.Instructions;
+
+            instructions.Insert(0, IteratorIfFirstTimeExecute(anchors.TryStart, fields));
+            instructions.InsertAfter(anchors.OnEntryStart, IteratorOnEntry(rouMethod, moveNextMethodDef, anchors.RewriteArgStart, fields));
+            instructions.InsertAfter(anchors.RewriteArgStart, IteratorRewriteArguments(anchors.TryStart, fields));
+
+            instructions.InsertAfter(anchors.CatchStart, IteratorSaveException(anchors.OnExceptionStart, fields, variables));
+            instructions.InsertAfter(anchors.OnExceptionStart, IteratorOnException(rouMethod, moveNextMethodDef, anchors.Rethrow, fields));
+
+            if (fields.RecordedReturn != null) instructions.InsertAfter(anchors.FinallyStart, IteratorSaveYeildReturn(fields));
+            instructions.InsertAfter(anchors.IfLastYeildStart, IteratorIfLastYeild(anchors.EndFinally, variables));
+            instructions.InsertAfter(anchors.IfHasExceptionStart, IteratorIfHasException(anchors.OnExitStart, fields));
+            if (fields.RecordedReturn != null) instructions.InsertAfter(anchors.SaveReturnValueStart, IteratorSaveReturnValue(fields));
+            instructions.InsertAfter(anchors.OnSuccessStart, IteratorOnSuccess(rouMethod, moveNextMethodDef, anchors.OnExitStart, fields));
+            instructions.InsertAfter(anchors.OnExitStart, IteratorOnExit(rouMethod, moveNextMethodDef, anchors.EndFinally, fields));
 
             rouMethod.MethodDef.Body.OptimizePlus();
             moveNextMethodDef.Body.OptimizePlus();
+        }
+
+        private IteratorFields IteratorResolveFields(RouMethod rouMethod, TypeDefinition stateMachineTypeDef)
+        {
+            var getEnumeratorMethodDef = stateMachineTypeDef.Methods.Single(x => x.Name.StartsWith("System.Collections.Generic.IEnumerable<") && x.Name.EndsWith(">.GetEnumerator"));
+
+            var mosFieldDef = new FieldDefinition(Constants.FIELD_RougamoMos, FieldAttributes.Public, _typeIMoArrayRef);
+            var contextFieldDef = new FieldDefinition(Constants.FIELD_RougamoContext, FieldAttributes.Public, _typeMethodContextRef);
+            var stateFieldDef = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_State);
+            var currentFieldDef = stateMachineTypeDef.Fields.Single(m => m.Name.EndsWith("current"));
+            FieldDefinition? recordedReturnFieldDef = null;
+            var parameterFieldDefs = StateMachineParameterFields(rouMethod);
+            parameterFieldDefs = IteratorGetPrivateParameterFields(getEnumeratorMethodDef, parameterFieldDefs);
+            if (this.ConfigRecordingIteratorReturnValue())
+            {
+                var listReturnsRef = new GenericInstanceType(_typeListRef);
+                listReturnsRef.GenericArguments.Add(((GenericInstanceType)rouMethod.MethodDef.ReturnType).GenericArguments[0]);
+                recordedReturnFieldDef = new FieldDefinition(Constants.FIELD_IteratorReturnList, FieldAttributes.Public, listReturnsRef);
+                stateMachineTypeDef.Fields.Add(recordedReturnFieldDef);
+            }
+
+            stateMachineTypeDef.Fields.Add(mosFieldDef);
+            stateMachineTypeDef.Fields.Add(contextFieldDef);
+
+            return new IteratorFields(stateMachineTypeDef, mosFieldDef, contextFieldDef, stateFieldDef, currentFieldDef, recordedReturnFieldDef, parameterFieldDefs);
+        }
+
+        private IteratorVariables IteratorResolveVariables(RouMethod rouMethod, MethodDefinition moveNextMethodDef, TypeDefinition stateMachineTypeDef)
+        {
+            // maybe can simply replace to stateMachineTypeDef.ImportInto(ModuleDefinition)
+            var stateMachineTypeRef = ((MethodReference)rouMethod.MethodDef.Body.Instructions.Single(x => x.OpCode.Code == Code.Newobj && x.Operand is MethodReference methodRef && methodRef.DeclaringType.Resolve() == stateMachineTypeDef).Operand).DeclaringType;
+
+            var stateMachineVariable = rouMethod.MethodDef.Body.CreateVariable(stateMachineTypeRef);
+
+            var exceptionVariable = moveNextMethodDef.Body.CreateVariable(_typeExceptionRef);
+            var moveNextReturnVariable = moveNextMethodDef.Body.CreateVariable(_typeBoolRef);
+
+            return new IteratorVariables(stateMachineVariable, exceptionVariable, moveNextReturnVariable);
+        }
+
+        private IteratorAnchors IteratorCreateAnchors(MethodDefinition methodDef, MethodDefinition moveNextMethodDef, IteratorVariables variables)
+        {
+            var @return = methodDef.Body.Instructions.Single(x => x.OpCode.Code == Code.Ret);
+            var tryStart = moveNextMethodDef.Body.Instructions.First();
+            var finallyEnd = Create(OpCodes.Ldloc, variables.MoveNextReturn);
+
+            return new IteratorAnchors(variables, @return, tryStart, finallyEnd);
+        }
+
+        private void IteratorSetAnchors(MethodDefinition methodDef, MethodDefinition moveNextMethodDef, IteratorVariables variables, IteratorAnchors anchors)
+        {
+            methodDef.Body.Instructions.InsertBefore(anchors.Return, new[]
+            {
+                Create(OpCodes.Stloc, variables.StateMachine),
+                anchors.InitMosStart,
+                anchors.InitContextStart,
+                anchors.InitRecordedReturnStart,
+                Create(OpCodes.Ldloc, variables.StateMachine),
+            });
+
+            IteratorSetMoveNextAnchors(moveNextMethodDef, variables, anchors);
+        }
+
+        private void IteratorSetTryCatchFinally(MethodDefinition methodDef, IteratorAnchors anchors)
+        {
+            var exceptionHandler = new ExceptionHandler(ExceptionHandlerType.Catch)
+            {
+                CatchType = _typeExceptionRef,
+                TryStart = anchors.TryStart,
+                TryEnd = anchors.CatchStart,
+                HandlerStart = anchors.CatchStart,
+                HandlerEnd = anchors.FinallyStart
+            };
+            var finallyHandler = new ExceptionHandler(ExceptionHandlerType.Finally)
+            {
+                TryStart = anchors.TryStart,
+                TryEnd = anchors.FinallyStart,
+                HandlerStart = anchors.FinallyStart,
+                HandlerEnd = anchors.FinallyEnd
+            };
+
+            methodDef.Body.ExceptionHandlers.Add(exceptionHandler);
+            methodDef.Body.ExceptionHandlers.Add(finallyHandler);
+        }
+
+        private void IteratorSetMoveNextAnchors(MethodDefinition moveNextMethodDef, IteratorVariables variables, IteratorAnchors anchors)
+        {
+            var instructions = moveNextMethodDef.Body.Instructions;
+            var returns = instructions.Where(ins => ins.IsRet()).ToArray();
+
+            instructions.Insert(0, new[]
+            {
+                anchors.OnEntryStart,
+                anchors.RewriteArgStart
+            });
+
+            instructions.Add(new[]
+            {
+                anchors.CatchStart,
+                anchors.OnExceptionStart,
+                anchors.Rethrow,
+                anchors.FinallyStart,
+                anchors.IfLastYeildStart,
+                anchors.IfHasExceptionStart,
+                anchors.SaveReturnValueStart,
+                anchors.OnSuccessStart,
+                anchors.OnExitStart,
+                anchors.EndFinally,
+                anchors.FinallyEnd,
+                Create(OpCodes.Ret)
+            });
+
+            if (returns.Length != 0)
+            {
+                foreach (var @return in returns)
+                {
+                    @return.OpCode = OpCodes.Stloc;
+                    @return.Operand = variables.MoveNextReturn;
+                    instructions.InsertAfter(@return, Create(OpCodes.Leave, anchors.FinallyEnd));
+                }
+            }
+        }
+
+        private IList<Instruction> IteratorInitMos(RouMethod rouMethod, IteratorFields fields, IteratorVariables variables)
+        {
+            var mosFieldRef = new FieldReference(fields.Mos.Name, fields.Mos.FieldType, variables.StateMachine.VariableType);
+
+            var instructions = new List<Instruction>
+            {
+                variables.StateMachine.LdlocOrA()
+            };
+            instructions.AddRange(InitMosArray(rouMethod.Mos));
+            instructions.Add(Create(OpCodes.Stfld, mosFieldRef));
+
+            return instructions;
+        }
+
+        private IList<Instruction> IteratorInitMethodContext(RouMethod rouMethod, IteratorFields fields, IteratorVariables variables)
+        {
+            var mosFieldRef = new FieldReference(fields.Mos.Name, fields.Mos.FieldType, variables.StateMachine.VariableType);
+            var contextFieldRef = new FieldReference(fields.MethodContext.Name, fields.MethodContext.FieldType, variables.StateMachine.VariableType);
+
+            var instructions = new List<Instruction>
+            {
+                variables.StateMachine.LdlocOrA()
+            };
+            instructions.AddRange(InitMethodContext(rouMethod.MethodDef, true, false, null, variables.StateMachine, mosFieldRef));
+            instructions.Add(Create(OpCodes.Stfld, contextFieldRef));
+
+            return instructions;
+        }
+
+        private IList<Instruction> IteratorInitRecordedReturn(IteratorFields fields, IteratorVariables variables)
+        {
+            var returnsFieldRef = new FieldReference(fields.RecordedReturn!.Name, fields.RecordedReturn!.FieldType, variables.StateMachine.VariableType);
+            var returnsTypeCtorDef = _typeListDef.GetZeroArgsCtor();
+            var returnsTypeCtorRef = fields.RecordedReturn.FieldType.GenericTypeMethodReference(returnsTypeCtorDef, ModuleDefinition);
+
+            return new[]
+            {
+                variables.StateMachine.LdlocOrA(),
+                Create(OpCodes.Newobj, returnsTypeCtorRef),
+                Create(OpCodes.Stfld, returnsFieldRef)
+            };
+        }
+
+        private IList<Instruction> IteratorIfFirstTimeExecute(Instruction ifNotFirstTimeGoTo, IteratorFields fields)
+        {
+            return new[]
+            {
+                Create(OpCodes.Ldarg_0),
+                Create(OpCodes.Ldfld, fields.State),
+                Create(OpCodes.Ldc_I4_0),
+                Create(OpCodes.Bne_Un, ifNotFirstTimeGoTo)
+            };
+        }
+
+        private IList<Instruction> IteratorOnEntry(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction endAnchor, IteratorFields fields)
+        {
+            return ExecuteMoMethod(Constants.METHOD_OnEntry, moveNextMethodDef, rouMethod.Mos.Count, endAnchor, null, null, fields.Mos, fields.MethodContext, false);
+        }
+
+        private IList<Instruction> IteratorRewriteArguments(Instruction endAnchor, IteratorFields fields)
+        {
+            var instructions = new List<Instruction>
+            {
+                Create(OpCodes.Ldarg_0),
+                Create(OpCodes.Ldfld, fields.MethodContext),
+                Create(OpCodes.Callvirt, _methodMethodContextGetRewriteArgumentsRef),
+                Create(OpCodes.Brfalse_S, endAnchor)
+            };
+            for (var i = 0; i < fields.Parameters.Length; i++)
+            {
+                var parameterFieldRef = fields.Parameters[i];
+                if (parameterFieldRef == null) continue;
+
+                AsyncRewriteArgument(i, fields.MethodContext, parameterFieldRef, instructions.Add);
+            }
+
+            return instructions;
+        }
+
+        private IList<Instruction> IteratorSaveException(Instruction endAnchor, IteratorFields fields, IteratorVariables variables)
+        {
+            return new[]
+            {
+                Create(OpCodes.Ldarg_0),
+                Create(OpCodes.Ldfld, fields.MethodContext),
+                Create(OpCodes.Ldloc, variables.Exception),
+                Create(OpCodes.Callvirt, _methodMethodContextSetExceptionRef)
+            };
+        }
+
+        private IList<Instruction> IteratorOnException(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction endAnchor, IteratorFields fields)
+        {
+            return ExecuteMoMethod(Constants.METHOD_OnException, moveNextMethodDef, rouMethod.Mos.Count, endAnchor, null, null, fields.Mos, fields.MethodContext, this.ConfigReverseCallEnding());
+        }
+
+        private IList<Instruction> IteratorSaveYeildReturn(IteratorFields fields)
+        {
+            var listAddMethodRef = fields.RecordedReturn!.FieldType.GenericTypeMethodReference(_methodListAddRef, ModuleDefinition);
+
+            return new[]
+            {
+                Create(OpCodes.Ldarg_0),
+                Create(OpCodes.Ldfld, fields.RecordedReturn),
+                Create(OpCodes.Ldarg_0),
+                Create(OpCodes.Ldfld, fields.Current),
+                Create(OpCodes.Callvirt, listAddMethodRef)
+            };
+        }
+
+        private IList<Instruction> IteratorIfLastYeild(Instruction ifNotLastYeildGoto, IteratorVariables variables)
+        {
+            return new[]
+            {
+                Create(OpCodes.Ldloc, variables.MoveNextReturn),
+                Create(OpCodes.Brtrue_S, ifNotLastYeildGoto)
+            };
+        }
+
+        private IList<Instruction> IteratorIfHasException(Instruction ifHasExceptionGoto, IteratorFields fields)
+        {
+            return new[]
+            {
+                Create(OpCodes.Ldarg_0),
+                Create(OpCodes.Ldfld, fields.MethodContext),
+                Create(OpCodes.Callvirt, _methodMethodContextGetHasExceptionRef),
+                Create(OpCodes.Brtrue_S, ifHasExceptionGoto)
+            };
+        }
+
+        private IList<Instruction> IteratorSaveReturnValue(IteratorFields fields)
+        {
+            var listToArrayMethodRef = fields.RecordedReturn!.FieldType.GenericTypeMethodReference(_methodListToArrayRef, ModuleDefinition);
+            return new[]
+            {
+                Create(OpCodes.Ldarg_0),
+                Create(OpCodes.Ldfld, fields.MethodContext),
+                Create(OpCodes.Ldarg_0),
+                Create(OpCodes.Ldfld, fields.RecordedReturn),
+                Create(OpCodes.Callvirt, listToArrayMethodRef),
+                Create(OpCodes.Callvirt, _methodMethodContextSetReturnValueRef)
+            };
+        }
+
+        private IList<Instruction> IteratorOnSuccess(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction endAnchor, IteratorFields fields)
+        {
+            return ExecuteMoMethod(Constants.METHOD_OnSuccess, moveNextMethodDef, rouMethod.Mos.Count, endAnchor, null, null, fields.Mos, fields.MethodContext, this.ConfigReverseCallEnding());
+        }
+
+        private IList<Instruction> IteratorOnExit(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction endAnchor, IteratorFields fields)
+        {
+            return ExecuteMoMethod(Constants.METHOD_OnExit, moveNextMethodDef, rouMethod.Mos.Count, endAnchor, null, null, fields.Mos, fields.MethodContext, this.ConfigReverseCallEnding());
         }
 
         private TypeReference IteratorInit(RouMethod rouMethod, string stateMachineName, bool isAsync, out TypeDefinition stateTypeDef, out FieldDefinition mosFieldDef, out FieldDefinition contextFieldDef, out FieldDefinition? returnsFieldDef)
@@ -85,7 +352,7 @@ namespace Rougamo.Fody
             return originFirstIns;
         }
 
-        private FieldDefinition?[] GetIteratorPrivateParameterFields(MethodDefinition getEnumeratorMethodDef, FieldDefinition?[] parameterFieldDefs)
+        private FieldDefinition?[] IteratorGetPrivateParameterFields(MethodDefinition getEnumeratorMethodDef, FieldDefinition?[] parameterFieldDefs)
         {
             var map = new Dictionary<FieldDefinition, int>();
             for (var i = 0; i < parameterFieldDefs.Length; i++)
@@ -105,59 +372,6 @@ namespace Rougamo.Fody
             }
 
             return parameterFieldDefs;
-        }
-
-        private void IteratorOnExitOrMoveNext(MethodDefinition methodDef, int mosCount, FieldReference mosFieldRef, FieldReference contextFieldRef, FieldReference? returnsFieldRef, FieldReference currentFieldRef, VariableDefinition returnVariable, Instruction finallyStart, Instruction finallyEnd)
-        {
-            var endFinally = finallyEnd.Previous;
-            var yieldBrTo = endFinally;
-            if (returnsFieldRef != null)
-            {
-                var listAddMethodRef = returnsFieldRef.FieldType.GenericTypeMethodReference(_methodListAddRef, ModuleDefinition);
-                yieldBrTo = Create(OpCodes.Ldarg_0);
-                var addCurrentToReturns = new[]
-                {
-                    yieldBrTo,
-                    Create(OpCodes.Ldfld, returnsFieldRef),
-                    Create(OpCodes.Ldarg_0),
-                    Create(OpCodes.Ldfld, currentFieldRef),
-                    Create(OpCodes.Callvirt, listAddMethodRef)
-                };
-                methodDef.Body.Instructions.InsertBefore(endFinally, addCurrentToReturns);
-            }
-
-            ExecuteMoMethod(Constants.METHOD_OnExit, methodDef, mosCount, mosFieldRef, contextFieldRef, yieldBrTo, this.ConfigReverseCallEnding());
-            if (returnsFieldRef != null)
-            {
-                methodDef.Body.Instructions.InsertBefore(yieldBrTo, Create(OpCodes.Br_S, endFinally));
-            }
-            if (finallyStart.OpCode.Code != Code.Nop) throw new RougamoException("finally start is not nop");
-            finallyStart.OpCode = OpCodes.Ldloc;
-            finallyStart.Operand = returnVariable;
-            var onExitStart = finallyStart.Next;
-            var hasException = Create(OpCodes.Brtrue_S, onExitStart);
-            methodDef.Body.Instructions.InsertAfter(finallyStart, new[]
-            {
-                Create(OpCodes.Brtrue_S, yieldBrTo),
-                Create(OpCodes.Ldarg_0),
-                Create(OpCodes.Ldfld, contextFieldRef),
-                Create(OpCodes.Callvirt, _methodMethodContextGetHasExceptionRef),
-                hasException
-            });
-            if (returnsFieldRef != null)
-            {
-                var listToArrayMethodRef = returnsFieldRef.FieldType.GenericTypeMethodReference(_methodListToArrayRef, ModuleDefinition);
-                methodDef.Body.Instructions.InsertAfter(hasException, new[]
-                {
-                    Create(OpCodes.Ldarg_0),
-                    Create(OpCodes.Ldfld, contextFieldRef),
-                    Create(OpCodes.Ldarg_0),
-                    Create(OpCodes.Ldfld, returnsFieldRef),
-                    Create(OpCodes.Callvirt, listToArrayMethodRef),
-                    Create(OpCodes.Callvirt, _methodMethodContextSetReturnValueRef)
-                });
-            }
-            ExecuteMoMethod(Constants.METHOD_OnSuccess, methodDef, mosCount, mosFieldRef, contextFieldRef, onExitStart, this.ConfigReverseCallEnding());
         }
 
         private void IteratorFieldDefinition(RouMethod rouMethod, string stateMachineName, out TypeDefinition stateTypeDef, out FieldDefinition mosFieldDef, out FieldDefinition contextFieldDef, out FieldDefinition? returnFieldDef)

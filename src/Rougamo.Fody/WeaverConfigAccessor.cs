@@ -16,11 +16,10 @@ namespace Rougamo.Fody
         {
 #if DEBUG
             return true;
-#endif
-#pragma warning disable CS0162 // Unreachable code detected
+#else
             var recording = weaver.GetConfigValue("enumerable-returns", "false");
             return "true".Equals(recording, StringComparison.OrdinalIgnoreCase);
-#pragma warning restore CS0162 // Unreachable code detected
+#endif
         }
 
         public static bool ConfigReverseCallEnding(this BaseModuleWeaver weaver)
