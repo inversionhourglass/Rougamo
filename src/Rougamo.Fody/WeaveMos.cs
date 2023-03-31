@@ -26,7 +26,7 @@ namespace Rougamo.Fody
                     }
                     else if (rouMethod.IsAsyncIterator)
                     {
-                        AsyncIteratorMethodWeave(rouMethod);
+                        AiteratorMethodWeave(rouMethod);
                     }
                     else if (rouMethod.IsAsyncTaskOrValueTask)
                     {

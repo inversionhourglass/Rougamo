@@ -25,6 +25,7 @@
         public const string TYPE_AsyncValueTaskMethodBuilder = "System.Runtime.CompilerServices.AsyncValueTaskMethodBuilder"; // async ValueTask
         public const string TYPE_AsyncVoidMethodBuilder = "System.Runtime.CompilerServices.AsyncVoidMethodBuilder"; // async void
         public const string TYPE_ManualResetValueTaskSourceCore = "System.Threading.Tasks.Sources.ManualResetValueTaskSourceCore"; // async IAsyncEnumerable
+        public const string TYPE_ManualResetValueTaskSourceCore_Bool = "System.Threading.Tasks.Sources.ManualResetValueTaskSourceCore`1<System.Boolean>";
 
         public const string TYPE_ARRAY_Type = "System.Type[]";
 
@@ -49,6 +50,7 @@
         public const string FIELD_RougamoContext = ">_<rougamo_context";
         public const string FIELD_Builder = "<>t__builder";
         public const string FIELD_State = "<>1__state";
+        public const string FIELD_Current_Suffix = "current";
         public const string FIELD_IteratorReturnList = ">_<returns";
 
         public const string METHOD_OnEntry = "OnEntry";
@@ -59,5 +61,9 @@
         public const string METHOD_MoveNext = "MoveNext";
         public const string METHOD_SetResult = "SetResult";
         public const string METHOD_SetException = "SetException";
+        public const string METHOD_GetEnumerator_Prefix = "System.Collections.Generic.IEnumerable<";
+        public const string METHOD_GetEnumerator_Suffix = ">.GetEnumerator";
+        public const string METHOD_GetAsyncEnumerator_Prefix = "System.Collections.Generic.IAsyncEnumerable<";
+        public const string METHOD_GetAsyncEnumerator_Suffix = ">.GetAsyncEnumerator";
     }
 }

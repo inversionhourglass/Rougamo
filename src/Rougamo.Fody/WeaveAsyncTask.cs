@@ -249,7 +249,7 @@ namespace Rougamo.Fody
             {
                 Create(OpCodes.Ldarg_0),
                 Create(OpCodes.Ldfld, fields.State),
-                Create(OpCodes.Ldc_I4, -1),
+                Create(OpCodes.Ldc_I4_M1),
                 Create(OpCodes.Bne_Un, retryStart)
             };
         }
@@ -522,94 +522,6 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private void StateMachineRewriteArguments(MethodDefinition moveNextMethodDef, FieldReference contextFieldRef, FieldReference?[] parameterFieldRefs, Instruction brFalseToIns)
-        {
-            var instructions = moveNextMethodDef.Body.Instructions;
-            instructions.InsertBefore(brFalseToIns, Create(OpCodes.Ldarg_0));
-            instructions.InsertBefore(brFalseToIns, Create(OpCodes.Ldfld, contextFieldRef));
-            instructions.InsertBefore(brFalseToIns, Create(OpCodes.Callvirt, _methodMethodContextGetRewriteArgumentsRef));
-            instructions.InsertBefore(brFalseToIns, Create(OpCodes.Brfalse_S, brFalseToIns));
-            for (var i = 0; i < parameterFieldRefs.Length; i++)
-            {
-                var parameterFieldRef = parameterFieldRefs[i];
-                if (parameterFieldRef == null) continue;
-
-                StateMachineRewriteArgument(i, contextFieldRef, parameterFieldRef, instruction => instructions.InsertBefore(brFalseToIns, instruction));
-            }
-        }
-
-        private void StateMachineRewriteArgument(int index, FieldReference contextFieldRef, FieldReference parameterFieldRef, Action<Instruction> append)
-        {
-            var parameterTypeRef = parameterFieldRef.FieldType.ImportInto(ModuleDefinition);
-            Instruction? afterNullNop = null;
-            if (parameterTypeRef.MetadataType == MetadataType.Class ||
-                parameterTypeRef.MetadataType == MetadataType.Array ||
-                parameterTypeRef.IsGenericParameter ||
-                parameterTypeRef.IsString() || parameterTypeRef.IsNullable())
-            {
-                var notNullNop = Create(OpCodes.Nop);
-                afterNullNop = Create(OpCodes.Nop);
-                append(Create(OpCodes.Ldarg_0));
-                append(Create(OpCodes.Ldfld, contextFieldRef));
-                append(Create(OpCodes.Callvirt, _methodMethodContextGetArgumentsRef));
-                append(Create(OpCodes.Ldc_I4, index));
-                append(Create(OpCodes.Ldelem_Ref));
-                append(Create(OpCodes.Ldnull));
-                append(Create(OpCodes.Ceq));
-                append(Create(OpCodes.Brfalse_S, notNullNop));
-                append(Create(OpCodes.Ldarg_0));
-                if (parameterTypeRef.IsGenericParameter || parameterTypeRef.IsNullable())
-                {
-                    append(Create(OpCodes.Ldflda, parameterFieldRef));
-                    append(Create(OpCodes.Initobj, parameterTypeRef));
-                }
-                else
-                {
-                    append(Create(OpCodes.Ldnull));
-                    append(Create(OpCodes.Stfld, parameterFieldRef));
-                }
-                append(Create(OpCodes.Br_S, afterNullNop));
-                append(notNullNop);
-            }
-            append(Create(OpCodes.Ldarg_0));
-            append(Create(OpCodes.Ldarg_0));
-            append(Create(OpCodes.Ldfld, contextFieldRef));
-            append(Create(OpCodes.Callvirt, _methodMethodContextGetArgumentsRef));
-            append(Create(OpCodes.Ldc_I4, index));
-            append(Create(OpCodes.Ldelem_Ref));
-            if (parameterTypeRef.IsUnboxable())
-            {
-                append(Create(OpCodes.Unbox_Any, parameterTypeRef));
-            }
-            else if (!parameterTypeRef.Is(typeof(object).FullName))
-            {
-                append(Create(OpCodes.Castclass, parameterTypeRef));
-            }
-            append(Create(OpCodes.Stfld, parameterFieldRef));
-            if (afterNullNop != null)
-            {
-                append(afterNullNop);
-            }
-        }
-
-        private Instruction AsyncOnException(RouMethod rouMethod, MethodDefinition moveNextMethodDef, ExceptionHandler exceptionHandler, FieldReference mosFieldRef, FieldReference contextFieldRef, out Instruction setExceptionFirst, out Instruction setExceptionLast)
-        {
-            var instructions = moveNextMethodDef.Body.Instructions;
-            var ldlocException = exceptionHandler.HandlerStart.Stloc2Ldloc($"[{rouMethod.MethodDef.FullName}] exception handler first instruction is not stloc.s exception");
-
-            FindMoveNextSetExceptionFirstInstruction(moveNextMethodDef, exceptionHandler, out setExceptionFirst, out setExceptionLast);
-
-            instructions.InsertBefore(setExceptionFirst, Create(OpCodes.Ldarg_0));
-            instructions.InsertBefore(setExceptionFirst, Create(OpCodes.Ldfld, contextFieldRef));
-            instructions.InsertBefore(setExceptionFirst, ldlocException);
-            instructions.InsertBefore(setExceptionFirst, Create(OpCodes.Callvirt, _methodMethodContextSetExceptionRef));
-
-            var afterOnExceptionNop = instructions.InsertBefore(setExceptionFirst, Create(OpCodes.Nop));
-            ExecuteMoMethod(Constants.METHOD_OnException, moveNextMethodDef, rouMethod.Mos.Count, mosFieldRef, contextFieldRef, afterOnExceptionNop, this.ConfigReverseCallEnding());
-
-            return afterOnExceptionNop;
-        }
-
         private FieldDefinition?[] StateMachineParameterFields(RouMethod rouMethod)
         {
             var isStaticMethod = rouMethod.MethodDef.IsStatic;
@@ -646,39 +558,6 @@ namespace Rougamo.Fody
             }
 
             return parameterFieldDefs;
-        }
-
-        private void StateMachineFieldDefinition(RouMethod rouMethod, string stateMachineName, out TypeDefinition stateTypeDef, out FieldDefinition mosFieldDef, out FieldDefinition contextFieldDef)
-        {
-            stateTypeDef = rouMethod.MethodDef.ResolveStateMachine(stateMachineName);
-            var fieldAttributes = FieldAttributes.Public;
-            mosFieldDef = new FieldDefinition(Constants.FIELD_RougamoMos, fieldAttributes, _typeIMoArrayRef);
-            contextFieldDef = new FieldDefinition(Constants.FIELD_RougamoContext, fieldAttributes, _typeMethodContextRef);
-            stateTypeDef.Fields.Add(mosFieldDef);
-            stateTypeDef.Fields.Add(contextFieldDef);
-        }
-
-        private void FindMoveNextSetExceptionFirstInstruction(MethodDefinition moveNextMethodDef, ExceptionHandler exceptionHandler, out Instruction setExceptionFirst, out Instruction setExceptionLast)
-        {
-            var instruction = exceptionHandler.HandlerStart;
-            while (true)
-            {
-                if (instruction.OpCode.Code == Code.Call && instruction.Operand is MethodReference setException &&
-                    setException.Name == Constants.METHOD_SetException &&
-                    setException.DeclaringType.FullName.StartsWithAny(
-                        Constants.TYPE_AsyncTaskMethodBuilder,
-                        Constants.TYPE_AsyncValueTaskMethodBuilder,
-                        Constants.TYPE_AsyncVoidMethodBuilder,
-                        Constants.TYPE_ManualResetValueTaskSourceCore))
-                {
-                    setExceptionLast = instruction;
-                    break;
-                }
-                instruction = instruction.Next;
-                if (instruction == null || instruction == exceptionHandler.HandlerEnd) throw new InvalidOperationException($"[{moveNextMethodDef.DeclaringType.FullName}] SetException instruction not found");
-            }
-            setExceptionFirst = instruction.Previous.Previous.Previous;
-            if (setExceptionFirst.OpCode.Code != Code.Ldarg_0) throw new RougamoException($"Offset {setExceptionFirst.Offset} of {moveNextMethodDef.FullName} is {setExceptionFirst.OpCode.Code}, it should be Ldarg0 of SetResult which offset is {instruction.Offset}");
         }
 
         private ExceptionHandler GetOuterExceptionHandler(MethodBody methodBody)
