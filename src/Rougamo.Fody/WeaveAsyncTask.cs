@@ -32,7 +32,7 @@ namespace Rougamo.Fody
             instructions.InsertAfter(anchors.IfFirstTimeEntry, StateMachineIfFirstTimeEntry(-1, anchors.Retry, fields));
             instructions.InsertAfter(anchors.OnEntry, StateMachineOnEntry(rouMethod, moveNextMethodDef, anchors.IfEntryReplaced, fields));
             instructions.InsertAfter(anchors.IfEntryReplaced, AsyncIfOnEntryReplacedReturn(rouMethod, moveNextMethodDef, returnBoxTypeRef, setResultMethodRef, anchors.RewriteArg, fields, variables));
-            instructions.InsertAfter(anchors.RewriteArg, StateMachineRewriteArguments(anchors.Retry, fields));
+            if (rouMethod.MethodDef.Parameters.Count > 0) instructions.InsertAfter(anchors.RewriteArg, StateMachineRewriteArguments(anchors.Retry, fields));
 
             instructions.InsertAfter(anchors.SaveException, StateMachineSaveException(moveNextMethodName, anchors.CatchStart, fields));
             instructions.InsertAfter(anchors.OnException, StateMachineOnException(rouMethod, moveNextMethodDef, anchors.IfExceptionRetry, fields));
@@ -526,6 +526,8 @@ namespace Rougamo.Fody
 
         private FieldDefinition?[] StateMachineParameterFields(RouMethod rouMethod)
         {
+            if (rouMethod.MethodDef.Parameters.Count == 0) return new FieldDefinition?[0];
+
             var isStaticMethod = rouMethod.MethodDef.IsStatic;
             var parameterFieldDefs = new FieldDefinition?[rouMethod.MethodDef.Parameters.Count];
             foreach (var instruction in rouMethod.MethodDef.Body.Instructions)

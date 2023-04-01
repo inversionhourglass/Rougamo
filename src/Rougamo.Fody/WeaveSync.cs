@@ -25,7 +25,7 @@ namespace Rougamo.Fody
             instructions.InsertAfter(anchors.InitContext, SyncInitMethodContext(rouMethod.MethodDef, variables));
             instructions.InsertAfter(anchors.OnEntry, SyncOnEntry(rouMethod, anchors.IfEntryReplaced, variables));
             instructions.InsertAfter(anchors.IfEntryReplaced, SyncIfOnEntryReplacedReturn(rouMethod, returnBoxTypeRef, anchors.RewriteArg, variables));
-            instructions.InsertAfter(anchors.RewriteArg, SyncRewriteArguments(rouMethod.MethodDef, anchors.Retry, variables));
+            if (rouMethod.MethodDef.Parameters.Count > 0) instructions.InsertAfter(anchors.RewriteArg, SyncRewriteArguments(rouMethod.MethodDef, anchors.Retry, variables));
             instructions.InsertAfter(anchors.Retry, SyncResetRetryVariable(variables));
 
             instructions.InsertAfter(anchors.CatchStart, SyncSaveException(variables));
@@ -183,7 +183,7 @@ namespace Rougamo.Fody
                 SyncRewriteArgument(i, variables.MethodContext, methodDef.Parameters[i], instructions.Add);
             }
 
-            return instructions;
+            return instructions.Count == 3 ? new Instruction[0] : instructions;
         }
 
         private void SyncRewriteArgument(int index, VariableDefinition contextVariable, ParameterDefinition parameterDef, Action<Instruction> append)

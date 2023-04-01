@@ -29,7 +29,7 @@ namespace Rougamo.Fody
             var instructions = moveNextMethodDef.Body.Instructions;
             instructions.InsertAfter(anchors.IfFirstTimeEntry, StateMachineIfFirstTimeEntry(0, anchors.TryStart, fields));
             instructions.InsertAfter(anchors.OnEntry, StateMachineOnEntry(rouMethod, moveNextMethodDef, anchors.RewriteArg, fields));
-            instructions.InsertAfter(anchors.RewriteArg, StateMachineRewriteArguments(anchors.TryStart, fields));
+            if (rouMethod.MethodDef.Parameters.Count > 0) instructions.InsertAfter(anchors.RewriteArg, StateMachineRewriteArguments(anchors.TryStart, fields));
 
             instructions.InsertAfter(anchors.CatchStart, IteratorSaveException(fields, variables));
             instructions.InsertAfter(anchors.OnException, StateMachineOnException(rouMethod, moveNextMethodDef, anchors.OnExitAfterException, fields));
@@ -223,6 +223,8 @@ namespace Rougamo.Fody
 
         private FieldDefinition?[] IteratorGetPrivateParameterFields(MethodDefinition getEnumeratorMethodDef, FieldDefinition?[] parameterFieldDefs)
         {
+            if (parameterFieldDefs.Length == 0) return parameterFieldDefs;
+
             var map = new Dictionary<FieldDefinition, int>();
             for (var i = 0; i < parameterFieldDefs.Length; i++)
             {
