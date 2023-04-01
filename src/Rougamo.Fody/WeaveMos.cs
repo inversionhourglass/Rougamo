@@ -64,12 +64,12 @@ namespace Rougamo.Fody
             instructions.Add(Create(OpCodes.Callvirt, _methodMethodContextGetReturnValueReplacedRef));
             instructions.Add(Create(OpCodes.Brtrue_S, afterOnSuccessNop));
 
-            ExecuteMoMethod(Constants.METHOD_OnSuccess, rouMethod.MethodDef, rouMethod.Mos.Count, mosVariable, contextVariable, instructions, this.ConfigReverseCallEnding());
+            ExecuteMoMethod(Constants.METHOD_OnSuccess, rouMethod.MethodDef, rouMethod.Mos.Count, mosVariable, contextVariable, instructions, _config.ReverseCallNonEntry);
 
             rouMethod.MethodDef.Body.Instructions.InsertBefore(afterOnSuccessNop, instructions);
 
             instructions = new List<Instruction>();
-            ExecuteMoMethod(Constants.METHOD_OnExit, rouMethod.MethodDef, rouMethod.Mos.Count, mosVariable, contextVariable, instructions, this.ConfigReverseCallEnding());
+            ExecuteMoMethod(Constants.METHOD_OnExit, rouMethod.MethodDef, rouMethod.Mos.Count, mosVariable, contextVariable, instructions, _config.ReverseCallNonEntry);
             rouMethod.MethodDef.Body.Instructions.InsertAfter(afterOnSuccessNop, instructions);
             rouMethod.MethodDef.Body.OptimizePlus();
         }
@@ -218,7 +218,7 @@ namespace Rougamo.Fody
         {
             var isAsyncCode = isAsync ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0;
             var isIteratorCode = isIterator ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0;
-            var mosNonEntryFIFO = this.ConfigReverseCallEnding() ? OpCodes.Ldc_I4_0 : OpCodes.Ldc_I4_1;
+            var mosNonEntryFIFO = _config.ReverseCallNonEntry ? OpCodes.Ldc_I4_0 : OpCodes.Ldc_I4_1;
             instructions.Add(LoadThisOnStack(methodDef));
             instructions.AddRange(LoadDeclaringTypeOnStack(methodDef));
             instructions.AddRange(LoadMethodBaseOnStack(methodDef));
@@ -244,7 +244,7 @@ namespace Rougamo.Fody
 
             var isAsyncCode = isAsync ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0;
             var isIteratorCode = isIterator ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0;
-            var mosNonEntryFIFO = this.ConfigReverseCallEnding() ? OpCodes.Ldc_I4_0 : OpCodes.Ldc_I4_1;
+            var mosNonEntryFIFO = _config.ReverseCallNonEntry ? OpCodes.Ldc_I4_0 : OpCodes.Ldc_I4_1;
             instructions.Add(LoadThisOnStack(methodDef));
             instructions.AddRange(LoadDeclaringTypeOnStack(methodDef));
             instructions.AddRange(LoadMethodBaseOnStack(methodDef));

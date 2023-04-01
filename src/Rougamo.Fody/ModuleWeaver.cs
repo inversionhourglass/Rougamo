@@ -1,6 +1,8 @@
 ﻿using Fody;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Rougamo.Fody.Models;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -45,11 +47,13 @@ namespace Rougamo.Fody
         //private FieldReference _fieldMethodContextReturnValueRef;
 
         private List<RouType> _rouTypes;
+        private Config _config;
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
         public override void Execute()
         {
-            if (!this.ConfigEnabled()) return;
+            ReadConfig();
+            if (!_config.Enabled) return;
 
             LoadLocalAssemblies();
             LoadBasicReference();
@@ -65,6 +69,32 @@ namespace Rougamo.Fody
             yield return "System";
             yield return "System.Runtime";
             yield return "System.Core";
+        }
+
+        private void ReadConfig()
+        {
+            var enabled = "true".Equals(GetConfigValue("true", "enabled"), StringComparison.OrdinalIgnoreCase);
+#if DEBUG
+            var recordingIteratorReturns = true;
+#else
+            var recordingIteratorReturns = "true".Equals(GetConfigValue("true", "iterator-returns", "enumerable-returns"), StringComparison.OrdinalIgnoreCase);
+#endif
+            var reverseCallNonEntry = "true".Equals(GetConfigValue("true", "reverse-call-nonentry", "reverse-call-ending"), StringComparison.OrdinalIgnoreCase);
+
+            _config = new Config(enabled, recordingIteratorReturns, reverseCallNonEntry);
+        }
+
+        private string GetConfigValue(string defaultValue, params string[] configKeys)
+        {
+            if (Config == null) return defaultValue;
+
+            foreach (var configKey in configKeys)
+            {
+                var configAttribute = Config.Attributes(configKey).SingleOrDefault();
+                if (configAttribute != null) return configAttribute.Value;
+            }
+
+            return defaultValue;
         }
 
         private void LoadLocalAssemblies()

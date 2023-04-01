@@ -53,7 +53,7 @@ namespace Rougamo.Fody
             FieldDefinition? recordedReturnFieldDef = null;
             var parameterFieldDefs = StateMachineParameterFields(rouMethod);
             parameterFieldDefs = IteratorGetPrivateParameterFields(getEnumeratorMethodDef, parameterFieldDefs);
-            if (this.ConfigRecordingIteratorReturnValue())
+            if (_config.RecordingIteratorReturns)
             {
                 var listReturnsRef = new GenericInstanceType(_typeListRef);
                 listReturnsRef.GenericArguments.Add(((GenericInstanceType)rouMethod.MethodDef.ReturnType).GenericArguments[0]);
