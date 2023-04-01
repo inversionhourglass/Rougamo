@@ -40,6 +40,7 @@ namespace Rougamo.Fody
 
             return def != null && def.Name == fieldName && def.FieldType.Is(fieldType);
         }
+
         public static Instruction Copy(this Instruction instruction)
         {
             if (instruction.Operand == null) return Instruction.Create(instruction.OpCode);

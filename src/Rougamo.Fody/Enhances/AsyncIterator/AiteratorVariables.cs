@@ -1,8 +1,8 @@
 ﻿using Mono.Cecil.Cil;
 
-namespace Rougamo.Fody.Enhances
+namespace Rougamo.Fody.Enhances.AsyncIterator
 {
-    internal class AiteratorVariables
+    internal class AiteratorVariables : IIteratorVariables
     {
         public AiteratorVariables(VariableDefinition stateMachine, VariableDefinition moveNextReturn)
         {

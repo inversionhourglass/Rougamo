@@ -1,6 +1,7 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Rougamo.Fody.Enhances;
+using Rougamo.Fody.Enhances.Async;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -22,32 +23,32 @@ namespace Rougamo.Fody
             var anchors = AsyncCreateAnchors(rouMethod.MethodDef, moveNextMethodDef, variables);
             AsyncSetAnchors(rouMethod.MethodDef, moveNextMethodDef, anchors);
 
-            rouMethod.MethodDef.Body.Instructions.InsertAfter(anchors.InitMosStart, AsyncInitMos(rouMethod, fields, variables));
-            rouMethod.MethodDef.Body.Instructions.InsertAfter(anchors.InitContextStart, AsyncInitMethodContext(rouMethod, fields, variables));
+            rouMethod.MethodDef.Body.Instructions.InsertAfter(anchors.InitMos, StateMachineInitMos(rouMethod, fields, variables));
+            rouMethod.MethodDef.Body.Instructions.InsertAfter(anchors.InitContext, StateMachineInitMethodContext(rouMethod, fields, variables));
 
-            var setResultMethodRef = variables.ReplacedReturn == null ? GetSetResult(fields.Builder.FieldType) : GetGenericSetResult(fields.Builder.FieldType);
+            var setResultMethodRef = variables.ReplacedReturn == null ? AsyncGetSetResult(fields.Builder.FieldType) : AsyncGetGenericSetResult(fields.Builder.FieldType);
 
             var instructions = moveNextMethodDef.Body.Instructions;
-            instructions.Insert(0, AsyncIfFirstTimeExecute(anchors.RetryStart, fields));
-            instructions.InsertAfter(anchors.OnEntryStart, AsyncOnEntry(rouMethod, moveNextMethodDef, anchors.IfEntryReplacedStart, fields));
-            instructions.InsertAfter(anchors.IfEntryReplacedStart, AsyncIfOnEntryReplacedReturn(rouMethod, moveNextMethodDef, returnBoxTypeRef, setResultMethodRef, anchors.RewriteArgStart, fields, variables));
-            instructions.InsertAfter(anchors.RewriteArgStart, AsyncRewriteArguments(anchors.RetryStart, fields));
+            instructions.InsertAfter(anchors.IfFirstTimeEntry, StateMachineIfFirstTimeEntry(-1, anchors.Retry, fields));
+            instructions.InsertAfter(anchors.OnEntry, StateMachineOnEntry(rouMethod, moveNextMethodDef, anchors.IfEntryReplaced, fields));
+            instructions.InsertAfter(anchors.IfEntryReplaced, AsyncIfOnEntryReplacedReturn(rouMethod, moveNextMethodDef, returnBoxTypeRef, setResultMethodRef, anchors.RewriteArg, fields, variables));
+            instructions.InsertAfter(anchors.RewriteArg, StateMachineRewriteArguments(anchors.Retry, fields));
 
-            instructions.InsertAfter(anchors.SaveException, AsyncSaveException(moveNextMethodName, anchors.CatchStart, fields));
-            instructions.InsertAfter(anchors.OnExceptionStart, AsyncOnException(rouMethod, moveNextMethodDef, anchors.IfExceptionRetryStart, fields));
-            instructions.InsertAfter(anchors.IfExceptionRetryStart, AsyncIfExceptionRetry(anchors.RetryStart, anchors.ExceptionContextStashStart, fields));
-            instructions.InsertAfter(anchors.ExceptionContextStashStart, AsyncExceptionContextStash(fields, variables));
-            instructions.InsertAfter(anchors.OnExitAfterExceptionHandledStart, AsyncOnExit(rouMethod, moveNextMethodDef, anchors.IfExceptionHandled, fields));
-            instructions.InsertAfter(anchors.IfExceptionHandled, AsyncIfExceptionHandled(returnBoxTypeRef, setResultMethodRef, anchors.SetExceptionStart, anchors.LeaveCatch, fields, variables));
+            instructions.InsertAfter(anchors.SaveException, StateMachineSaveException(moveNextMethodName, anchors.CatchStart, fields));
+            instructions.InsertAfter(anchors.OnException, StateMachineOnException(rouMethod, moveNextMethodDef, anchors.IfExceptionRetry, fields));
+            instructions.InsertAfter(anchors.IfExceptionRetry, AsyncIfExceptionRetry(anchors.Retry, anchors.ExceptionContextStash, fields));
+            instructions.InsertAfter(anchors.ExceptionContextStash, AsyncExceptionContextStash(fields, variables));
+            instructions.InsertAfter(anchors.OnExitAfterException, StateMachineOnExit(rouMethod, moveNextMethodDef, anchors.IfExceptionHandled, fields));
+            instructions.InsertAfter(anchors.IfExceptionHandled, AsyncIfExceptionHandled(returnBoxTypeRef, setResultMethodRef, anchors.HostsSetException, anchors.HostsLeaveCatch, fields, variables));
 
-            if (anchors.BuilderSetResultStart != null)
+            if (anchors.HostsSetResult != null)
             {
-                var notVoid = anchors.LdlocReturn != null;
-                if (notVoid) instructions.InsertAfter(anchors.SaveReturnValueStart, AsyncSaveReturnValue(returnBoxTypeRef, anchors.LdlocReturn!, fields));
-                instructions.InsertAfter(anchors.OnSuccessStart, AsyncOnSuccess(rouMethod, moveNextMethodDef, anchors.IfSuccessRetryStart, fields));
-                instructions.InsertAfter(anchors.IfSuccessRetryStart, AsyncIfSuccessRetry(anchors.RetryStart, anchors.IfSuccessReplacedStart, fields));
-                if (notVoid) instructions.InsertAfter(anchors.IfSuccessReplacedStart, AsyncIfSuccessReplacedReturn(moveNextMethodName, returnBoxTypeRef, anchors.LdlocReturn!, anchors.OnExitAfterSuccessExecutedStart, fields));
-                instructions.InsertAfter(anchors.OnExitAfterSuccessExecutedStart, AsyncOnExit(rouMethod, moveNextMethodDef, anchors.BuilderSetResultStart, fields));
+                var notVoid = anchors.HostsLdlocReturn != null;
+                if (notVoid) instructions.InsertAfter(anchors.SaveReturnValue, AsyncSaveReturnValue(returnBoxTypeRef, anchors.HostsLdlocReturn!, fields));
+                instructions.InsertAfter(anchors.OnSuccess, StateMachineOnSuccess(rouMethod, moveNextMethodDef, anchors.IfSuccessRetry, fields));
+                instructions.InsertAfter(anchors.IfSuccessRetry, AsyncIfSuccessRetry(anchors.Retry, anchors.IfSuccessReplaced, fields));
+                if (notVoid) instructions.InsertAfter(anchors.IfSuccessReplaced, AsyncIfSuccessReplacedReturn(moveNextMethodName, returnBoxTypeRef, anchors.HostsLdlocReturn!, anchors.OnExitAfterSuccess, fields));
+                instructions.InsertAfter(anchors.OnExitAfterSuccess, StateMachineOnExit(rouMethod, moveNextMethodDef, anchors.HostsSetResult, fields));
             }
 
             moveNextMethodDef.Body.OptimizePlus();
@@ -88,36 +89,36 @@ namespace Rougamo.Fody
 
         private AsyncAnchors AsyncCreateAnchors(MethodDefinition methodDef, MethodDefinition moveNextMethodDef, AsyncVariables variables)
         {
-            var exceptionHandler = GetOuterExceptionHandler(moveNextMethodDef.Body);
+            var exceptionHandler = GetOuterExceptionHandler(moveNextMethodDef);
 
-            var builderCreateStart = AsyncGetBuilderCreateStartAnchor(methodDef.Body, out var builderTypeDef);
+            var hostsBuilderCreate = AsyncGetBuilderCreateStartAnchor(methodDef, out var builderTypeDef);
             var catchStart = exceptionHandler.HandlerStart;
-            var setExceptionStart = AsyncGetSetExceptionStartAnchor(moveNextMethodDef, exceptionHandler);
-            var leaveCatch = AsyncGetLeaveCatchAnchor(exceptionHandler);
+            var hostsSetException = AsyncGetSetExceptionStartAnchor(moveNextMethodDef, exceptionHandler);
+            var hostsLeaveCatch = AsyncGetLeaveCatchAnchor(exceptionHandler);
             var setResult = moveNextMethodDef.Body.Instructions.SingleOrDefault(x => x.Operand is MethodReference methodRef && methodRef.DeclaringType.Resolve() == builderTypeDef && methodRef.Name == Constants.METHOD_SetResult);
-            Instruction? setResultStart, ldlocReturn;
+            Instruction? hostsSetResult, hostsLdlocReturn;
             if (setResult == null)
             {
-                setResultStart = null;
-                ldlocReturn = null;
+                hostsSetResult = null;
+                hostsLdlocReturn = null;
             }
             else if (variables.ReplacedReturn == null)
             {
-                setResultStart = setResult.Previous.Previous;
-                ldlocReturn = null;
+                hostsSetResult = setResult.Previous.Previous;
+                hostsLdlocReturn = null;
             }
             else
             {
-                setResultStart = setResult.Previous.Previous.Previous;
-                ldlocReturn = setResult.Previous;
+                hostsSetResult = setResult.Previous.Previous.Previous;
+                hostsLdlocReturn = setResult.Previous;
             }
 
-            return new AsyncAnchors(builderCreateStart, catchStart, setExceptionStart, leaveCatch, setResultStart, ldlocReturn);
+            return new AsyncAnchors(hostsBuilderCreate, catchStart, hostsSetException, hostsLeaveCatch, hostsSetResult, hostsLdlocReturn);
         }
 
-        private Instruction AsyncGetBuilderCreateStartAnchor(MethodBody methodBody, out TypeDefinition builderTypeDef)
+        private Instruction AsyncGetBuilderCreateStartAnchor(MethodDefinition methodDef, out TypeDefinition builderTypeDef)
         {
-            foreach (var instruction in methodBody.Instructions)
+            foreach (var instruction in methodDef.Body.Instructions)
             {
                 if (instruction.OpCode == OpCodes.Call && instruction.Operand is MethodReference methodRef &&
                     methodRef.DeclaringType.FullName.StartsWithAny(Constants.TYPE_AsyncTaskMethodBuilder, Constants.TYPE_AsyncValueTaskMethodBuilder, Constants.TYPE_AsyncVoidMethodBuilder) &&
@@ -129,7 +130,7 @@ namespace Rougamo.Fody
                 }
             }
 
-            throw new RougamoException("unable find call AsyncTaskMethodBuilder.Create instruction");
+            throw new RougamoException($"[{methodDef.FullName}] Unable find call AsyncTaskMethodBuilder.Create instruction");
         }
 
         private Instruction AsyncGetSetExceptionStartAnchor(MethodDefinition moveNextMethodDef, ExceptionHandler exceptionHandler)
@@ -170,10 +171,10 @@ namespace Rougamo.Fody
 
         private void AsyncSetAnchors(MethodDefinition methodDef, MethodDefinition moveNextMethodDef, AsyncAnchors anchors)
         {
-            methodDef.Body.Instructions.InsertBefore(anchors.BuilderCreateStart, new[]
+            methodDef.Body.Instructions.InsertBefore(anchors.HostsBuilderCreate, new[]
             {
-                anchors.InitMosStart,
-                anchors.InitContextStart
+                anchors.InitMos,
+                anchors.InitContext
             });
 
             AsyncSetMoveNextAnchors(moveNextMethodDef, anchors);
@@ -185,36 +186,37 @@ namespace Rougamo.Fody
 
             instructions.Insert(0, new[]
             {
-                anchors.OnEntryStart,
-                anchors.IfEntryReplacedStart,
-                anchors.RewriteArgStart,
-                anchors.RetryStart
+                anchors.IfFirstTimeEntry,
+                anchors.OnEntry,
+                anchors.IfEntryReplaced,
+                anchors.RewriteArg,
+                anchors.Retry
             });
 
-            instructions.InsertBefore(anchors.SetExceptionStart, new[]
+            instructions.InsertBefore(anchors.HostsSetException, new[]
             {
                 anchors.SaveException,
-                anchors.OnExceptionStart,
-                anchors.IfExceptionRetryStart,
-                anchors.ExceptionContextStashStart,
-                anchors.OnExitAfterExceptionHandledStart,
+                anchors.OnException,
+                anchors.IfExceptionRetry,
+                anchors.ExceptionContextStash,
+                anchors.OnExitAfterException,
                 anchors.IfExceptionHandled
             });
 
-            if (anchors.BuilderSetResultStart != null)
+            if (anchors.HostsSetResult != null)
             {
-                instructions.InsertBefore(anchors.BuilderSetResultStart, new[]
+                instructions.InsertBefore(anchors.HostsSetResult, new[]
                 {
-                    anchors.SaveReturnValueStart,
-                    anchors.OnSuccessStart,
-                    anchors.IfSuccessRetryStart,
-                    anchors.IfSuccessReplacedStart,
-                    anchors.OnExitAfterSuccessExecutedStart
+                    anchors.SaveReturnValue,
+                    anchors.OnSuccess,
+                    anchors.IfSuccessRetry,
+                    anchors.IfSuccessReplaced,
+                    anchors.OnExitAfterSuccess
                 });
             }
         }
 
-        private IList<Instruction> AsyncInitMos(RouMethod rouMethod, AsyncFields fields, AsyncVariables variables)
+        private IList<Instruction> StateMachineInitMos(RouMethod rouMethod, IStateMachineFields fields, IStateMachineVariables variables)
         {
             var mosFieldRef = new FieldReference(fields.Mos.Name, fields.Mos.FieldType, variables.StateMachine.VariableType);
 
@@ -228,7 +230,7 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private IList<Instruction> AsyncInitMethodContext(RouMethod rouMethod, AsyncFields fields, AsyncVariables variables)
+        private IList<Instruction> StateMachineInitMethodContext(RouMethod rouMethod, IStateMachineFields fields, IStateMachineVariables variables)
         {
             var mosFieldRef = new FieldReference(fields.Mos.Name, fields.Mos.FieldType, variables.StateMachine.VariableType);
             var contextFieldRef = new FieldReference(fields.MethodContext.Name, fields.MethodContext.FieldType, variables.StateMachine.VariableType);
@@ -243,18 +245,18 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private IList<Instruction> AsyncIfFirstTimeExecute(Instruction retryStart, AsyncFields fields)
+        private IList<Instruction> StateMachineIfFirstTimeEntry(int initialState, Instruction ifNotFirstTimeGoto, IStateMachineFields fields)
         {
             return new[]
             {
                 Create(OpCodes.Ldarg_0),
                 Create(OpCodes.Ldfld, fields.State),
-                Create(OpCodes.Ldc_I4_M1),
-                Create(OpCodes.Bne_Un, retryStart)
+                LdcI4(initialState),
+                Create(OpCodes.Bne_Un, ifNotFirstTimeGoto)
             };
         }
 
-        private IList<Instruction> AsyncOnEntry(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction endAnchor, AsyncFields fields)
+        private IList<Instruction> StateMachineOnEntry(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction endAnchor, IStateMachineFields fields)
         {
             return ExecuteMoMethod(Constants.METHOD_OnEntry, moveNextMethodDef, rouMethod.Mos.Count, endAnchor, null, null, fields.Mos, fields.MethodContext, false);
         }
@@ -302,7 +304,7 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private IList<Instruction> AsyncRewriteArguments(Instruction endAnchor, AsyncFields fields)
+        private IList<Instruction> StateMachineRewriteArguments(Instruction endAnchor, IStateMachineFields fields)
         {
             var instructions = new List<Instruction>
             {
@@ -316,13 +318,13 @@ namespace Rougamo.Fody
                 var parameterFieldRef = fields.Parameters[i];
                 if (parameterFieldRef == null) continue;
 
-                AsyncRewriteArgument(i, fields.MethodContext, parameterFieldRef, instruction => instructions.Add(instruction));
+                StateMachineRewriteArgument(i, fields.MethodContext, parameterFieldRef, instructions.Add);
             }
 
             return instructions;
         }
 
-        private void AsyncRewriteArgument(int index, FieldReference contextFieldRef, FieldReference parameterFieldRef, Action<Instruction> append)
+        private void StateMachineRewriteArgument(int index, FieldReference contextFieldRef, FieldReference parameterFieldRef, Action<Instruction> append)
         {
             var parameterTypeRef = parameterFieldRef.FieldType.ImportInto(ModuleDefinition);
             Instruction? afterNullNop = null;
@@ -376,7 +378,7 @@ namespace Rougamo.Fody
             }
         }
 
-        private IList<Instruction> AsyncSaveException(string methodName, Instruction stlocException, AsyncFields fields)
+        private IList<Instruction> StateMachineSaveException(string methodName, Instruction stlocException, IStateMachineFields fields)
         {
             var ldlocException = stlocException.Stloc2Ldloc($"{methodName} exception handler first instruction is not stloc.* exception");
 
@@ -389,7 +391,7 @@ namespace Rougamo.Fody
             };
         }
 
-        private IList<Instruction> AsyncOnException(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction endAnchor, AsyncFields fields)
+        private IList<Instruction> StateMachineOnException(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction endAnchor, IStateMachineFields fields)
         {
             return ExecuteMoMethod(Constants.METHOD_OnException, moveNextMethodDef, rouMethod.Mos.Count, endAnchor, null, null, fields.Mos, fields.MethodContext, this.ConfigReverseCallEnding());
         }
@@ -434,7 +436,7 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private IList<Instruction> AsyncOnExit(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction endAnchor, AsyncFields fields)
+        private IList<Instruction> StateMachineOnExit(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction endAnchor, IStateMachineFields fields)
         {
             return ExecuteMoMethod(Constants.METHOD_OnExit, moveNextMethodDef, rouMethod.Mos.Count, endAnchor, null, null, fields.Mos, fields.MethodContext, this.ConfigReverseCallEnding());
         }
@@ -479,7 +481,7 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private IList<Instruction> AsyncOnSuccess(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction endAnchor, AsyncFields fields)
+        private IList<Instruction> StateMachineOnSuccess(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction endAnchor, IStateMachineFields fields)
         {
             return ExecuteMoMethod(Constants.METHOD_OnSuccess, moveNextMethodDef, rouMethod.Mos.Count, endAnchor, null, null, fields.Mos, fields.MethodContext, this.ConfigReverseCallEnding());
         }
@@ -560,28 +562,12 @@ namespace Rougamo.Fody
             return parameterFieldDefs;
         }
 
-        private ExceptionHandler GetOuterExceptionHandler(MethodBody methodBody)
-        {
-            ExceptionHandler? exceptionHandler = null;
-            int offset = methodBody.Instructions.First().Offset;
-            foreach (var handler in methodBody.ExceptionHandlers)
-            {
-                if (handler.HandlerType != ExceptionHandlerType.Catch) continue;
-                if (handler.TryEnd.Offset > offset)
-                {
-                    exceptionHandler = handler;
-                    offset = handler.TryEnd.Offset;
-                }
-            }
-            return exceptionHandler ?? throw new RougamoException("can not find outer exception handler");
-        }
-
-        private MethodReference GetSetResult(TypeReference builderTypeRef)
+        private MethodReference AsyncGetSetResult(TypeReference builderTypeRef)
         {
             return builderTypeRef.Resolve().Methods.Single(x => x.Name == "SetResult" && x.Parameters.Count == 0 && x.IsPublic).ImportInto(ModuleDefinition);
         }
 
-        private MethodReference GetGenericSetResult(TypeReference builderTypeRef)
+        private MethodReference AsyncGetGenericSetResult(TypeReference builderTypeRef)
         {
             return builderTypeRef.GenericTypeMethodReference(builderTypeRef.Resolve().Methods.Single(x => x.Name == "SetResult" && x.Parameters.Count == 1 && x.IsPublic), ModuleDefinition);
         }

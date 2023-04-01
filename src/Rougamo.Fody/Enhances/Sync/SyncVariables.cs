@@ -1,6 +1,6 @@
 ﻿using Mono.Cecil.Cil;
 
-namespace Rougamo.Fody.Enhances
+namespace Rougamo.Fody.Enhances.Sync
 {
     internal class SyncVariables
     {

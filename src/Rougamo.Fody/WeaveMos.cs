@@ -74,93 +74,22 @@ namespace Rougamo.Fody
             rouMethod.MethodDef.Body.OptimizePlus();
         }
 
-        /// <summary>
-        /// generate try..catch..finally for <paramref name="methodDef"/>
-        /// </summary>
-        /// <param name="methodDef">user code MethodDefinition</param>
-        /// <param name="tryStart">first of method body's instructions</param>
-        /// <param name="catchStart">stloc exception variable</param>
-        /// <param name="finallyStart">nop placeholder</param>
-        /// <param name="finallyEnd">
-        /// null if method no return just throw exception<br/>
-        /// ret if method return void<br/>
-        /// ldloc/ldarg/ldfld etc if has return value
-        /// </param>
-        /// <param name="exceptionVariable">catch generate exception variable</param>
-        /// <param name="returnVariable">method return value variable, null if void</param>
-        private void GenerateTryCatchFinally(MethodDefinition methodDef, out Instruction tryStart, out Instruction catchStart, out Instruction finallyStart, out Instruction? finallyEnd, out Instruction? returnStart, out Instruction rethrow, out VariableDefinition exceptionVariable, out VariableDefinition? returnVariable)
-        {
-            var instructions = methodDef.Body.Instructions;
-            var isVoid = methodDef.ReturnType.IsVoid();
-
-            exceptionVariable = methodDef.Body.CreateVariable(_typeExceptionRef);
-            returnVariable = isVoid ? null : methodDef.Body.CreateVariable(Import(methodDef.ReturnType));
-
-            tryStart = instructions.First();
-
-            instructions.Add(new[]
-            {
-                catchStart = Create(OpCodes.Stloc, exceptionVariable),
-                rethrow = Create(OpCodes.Rethrow),
-                finallyStart = Create(OpCodes.Nop),
-                Create(OpCodes.Endfinally)
-            });
-
-            finallyEnd = null;
-            returnStart = null;
-
-            var returns = instructions.Where(ins => ins.IsRet()).ToArray();
-            if (returns.Length != 0)
-            {
-                instructions.Add(new[]
-                {
-                    finallyEnd = Create(OpCodes.Nop),
-                    returnStart = Create(OpCodes.Ret)
-                });
-                if (!isVoid)
-                {
-                    returnStart = instructions.InsertBefore(returnStart, returnVariable!.Ldloc()); ;
-                }
-                foreach (var @return in returns)
-                {
-                    if (isVoid)
-                    {
-                        @return.OpCode = OpCodes.Leave;
-                        @return.Operand = finallyEnd;
-                    }
-                    else
-                    {
-                        @return.OpCode = OpCodes.Stloc;
-                        @return.Operand = returnVariable;
-                        instructions.InsertAfter(@return, Create(OpCodes.Leave, finallyEnd));
-                    }
-                }
-            }
-        }
-
-        private void SetTryCatchFinally(MethodDefinition methodDef, Instruction tryStart, Instruction catchStart, Instruction finallyStart, Instruction? finallyEnd)
-        {
-            var exceptionHandler = new ExceptionHandler(ExceptionHandlerType.Catch)
-            {
-                CatchType = _typeExceptionRef,
-                TryStart = tryStart,
-                TryEnd = catchStart,
-                HandlerStart = catchStart,
-                HandlerEnd = finallyStart
-            };
-            var finallyHandler = new ExceptionHandler(ExceptionHandlerType.Finally)
-            {
-                TryStart = tryStart,
-                TryEnd = finallyStart,
-                HandlerStart = finallyStart,
-                HandlerEnd = finallyEnd
-            };
-
-            methodDef.Body.ExceptionHandlers.Add(exceptionHandler);
-            methodDef.Body.ExceptionHandlers.Add(finallyHandler);
-        }
-
         #region LoadMosOnStack
+
+        private Instruction LdcI4(int i4) => i4 switch
+        {
+            -1 => Create(OpCodes.Ldc_I4_M1),
+            0 => Create(OpCodes.Ldc_I4_0),
+            1 => Create(OpCodes.Ldc_I4_1),
+            2 => Create(OpCodes.Ldc_I4_2),
+            3 => Create(OpCodes.Ldc_I4_3),
+            4 => Create(OpCodes.Ldc_I4_4),
+            5 => Create(OpCodes.Ldc_I4_5),
+            6 => Create(OpCodes.Ldc_I4_6),
+            7 => Create(OpCodes.Ldc_I4_7),
+            8 => Create(OpCodes.Ldc_I4_8),
+            _ => Create(OpCodes.Ldc_I4, i4)
+        };
 
         private VariableDefinition[] LoadMosOnStack(RouMethod rouMethod, List<Instruction> instructions)
         {
@@ -203,15 +132,6 @@ namespace Rougamo.Fody
             instructions.Add(Create(OpCodes.Stloc, mosVariable));
 
             return instructions;
-        }
-
-        private void StateMachineInitMosField(RouMethod rouMethod, FieldDefinition mosFieldDef, VariableDefinition stateMachineVariable, Instruction insertBeforeThisInstruction)
-        {
-            var instructions = rouMethod.MethodDef.Body.Instructions;
-            instructions.InsertBefore(insertBeforeThisInstruction, stateMachineVariable.LdlocOrA());
-            instructions.InsertBefore(insertBeforeThisInstruction, InitMosArray(rouMethod.Mos));
-            var mosFieldRef = new FieldReference(mosFieldDef.Name, mosFieldDef.FieldType, stateMachineVariable.VariableType);
-            instructions.InsertBefore(insertBeforeThisInstruction, Create(OpCodes.Stfld, mosFieldRef));
         }
 
         private List<Instruction> InitMosArray(HashSet<Mo> mos)
@@ -294,18 +214,6 @@ namespace Rougamo.Fody
             return variable;
         }
 
-        private void StateMachineInitMethodContextField(RouMethod rouMethod, FieldDefinition mosFieldDef, FieldDefinition contextFieldDef, VariableDefinition stateMachineVariable, Instruction insertBeforeThis, bool isAsync, bool isIterator)
-        {
-            var mosFieldRef = new FieldReference(mosFieldDef.Name, mosFieldDef.FieldType, stateMachineVariable.VariableType);
-            var contextFieldRef = new FieldReference(contextFieldDef.Name, contextFieldDef.FieldType, stateMachineVariable.VariableType);
-            var bodyInstructions = rouMethod.MethodDef.Body.Instructions;
-            var instructions = new List<Instruction>();
-            bodyInstructions.InsertBefore(insertBeforeThis, stateMachineVariable.LdlocOrA());
-            InitMethodContext(rouMethod.MethodDef, isAsync, isIterator, null, stateMachineVariable, mosFieldRef, instructions);
-            bodyInstructions.InsertBefore(insertBeforeThis, instructions);
-            bodyInstructions.InsertBefore(insertBeforeThis, Create(OpCodes.Stfld, contextFieldRef));
-        }
-
         private void InitMethodContext(MethodDefinition methodDef, bool isAsync, bool isIterator, VariableDefinition? mosVariable, VariableDefinition? stateMachineVariable, FieldReference? mosFieldRef, List<Instruction> instructions)
         {
             var isAsyncCode = isAsync ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0;
@@ -356,12 +264,6 @@ namespace Rougamo.Fody
             instructions.Add(Create(OpCodes.Newobj, _methodMethodContextCtorRef));
 
             return instructions;
-        }
-
-        private void ExecuteMoMethod(string methodName, MethodDefinition methodDef, int mosCount, FieldReference mosField, FieldReference contextField, Instruction beforeThisInstruction, bool reverseCall)
-        {
-            var instructions = methodDef.Body.Instructions;
-            instructions.InsertBefore(beforeThisInstruction, ExecuteMoMethod(methodName, methodDef, mosCount, beforeThisInstruction, null, null, mosField, contextField, reverseCall));
         }
 
         private void ExecuteMoMethod(string methodName, MethodDefinition methodDef, int mosCount, VariableDefinition mosVariable, VariableDefinition contextVariable, List<Instruction> instructions, bool reverseCall)
@@ -438,6 +340,44 @@ namespace Rougamo.Fody
             instructions.Add(Create(OpCodes.Br_S, loopFirst));
 
             return instructions;
+        }
+
+        private ExceptionHandler GetOuterExceptionHandler(MethodDefinition methodDef)
+        {
+            ExceptionHandler? exceptionHandler = null;
+            int offset = methodDef.Body.Instructions.First().Offset;
+            foreach (var handler in methodDef.Body.ExceptionHandlers)
+            {
+                if (handler.HandlerType != ExceptionHandlerType.Catch) continue;
+                if (handler.TryEnd.Offset > offset)
+                {
+                    exceptionHandler = handler;
+                    offset = handler.TryEnd.Offset;
+                }
+            }
+            return exceptionHandler ?? throw new RougamoException($"[{methodDef.FullName}] can not find outer exception handler");
+        }
+
+        private void SetTryCatchFinally(MethodDefinition methodDef, ITryCatchFinallyAnchors anchors)
+        {
+            var exceptionHandler = new ExceptionHandler(ExceptionHandlerType.Catch)
+            {
+                CatchType = _typeExceptionRef,
+                TryStart = anchors.TryStart,
+                TryEnd = anchors.CatchStart,
+                HandlerStart = anchors.CatchStart,
+                HandlerEnd = anchors.FinallyStart
+            };
+            var finallyHandler = new ExceptionHandler(ExceptionHandlerType.Finally)
+            {
+                TryStart = anchors.TryStart,
+                TryEnd = anchors.FinallyStart,
+                HandlerStart = anchors.FinallyStart,
+                HandlerEnd = anchors.FinallyEnd
+            };
+
+            methodDef.Body.ExceptionHandlers.Add(exceptionHandler);
+            methodDef.Body.ExceptionHandlers.Add(finallyHandler);
         }
     }
 }

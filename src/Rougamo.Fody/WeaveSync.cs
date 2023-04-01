@@ -1,6 +1,7 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Rougamo.Fody.Enhances;
+using Rougamo.Fody.Enhances.Sync;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -17,27 +18,29 @@ namespace Rougamo.Fody
 
             var variables = SyncCreateVariables(rouMethod.MethodDef);
             var anchors = SyncCreateAnchors(rouMethod.MethodDef, variables);
+            SyncSetAnchors(rouMethod.MethodDef, anchors, variables);
+            SetTryCatchFinally(rouMethod.MethodDef, anchors);
 
-            SyncGenerateAnchors(rouMethod.MethodDef, anchors, variables);
-            SyncSetTryCatchFinally(rouMethod.MethodDef, anchors);
+            instructions.InsertAfter(anchors.InitMos, SyncInitMoArray(rouMethod.Mos, variables));
+            instructions.InsertAfter(anchors.InitContext, SyncInitMethodContext(rouMethod.MethodDef, variables));
+            instructions.InsertAfter(anchors.OnEntry, SyncOnEntry(rouMethod, anchors.IfEntryReplaced, variables));
+            instructions.InsertAfter(anchors.IfEntryReplaced, SyncIfOnEntryReplacedReturn(rouMethod, returnBoxTypeRef, anchors.RewriteArg, variables));
+            instructions.InsertAfter(anchors.RewriteArg, SyncRewriteArguments(rouMethod.MethodDef, anchors.Retry, variables));
+            instructions.InsertAfter(anchors.Retry, SyncResetRetryVariable(variables));
 
-            instructions.Insert(0, SyncInitMoArray(rouMethod.Mos, variables));
-            instructions.InsertAfter(anchors.InitContextStart, SyncInitMethodContext(rouMethod.MethodDef, variables));
-            instructions.InsertAfter(anchors.OnEntryStart, SyncOnEntry(rouMethod, anchors.IfOnEntryReplacedStart, variables));
-            instructions.InsertAfter(anchors.IfOnEntryReplacedStart, SyncIfOnEntryReplacedReturn(rouMethod, returnBoxTypeRef, anchors.RewriteArgStart, variables));
-            instructions.InsertAfter(anchors.RewriteArgStart, SyncRewriteArguments(rouMethod.MethodDef, anchors.RetryStart, variables));
-            instructions.InsertAfter(anchors.RetryStart, SyncResetRetryVariable(variables));
             instructions.InsertAfter(anchors.CatchStart, SyncSaveException(variables));
-            instructions.InsertAfter(anchors.OnExceptionStart, SyncOnException(rouMethod, anchors.IfOnExceptionRetryStart, variables));
-            instructions.InsertAfter(anchors.IfOnExceptionRetryStart, SyncIfExceptionRetry(anchors.RetryStart, anchors.IfOnExceptionHandledStart, variables));
-            instructions.InsertAfter(anchors.IfOnExceptionHandledStart, SyncIfExceptionHandled(returnBoxTypeRef, anchors.FinallyEnd, anchors.Rethrow, variables));
-            instructions.InsertAfter(anchors.FinallyStart, SyncHasExceptionCheck(anchors.OnExitStart, variables));
-            instructions.InsertAfter(anchors.SetBackReturnStart, SyncSetBackReturnValue(returnBoxTypeRef, variables));
-            instructions.InsertAfter(anchors.OnSuccessStart, SyncOnSuccess(rouMethod, anchors.IfOnSuccessRetryStart, variables));
-            instructions.InsertAfter(anchors.IfOnSuccessRetryStart, SyncIfOnSuccessRetry(anchors.IfOnSuccessReplacedStart, anchors.EndFinally, variables));
-            instructions.InsertAfter(anchors.IfOnSuccessReplacedStart, SyncIfOnSuccessReplacedReturn(returnBoxTypeRef, anchors.OnExitStart, variables));
-            instructions.InsertAfter(anchors.OnExitStart, SyncOnExit(rouMethod, anchors.EndFinally, variables));
-            instructions.InsertAfter(anchors.FinallyEnd, SyncRetryFork(anchors.RetryStart, anchors.ReturnStart, variables));
+            instructions.InsertAfter(anchors.OnException, SyncOnException(rouMethod, anchors.IfExceptionRetry, variables));
+            instructions.InsertAfter(anchors.IfExceptionRetry, SyncIfExceptionRetry(anchors.Retry, anchors.IfExceptionHandled, variables));
+            instructions.InsertAfter(anchors.IfExceptionHandled, SyncIfExceptionHandled(returnBoxTypeRef, anchors.FinallyEnd, anchors.Rethrow, variables));
+
+            instructions.InsertAfter(anchors.FinallyStart, SyncHasExceptionCheck(anchors.OnExit, variables));
+            instructions.InsertAfter(anchors.SaveReturnValue, SyncSaveReturnValue(returnBoxTypeRef, variables));
+            instructions.InsertAfter(anchors.OnSuccess, SyncOnSuccess(rouMethod, anchors.IfSuccessRetry, variables));
+            instructions.InsertAfter(anchors.IfSuccessRetry, SyncIfOnSuccessRetry(anchors.IfSuccessReplaced, anchors.EndFinally, variables));
+            instructions.InsertAfter(anchors.IfSuccessReplaced, SyncIfOnSuccessReplacedReturn(returnBoxTypeRef, anchors.OnExit, variables));
+            instructions.InsertAfter(anchors.OnExit, SyncOnExit(rouMethod, anchors.EndFinally, variables));
+
+            instructions.InsertAfter(anchors.FinallyEnd, SyncRetryFork(anchors.Retry, anchors.Ret, variables));
 
             rouMethod.MethodDef.Body.OptimizePlus();
         }
@@ -56,7 +59,7 @@ namespace Rougamo.Fody
             return new SyncAnchors(variables, methodDef.Body.Instructions.First());
         }
 
-        private void SyncGenerateAnchors(MethodDefinition methodDef, SyncAnchors anchors, SyncVariables variables)
+        private void SyncSetAnchors(MethodDefinition methodDef, SyncAnchors anchors, SyncVariables variables)
         {
             var instructions = methodDef.Body.Instructions;
 
@@ -64,26 +67,27 @@ namespace Rougamo.Fody
 
             instructions.InsertBefore(anchors.TryStart, new[]
             {
-                anchors.InitContextStart,
-                anchors.OnEntryStart,
-                anchors.IfOnEntryReplacedStart,
-                anchors.RewriteArgStart,
-                anchors.RetryStart
+                anchors.InitMos,
+                anchors.InitContext,
+                anchors.OnEntry,
+                anchors.IfEntryReplaced,
+                anchors.RewriteArg,
+                anchors.Retry
             });
 
             instructions.Add(new[]
             {
                 anchors.CatchStart,
-                anchors.OnExceptionStart,
-                anchors.IfOnExceptionRetryStart,
-                anchors.IfOnExceptionHandledStart,
+                anchors.OnException,
+                anchors.IfExceptionRetry,
+                anchors.IfExceptionHandled,
                 anchors.Rethrow,
                 anchors.FinallyStart,
-                anchors.SetBackReturnStart,
-                anchors.OnSuccessStart,
-                anchors.IfOnSuccessRetryStart,
-                anchors.IfOnSuccessReplacedStart,
-                anchors.OnExitStart,
+                anchors.SaveReturnValue,
+                anchors.OnSuccess,
+                anchors.IfSuccessRetry,
+                anchors.IfSuccessReplaced,
+                anchors.OnExit,
                 anchors.EndFinally,
                 anchors.FinallyEnd
             });
@@ -92,12 +96,12 @@ namespace Rougamo.Fody
 
             if (variables.Return == null)
             {
-                instructions.Add(anchors.ReturnStart);
+                instructions.Add(anchors.Ret);
             }
             else
             {
-                var ret = anchors.ReturnStart;
-                instructions.Add(anchors.ReturnStart = variables.Return.Ldloc());
+                var ret = anchors.Ret;
+                instructions.Add(anchors.Ret = variables.Return.Ldloc());
                 instructions.Add(ret);
             }
 
@@ -118,28 +122,6 @@ namespace Rougamo.Fody
                     }
                 }
             }
-        }
-
-        private void SyncSetTryCatchFinally(MethodDefinition methodDef, SyncAnchors anchors)
-        {
-            var exceptionHandler = new ExceptionHandler(ExceptionHandlerType.Catch)
-            {
-                CatchType = _typeExceptionRef,
-                TryStart = anchors.TryStart,
-                TryEnd = anchors.CatchStart,
-                HandlerStart = anchors.CatchStart,
-                HandlerEnd = anchors.FinallyStart
-            };
-            var finallyHandler = new ExceptionHandler(ExceptionHandlerType.Finally)
-            {
-                TryStart = anchors.TryStart,
-                TryEnd = anchors.FinallyStart,
-                HandlerStart = anchors.FinallyStart,
-                HandlerEnd = anchors.FinallyEnd
-            };
-
-            methodDef.Body.ExceptionHandlers.Add(exceptionHandler);
-            methodDef.Body.ExceptionHandlers.Add(finallyHandler);
         }
 
         private IList<Instruction> SyncInitMoArray(HashSet<Mo> mos, SyncVariables variables)
@@ -352,7 +334,7 @@ namespace Rougamo.Fody
             };
         }
 
-        private IList<Instruction>? SyncSetBackReturnValue(BoxTypeReference returnBoxTypeRef, SyncVariables variables)
+        private IList<Instruction>? SyncSaveReturnValue(BoxTypeReference returnBoxTypeRef, SyncVariables variables)
         {
             if (variables.Return == null) return null;
 

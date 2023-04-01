@@ -1,19 +1,19 @@
 ﻿using Mono.Cecil;
 using System.Linq;
 
-namespace Rougamo.Fody.Enhances
+namespace Rougamo.Fody.Enhances.Async
 {
-    internal class AiteratorFields
+    internal class AsyncFields : IStateMachineFields
     {
-        public AiteratorFields(
+        public AsyncFields(
             TypeDefinition stateMachineTypeDef,
             FieldDefinition mos, FieldDefinition methodContext,
-            FieldDefinition state, FieldDefinition current,
-            FieldDefinition? recordedReturn, FieldDefinition?[] parameters)
+            FieldDefinition state, FieldDefinition builder,
+            FieldDefinition?[] parameters)
         {
             if (stateMachineTypeDef.HasGenericParameters)
             {
-                // public IEnumerable<MyClass<T>> Mt<T>()
+                // public async Task<MyClass<T>> Mt<T>()
                 var stateTypeRef = new GenericInstanceType(stateMachineTypeDef);
                 foreach (var parameter in stateMachineTypeDef.GenericParameters)
                 {
@@ -22,8 +22,7 @@ namespace Rougamo.Fody.Enhances
                 Mos = new FieldReference(mos.Name, mos.FieldType, stateTypeRef);
                 MethodContext = new FieldReference(methodContext.Name, methodContext.FieldType, stateTypeRef);
                 State = new FieldReference(state.Name, state.FieldType, stateTypeRef);
-                Current = new FieldReference(current.Name, current.FieldType, stateTypeRef);
-                RecordedReturn = recordedReturn == null ? null : new FieldReference(recordedReturn.Name, recordedReturn.FieldType, stateTypeRef);
+                Builder = new FieldReference(builder.Name, builder.FieldType, stateTypeRef);
                 Parameters = parameters.Select(x => x == null ? null : new FieldReference(x.Name, x.FieldType, stateTypeRef)).ToArray();
             }
             else
@@ -31,8 +30,7 @@ namespace Rougamo.Fody.Enhances
                 Mos = mos;
                 MethodContext = methodContext;
                 State = state;
-                Current = current;
-                RecordedReturn = recordedReturn;
+                Builder = builder;
                 Parameters = parameters;
             }
         }
@@ -43,9 +41,7 @@ namespace Rougamo.Fody.Enhances
 
         public FieldReference State { get; }
 
-        public FieldReference Current { get; }
-
-        public FieldReference? RecordedReturn { get; }
+        public FieldReference Builder { get; }
 
         public FieldReference?[] Parameters { get; }
     }

@@ -1,8 +1,8 @@
 ﻿using Mono.Cecil.Cil;
 
-namespace Rougamo.Fody.Enhances
+namespace Rougamo.Fody.Enhances.Async
 {
-    internal class AsyncVariables
+    internal class AsyncVariables : IStateMachineVariables
     {
         public AsyncVariables(VariableDefinition stateMachine, VariableDefinition? replacedReturn, VariableDefinition exceptionHandled)
         {

@@ -1,11 +1,11 @@
 ﻿using Mono.Cecil;
 using System.Linq;
 
-namespace Rougamo.Fody.Enhances
+namespace Rougamo.Fody.Enhances.AsyncIterator
 {
-    internal class IteratorFields
+    internal class AiteratorFields : IIteratorFields
     {
-        public IteratorFields(
+        public AiteratorFields(
             TypeDefinition stateMachineTypeDef,
             FieldDefinition mos, FieldDefinition methodContext,
             FieldDefinition state, FieldDefinition current,
