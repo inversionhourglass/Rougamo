@@ -26,6 +26,9 @@ namespace Rougamo
         public virtual AccessFlags Flags { get; }
 
         /// <inheritdoc/>
+        public virtual double Order { get; set; }
+
+        /// <inheritdoc/>
         public virtual void OnEntry(MethodContext context) { }
 
         /// <inheritdoc/>

@@ -12,6 +12,11 @@ namespace Rougamo
         AccessFlags Flags { get; }
 
         /// <summary>
+        /// execution order
+        /// </summary>
+        double Order { get; set; }
+
+        /// <summary>
         /// Before the method executing.
         /// </summary>
         void OnEntry(MethodContext context);

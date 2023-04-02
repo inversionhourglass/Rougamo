@@ -457,5 +457,24 @@ namespace Rougamo.Fody.Tests
             await (Task)asyncInstance.RetrySuccess(datas);
             Assert.Equal(3, datas.Count);
         }
+
+        [Fact]
+        public async Task OrderTest()
+        {
+            var instance = GetInstance(nameof(OrderUseCase));
+
+            string[] expected;
+            List<string> actual;
+
+            expected = (string[])instance.Buildin();
+            actual = (List<string>)instance.Executions;
+            Assert.Equal(expected, actual);
+            instance.Executions.Clear();
+
+            expected = await (Task<string[]>)instance.TempPropAsync();
+            actual = (List<string>)instance.Executions;
+            Assert.Equal(expected, actual);
+            instance.Executions.Clear();
+        }
     }
 }
