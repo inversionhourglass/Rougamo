@@ -57,20 +57,30 @@ namespace Rougamo.Fody
 
         private AsyncFields AsyncResolveFields(RouMethod rouMethod, TypeDefinition stateMachineTypeDef)
         {
-            var mosFieldDef = new FieldDefinition(Constants.FIELD_RougamoMos, FieldAttributes.Public, _typeIMoArrayRef);
-            var contextFieldDef = new FieldDefinition(Constants.FIELD_RougamoContext, FieldAttributes.Public, _typeMethodContextRef);
-            var builderFieldDef = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_Builder);
-            var stateFieldDef = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_State);
-            var parameterFieldDefs = StateMachineParameterFields(rouMethod);
+            FieldDefinition? moArray = null;
+            var mos = new FieldDefinition[0];
+            if (rouMethod.Mos.Count >= _config.MoArrayThreshold)
+            {
+                moArray = new FieldDefinition(Constants.FIELD_RougamoMos, FieldAttributes.Public, _typeIMoArrayRef);
+                stateMachineTypeDef.Fields.Add(moArray);
+            }
+            else
+            {
+                mos = new FieldDefinition[rouMethod.Mos.Count];
+                for (int i = 0; i < rouMethod.Mos.Count; i++)
+                {
+                    mos[i] = new FieldDefinition(Constants.FIELD_RougamoMo_Prefix + i, FieldAttributes.Public, _typeIMoRef);
+                    stateMachineTypeDef.Fields.Add(mos[i]);
+                }
+            }
+            var methodContext = new FieldDefinition(Constants.FIELD_RougamoContext, FieldAttributes.Public, _typeMethodContextRef);
+            var builder = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_Builder);
+            var state = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_State);
+            var parameters = StateMachineParameterFields(rouMethod);
 
-            stateMachineTypeDef.Fields.Add(mosFieldDef);
-            stateMachineTypeDef.Fields.Add(contextFieldDef);
+            stateMachineTypeDef.Fields.Add(methodContext);
 
-            return new AsyncFields(
-                        stateMachineTypeDef: stateMachineTypeDef,
-                        mos: mosFieldDef, methodContext: contextFieldDef,
-                        state: stateFieldDef, builder: builderFieldDef,
-                        parameters: parameterFieldDefs);
+            return new AsyncFields(stateMachineTypeDef, moArray, mos, methodContext, state, builder, parameters);
         }
 
         private BoxTypeReference AsyncResolveReturnBoxTypeRef(TypeReference returnTypeRef, FieldReference builderField)
@@ -218,28 +228,61 @@ namespace Rougamo.Fody
 
         private IList<Instruction> StateMachineInitMos(RouMethod rouMethod, IStateMachineFields fields, IStateMachineVariables variables)
         {
-            var mosFieldRef = new FieldReference(fields.Mos.Name, fields.Mos.FieldType, variables.StateMachine.VariableType);
-
-            var instructions = new List<Instruction>
+            if (fields.MoArray != null)
             {
-                variables.StateMachine.LdlocOrA()
-            };
-            instructions.AddRange(InitMosArray(rouMethod.Mos));
-            instructions.Add(Create(OpCodes.Stfld, mosFieldRef));
+                var mosFieldRef = new FieldReference(fields.MoArray.Name, fields.MoArray.FieldType, variables.StateMachine.VariableType);
+
+                var instructions = new List<Instruction>
+                {
+                    variables.StateMachine.LdlocOrA()
+                };
+                instructions.AddRange(InitMoArray(rouMethod.Mos));
+                instructions.Add(Create(OpCodes.Stfld, mosFieldRef));
+
+                return instructions;
+            }
+
+            return StateMachineInitMoFields(rouMethod.Mos, variables.StateMachine, fields.Mos);
+        }
+
+        private IList<Instruction> StateMachineInitMoFields(HashSet<Mo> mos, VariableDefinition stateMachineVariable, FieldReference[] moFields)
+        {
+            var instructions = new List<Instruction>();
+
+            moFields = moFields.Select(x => new FieldReference(x.Name, x.FieldType, stateMachineVariable.VariableType)).ToArray();
+            var i = 0;
+            foreach (var mo in mos)
+            {
+                instructions.Add(stateMachineVariable.LdlocOrA());
+                instructions.AddRange(InitMo(mo));
+                instructions.Add(Create(OpCodes.Stfld, moFields[i]));
+
+                i++;
+            }
 
             return instructions;
         }
 
         private IList<Instruction> StateMachineInitMethodContext(RouMethod rouMethod, IStateMachineFields fields, IStateMachineVariables variables)
         {
-            var mosFieldRef = new FieldReference(fields.Mos.Name, fields.Mos.FieldType, variables.StateMachine.VariableType);
+            var instructions = new List<Instruction>();
+            FieldReference? mosFieldRef = null;
+            VariableDefinition? moArray = null;
+            if (fields.MoArray != null)
+            {
+                mosFieldRef = new FieldReference(fields.MoArray.Name, fields.MoArray.FieldType, variables.StateMachine.VariableType);
+            }
+            else
+            {
+                moArray = rouMethod.MethodDef.Body.CreateVariable(_typeIMoArrayRef);
+                var moFieldRefs = fields.Mos.Select(x => new FieldReference(x.Name, x.FieldType, variables.StateMachine.VariableType)).ToArray();
+                instructions.AddRange(CreateTempMoArray(variables.StateMachine, moFieldRefs));
+                instructions.Add(Create(OpCodes.Stloc, moArray));
+            }
             var contextFieldRef = new FieldReference(fields.MethodContext.Name, fields.MethodContext.FieldType, variables.StateMachine.VariableType);
 
-            var instructions = new List<Instruction>
-            {
-                variables.StateMachine.LdlocOrA()
-            };
-            instructions.AddRange(InitMethodContext(rouMethod.MethodDef, true, false, null, variables.StateMachine, mosFieldRef));
+            instructions.Add(variables.StateMachine.LdlocOrA());
+            instructions.AddRange(InitMethodContext(rouMethod.MethodDef, true, false, moArray, variables.StateMachine, mosFieldRef));
             instructions.Add(Create(OpCodes.Stfld, contextFieldRef));
 
             return instructions;
@@ -258,7 +301,11 @@ namespace Rougamo.Fody
 
         private IList<Instruction> StateMachineOnEntry(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction endAnchor, IStateMachineFields fields)
         {
-            return ExecuteMoMethod(Constants.METHOD_OnEntry, moveNextMethodDef, rouMethod.Mos.Count, endAnchor, null, null, fields.Mos, fields.MethodContext, false);
+            if (fields.MoArray != null)
+            {
+                return ExecuteMoMethod(Constants.METHOD_OnEntry, moveNextMethodDef, rouMethod.Mos.Count, endAnchor, null, null, fields.MoArray, fields.MethodContext, false);
+            }
+            return ExecuteMoMethod(Constants.METHOD_OnEntry, rouMethod.Mos.Count, null, null, fields.Mos, fields.MethodContext, false);
         }
 
         private IList<Instruction> AsyncIfOnEntryReplacedReturn(RouMethod rouMethod, MethodDefinition moveNextMethodDef, BoxTypeReference returnBoxTypeRef, MethodReference setResultMethodRef, Instruction endAnchor, AsyncFields fields, AsyncVariables variables)
@@ -287,7 +334,7 @@ namespace Rougamo.Fody
                 Create(OpCodes.Stfld, fields.State)
             });
             var onExitEndAnchor = Create(OpCodes.Ldarg_0);
-            instructions.AddRange(ExecuteMoMethod(Constants.METHOD_OnExit, moveNextMethodDef, rouMethod.Mos.Count, onExitEndAnchor, null, null, fields.Mos, fields.MethodContext, _config.ReverseCallNonEntry));
+            instructions.AddRange(StateMachineOnExit(rouMethod, moveNextMethodDef, onExitEndAnchor, fields));
             instructions.Add(onExitEndAnchor);
             instructions.Add(Create(OpCodes.Ldflda, fields.Builder));
             if (variables.ReplacedReturn != null)
@@ -393,7 +440,11 @@ namespace Rougamo.Fody
 
         private IList<Instruction> StateMachineOnException(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction endAnchor, IStateMachineFields fields)
         {
-            return ExecuteMoMethod(Constants.METHOD_OnException, moveNextMethodDef, rouMethod.Mos.Count, endAnchor, null, null, fields.Mos, fields.MethodContext, _config.ReverseCallNonEntry);
+            if (fields.MoArray != null)
+            {
+                return ExecuteMoMethod(Constants.METHOD_OnException, moveNextMethodDef, rouMethod.Mos.Count, endAnchor, null, null, fields.MoArray, fields.MethodContext, _config.ReverseCallNonEntry);
+            }
+            return ExecuteMoMethod(Constants.METHOD_OnException, rouMethod.Mos.Count, null, null, fields.Mos, fields.MethodContext, _config.ReverseCallNonEntry);
         }
 
         private IList<Instruction> AsyncIfExceptionRetry(Instruction retryStart, Instruction endAnchor, AsyncFields fields)
@@ -438,7 +489,11 @@ namespace Rougamo.Fody
 
         private IList<Instruction> StateMachineOnExit(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction endAnchor, IStateMachineFields fields)
         {
-            return ExecuteMoMethod(Constants.METHOD_OnExit, moveNextMethodDef, rouMethod.Mos.Count, endAnchor, null, null, fields.Mos, fields.MethodContext, _config.ReverseCallNonEntry);
+            if (fields.MoArray != null)
+            {
+                return ExecuteMoMethod(Constants.METHOD_OnExit, moveNextMethodDef, rouMethod.Mos.Count, endAnchor, null, null, fields.MoArray, fields.MethodContext, _config.ReverseCallNonEntry);
+            }
+            return ExecuteMoMethod(Constants.METHOD_OnExit, rouMethod.Mos.Count, null, null, fields.Mos, fields.MethodContext, _config.ReverseCallNonEntry);
         }
 
         private IList<Instruction> AsyncIfExceptionHandled(BoxTypeReference returnBoxTypeRef, MethodReference setResultMethodRef, Instruction ifUnhandledBrTo, Instruction ifHandledBrTo, AsyncFields fields, AsyncVariables variables)
@@ -483,7 +538,11 @@ namespace Rougamo.Fody
 
         private IList<Instruction> StateMachineOnSuccess(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction endAnchor, IStateMachineFields fields)
         {
-            return ExecuteMoMethod(Constants.METHOD_OnSuccess, moveNextMethodDef, rouMethod.Mos.Count, endAnchor, null, null, fields.Mos, fields.MethodContext, _config.ReverseCallNonEntry);
+            if (fields.MoArray != null)
+            {
+                return ExecuteMoMethod(Constants.METHOD_OnSuccess, moveNextMethodDef, rouMethod.Mos.Count, endAnchor, null, null, fields.MoArray, fields.MethodContext, _config.ReverseCallNonEntry);
+            }
+            return ExecuteMoMethod(Constants.METHOD_OnSuccess, rouMethod.Mos.Count, null, null, fields.Mos, fields.MethodContext, _config.ReverseCallNonEntry);
         }
 
         private IList<Instruction> AsyncIfSuccessRetry(Instruction ifRetryGoTo, Instruction ifNotRetryGoTo, AsyncFields fields)

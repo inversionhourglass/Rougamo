@@ -1,4 +1,5 @@
 ﻿using Mono.Cecil;
+using System;
 using System.Linq;
 
 namespace Rougamo.Fody.Enhances.Iterator
@@ -7,7 +8,8 @@ namespace Rougamo.Fody.Enhances.Iterator
     {
         public IteratorFields(
             TypeDefinition stateMachineTypeDef,
-            FieldDefinition mos, FieldDefinition methodContext,
+            FieldDefinition? moArray, FieldDefinition[] mos,
+            FieldDefinition methodContext,
             FieldDefinition state, FieldDefinition current,
             FieldDefinition? recordedReturn, FieldDefinition?[] parameters)
         {
@@ -19,7 +21,8 @@ namespace Rougamo.Fody.Enhances.Iterator
                 {
                     stateTypeRef.GenericArguments.Add(parameter);
                 }
-                Mos = new FieldReference(mos.Name, mos.FieldType, stateTypeRef);
+                MoArray = moArray == null ? null : new FieldReference(moArray.Name, moArray.FieldType, stateTypeRef);
+                Mos = mos.Select(x => new FieldReference(x.Name, x.FieldType, stateTypeRef)).ToArray();
                 MethodContext = new FieldReference(methodContext.Name, methodContext.FieldType, stateTypeRef);
                 State = new FieldReference(state.Name, state.FieldType, stateTypeRef);
                 Current = new FieldReference(current.Name, current.FieldType, stateTypeRef);
@@ -28,6 +31,7 @@ namespace Rougamo.Fody.Enhances.Iterator
             }
             else
             {
+                MoArray = moArray;
                 Mos = mos;
                 MethodContext = methodContext;
                 State = state;
@@ -37,7 +41,9 @@ namespace Rougamo.Fody.Enhances.Iterator
             }
         }
 
-        public FieldReference Mos { get; }
+        public FieldReference? MoArray { get; }
+
+        public FieldReference[] Mos { get; }
 
         public FieldReference MethodContext { get; }
 

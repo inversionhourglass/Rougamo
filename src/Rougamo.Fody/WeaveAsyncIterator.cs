@@ -46,25 +46,39 @@ namespace Rougamo.Fody
         {
             var getEnumeratorMethodDef = stateMachineTypeDef.Methods.Single(x => x.Name.StartsWith(Constants.METHOD_GetAsyncEnumerator_Prefix) && x.Name.EndsWith(Constants.METHOD_GetAsyncEnumerator_Suffix));
 
-            var mosFieldDef = new FieldDefinition(Constants.FIELD_RougamoMos, FieldAttributes.Public, _typeIMoArrayRef);
-            var contextFieldDef = new FieldDefinition(Constants.FIELD_RougamoContext, FieldAttributes.Public, _typeMethodContextRef);
-            var stateFieldDef = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_State);
-            var currentFieldDef = stateMachineTypeDef.Fields.Single(m => m.Name.EndsWith(Constants.FIELD_Current_Suffix));
-            FieldDefinition? recordedReturnFieldDef = null;
-            var parameterFieldDefs = StateMachineParameterFields(rouMethod);
-            parameterFieldDefs = IteratorGetPrivateParameterFields(getEnumeratorMethodDef, parameterFieldDefs);
+            FieldDefinition? moArray = null;
+            var mos = new FieldDefinition[0];
+            if (rouMethod.Mos.Count >= _config.MoArrayThreshold)
+            {
+                moArray = new FieldDefinition(Constants.FIELD_RougamoMos, FieldAttributes.Public, _typeIMoArrayRef);
+                stateMachineTypeDef.Fields.Add(moArray);
+            }
+            else
+            {
+                mos = new FieldDefinition[rouMethod.Mos.Count];
+                for (int i = 0; i < rouMethod.Mos.Count; i++)
+                {
+                    mos[i] = new FieldDefinition(Constants.FIELD_RougamoMo_Prefix + i, FieldAttributes.Public, _typeIMoRef);
+                    stateMachineTypeDef.Fields.Add(mos[i]);
+                }
+            }
+            var methodContext = new FieldDefinition(Constants.FIELD_RougamoContext, FieldAttributes.Public, _typeMethodContextRef);
+            var state = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_State);
+            var current = stateMachineTypeDef.Fields.Single(m => m.Name.EndsWith(Constants.FIELD_Current_Suffix));
+            FieldDefinition? recordedReturn = null;
+            var parameters = StateMachineParameterFields(rouMethod);
+            parameters = IteratorGetPrivateParameterFields(getEnumeratorMethodDef, parameters);
             if (_config.RecordingIteratorReturns)
             {
                 var listReturnsRef = new GenericInstanceType(_typeListRef);
                 listReturnsRef.GenericArguments.Add(((GenericInstanceType)rouMethod.MethodDef.ReturnType).GenericArguments[0]);
-                recordedReturnFieldDef = new FieldDefinition(Constants.FIELD_IteratorReturnList, FieldAttributes.Public, listReturnsRef);
-                stateMachineTypeDef.Fields.Add(recordedReturnFieldDef);
+                recordedReturn = new FieldDefinition(Constants.FIELD_IteratorReturnList, FieldAttributes.Public, listReturnsRef);
+                stateMachineTypeDef.Fields.Add(recordedReturn);
             }
 
-            stateMachineTypeDef.Fields.Add(mosFieldDef);
-            stateMachineTypeDef.Fields.Add(contextFieldDef);
+            stateMachineTypeDef.Fields.Add(methodContext);
 
-            return new AiteratorFields(stateMachineTypeDef, mosFieldDef, contextFieldDef, stateFieldDef, currentFieldDef, recordedReturnFieldDef, parameterFieldDefs);
+            return new AiteratorFields(stateMachineTypeDef, moArray, mos, methodContext, state, current, recordedReturn, parameters);
         }
 
         private AiteratorVariables AiteratorResolveVariables(RouMethod rouMethod, MethodDefinition moveNextMethodDef, TypeDefinition stateMachineTypeDef)

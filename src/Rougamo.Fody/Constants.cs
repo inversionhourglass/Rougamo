@@ -46,6 +46,7 @@
         // Private fields cannot be accessed externally even using IL
         //public const string FIELD_Exception = "<Exception>k__BackingField";
         //public const string FIELD_ReturnValue = "<ReturnValue>k__BackingField";
+        public const string FIELD_RougamoMo_Prefix = ">_<rougamo_mo_";
         public const string FIELD_RougamoMos = ">_<rougamo_mos";
         public const string FIELD_RougamoContext = ">_<rougamo_context";
         public const string FIELD_Builder = "<>t__builder";

@@ -74,6 +74,7 @@ namespace Rougamo.Fody
         private void ReadConfig()
         {
             var enabled = "true".Equals(GetConfigValue("true", "enabled"), StringComparison.OrdinalIgnoreCase);
+            var moArrayThreshold = int.Parse(GetConfigValue("4", "moarray-threshold"));
 #if DEBUG
             var recordingIteratorReturns = true;
 #else
@@ -81,7 +82,7 @@ namespace Rougamo.Fody
 #endif
             var reverseCallNonEntry = "true".Equals(GetConfigValue("true", "reverse-call-nonentry", "reverse-call-ending"), StringComparison.OrdinalIgnoreCase);
 
-            _config = new Config(enabled, recordingIteratorReturns, reverseCallNonEntry);
+            _config = new Config(enabled, moArrayThreshold, recordingIteratorReturns, reverseCallNonEntry);
         }
 
         private string GetConfigValue(string defaultValue, params string[] configKeys)

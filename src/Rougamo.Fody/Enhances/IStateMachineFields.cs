@@ -4,7 +4,9 @@ namespace Rougamo.Fody.Enhances
 {
     internal interface IStateMachineFields
     {
-        FieldReference Mos { get; }
+        FieldReference? MoArray { get; }
+
+        FieldReference[] Mos { get; }
 
         FieldReference MethodContext { get; }
 
