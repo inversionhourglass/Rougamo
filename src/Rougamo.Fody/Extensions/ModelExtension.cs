@@ -1,6 +1,7 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -10,41 +11,78 @@ namespace Rougamo.Fody
     {
         #region Mo
 
-        #region Mo-Flags
+        #region Extract-Mo-Flags
 
-        public static AccessFlags ExtractFlagsFromAttribute(this Mo mo)
+        public static AccessFlags ExtractFlags(this Mo mo)
         {
-            if (mo.Attribute!.Properties.TryGet(Constants.PROP_Flags, out var property))
+            var typeDef = mo.TypeDef;
+            if (mo.Attribute != null)
             {
-                return (AccessFlags)(sbyte)property!.Value.Argument.Value;
+                if (mo.Attribute.Properties.TryGet(Constants.PROP_Flags, out var property))
+                {
+                    return (AccessFlags)(sbyte)property!.Value.Argument.Value;
+                }
+                typeDef = mo.Attribute.AttributeType.Resolve();
             }
-            var flags = ExtractFlagsFromIl(mo.Attribute.AttributeType.Resolve());
-            return flags.HasValue ? flags.Value : AccessFlags.InstancePublic;
+            var flags = ExtractFromIl(typeDef!, Constants.PROP_Flags, Constants.TYPE_AccessFlags, ParseFlags);
+            return flags ?? AccessFlags.InstancePublic;
         }
 
-        public static AccessFlags ExtractFlagsFromType(this Mo mo)
+        private static AccessFlags? ParseFlags(Instruction instruction)
         {
-            var flags = ExtractFlagsFromIl(mo.TypeDef!);
-            return flags.HasValue ? flags.Value : AccessFlags.InstancePublic;
+            if (instruction.OpCode == OpCodes.Ldc_I4_3) return AccessFlags.Public;
+            if (instruction.OpCode == OpCodes.Ldc_I4_6) return AccessFlags.Instance;
+            if (instruction.OpCode == OpCodes.Ldc_I4_7) return AccessFlags.Instance | AccessFlags.Public;
+            if (instruction.OpCode == OpCodes.Ldc_I4_S) return (AccessFlags)(sbyte)instruction.Operand;
+            return null;
         }
 
-        private static AccessFlags? ExtractFlagsFromIl(TypeDefinition typeDef)
+        #endregion Extract-Mo-Flags
+
+        #region Extract-Mo-Order
+
+        public static double ExtractOrder(this Mo mo)
         {
-            return ExtractFlagsFromProp(typeDef) ?? ExtractFlagsFromCtor(typeDef);
+            var typeDef = mo.TypeDef;
+            if (mo.Attribute != null)
+            {
+                if (mo.Attribute.Properties.TryGet(Constants.PROP_Order, out var property))
+                {
+                    return (double)property!.Value.Argument.Value;
+                }
+                typeDef = mo.Attribute.AttributeType.Resolve();
+            }
+            var order = ExtractFromIl(typeDef!, Constants.PROP_Order, Constants.TYPE_Double, ParseOrder);
+            return order ?? 0;
         }
 
-        private static AccessFlags? ExtractFlagsFromProp(TypeDefinition typeDef)
+        private static double? ParseOrder(Instruction instruction)
+        {
+            return instruction.OpCode.Code == Code.Ldc_R8 ? (double)instruction.Operand : null;
+        }
+
+        #endregion Extract-Mo-Order
+
+        #region Extract-Property-Value
+
+        private static T? ExtractFromIl<T>(TypeDefinition typeDef, string propertyName, string propertyTypeFullName, Func<Instruction, T?> tryResolve) where T : struct
+        {
+            return ExtractFromProp(typeDef, propertyName, tryResolve) ??
+                ExtractFromCtor(typeDef, propertyTypeFullName, string.Format(Constants.FIELD_Format, propertyName), tryResolve);
+        }
+
+        private static T? ExtractFromProp<T>(TypeDefinition typeDef, string propName, Func<Instruction, T?> tryResolve) where T : struct
         {
             do
             {
-                var property = typeDef.Properties.FirstOrDefault(prop => prop.Name == Constants.PROP_Flags);
+                var property = typeDef.Properties.FirstOrDefault(prop => prop.Name == propName);
                 if (property != null)
                 {
                     var instructions = property.GetMethod.Body.Instructions;
                     for (int i = instructions.Count - 1; i >= 0; i--)
                     {
-                        var flags = ParseFlags(instructions[i]);
-                        if (flags.HasValue) return flags.Value;
+                        var value = tryResolve(instructions[i]);
+                        if (value.HasValue) return value.Value;
                     }
                     // 一旦在类定义中找到了属性定义，即使没有查找到对应初始化代码，也没有必要继续往父类查找了
                     // 因为已经override的属性，父类的赋值操作没有意义，直接进行后续的构造方法查找即可
@@ -57,7 +95,7 @@ namespace Rougamo.Fody
             return null;
         }
 
-        private static AccessFlags? ExtractFlagsFromCtor(TypeDefinition typeDef)
+        private static T? ExtractFromCtor<T>(TypeDefinition typeDef, string propTypeFullName, string propFieldName, Func<Instruction, T?> tryResolve) where T : struct
         {
             do
             {
@@ -66,9 +104,9 @@ namespace Rougamo.Fody
                 {
                     foreach (var instruction in nonCtor.Body.Instructions)
                     {
-                        if (instruction.IsStfld(Constants.FIELD_Flags, Constants.TYPE_AccessFlags))
+                        if (instruction.IsStfld(propFieldName, propTypeFullName))
                         {
-                            return ParseFlags(instruction.Previous);
+                            return tryResolve(instruction.Previous);
                         }
                     }
                 }
@@ -79,16 +117,7 @@ namespace Rougamo.Fody
             return null;
         }
 
-        private static AccessFlags? ParseFlags(Instruction instruction)
-        {
-            if (instruction.OpCode == OpCodes.Ldc_I4_3) return AccessFlags.Public;
-            if (instruction.OpCode == OpCodes.Ldc_I4_6) return AccessFlags.Instance;
-            if (instruction.OpCode == OpCodes.Ldc_I4_7) return AccessFlags.Instance | AccessFlags.Public;
-            if (instruction.OpCode == OpCodes.Ldc_I4_S) return (AccessFlags)(sbyte)instruction.Operand;
-            return null;
-        }
-
-        #endregion Mo-Flags
+        #endregion Extract-Property-Value
 
         public static void Initialize(this RouType rouType, MethodDefinition methdDef, CustomAttribute[] assemblyAttributes,
             RepulsionMo[] typeImplements, CustomAttribute[] typeAttributes, TypeDefinition[] typeProxies,
@@ -117,7 +146,7 @@ namespace Rougamo.Fody
 
             rouMethod.AddMo(assemblyAttributes.Where(x => !ignores.Contains(x.AttributeType.FullName)), MoFrom.Assembly);
 
-            if (rouMethod.Mos.Any())
+            if (rouMethod.MosAny())
             {
                 rouType.Methods.Add(rouMethod);
             }
@@ -128,30 +157,30 @@ namespace Rougamo.Fody
             var mo = new Mo(typeDef, from);
             if((method.Flags(from) & mo.Flags) != 0)
             {
-                method.Mos.Add(mo);
+                method.AddMo(mo);
             }
         }
 
         public static void AddMo(this RouMethod method, IEnumerable<CustomAttribute> attributes, MoFrom from)
         {
             var mos = attributes.Select(x => new Mo(x, from)).Where(x => (x.Flags & method.Flags(from)) != 0);
-            method.Mos.AddRange(mos);
+            method.AddMo(mos);
         }
 
         public static void AddMo(this RouMethod method, IEnumerable<TypeDefinition> typeDefs, MoFrom from)
         {
             var mos = typeDefs.Select(x => new Mo(x, from)).Where(x => (x.Flags & method.Flags(from)) != 0);
-            method.Mos.AddRange(mos);
+            method.AddMo(mos);
         }
 
         public static bool Any(this RouMethod method, TypeDefinition typeDef)
         {
-            return method.Mos.Any(mo => mo.FullName == typeDef.FullName);
+            return method.MosAny(mo => mo.FullName == typeDef.FullName);
         }
 
         public static bool Any(this RouMethod method, TypeDefinition[] typeDefs)
         {
-            return typeDefs.Any(typeDef => method.Any(typeDef));
+            return typeDefs.Any(method.Any);
         }
 
         #endregion Mo

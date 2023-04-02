@@ -16,6 +16,6 @@ namespace Rougamo.Fody
 
         public List<RouMethod> Methods { get; }
 
-        public bool HasMo => Methods.Any(rm => rm.Mos.Any());
+        public bool HasMo => Methods.Any(rm => rm.MosAny());
     }
 }

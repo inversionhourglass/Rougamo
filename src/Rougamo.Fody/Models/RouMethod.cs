@@ -1,4 +1,5 @@
 ﻿using Mono.Cecil;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -9,16 +10,47 @@ namespace Rougamo.Fody
         private bool? _isAsync;
         private bool? _isIterator;
         private bool? _isAsyncIterator;
+        private readonly HashSet<Mo> _mos;
+        private Mo[]? _sortedMos;
 
         public RouMethod(MethodDefinition methodDef)
         {
-            Mos = new HashSet<Mo>(Mo.Comparer);
+            _mos = new HashSet<Mo>(Mo.Comparer);
             MethodDef = methodDef;
         }
 
         public MethodDefinition MethodDef { get; set; }
 
-        public HashSet<Mo> Mos { get; set; }
+        public Mo[] Mos
+        {
+            get
+            {
+                if (_sortedMos == null)
+                {
+                    _sortedMos = _mos.OrderBy(x => x.Order).ToArray();
+                }
+                return _sortedMos;
+            }
+        }
+
+        public void AddMo(Mo mo)
+        {
+            _sortedMos = null;
+
+            _mos.Add(mo);
+        }
+
+        public void AddMo(IEnumerable<Mo> mos)
+        {
+            foreach (var mo in mos)
+            {
+                AddMo(mo);
+            }
+        }
+
+        public bool MosAny() => _mos.Any();
+
+        public bool MosAny(Func<Mo, bool> predicate) => _mos.Any(predicate);
 
         public AccessFlags Flags(MoFrom from)
         {

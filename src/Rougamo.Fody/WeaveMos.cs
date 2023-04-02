@@ -58,42 +58,27 @@ namespace Rougamo.Fody
             var instructions = InitMoArrayVariable(rouMethod, out var mosVariable);
             var contextVariable = CreateMethodContextVariable(rouMethod.MethodDef, mosVariable, false, false, instructions);
 
-            ExecuteMoMethod(Constants.METHOD_OnEntry, rouMethod.MethodDef, rouMethod.Mos.Count, mosVariable, contextVariable, instructions, false);
+            ExecuteMoMethod(Constants.METHOD_OnEntry, rouMethod.MethodDef, rouMethod.Mos.Length, mosVariable, contextVariable, instructions, false);
 
             instructions.Add(Create(OpCodes.Ldloc, contextVariable));
             instructions.Add(Create(OpCodes.Callvirt, _methodMethodContextGetReturnValueReplacedRef));
             instructions.Add(Create(OpCodes.Brtrue_S, afterOnSuccessNop));
 
-            ExecuteMoMethod(Constants.METHOD_OnSuccess, rouMethod.MethodDef, rouMethod.Mos.Count, mosVariable, contextVariable, instructions, _config.ReverseCallNonEntry);
+            ExecuteMoMethod(Constants.METHOD_OnSuccess, rouMethod.MethodDef, rouMethod.Mos.Length, mosVariable, contextVariable, instructions, _config.ReverseCallNonEntry);
 
             rouMethod.MethodDef.Body.Instructions.InsertBefore(afterOnSuccessNop, instructions);
 
             instructions = new List<Instruction>();
-            ExecuteMoMethod(Constants.METHOD_OnExit, rouMethod.MethodDef, rouMethod.Mos.Count, mosVariable, contextVariable, instructions, _config.ReverseCallNonEntry);
+            ExecuteMoMethod(Constants.METHOD_OnExit, rouMethod.MethodDef, rouMethod.Mos.Length, mosVariable, contextVariable, instructions, _config.ReverseCallNonEntry);
             rouMethod.MethodDef.Body.Instructions.InsertAfter(afterOnSuccessNop, instructions);
             rouMethod.MethodDef.Body.OptimizePlus();
         }
 
         #region LoadMosOnStack
 
-        private Instruction LdcI4(int i4) => i4 switch
-        {
-            -1 => Create(OpCodes.Ldc_I4_M1),
-            0 => Create(OpCodes.Ldc_I4_0),
-            1 => Create(OpCodes.Ldc_I4_1),
-            2 => Create(OpCodes.Ldc_I4_2),
-            3 => Create(OpCodes.Ldc_I4_3),
-            4 => Create(OpCodes.Ldc_I4_4),
-            5 => Create(OpCodes.Ldc_I4_5),
-            6 => Create(OpCodes.Ldc_I4_6),
-            7 => Create(OpCodes.Ldc_I4_7),
-            8 => Create(OpCodes.Ldc_I4_8),
-            _ => Create(OpCodes.Ldc_I4, i4)
-        };
-
         private VariableDefinition[] LoadMosOnStack(RouMethod rouMethod, List<Instruction> instructions)
         {
-            var mos = new VariableDefinition[rouMethod.Mos.Count];
+            var mos = new VariableDefinition[rouMethod.Mos.Length];
             var i = 0;
             foreach (var mo in rouMethod.Mos)
             {
@@ -171,11 +156,11 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private List<Instruction> InitMoArray(HashSet<Mo> mos)
+        private List<Instruction> InitMoArray(Mo[] mos)
         {
             var instructions = new List<Instruction>
             {
-                Create(OpCodes.Ldc_I4, mos.Count),
+                Create(OpCodes.Ldc_I4, mos.Length),
                 Create(OpCodes.Newarr, _typeIMoRef)
             };
             var i = 0;

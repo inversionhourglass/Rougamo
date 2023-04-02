@@ -52,15 +52,15 @@ namespace Rougamo.Fody
 
             FieldDefinition? moArray = null;
             var mos = new FieldDefinition[0];
-            if (rouMethod.Mos.Count >= _config.MoArrayThreshold)
+            if (rouMethod.Mos.Length >= _config.MoArrayThreshold)
             {
                 moArray = new FieldDefinition(Constants.FIELD_RougamoMos, FieldAttributes.Public, _typeIMoArrayRef);
                 stateMachineTypeDef.Fields.Add(moArray);
             }
             else
             {
-                mos = new FieldDefinition[rouMethod.Mos.Count];
-                for (int i = 0; i < rouMethod.Mos.Count; i++)
+                mos = new FieldDefinition[rouMethod.Mos.Length];
+                for (int i = 0; i < rouMethod.Mos.Length; i++)
                 {
                     mos[i] = new FieldDefinition(Constants.FIELD_RougamoMo_Prefix + i, FieldAttributes.Public, _typeIMoRef);
                     stateMachineTypeDef.Fields.Add(mos[i]);
@@ -87,7 +87,7 @@ namespace Rougamo.Fody
 
         private IteratorVariables IteratorResolveVariables(RouMethod rouMethod, MethodDefinition moveNextMethodDef, TypeDefinition stateMachineTypeDef)
         {
-            // maybe can simply replace to stateMachineTypeDef.ImportInto(ModuleDefinition)
+            // Can not replace to stateMachineTypeDef.ImportInto(ModuleDefinition)
             var stateMachineTypeRef = ((MethodReference)rouMethod.MethodDef.Body.Instructions.Single(x => x.OpCode.Code == Code.Newobj && x.Operand is MethodReference methodRef && methodRef.DeclaringType.Resolve() == stateMachineTypeDef).Operand).DeclaringType;
 
             var stateMachineVariable = rouMethod.MethodDef.Body.CreateVariable(stateMachineTypeRef);
