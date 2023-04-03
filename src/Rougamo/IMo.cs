@@ -12,7 +12,12 @@ namespace Rougamo
         AccessFlags Flags { get; }
 
         /// <summary>
-        /// execution order
+        /// Which features will be weaving.
+        /// </summary>
+        Feature Features { get; set; }
+
+        /// <summary>
+        /// Execution order.
         /// </summary>
         double Order { get; set; }
 

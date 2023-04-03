@@ -39,6 +39,27 @@ namespace Rougamo.Fody
 
         #endregion Extract-Mo-Flags
 
+        #region Extract-Mo-Features
+
+        public static int ExtractFeatures(this Mo mo)
+        {
+            var typeDef = mo.TypeDef;
+            if (mo.Attribute != null)
+            {
+                if (mo.Attribute.Properties.TryGet(Constants.PROP_Features, out var property))
+                {
+                    return (int)property!.Value.Argument.Value;
+                }
+                typeDef = mo.Attribute.AttributeType.Resolve();
+            }
+            var features = ExtractFromIl(typeDef!, Constants.PROP_Features, Constants.TYPE_Int32, ParseFeatures);
+            return features ?? (int)Feature.All;
+        }
+
+        private static int? ParseFeatures(Instruction instruction) => instruction.TryResolveInt32();
+
+        #endregion Extract-Mo-Features
+
         #region Extract-Mo-Order
 
         public static double ExtractOrder(this Mo mo)
@@ -118,6 +139,11 @@ namespace Rougamo.Fody
         }
 
         #endregion Extract-Property-Value
+
+        public static bool IsMatch(this Feature matchWith, int value)
+        {
+            return ((int)matchWith & value) == (int)matchWith;
+        }
 
         public static void Initialize(this RouType rouType, MethodDefinition methdDef, CustomAttribute[] assemblyAttributes,
             RepulsionMo[] typeImplements, CustomAttribute[] typeAttributes, TypeDefinition[] typeProxies,

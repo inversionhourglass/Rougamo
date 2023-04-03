@@ -125,7 +125,7 @@ namespace Rougamo.Fody
         /// </summary>
         public static void InsertAfter<T>(this Collection<T> collection, T targetItem, IList<T>? items)
         {
-            if (items == null) return;
+            if (items == null || items.Count == 0) return;
 
             var index = collection.IndexOf(targetItem);
             if (index < 0) throw new System.IndexOutOfRangeException("could not found targetItem from collection");

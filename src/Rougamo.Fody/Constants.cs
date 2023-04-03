@@ -14,6 +14,7 @@
         public const string TYPE_MethodContext = "Rougamo.Context.MethodContext";
 
         public const string TYPE_Void = "System.Void";
+        public const string TYPE_Int32 = "System.Int32";
         public const string TYPE_Double = "System.Double";
         public const string TYPE_Task = "System.Threading.Tasks.Task";
         public const string TYPE_ValueTask = "System.Threading.Tasks.ValueTask";
@@ -31,6 +32,7 @@
         public const string TYPE_ARRAY_Type = "System.Type[]";
 
         public const string PROP_Flags = "Flags";
+        public const string PROP_Features = "Features";
         public const string PROP_Order = "Order";
         public const string PROP_Repulsions = "Repulsions";
         public const string PROP_MoTypes = "MoTypes";

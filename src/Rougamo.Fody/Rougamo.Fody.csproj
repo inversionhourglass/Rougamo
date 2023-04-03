@@ -9,6 +9,7 @@
 
   <ItemGroup>
     <Compile Include="..\Rougamo\AccessFlags.cs" Link="Models\AccessFlags.cs" />
+    <Compile Include="..\Rougamo\Feature.cs" Link="Models\Feature.cs" />
   </ItemGroup>
 
   <ItemGroup>

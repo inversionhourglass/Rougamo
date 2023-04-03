@@ -7,6 +7,7 @@ namespace Rougamo.Fody
     internal sealed class Mo
     {
         private AccessFlags? _flags;
+        private int? _features;
         private double? _order;
 
         public Mo(CustomAttribute attribute, MoFrom from)
@@ -38,6 +39,18 @@ namespace Rougamo.Fody
                     _flags = this.ExtractFlags();
                 }
                 return _flags.Value;
+            }
+        }
+
+        public int Features
+        {
+            get
+            {
+                if (!_features.HasValue)
+                {
+                    _features = this.ExtractFeatures();
+                }
+                return _features.Value;
             }
         }
 

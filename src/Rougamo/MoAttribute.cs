@@ -26,6 +26,9 @@ namespace Rougamo
         public virtual AccessFlags Flags { get; }
 
         /// <inheritdoc/>
+        public virtual Feature Features { get; set; }
+
+        /// <inheritdoc/>
         public virtual double Order { get; set; }
 
         /// <inheritdoc/>

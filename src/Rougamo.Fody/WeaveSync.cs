@@ -25,22 +25,22 @@ namespace Rougamo.Fody
             instructions.InsertAfter(anchors.InitContext, SyncInitMethodContext(rouMethod.MethodDef, variables));
             instructions.InsertAfter(anchors.OnEntry, SyncOnEntry(rouMethod, anchors.IfEntryReplaced, variables));
             instructions.InsertAfter(anchors.IfEntryReplaced, SyncIfOnEntryReplacedReturn(rouMethod, returnBoxTypeRef, anchors.RewriteArg, variables));
-            if (rouMethod.MethodDef.Parameters.Count > 0) instructions.InsertAfter(anchors.RewriteArg, SyncRewriteArguments(rouMethod.MethodDef, anchors.Retry, variables));
-            instructions.InsertAfter(anchors.Retry, SyncResetRetryVariable(variables));
+            instructions.InsertAfter(anchors.RewriteArg, SyncRewriteArguments(rouMethod, anchors.Retry, variables));
+            instructions.InsertAfter(anchors.Retry, SyncResetRetryVariable(rouMethod, variables));
 
             instructions.InsertAfter(anchors.CatchStart, SyncSaveException(variables));
             instructions.InsertAfter(anchors.OnException, SyncOnException(rouMethod, anchors.IfExceptionRetry, variables));
-            instructions.InsertAfter(anchors.IfExceptionRetry, SyncIfExceptionRetry(anchors.Retry, anchors.IfExceptionHandled, variables));
-            instructions.InsertAfter(anchors.IfExceptionHandled, SyncIfExceptionHandled(returnBoxTypeRef, anchors.FinallyEnd, anchors.Rethrow, variables));
+            instructions.InsertAfter(anchors.IfExceptionRetry, SyncIfExceptionRetry(rouMethod, anchors.Retry, anchors.IfExceptionHandled, variables));
+            instructions.InsertAfter(anchors.IfExceptionHandled, SyncIfExceptionHandled(rouMethod, returnBoxTypeRef, anchors.FinallyEnd, anchors.Rethrow, variables));
 
-            instructions.InsertAfter(anchors.FinallyStart, SyncHasExceptionCheck(anchors.OnExit, variables));
+            instructions.InsertAfter(anchors.FinallyStart, SyncHasExceptionCheck(rouMethod, anchors.OnExit, variables));
             instructions.InsertAfter(anchors.SaveReturnValue, SyncSaveReturnValue(returnBoxTypeRef, variables));
             instructions.InsertAfter(anchors.OnSuccess, SyncOnSuccess(rouMethod, anchors.IfSuccessRetry, variables));
-            instructions.InsertAfter(anchors.IfSuccessRetry, SyncIfOnSuccessRetry(anchors.IfSuccessReplaced, anchors.EndFinally, variables));
-            instructions.InsertAfter(anchors.IfSuccessReplaced, SyncIfOnSuccessReplacedReturn(returnBoxTypeRef, anchors.OnExit, variables));
+            instructions.InsertAfter(anchors.IfSuccessRetry, SyncIfOnSuccessRetry(rouMethod, anchors.IfSuccessReplaced, anchors.EndFinally, variables));
+            instructions.InsertAfter(anchors.IfSuccessReplaced, SyncIfOnSuccessReplacedReturn(rouMethod, returnBoxTypeRef, anchors.OnExit, variables));
             instructions.InsertAfter(anchors.OnExit, SyncOnExit(rouMethod, anchors.EndFinally, variables));
 
-            instructions.InsertAfter(anchors.FinallyEnd, SyncRetryFork(anchors.Retry, anchors.Ret, variables));
+            instructions.InsertAfter(anchors.FinallyEnd, SyncRetryFork(rouMethod, anchors.Retry, anchors.Ret, variables));
 
             rouMethod.MethodDef.Body.OptimizePlus();
         }
@@ -185,6 +185,8 @@ namespace Rougamo.Fody
 
         private IList<Instruction> SyncOnEntry(RouMethod rouMethod, Instruction endAnchor, SyncVariables variables)
         {
+            if (!Feature.OnEntry.IsMatch(rouMethod.Features)) return new Instruction[0];
+
             if (variables.MoArray != null)
             {
                 return ExecuteMoMethod(Constants.METHOD_OnEntry, rouMethod.MethodDef, rouMethod.Mos.Length, endAnchor, variables.MoArray, variables.MethodContext, null, null, false);
@@ -194,6 +196,8 @@ namespace Rougamo.Fody
 
         private IList<Instruction> SyncIfOnEntryReplacedReturn(RouMethod rouMethod, BoxTypeReference returnBoxTypeRef, Instruction endAnchor, SyncVariables variables)
         {
+            if (!Feature.EntryReplace.IsMatch(rouMethod.Features)) return new Instruction[0];
+
             var instructions = new List<Instruction>
             {
                 Create(OpCodes.Ldloc, variables.MethodContext),
@@ -207,6 +211,7 @@ namespace Rougamo.Fody
                 onExitEndAnchor = Create(OpCodes.Ldloc, variables.Return);
                 instructions.AddRange(ReplaceReturnValue(variables.MethodContext, variables.Return, returnBoxTypeRef));
             }
+
             instructions.AddRange(SyncOnExit(rouMethod, onExitEndAnchor, variables));
             if (variables.Return != null)
             {
@@ -217,17 +222,19 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private IList<Instruction> SyncRewriteArguments(MethodDefinition methodDef, Instruction endAnchor, SyncVariables variables)
+        private IList<Instruction> SyncRewriteArguments(RouMethod rouMethod, Instruction endAnchor, SyncVariables variables)
         {
+            if (rouMethod.MethodDef.Parameters.Count == 0 || !Feature.RewriteArgs.IsMatch(rouMethod.Features)) return new Instruction[0];
+
             var instructions = new List<Instruction>
             {
                 Create(OpCodes.Ldloc, variables.MethodContext),
                 Create(OpCodes.Callvirt, _methodMethodContextGetRewriteArgumentsRef),
                 Create(OpCodes.Brfalse_S, endAnchor)
             };
-            for (var i = 0; i < methodDef.Parameters.Count; i++)
+            for (var i = 0; i < rouMethod.MethodDef.Parameters.Count; i++)
             {
-                SyncRewriteArgument(i, variables.MethodContext, methodDef.Parameters[i], instructions.Add);
+                SyncRewriteArgument(i, variables.MethodContext, rouMethod.MethodDef.Parameters[i], instructions.Add);
             }
 
             return instructions.Count == 3 ? new Instruction[0] : instructions;
@@ -314,8 +321,12 @@ namespace Rougamo.Fody
             }
         }
 
-        private IList<Instruction> SyncResetRetryVariable(SyncVariables variables)
+        private IList<Instruction> SyncResetRetryVariable(RouMethod rouMethod, SyncVariables variables)
         {
+#pragma warning disable CS0618 // Type or member is obsolete
+            if (!Feature.RetryAny.IsMatch(rouMethod.Features)) return new Instruction[0];
+#pragma warning restore CS0618 // Type or member is obsolete
+
             return new[]
             {
                 Create(OpCodes.Ldc_I4_0),
@@ -335,6 +346,8 @@ namespace Rougamo.Fody
 
         private IList<Instruction> SyncOnException(RouMethod rouMethod, Instruction endAnchor, SyncVariables variables)
         {
+            if (!Feature.OnException.IsMatch(rouMethod.Features)) return new Instruction[0];
+
             if (variables.MoArray != null)
             {
                 return ExecuteMoMethod(Constants.METHOD_OnException, rouMethod.MethodDef, rouMethod.Mos.Length, endAnchor, variables.MoArray, variables.MethodContext, null, null, _config.ReverseCallNonEntry);
@@ -342,8 +355,10 @@ namespace Rougamo.Fody
             return ExecuteMoMethod(Constants.METHOD_OnException, rouMethod.Mos.Length, variables.Mos, variables.MethodContext, null, null, _config.ReverseCallNonEntry);
         }
 
-        private IList<Instruction> SyncIfExceptionRetry(Instruction retryAnchor, Instruction endAnchor, SyncVariables variables)
+        private IList<Instruction> SyncIfExceptionRetry(RouMethod rouMethod, Instruction retryAnchor, Instruction endAnchor, SyncVariables variables)
         {
+            if (!Feature.ExceptionRetry.IsMatch(rouMethod.Features)) return new Instruction[0];
+
             return new[]
             {
                 Create(OpCodes.Ldloc, variables.MethodContext),
@@ -355,8 +370,10 @@ namespace Rougamo.Fody
             };
         }
 
-        private IList<Instruction> SyncIfExceptionHandled(BoxTypeReference returnBoxTypeRef, Instruction finallyEndAnchor, Instruction endAnchor, SyncVariables variables)
+        private IList<Instruction> SyncIfExceptionHandled(RouMethod rouMethod, BoxTypeReference returnBoxTypeRef, Instruction finallyEndAnchor, Instruction endAnchor, SyncVariables variables)
         {
+            if (!Feature.ExceptionHandle.IsMatch(rouMethod.Features)) return new Instruction[0];
+
             var instructions = new List<Instruction>
             {
                 Create(OpCodes.Ldloc, variables.MethodContext),
@@ -372,17 +389,25 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private IList<Instruction> SyncHasExceptionCheck(Instruction onExitStart, SyncVariables variables)
+        private IList<Instruction> SyncHasExceptionCheck(RouMethod rouMethod, Instruction onExitStart, SyncVariables variables)
         {
-            return new[]
+            if ((rouMethod.Features & (int)(Feature.ExceptionHandle | Feature.OnSuccess | Feature.SuccessRetry | Feature.SuccessReplace | Feature.OnExit)) == 0) return new Instruction[0];
+
+            var instructions = new List<Instruction>
             {
                 Create(OpCodes.Ldloc, variables.MethodContext),
                 Create(OpCodes.Callvirt, _methodMethodContextGetHasExceptionRef),
-                Create(OpCodes.Brtrue_S, onExitStart),
-                Create(OpCodes.Ldloc, variables.MethodContext),
-                Create(OpCodes.Callvirt, _methodMethodContextGetExceptionHandledRef),
                 Create(OpCodes.Brtrue_S, onExitStart)
             };
+
+            if (Feature.ExceptionHandle.IsMatch(rouMethod.Features))
+            {
+                instructions.Add(Create(OpCodes.Ldloc, variables.MethodContext));
+                instructions.Add(Create(OpCodes.Callvirt, _methodMethodContextGetExceptionHandledRef));
+                instructions.Add(Create(OpCodes.Brtrue_S, onExitStart));
+            }
+
+            return instructions;
         }
 
         private IList<Instruction>? SyncSaveReturnValue(BoxTypeReference returnBoxTypeRef, SyncVariables variables)
@@ -405,6 +430,8 @@ namespace Rougamo.Fody
 
         private IList<Instruction> SyncOnSuccess(RouMethod rouMethod, Instruction endAnchor, SyncVariables variables)
         {
+            if (!Feature.OnSuccess.IsMatch(rouMethod.Features)) return new Instruction[0];
+
             if (variables.MoArray != null)
             {
                 return ExecuteMoMethod(Constants.METHOD_OnSuccess, rouMethod.MethodDef, rouMethod.Mos.Length, endAnchor, variables.MoArray, variables.MethodContext, null, null, _config.ReverseCallNonEntry);
@@ -412,8 +439,10 @@ namespace Rougamo.Fody
             return ExecuteMoMethod(Constants.METHOD_OnSuccess, rouMethod.Mos.Length, variables.Mos, variables.MethodContext, null, null, _config.ReverseCallNonEntry);
         }
 
-        private IList<Instruction> SyncIfOnSuccessRetry(Instruction endAnchor, Instruction endFinally, SyncVariables variables)
+        private IList<Instruction> SyncIfOnSuccessRetry(RouMethod rouMethod, Instruction endAnchor, Instruction endFinally, SyncVariables variables)
         {
+            if (!Feature.SuccessRetry.IsMatch(rouMethod.Features)) return new Instruction[0];
+
             return new[]
             {
                 Create(OpCodes.Ldloc, variables.MethodContext),
@@ -427,9 +456,9 @@ namespace Rougamo.Fody
             };
         }
 
-        private IList<Instruction>? SyncIfOnSuccessReplacedReturn(BoxTypeReference returnBoxTypeRef, Instruction endAnchor, SyncVariables variables)
+        private IList<Instruction> SyncIfOnSuccessReplacedReturn(RouMethod rouMethod, BoxTypeReference returnBoxTypeRef, Instruction endAnchor, SyncVariables variables)
         {
-            if (variables.Return == null) return null;
+            if (variables.Return == null || !Feature.SuccessReplace.IsMatch(rouMethod.Features)) return new Instruction[0];
 
             var instructions = new List<Instruction>
             {
@@ -444,6 +473,8 @@ namespace Rougamo.Fody
 
         private IList<Instruction> SyncOnExit(RouMethod rouMethod, Instruction endAnchor, SyncVariables variables)
         {
+            if (!Feature.OnExit.IsMatch(rouMethod.Features)) return new Instruction[0];
+
             if (variables.MoArray != null)
             {
                 return ExecuteMoMethod(Constants.METHOD_OnExit, rouMethod.MethodDef, rouMethod.Mos.Length, endAnchor, variables.MoArray, variables.MethodContext, null, null, _config.ReverseCallNonEntry);
@@ -451,8 +482,12 @@ namespace Rougamo.Fody
             return ExecuteMoMethod(Constants.METHOD_OnExit, rouMethod.Mos.Length, variables.Mos, variables.MethodContext, null, null, _config.ReverseCallNonEntry);
         }
 
-        private IList<Instruction> SyncRetryFork(Instruction retry, Instruction notRetry, SyncVariables variables)
+        private IList<Instruction> SyncRetryFork(RouMethod rouMethod, Instruction retry, Instruction notRetry, SyncVariables variables)
         {
+#pragma warning disable CS0618 // Type or member is obsolete
+            if (!Feature.RetryAny.IsMatch(rouMethod.Features)) return new Instruction[0];
+#pragma warning restore CS0618 // Type or member is obsolete
+
             return new[]
             {
                 Create(OpCodes.Ldloc, variables.IsRetry),

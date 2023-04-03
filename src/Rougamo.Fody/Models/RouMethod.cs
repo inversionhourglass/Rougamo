@@ -72,6 +72,8 @@ namespace Rougamo.Fody
             return flags;
         }
 
+        public int Features => Mos.Aggregate(0, (v, m) => v | m.Features);
+
         public bool IsIterator
         {
             get
