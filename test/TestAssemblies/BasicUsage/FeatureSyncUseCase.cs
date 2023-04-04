@@ -113,6 +113,58 @@ namespace BasicUsage
         }
         #endregion OnException
 
+        #region OnSuccess
+        public static string[] Expect_OnSuccess = new[] { "OnSuccess-1" };
+
+        [SyncFeature(1, Features = Feature.OnSuccess)]
+        public string OnSuccess(string value)
+        {
+            return value + Guid.NewGuid().ToString();
+        }
+
+        [SyncFeature(1, Features = Feature.OnSuccess)]
+        public Guid OnSuccess_RewriteArgs(Guid guid)
+        {
+            return guid;
+        }
+
+        [SyncFeature(1, Features = Feature.OnSuccess)]
+        public string OnSuccess_EntryReplace(string x, string y)
+        {
+            return x + y;
+        }
+
+        [SyncFeature(1, Features = Feature.OnSuccess)]
+        public void OnSuccess_Exception()
+        {
+            throw new NotImplementedException();
+        }
+
+        [SyncFeature(1, Features = Feature.OnSuccess)]
+        public void OnSuccess_ExceptionRetry()
+        {
+            throw SyncFeatureAttribute.RetryException;
+        }
+
+        [SyncFeature(1, Features = Feature.OnSuccess)]
+        public void OnSuccess_ExceptionHandled()
+        {
+            throw SyncFeatureAttribute.HandleableException;
+        }
+
+        [SyncFeature(1, Features = Feature.OnSuccess)]
+        public string OnSuccess_SuccessRetry()
+        {
+            return SyncFeatureAttribute.RetryReturn;
+        }
+
+        [SyncFeature(1, Features = Feature.OnSuccess)]
+        public string OnSuccess_SuccessReplaced()
+        {
+            return SyncFeatureAttribute.ReplaceableReturn;
+        }
+        #endregion OnSuccess
+
         #region Different Feature Apply
         public static string[] Expect_DiffApplyVariables = new[] { "OnEntry-1", "OnEntry-3", "OnException-3", "OnException-2" };
         [SyncFeature(1, Features = Feature.OnEntry)]

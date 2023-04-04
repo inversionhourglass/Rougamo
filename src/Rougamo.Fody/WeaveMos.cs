@@ -458,7 +458,7 @@ namespace Rougamo.Fody
 
         private void SetTryCatchFinally(int features, MethodDefinition methodDef, ITryCatchFinallyAnchors anchors)
         {
-            if (Feature.OnException.IsMatch(features))
+            if ((features & (int)(Feature.OnException | Feature.OnSuccess | Feature.OnExit)) != 0)
             {
                 var exceptionHandler = new ExceptionHandler(ExceptionHandlerType.Catch)
                 {

@@ -87,7 +87,7 @@ namespace Rougamo.Fody
 
             var brCode = OpCodes.Br;
 
-            if (Feature.OnException.IsMatch(rouMethod.Features))
+            if ((rouMethod.Features & (int)(Feature.OnException | Feature.OnSuccess | Feature.OnExit)) != 0)
             {
                 brCode = OpCodes.Leave;
                 instructions.Add(new[]

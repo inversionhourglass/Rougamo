@@ -94,6 +94,45 @@ namespace Rougamo.Fody.Tests
         }
 
         [Fact]
+        public void SyncFeatureOnSuccessTest()
+        {
+            var instance = GetInstance("FeatureSyncUseCase");
+            var actual = (List<string>)instance.Recording;
+
+            actual.Clear();
+            instance.OnSuccess(string.Empty);
+            Assert.Equal(FeatureSyncUseCase.Expect_OnSuccess, actual);
+
+            actual.Clear();
+            instance.OnSuccess_RewriteArgs(Guid.NewGuid());
+            Assert.Equal(FeatureSyncUseCase.Expect_OnSuccess, actual);
+
+            actual.Clear();
+            instance.OnSuccess_EntryReplace(string.Empty, null);
+            Assert.Equal(FeatureSyncUseCase.Expect_OnSuccess, actual);
+
+            actual.Clear();
+            Assert.Throws<NotImplementedException>(() => { instance.OnSuccess_Exception(); });
+            Assert.Empty(actual);
+
+            actual.Clear();
+            Assert.Throws(SyncFeatureAttribute.RetryException.GetType(), () => { instance.OnSuccess_ExceptionRetry(); });
+            Assert.Empty(actual);
+
+            actual.Clear();
+            Assert.Throws(SyncFeatureAttribute.HandleableException.GetType(), () => { instance.OnSuccess_ExceptionHandled(); });
+            Assert.Empty(actual);
+
+            actual.Clear();
+            instance.OnSuccess_SuccessRetry();
+            Assert.Equal(FeatureSyncUseCase.Expect_OnSuccess, actual);
+
+            actual.Clear();
+            instance.OnSuccess_SuccessReplaced();
+            Assert.Equal(FeatureSyncUseCase.Expect_OnSuccess, actual);
+        }
+
+        [Fact]
         public void DifferentFeatureApplyTest()
         {
             var instance = GetInstance("FeatureSyncUseCase");

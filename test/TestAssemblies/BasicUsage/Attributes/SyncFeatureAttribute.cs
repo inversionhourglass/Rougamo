@@ -63,7 +63,7 @@ namespace BasicUsage.Attributes
             var recording = (IRecording)context.Target;
             recording.Recording.Add($"{nameof(OnSuccess)}-{Seed}");
 
-            if ((string)context.ReturnValue == RetryReturn)
+            if (context.ReturnValue is string v1 && v1 == RetryReturn)
             {
                 if(context.RetryCount > 0)
                 {
@@ -72,7 +72,7 @@ namespace BasicUsage.Attributes
                 }
                 context.RetryCount = 1;
             }
-            else if ((string)context.ReturnValue == ReplaceableReturn)
+            else if (context.ReturnValue is string v2 && v2 == ReplaceableReturn)
             {
                 context.ReplaceReturnValue(this, ReplacedReturn);
             }
