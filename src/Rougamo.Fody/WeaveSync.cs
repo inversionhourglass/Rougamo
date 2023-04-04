@@ -25,12 +25,12 @@ namespace Rougamo.Fody
             instructions.InsertAfter(anchors.InitContext, SyncInitMethodContext(rouMethod.MethodDef, variables));
             instructions.InsertAfter(anchors.OnEntry, SyncOnEntry(rouMethod, anchors.IfEntryReplaced, variables));
             instructions.InsertAfter(anchors.IfEntryReplaced, SyncIfOnEntryReplacedReturn(rouMethod, returnBoxTypeRef, anchors.RewriteArg, variables));
-            instructions.InsertAfter(anchors.RewriteArg, SyncRewriteArguments(rouMethod, anchors.Retry, variables));
-            instructions.InsertAfter(anchors.Retry, SyncResetRetryVariable(rouMethod, variables));
+            instructions.InsertAfter(anchors.RewriteArg, SyncRewriteArguments(rouMethod, anchors.TryStart, variables));
+            instructions.InsertAfter(anchors.TryStart, SyncResetRetryVariable(rouMethod, variables));
 
             instructions.InsertAfter(anchors.CatchStart, SyncSaveException(rouMethod, variables));
             instructions.InsertAfter(anchors.OnException, SyncOnException(rouMethod, anchors.IfExceptionRetry, variables));
-            instructions.InsertAfter(anchors.IfExceptionRetry, SyncIfExceptionRetry(rouMethod, anchors.Retry, anchors.IfExceptionHandled, variables));
+            instructions.InsertAfter(anchors.IfExceptionRetry, SyncIfExceptionRetry(rouMethod, anchors.TryStart, anchors.IfExceptionHandled, variables));
             instructions.InsertAfter(anchors.IfExceptionHandled, SyncIfExceptionHandled(rouMethod, returnBoxTypeRef, anchors.FinallyEnd, anchors.Rethrow, variables));
 
             instructions.InsertAfter(anchors.FinallyStart, SyncHasExceptionCheck(rouMethod, anchors.OnExit, variables));
@@ -40,7 +40,7 @@ namespace Rougamo.Fody
             instructions.InsertAfter(anchors.IfSuccessReplaced, SyncIfOnSuccessReplacedReturn(rouMethod, returnBoxTypeRef, anchors.OnExit, variables));
             instructions.InsertAfter(anchors.OnExit, SyncOnExit(rouMethod, anchors.EndFinally, variables));
 
-            instructions.InsertAfter(anchors.FinallyEnd, SyncRetryFork(rouMethod, anchors.Retry, anchors.Ret, variables));
+            instructions.InsertAfter(anchors.FinallyEnd, SyncRetryFork(rouMethod, anchors.TryStart, anchors.Ret, variables));
 
             rouMethod.MethodDef.Body.OptimizePlus();
         }
@@ -75,14 +75,14 @@ namespace Rougamo.Fody
 
             variables.Return = rouMethod.MethodDef.ReturnType.IsVoid() ? null : rouMethod.MethodDef.Body.CreateVariable(Import(rouMethod.MethodDef.ReturnType));
 
-            instructions.InsertBefore(anchors.TryStart, new[]
+            instructions.InsertBefore(anchors.HostsStart, new[]
             {
                 anchors.InitMos,
                 anchors.InitContext,
                 anchors.OnEntry,
                 anchors.IfEntryReplaced,
                 anchors.RewriteArg,
-                anchors.Retry
+                anchors.TryStart
             });
 
             var brCode = OpCodes.Br;

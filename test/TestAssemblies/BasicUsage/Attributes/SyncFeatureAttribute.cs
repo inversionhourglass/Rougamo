@@ -9,7 +9,7 @@ namespace BasicUsage.Attributes
     {
         public static readonly Exception RetryException = new InvalidOperationException();
         public static readonly Exception HandleableException = new ArgumentException();
-        public static readonly string ReplaceableReturn = null;
+        public static readonly string ReplaceableReturn = "nil";
         public static readonly string ReplacedReturn = "null";
         public static readonly string RetryReturn = string.Empty;
         public static readonly string RetriedReturn = "retried";
@@ -48,7 +48,7 @@ namespace BasicUsage.Attributes
             {
                 if (context.RetryCount > 0)
                 {
-                    context.RetryCount = 0;
+                    context.HandledException(this, RetriedReturn);
                     return;
                 }
                 context.RetryCount = 1;

@@ -26,10 +26,6 @@ namespace Rougamo
         /// </summary>
         OnExit = 0x8,
         /// <summary>
-        /// OnEntry, OnException, OnSuccess and OnExit
-        /// </summary>
-        Observe = OnEntry | OnException | OnSuccess | OnExit,
-        /// <summary>
         /// OnEntry and RewriteArgument
         /// </summary>
         RewriteArgs = 0x10 | OnEntry,
@@ -63,6 +59,18 @@ namespace Rougamo
         /// OnSuccess and return replaced value
         /// </summary>
         SuccessReplace = 0x100 | OnSuccess,
+        /// <summary>
+        /// OnEntry, OnException, OnSuccess and OnExit
+        /// </summary>
+        Observe = OnEntry | OnException | OnSuccess | OnExit,
+        /// <summary>
+        /// Except Rewrite Arguments
+        /// </summary>
+        NonRewriteArgs = (All ^ 0x10) & All,
+        /// <summary>
+        /// Except Retry
+        /// </summary>
+        NonRetry = (All ^ RetryAny) & All,
         /// <summary>
         /// all features(default)
         /// </summary>

@@ -6,9 +6,9 @@ namespace Rougamo.Fody.Enhances.Sync
 {
     internal class SyncAnchors : ITryCatchFinallyAnchors
     {
-        public SyncAnchors(SyncVariables variables, Instruction tryStart)
+        public SyncAnchors(SyncVariables variables, Instruction hostsStart)
         {
-            TryStart = tryStart;
+            HostsStart = hostsStart;
             CatchStart = Create(OpCodes.Stloc, variables.Exception);
         }
 
@@ -22,9 +22,11 @@ namespace Rougamo.Fody.Enhances.Sync
 
         public Instruction RewriteArg { get; } = Nop();
 
-        public Instruction Retry { get; } = Nop();
+        //public Instruction Retry { get; } = Nop();
 
-        public Instruction TryStart { get; }
+        public Instruction TryStart { get; } = Nop();
+
+        public Instruction HostsStart { get; }
 
         public Instruction CatchStart { get; }
 
