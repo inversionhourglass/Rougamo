@@ -573,6 +573,100 @@ namespace Rougamo.Fody.Tests
         }
 
         [Fact]
+        public void SyncFeatureNonRetryTest()
+        {
+            var instance = GetInstance("FeatureSyncUseCase");
+            var actual = (List<string>)instance.Recording;
+
+            actual.Clear();
+            instance.NonRetry(string.Empty);
+            Assert.Equal(FeatureSyncUseCase.Expect_NonRetry, actual);
+
+            actual.Clear();
+            var guid1 = Guid.NewGuid();
+            var guid2 = (Guid)instance.NonRetry_RewriteArgs(guid1);
+            Assert.Equal(FeatureSyncUseCase.Expect_NonRetry, actual);
+            Assert.NotEqual(guid1, guid2);
+
+            actual.Clear();
+            var a = "a";
+            var b = "b";
+            var value = instance.NonRetry_EntryReplace(a, b);
+            Assert.Equal(FeatureSyncUseCase.Expect_NonRetry_EntryReplaced, actual);
+            Assert.NotEqual(a + b, value);
+            Assert.Equal(SyncFeatureAttribute.ReplacedReturn, value);
+
+            actual.Clear();
+            Assert.Throws<NotImplementedException>(() => { instance.NonRetry_Exception(); });
+            Assert.Equal(FeatureSyncUseCase.Expect_NonRetry_Failed, actual);
+
+            actual.Clear();
+            Assert.Throws(SyncFeatureAttribute.RetryException.GetType(), () => { instance.NonRetry_ExceptionRetry(); });
+            Assert.Equal(FeatureSyncUseCase.Expect_NonRetry_Failed, actual);
+
+            actual.Clear();
+            var v2 = instance.NonRetry_ExceptionHandled();
+            Assert.Equal(FeatureSyncUseCase.Expect_NonRetry_Failed, actual);
+            Assert.Equal(SyncFeatureAttribute.ReplacedReturn, v2);
+
+            actual.Clear();
+            var v5 = (string)instance.NonRetry_SuccessRetry();
+            Assert.Equal(FeatureSyncUseCase.Expect_NonRetry, actual);
+            Assert.Equal(SyncFeatureAttribute.RetryReturn, v5);
+
+            actual.Clear();
+            var v4 = (string)instance.NonRetry_SuccessReplaced();
+            Assert.Equal(FeatureSyncUseCase.Expect_NonRetry, actual);
+            Assert.Equal(SyncFeatureAttribute.ReplacedReturn, v4);
+        }
+
+        [Fact]
+        public void SyncFeatureOnEntryExitTest()
+        {
+            var instance = GetInstance("FeatureSyncUseCase");
+            var actual = (List<string>)instance.Recording;
+
+            actual.Clear();
+            instance.OnEntryExit(string.Empty);
+            Assert.Equal(FeatureSyncUseCase.Expect_OnEntryExit, actual);
+
+            actual.Clear();
+            var guid1 = Guid.NewGuid();
+            var guid2 = (Guid)instance.OnEntryExit_RewriteArgs(guid1);
+            Assert.Equal(FeatureSyncUseCase.Expect_OnEntryExit, actual);
+            Assert.Equal(guid1, guid2);
+
+            actual.Clear();
+            var a = "a";
+            var b = "b";
+            var value = instance.OnEntryExit_EntryReplace(a, b);
+            Assert.Equal(FeatureSyncUseCase.Expect_OnEntryExit, actual);
+            Assert.Equal(a + b, value);
+
+            actual.Clear();
+            Assert.Throws<NotImplementedException>(() => { instance.OnEntryExit_Exception(); });
+            Assert.Equal(FeatureSyncUseCase.Expect_OnEntryExit, actual);
+
+            actual.Clear();
+            Assert.Throws(SyncFeatureAttribute.RetryException.GetType(), () => { instance.OnEntryExit_ExceptionRetry(); });
+            Assert.Equal(FeatureSyncUseCase.Expect_OnEntryExit, actual);
+
+            actual.Clear();
+            Assert.Throws(SyncFeatureAttribute.HandleableException.GetType(), () => { instance.OnEntryExit_ExceptionHandled(); });
+            Assert.Equal(FeatureSyncUseCase.Expect_OnEntryExit, actual);
+
+            actual.Clear();
+            var v5 = (string)instance.OnEntryExit_SuccessRetry();
+            Assert.Equal(FeatureSyncUseCase.Expect_OnEntryExit, actual);
+            Assert.Equal(SyncFeatureAttribute.RetryReturn, v5);
+
+            actual.Clear();
+            var v4 = (string)instance.OnEntryExit_SuccessReplaced();
+            Assert.Equal(FeatureSyncUseCase.Expect_OnEntryExit, actual);
+            Assert.Equal(SyncFeatureAttribute.ReplaceableReturn, v4);
+        }
+
+        [Fact]
         public void DifferentFeatureApplyTest()
         {
             var instance = GetInstance("FeatureSyncUseCase");

@@ -640,6 +640,112 @@ namespace BasicUsage
         }
         #endregion NonRewriteArgs
 
+        #region NonRetry
+        public static string[] Expect_NonRetry = new[] { "OnEntry-1", "OnSuccess-1", "OnExit-1" };
+        public static string[] Expect_NonRetry_EntryReplaced = new[] { "OnEntry-1", "OnExit-1" };
+        public static string[] Expect_NonRetry_Failed = new[] { "OnEntry-1", "OnException-1", "OnExit-1" };
+
+        [SyncFeature(1, Features = Feature.NonRetry)]
+        public string NonRetry(string value)
+        {
+            return value + Guid.NewGuid().ToString();
+        }
+
+        [SyncFeature(1, Features = Feature.NonRetry)]
+        public Guid NonRetry_RewriteArgs(Guid guid)
+        {
+            return guid;
+        }
+
+        [SyncFeature(1, Features = Feature.NonRetry)]
+        public string NonRetry_EntryReplace(string x, string y)
+        {
+            return x + y;
+        }
+
+        [SyncFeature(1, Features = Feature.NonRetry)]
+        public void NonRetry_Exception()
+        {
+            throw new NotImplementedException();
+        }
+
+        [SyncFeature(1, Features = Feature.NonRetry)]
+        public string NonRetry_ExceptionRetry()
+        {
+            throw SyncFeatureAttribute.RetryException;
+        }
+
+        [SyncFeature(1, Features = Feature.NonRetry)]
+        public string NonRetry_ExceptionHandled()
+        {
+            throw SyncFeatureAttribute.HandleableException;
+        }
+
+        [SyncFeature(1, Features = Feature.NonRetry)]
+        public string NonRetry_SuccessRetry()
+        {
+            return SyncFeatureAttribute.RetryReturn;
+        }
+
+        [SyncFeature(1, Features = Feature.NonRetry)]
+        public string NonRetry_SuccessReplaced()
+        {
+            return SyncFeatureAttribute.ReplaceableReturn;
+        }
+        #endregion NonRetry
+
+        #region OnEntry and OnExit
+        public static string[] Expect_OnEntryExit = new[] { "OnEntry-1", "OnExit-1" };
+
+        [SyncFeature(1, Features = Feature.OnEntry | Feature.OnExit)]
+        public string OnEntryExit(string value)
+        {
+            return value + Guid.NewGuid().ToString();
+        }
+
+        [SyncFeature(1, Features = Feature.OnEntry | Feature.OnExit)]
+        public Guid OnEntryExit_RewriteArgs(Guid guid)
+        {
+            return guid;
+        }
+
+        [SyncFeature(1, Features = Feature.OnEntry | Feature.OnExit)]
+        public string OnEntryExit_EntryReplace(string x, string y)
+        {
+            return x + y;
+        }
+
+        [SyncFeature(1, Features = Feature.OnEntry | Feature.OnExit)]
+        public void OnEntryExit_Exception()
+        {
+            throw new NotImplementedException();
+        }
+
+        [SyncFeature(1, Features = Feature.OnEntry | Feature.OnExit)]
+        public string OnEntryExit_ExceptionRetry()
+        {
+            throw SyncFeatureAttribute.RetryException;
+        }
+
+        [SyncFeature(1, Features = Feature.OnEntry | Feature.OnExit)]
+        public string OnEntryExit_ExceptionHandled()
+        {
+            throw SyncFeatureAttribute.HandleableException;
+        }
+
+        [SyncFeature(1, Features = Feature.OnEntry | Feature.OnExit)]
+        public string OnEntryExit_SuccessRetry()
+        {
+            return SyncFeatureAttribute.RetryReturn;
+        }
+
+        [SyncFeature(1, Features = Feature.OnEntry | Feature.OnExit)]
+        public string OnEntryExit_SuccessReplaced()
+        {
+            return SyncFeatureAttribute.ReplaceableReturn;
+        }
+        #endregion OnEntry and OnExit
+
         #region Different Feature Apply
         public static string[] Expect_DiffApplyVariables = new[] { "OnEntry-1", "OnEntry-3", "OnException-3", "OnException-2" };
         [SyncFeature(1, Features = Feature.OnEntry)]
