@@ -10,6 +10,7 @@ using Xunit;
 
 namespace Rougamo.Fody.Tests
 {
+    [Collection(nameof(BasicUsage))]
     public class BasicTest : TestBase
     {
         public BasicTest() : base("BasicUsage.dll")

@@ -2,13 +2,11 @@
 using BasicUsage.Attributes;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace Rougamo.Fody.Tests
 {
+    [Collection(nameof(BasicUsage))]
     public class FeatureTests : TestBase
     {
         public FeatureTests() : base("BasicUsage.dll")
