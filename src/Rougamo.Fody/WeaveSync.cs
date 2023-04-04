@@ -5,7 +5,6 @@ using Rougamo.Fody.Enhances.Sync;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Net.Mail;
 using static Mono.Cecil.Cil.Instruction;
 
 namespace Rougamo.Fody
@@ -337,9 +336,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction> SyncResetRetryVariable(RouMethod rouMethod, SyncVariables variables)
         {
-#pragma warning disable CS0618 // Type or member is obsolete
             if (!Feature.SuccessRetry.IsMatch(rouMethod.Features)) return EmptyInstructions;
-#pragma warning restore CS0618 // Type or member is obsolete
 
             return new[]
             {
@@ -416,13 +413,13 @@ namespace Rougamo.Fody
                 instructions.Add(Create(OpCodes.Ldloc, variables.MethodContext));
                 instructions.Add(Create(OpCodes.Callvirt, _methodMethodContextGetHasExceptionRef));
                 instructions.Add(Create(OpCodes.Brtrue_S, onExitStart));
-            }
 
-            if (Feature.ExceptionHandle.IsMatch(rouMethod.Features))
-            {
-                instructions.Add(Create(OpCodes.Ldloc, variables.MethodContext));
-                instructions.Add(Create(OpCodes.Callvirt, _methodMethodContextGetExceptionHandledRef));
-                instructions.Add(Create(OpCodes.Brtrue_S, onExitStart));
+                if (Feature.OnException.IsMatch(rouMethod.Features))
+                {
+                    instructions.Add(Create(OpCodes.Ldloc, variables.MethodContext));
+                    instructions.Add(Create(OpCodes.Callvirt, _methodMethodContextGetExceptionHandledRef));
+                    instructions.Add(Create(OpCodes.Brtrue_S, onExitStart));
+                }
             }
 
             return instructions;
@@ -502,9 +499,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction> SyncRetryFork(RouMethod rouMethod, Instruction retry, Instruction notRetry, SyncVariables variables)
         {
-#pragma warning disable CS0618 // Type or member is obsolete
             if (!Feature.SuccessRetry.IsMatch(rouMethod.Features)) return EmptyInstructions;
-#pragma warning restore CS0618 // Type or member is obsolete
 
             return new[]
             {
