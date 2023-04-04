@@ -30,6 +30,7 @@ namespace BasicUsage.Attributes
 
             if(context.Arguments.Length == 1 && context.Arguments[0].GetType() == typeof(Guid))
             {
+                context.RewriteArguments = true;
                 context.Arguments[0] = Guid.Empty;
             }
             else if(context.Arguments.Length > 1)
