@@ -428,7 +428,7 @@ namespace Rougamo.Fody
                 methodDef.Body.ExceptionHandlers.Add(exceptionHandler);
             }
 
-            if ((features & (int)(Feature.ExceptionHandle | Feature.OnSuccess | Feature.OnExit)) != 0)
+            if ((features & (int)(Feature.OnSuccess | Feature.OnExit)) != 0 || Feature.ExceptionHandle.IsMatch(features))
             {
                 var finallyHandler = new ExceptionHandler(ExceptionHandlerType.Finally)
                 {

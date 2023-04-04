@@ -99,12 +99,12 @@ namespace Rougamo.Fody
                     anchors.Rethrow,
                 });
             }
-            if ((rouMethod.Features & (int)(Feature.ExceptionHandle | Feature.OnSuccess | Feature.OnExit)) != 0)
+            instructions.Add(anchors.FinallyStart);
+            if ((rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) != 0 || Feature.ExceptionHandle.IsMatch(rouMethod.Features))
             {
                 brCode = OpCodes.Leave;
                 instructions.Add(new[]
                 {
-                    anchors.FinallyStart,
                     anchors.SaveReturnValue,
                     anchors.OnSuccess,
                     anchors.IfSuccessRetry,
@@ -408,19 +408,20 @@ namespace Rougamo.Fody
         {
             if ((rouMethod.Features & (int)(Feature.ExceptionHandle | Feature.OnSuccess | Feature.SuccessRetry | Feature.SuccessReplace | Feature.OnExit)) == 0) return EmptyInstructions;
 
-            var instructions = new List<Instruction>
-            {
-                Create(OpCodes.Ldloc, variables.MethodContext),
-                Create(OpCodes.Callvirt, _methodMethodContextGetHasExceptionRef),
-                Create(OpCodes.Brtrue_S, onExitStart)
-            };
-
-            if (Feature.ExceptionHandle.IsMatch(rouMethod.Features))
+            var instructions = new List<Instruction>();
+            if (Feature.OnSuccess.IsMatch(rouMethod.Features))
             {
                 instructions.Add(Create(OpCodes.Ldloc, variables.MethodContext));
-                instructions.Add(Create(OpCodes.Callvirt, _methodMethodContextGetExceptionHandledRef));
+                instructions.Add(Create(OpCodes.Callvirt, _methodMethodContextGetHasExceptionRef));
                 instructions.Add(Create(OpCodes.Brtrue_S, onExitStart));
-            }
+
+                if (Feature.ExceptionHandle.IsMatch(rouMethod.Features))
+                {
+                    instructions.Add(Create(OpCodes.Ldloc, variables.MethodContext));
+                    instructions.Add(Create(OpCodes.Callvirt, _methodMethodContextGetExceptionHandledRef));
+                    instructions.Add(Create(OpCodes.Brtrue_S, onExitStart));
+                }
+            };
 
             return instructions;
         }

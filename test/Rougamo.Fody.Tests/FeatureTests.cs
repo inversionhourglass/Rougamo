@@ -53,5 +53,44 @@ namespace Rougamo.Fody.Tests
             instance.OnEntry_SuccessReplaced();
             Assert.Equal(FeatureSyncUseCase.Expect_OnEntry, actual);
         }
+
+        [Fact]
+        public void SyncFeatureOnExceptionTest()
+        {
+            var instance = GetInstance("FeatureSyncUseCase");
+            var actual = (List<string>)instance.Recording;
+
+            actual.Clear();
+            instance.OnException(string.Empty);
+            Assert.Empty(actual);
+
+            actual.Clear();
+            instance.OnException_RewriteArgs(Guid.NewGuid());
+            Assert.Empty(actual);
+
+            actual.Clear();
+            instance.OnException_EntryReplace(string.Empty, null);
+            Assert.Empty(actual);
+
+            actual.Clear();
+            Assert.Throws<NotImplementedException>(() => { instance.OnException_Exception(); });
+            Assert.Equal(FeatureSyncUseCase.Expect_OnException, actual);
+
+            actual.Clear();
+            Assert.Throws(SyncFeatureAttribute.RetryException.GetType(), () => { instance.OnException_ExceptionRetry(); });
+            Assert.Equal(FeatureSyncUseCase.Expect_OnException, actual);
+
+            actual.Clear();
+            Assert.Throws(SyncFeatureAttribute.HandleableException.GetType(), () => { instance.OnException_ExceptionHandled(); });
+            Assert.Equal(FeatureSyncUseCase.Expect_OnException, actual);
+
+            actual.Clear();
+            instance.OnException_SuccessRetry();
+            Assert.Empty(actual);
+
+            actual.Clear();
+            instance.OnException_SuccessReplaced();
+            Assert.Empty(actual);
+        }
     }
 }
