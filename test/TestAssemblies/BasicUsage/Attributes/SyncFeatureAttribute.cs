@@ -4,6 +4,7 @@ using System;
 
 namespace BasicUsage.Attributes
 {
+    [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
     public class SyncFeatureAttribute : MoAttribute
     {
         public static readonly Exception RetryException = new InvalidOperationException();

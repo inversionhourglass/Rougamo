@@ -92,5 +92,20 @@ namespace Rougamo.Fody.Tests
             instance.OnException_SuccessReplaced();
             Assert.Empty(actual);
         }
+
+        [Fact]
+        public void DifferentFeatureApplyTest()
+        {
+            var instance = GetInstance("FeatureSyncUseCase");
+            var actual = (List<string>)instance.Recording;
+
+            actual.Clear();
+            Assert.Throws<NotImplementedException>(() => instance.DiffApplyVariables());
+            Assert.Equal(FeatureSyncUseCase.Expect_DiffApplyVariables, actual);
+
+            actual.Clear();
+            Assert.Throws<NotImplementedException>(() => instance.DiffApplyArray());
+            Assert.Equal(FeatureSyncUseCase.Expect_DiffApplyArray, actual);
+        }
     }
 }

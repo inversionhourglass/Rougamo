@@ -112,5 +112,27 @@ namespace BasicUsage
             return SyncFeatureAttribute.ReplaceableReturn;
         }
         #endregion OnException
+
+        #region Different Feature Apply
+        public static string[] Expect_DiffApplyVariables = new[] { "OnEntry-1", "OnEntry-3", "OnException-3", "OnException-2" };
+        [SyncFeature(1, Features = Feature.OnEntry)]
+        [SyncFeature(2, Features = Feature.OnException)]
+        [SyncFeature(3, Features = Feature.OnEntry | Feature.OnException)]
+        public string DiffApplyVariables()
+        {
+            throw new NotImplementedException();
+        }
+
+        public static string[] Expect_DiffApplyArray = new[] { "OnEntry-1", "OnEntry-3", "OnEntry-4", "OnEntry-5", "OnException-4", "OnException-2" };
+        [SyncFeature(1, Features = Feature.OnEntry)]
+        [SyncFeature(2, Features = Feature.OnException)]
+        [SyncFeature(3, Features = Feature.OnEntry)]
+        [SyncFeature(4, Features = Feature.OnEntry | Feature.OnException)]
+        [SyncFeature(5, Features = Feature.OnEntry)]
+        public string DiffApplyArray()
+        {
+            throw new NotImplementedException();
+        }
+        #endregion Different Feature Apply
     }
 }

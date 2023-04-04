@@ -7,6 +7,6 @@
 	- [ ] 异步织入
 	- [ ] 迭代器织入
 	- [ ] 异步迭代器织入
-	- [ ] 多个Mo同时应用时，根据当前Mo的feature决定是否执行OnEntry、OnException、OnSuccess以及OnExit
+	- [x] 多个Mo同时应用时，根据当前Mo的feature决定是否执行OnEntry、OnException、OnSuccess以及OnExit
 - [ ] 支持更灵活的方法扫描
 - [ ] 增加CLI，结合CICD解决间接依赖的问题

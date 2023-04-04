@@ -198,13 +198,13 @@ namespace Rougamo.Fody
 
         private IList<Instruction> SyncOnEntry(RouMethod rouMethod, Instruction endAnchor, SyncVariables variables)
         {
-            if (!Feature.OnEntry.IsMatch(rouMethod.Features)) return EmptyInstructions;
+            if (rouMethod.Mos.All(x => !Feature.OnEntry.IsMatch(x.Features))) return EmptyInstructions;
 
             if (variables.MoArray != null)
             {
-                return ExecuteMoMethod(Constants.METHOD_OnEntry, rouMethod.MethodDef, rouMethod.Mos.Length, endAnchor, variables.MoArray, variables.MethodContext, null, null, false);
+                return ExecuteMoMethod(Constants.METHOD_OnEntry, rouMethod.MethodDef, rouMethod.Mos, endAnchor, variables.MoArray, variables.MethodContext, null, null, false);
             }
-            return ExecuteMoMethod(Constants.METHOD_OnEntry, rouMethod.Mos.Length, variables.Mos, variables.MethodContext, null, null, false);
+            return ExecuteMoMethod(Constants.METHOD_OnEntry, rouMethod.Mos, variables.Mos, variables.MethodContext, null, null, false);
         }
 
         private IList<Instruction> SyncIfOnEntryReplacedReturn(RouMethod rouMethod, BoxTypeReference returnBoxTypeRef, Instruction endAnchor, SyncVariables variables)
@@ -361,13 +361,13 @@ namespace Rougamo.Fody
 
         private IList<Instruction> SyncOnException(RouMethod rouMethod, Instruction endAnchor, SyncVariables variables)
         {
-            if (!Feature.OnException.IsMatch(rouMethod.Features)) return EmptyInstructions;
+            if (rouMethod.Mos.All(x => !Feature.OnException.IsMatch(x.Features))) return EmptyInstructions;
 
             if (variables.MoArray != null)
             {
-                return ExecuteMoMethod(Constants.METHOD_OnException, rouMethod.MethodDef, rouMethod.Mos.Length, endAnchor, variables.MoArray, variables.MethodContext, null, null, _config.ReverseCallNonEntry);
+                return ExecuteMoMethod(Constants.METHOD_OnException, rouMethod.MethodDef, rouMethod.Mos, endAnchor, variables.MoArray, variables.MethodContext, null, null, _config.ReverseCallNonEntry);
             }
-            return ExecuteMoMethod(Constants.METHOD_OnException, rouMethod.Mos.Length, variables.Mos, variables.MethodContext, null, null, _config.ReverseCallNonEntry);
+            return ExecuteMoMethod(Constants.METHOD_OnException, rouMethod.Mos, variables.Mos, variables.MethodContext, null, null, _config.ReverseCallNonEntry);
         }
 
         private IList<Instruction> SyncIfExceptionRetry(RouMethod rouMethod, Instruction retryAnchor, Instruction endAnchor, SyncVariables variables)
@@ -446,13 +446,13 @@ namespace Rougamo.Fody
 
         private IList<Instruction> SyncOnSuccess(RouMethod rouMethod, Instruction endAnchor, SyncVariables variables)
         {
-            if (!Feature.OnSuccess.IsMatch(rouMethod.Features)) return EmptyInstructions;
+            if (rouMethod.Mos.All(x => !Feature.OnSuccess.IsMatch(x.Features))) return EmptyInstructions;
 
             if (variables.MoArray != null)
             {
-                return ExecuteMoMethod(Constants.METHOD_OnSuccess, rouMethod.MethodDef, rouMethod.Mos.Length, endAnchor, variables.MoArray, variables.MethodContext, null, null, _config.ReverseCallNonEntry);
+                return ExecuteMoMethod(Constants.METHOD_OnSuccess, rouMethod.MethodDef, rouMethod.Mos, endAnchor, variables.MoArray, variables.MethodContext, null, null, _config.ReverseCallNonEntry);
             }
-            return ExecuteMoMethod(Constants.METHOD_OnSuccess, rouMethod.Mos.Length, variables.Mos, variables.MethodContext, null, null, _config.ReverseCallNonEntry);
+            return ExecuteMoMethod(Constants.METHOD_OnSuccess, rouMethod.Mos, variables.Mos, variables.MethodContext, null, null, _config.ReverseCallNonEntry);
         }
 
         private IList<Instruction> SyncIfOnSuccessRetry(RouMethod rouMethod, Instruction endAnchor, Instruction endFinally, SyncVariables variables)
@@ -489,13 +489,13 @@ namespace Rougamo.Fody
 
         private IList<Instruction> SyncOnExit(RouMethod rouMethod, Instruction endAnchor, SyncVariables variables)
         {
-            if (!Feature.OnExit.IsMatch(rouMethod.Features)) return EmptyInstructions;
+            if (rouMethod.Mos.All(x => !Feature.OnExit.IsMatch(x.Features))) return EmptyInstructions;
 
             if (variables.MoArray != null)
             {
-                return ExecuteMoMethod(Constants.METHOD_OnExit, rouMethod.MethodDef, rouMethod.Mos.Length, endAnchor, variables.MoArray, variables.MethodContext, null, null, _config.ReverseCallNonEntry);
+                return ExecuteMoMethod(Constants.METHOD_OnExit, rouMethod.MethodDef, rouMethod.Mos, endAnchor, variables.MoArray, variables.MethodContext, null, null, _config.ReverseCallNonEntry);
             }
-            return ExecuteMoMethod(Constants.METHOD_OnExit, rouMethod.Mos.Length, variables.Mos, variables.MethodContext, null, null, _config.ReverseCallNonEntry);
+            return ExecuteMoMethod(Constants.METHOD_OnExit, rouMethod.Mos, variables.Mos, variables.MethodContext, null, null, _config.ReverseCallNonEntry);
         }
 
         private IList<Instruction> SyncRetryFork(RouMethod rouMethod, Instruction retry, Instruction notRetry, SyncVariables variables)
