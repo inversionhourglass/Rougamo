@@ -48,7 +48,7 @@ namespace BasicUsage.Attributes
             {
                 if (context.RetryCount > 0)
                 {
-                    context.HandledException(this, RetriedReturn);
+                    context.RetryCount = 0;
                     return;
                 }
                 context.RetryCount = 1;

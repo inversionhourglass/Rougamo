@@ -326,6 +326,50 @@ namespace Rougamo.Fody.Tests
         }
 
         [Fact]
+        public void SyncFeatureExceptionRetryTest()
+        {
+            var instance = GetInstance("FeatureSyncUseCase");
+            var actual = (List<string>)instance.Recording;
+
+            actual.Clear();
+            instance.ExceptionRetry(string.Empty);
+            Assert.Empty(actual);
+
+            actual.Clear();
+            var guid1 = Guid.NewGuid();
+            var guid2 = (Guid)instance.ExceptionRetry_RewriteArgs(guid1);
+            Assert.Empty(actual);
+            Assert.Equal(guid1, guid2);
+
+            actual.Clear();
+            var a = "a";
+            var b = "b";
+            var value = instance.ExceptionRetry_EntryReplace(a, b);
+            Assert.Empty(actual);
+            Assert.Equal(a + b, value);
+
+            actual.Clear();
+            Assert.Throws<NotImplementedException>(() => { instance.ExceptionRetry_Exception(); });
+            Assert.Equal(FeatureSyncUseCase.Expect_ExceptionRetry, actual);
+
+            actual.Clear();
+            Assert.Throws(SyncFeatureAttribute.RetryException.GetType(), () => { instance.ExceptionRetry_ExceptionRetry(); });
+            Assert.Equal(FeatureSyncUseCase.Expect_ExceptionRetried, actual);
+
+            actual.Clear();
+            Assert.Throws(SyncFeatureAttribute.HandleableException.GetType(), () => { instance.ExceptionRetry_ExceptionHandled(); });
+            Assert.Equal(FeatureSyncUseCase.Expect_ExceptionRetry, actual);
+
+            actual.Clear();
+            instance.ExceptionRetry_SuccessRetry();
+            Assert.Empty(actual);
+
+            actual.Clear();
+            instance.ExceptionRetry_SuccessReplaced();
+            Assert.Empty(actual);
+        }
+
+        [Fact]
         public void DifferentFeatureApplyTest()
         {
             var instance = GetInstance("FeatureSyncUseCase");

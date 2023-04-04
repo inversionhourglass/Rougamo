@@ -338,7 +338,7 @@ namespace Rougamo.Fody
         private IList<Instruction> SyncResetRetryVariable(RouMethod rouMethod, SyncVariables variables)
         {
 #pragma warning disable CS0618 // Type or member is obsolete
-            if (!Feature.RetryAny.IsMatch(rouMethod.Features)) return EmptyInstructions;
+            if (!Feature.SuccessRetry.IsMatch(rouMethod.Features)) return EmptyInstructions;
 #pragma warning restore CS0618 // Type or member is obsolete
 
             return new[]
@@ -503,7 +503,7 @@ namespace Rougamo.Fody
         private IList<Instruction> SyncRetryFork(RouMethod rouMethod, Instruction retry, Instruction notRetry, SyncVariables variables)
         {
 #pragma warning disable CS0618 // Type or member is obsolete
-            if (!Feature.RetryAny.IsMatch(rouMethod.Features)) return EmptyInstructions;
+            if (!Feature.SuccessRetry.IsMatch(rouMethod.Features)) return EmptyInstructions;
 #pragma warning restore CS0618 // Type or member is obsolete
 
             return new[]
