@@ -20,7 +20,7 @@ namespace Rougamo.Fody
             var variables = IteratorResolveVariables(rouMethod, moveNextMethodDef, stateMachineTypeDef);
             var anchors = IteratorCreateAnchors(rouMethod.MethodDef, moveNextMethodDef, variables);
             IteratorSetAnchors(rouMethod.MethodDef, moveNextMethodDef, variables, anchors);
-            SetTryCatchFinally(moveNextMethodDef, anchors);
+            SetTryCatchFinally(rouMethod.Features, moveNextMethodDef, anchors);
 
             rouMethod.MethodDef.Body.Instructions.InsertAfter(anchors.InitMos, StateMachineInitMos(rouMethod, fields, variables));
             rouMethod.MethodDef.Body.Instructions.InsertAfter(anchors.InitContext, StateMachineInitMethodContext(rouMethod, fields, variables));

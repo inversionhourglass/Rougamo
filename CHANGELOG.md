@@ -2,8 +2,8 @@
 - [x] 需要织入的Mo不足X个时不使用数组保存
 - [x] 支持排序
 - [ ] 支持按需织入
-	- [ ] 同步织入
-		- [ ] 优化织入内容，尝试省略try..catch..finally，如果没有OnException、OnSuccess以及OnExit的织入
+	- [x] 同步织入
+		- [x] 优化织入内容，尝试省略try..catch..finally，如果没有OnException、OnSuccess以及OnExit的织入
 	- [ ] 异步织入
 	- [ ] 迭代器织入
 	- [ ] 异步迭代器织入

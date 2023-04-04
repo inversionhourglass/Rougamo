@@ -413,26 +413,32 @@ namespace Rougamo.Fody
             return exceptionHandler ?? throw new RougamoException($"[{methodDef.FullName}] can not find outer exception handler");
         }
 
-        private void SetTryCatchFinally(MethodDefinition methodDef, ITryCatchFinallyAnchors anchors)
+        private void SetTryCatchFinally(int features, MethodDefinition methodDef, ITryCatchFinallyAnchors anchors)
         {
-            var exceptionHandler = new ExceptionHandler(ExceptionHandlerType.Catch)
+            if (Feature.OnException.IsMatch(features))
             {
-                CatchType = _typeExceptionRef,
-                TryStart = anchors.TryStart,
-                TryEnd = anchors.CatchStart,
-                HandlerStart = anchors.CatchStart,
-                HandlerEnd = anchors.FinallyStart
-            };
-            var finallyHandler = new ExceptionHandler(ExceptionHandlerType.Finally)
-            {
-                TryStart = anchors.TryStart,
-                TryEnd = anchors.FinallyStart,
-                HandlerStart = anchors.FinallyStart,
-                HandlerEnd = anchors.FinallyEnd
-            };
+                var exceptionHandler = new ExceptionHandler(ExceptionHandlerType.Catch)
+                {
+                    CatchType = _typeExceptionRef,
+                    TryStart = anchors.TryStart,
+                    TryEnd = anchors.CatchStart,
+                    HandlerStart = anchors.CatchStart,
+                    HandlerEnd = anchors.FinallyStart
+                };
+                methodDef.Body.ExceptionHandlers.Add(exceptionHandler);
+            }
 
-            methodDef.Body.ExceptionHandlers.Add(exceptionHandler);
-            methodDef.Body.ExceptionHandlers.Add(finallyHandler);
+            if ((features & (int)(Feature.ExceptionHandle | Feature.OnSuccess | Feature.OnExit)) != 0)
+            {
+                var finallyHandler = new ExceptionHandler(ExceptionHandlerType.Finally)
+                {
+                    TryStart = anchors.TryStart,
+                    TryEnd = anchors.FinallyStart,
+                    HandlerStart = anchors.FinallyStart,
+                    HandlerEnd = anchors.FinallyEnd
+                };
+                methodDef.Body.ExceptionHandlers.Add(finallyHandler);
+            }
         }
     }
 }
