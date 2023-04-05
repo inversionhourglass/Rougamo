@@ -32,6 +32,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Issues", "test\TestAssembli
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ExUsage", "test\TestAssemblies\ExUsage\ExUsage.csproj", "{D7059485-5568-4815-8BD7-AFAE43D2F742}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Discoverers", "test\TestAssemblies\Discoverers\Discoverers.csproj", "{82B40387-A543-426E-A6E5-4494C0679AED}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -62,6 +64,10 @@ Global
 		{D7059485-5568-4815-8BD7-AFAE43D2F742}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D7059485-5568-4815-8BD7-AFAE43D2F742}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D7059485-5568-4815-8BD7-AFAE43D2F742}.Release|Any CPU.Build.0 = Release|Any CPU
+		{82B40387-A543-426E-A6E5-4494C0679AED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{82B40387-A543-426E-A6E5-4494C0679AED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{82B40387-A543-426E-A6E5-4494C0679AED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{82B40387-A543-426E-A6E5-4494C0679AED}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -74,6 +80,7 @@ Global
 		{D7315A9F-D9E0-44FF-A826-BBC3385CF844} = {8C9FFBEC-F477-4037-B3FE-BAF02ED3A16C}
 		{0D22AE69-6F02-4890-BEF1-1D391E15FEF4} = {400088B1-D25F-49FE-887E-E9E2FE62B3CB}
 		{D7059485-5568-4815-8BD7-AFAE43D2F742} = {400088B1-D25F-49FE-887E-E9E2FE62B3CB}
+		{82B40387-A543-426E-A6E5-4494C0679AED} = {400088B1-D25F-49FE-887E-E9E2FE62B3CB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0BD0178E-76E0-4736-A036-89B1AA268A05}

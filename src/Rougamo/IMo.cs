@@ -1,4 +1,5 @@
 ﻿using Rougamo.Context;
+using System;
 
 namespace Rougamo
 {
@@ -10,6 +11,11 @@ namespace Rougamo
         /// Weavable method type, this attribute has no effect when applied at the method level.
         /// </summary>
         AccessFlags Flags { get; }
+
+        /// <summary>
+        /// Type instance of <see cref="IMethodDiscoverer"/>
+        /// </summary>
+        Type? DiscovererType { get; set; }
 
         /// <summary>
         /// Which features will be weaving.

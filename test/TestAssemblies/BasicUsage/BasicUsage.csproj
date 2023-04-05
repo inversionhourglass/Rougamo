@@ -12,6 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\Rougamo\Rougamo.csproj" />
+    <ProjectReference Include="..\Discoverers\Discoverers.csproj" />
   </ItemGroup>
 
 </Project>

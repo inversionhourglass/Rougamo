@@ -29,6 +29,9 @@ namespace Rougamo
         public virtual Feature Features { get; set; }
 
         /// <inheritdoc/>
+        public virtual Type? DiscovererType { get; set; }
+
+        /// <inheritdoc/>
         public virtual double Order { get; set; }
 
         /// <inheritdoc/>

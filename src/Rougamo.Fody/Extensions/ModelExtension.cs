@@ -4,6 +4,7 @@ using Mono.Cecil.Rocks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace Rougamo.Fody
 {
@@ -38,6 +39,71 @@ namespace Rougamo.Fody
         }
 
         #endregion Extract-Mo-Flags
+
+        #region Extract-Mo-Discoverer
+
+        public static object? ExtractDiscoverer(this Mo mo)
+        {
+            TypeDefinition? discovererTypeDef = null;
+            var typeDef = mo.TypeDef;
+            if (mo.Attribute != null)
+            {
+                if (mo.Attribute.Properties.TryGet(Constants.PROP_DiscovererType, out var property))
+                {
+                    var value = property!.Value.Argument.Value;
+                    if (value is TypeReference typeRef)
+                    {
+                        discovererTypeDef = typeRef.Resolve();
+                    }
+                    else if (value is TypeDefinition typeDef2)
+                    {
+                        discovererTypeDef = typeDef2;
+                    }
+                    else
+                    {
+                        throw new RougamoException($"Unknow discoverer type({value.GetType()}) from {mo.Attribute.AttributeType}");
+                    }
+                }
+                else
+                {
+                    typeDef = mo.Attribute.AttributeType.Resolve();
+                }
+            }
+            discovererTypeDef ??= ExtractFromIl(typeDef!, Constants.PROP_DiscovererType, Constants.TYPE_Type, ParseDiscoverer);
+            if (discovererTypeDef == null) return null;
+
+            string assemblyName;
+            if (discovererTypeDef.Scope is AssemblyNameReference anRef)
+            {
+                assemblyName = anRef.FullName;
+            }
+            else if (discovererTypeDef.Scope is ModuleDefinition moduleDef)
+            {
+                assemblyName = moduleDef.Assembly.FullName;
+            }
+            else
+            {
+                throw new RougamoException($"Cannot resolve discoverer({discovererTypeDef.FullName}), scope type is {discovererTypeDef.Scope.GetType()}");
+            }
+            var fullName = $"{discovererTypeDef.FullName}, {assemblyName}";
+            var discovererType = Type.GetType(fullName);
+            var discoverer = Activator.CreateInstance(discovererType) ?? throw new RougamoException($"Cannot create instance of {fullName}");
+            return discoverer;
+        }
+
+        private static TypeDefinition? ParseDiscoverer(Instruction instruction)
+        {
+            if(instruction.OpCode.Code == Code.Call &&
+                instruction.Operand is MethodReference methodRef && methodRef.Name == nameof(Type.GetTypeFromHandle) &&
+                instruction.Previous.OpCode.Code == Code.Ldtoken)
+            {
+                var operand = instruction.Previous.Operand;
+                return operand as TypeDefinition ?? (operand as TypeReference)!.Resolve();
+            }
+            return null;
+        }
+
+        #endregion Extract-Mo-Discoverer
 
         #region Extract-Mo-Features
 
@@ -117,6 +183,58 @@ namespace Rougamo.Fody
         }
 
         private static T? ExtractFromCtor<T>(TypeDefinition typeDef, string propTypeFullName, string propFieldName, Func<Instruction, T?> tryResolve) where T : struct
+        {
+            do
+            {
+                var nonCtor = typeDef.GetConstructors().FirstOrDefault(ctor => !ctor.HasParameters);
+                if (nonCtor != null)
+                {
+                    foreach (var instruction in nonCtor.Body.Instructions)
+                    {
+                        if (instruction.IsStfld(propFieldName, propTypeFullName))
+                        {
+                            return tryResolve(instruction.Previous);
+                        }
+                    }
+                }
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
+                typeDef = typeDef.BaseType?.Resolve();
+#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
+            } while (typeDef != null);
+            return null;
+        }
+
+        private static T? ExtractFromIl<T>(TypeDefinition typeDef, string propertyName, string propertyTypeFullName, Func<Instruction, T?> tryResolve) where T : class
+        {
+            return ExtractFromProp(typeDef, propertyName, tryResolve) ??
+                ExtractFromCtor(typeDef, propertyTypeFullName, string.Format(Constants.FIELD_Format, propertyName), tryResolve);
+        }
+
+        private static T? ExtractFromProp<T>(TypeDefinition typeDef, string propName, Func<Instruction, T?> tryResolve) where T : class
+        {
+            do
+            {
+                var property = typeDef.Properties.FirstOrDefault(prop => prop.Name == propName);
+                if (property != null)
+                {
+                    var instructions = property.GetMethod.Body.Instructions;
+                    for (int i = instructions.Count - 1; i >= 0; i--)
+                    {
+                        var value = tryResolve(instructions[i]);
+                        if (value != null) return value;
+                    }
+                    // 一旦在类定义中找到了属性定义，即使没有查找到对应初始化代码，也没有必要继续往父类查找了
+                    // 因为已经override的属性，父类的赋值操作没有意义，直接进行后续的构造方法查找即可
+                    return null;
+                }
+#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
+                typeDef = typeDef.BaseType?.Resolve();
+#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
+            } while (typeDef != null);
+            return null;
+        }
+
+        private static T? ExtractFromCtor<T>(TypeDefinition typeDef, string propTypeFullName, string propFieldName, Func<Instruction, T?> tryResolve) where T : class
         {
             do
             {
