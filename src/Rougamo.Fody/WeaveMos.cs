@@ -17,11 +17,7 @@ namespace Rougamo.Fody
             {
                 foreach (var rouMethod in rouType.Methods)
                 {
-                    if (rouMethod.MethodDef.IsEmpty())
-                    {
-                        EmptyMethodWeave(rouMethod);
-                    }
-                    else if (rouMethod.IsIterator)
+                    if (rouMethod.IsIterator)
                     {
                         IteratorMethodWeave(rouMethod);
                     }
@@ -41,84 +37,7 @@ namespace Rougamo.Fody
             }
         }
 
-        private void EmptyMethodWeave(RouMethod rouMethod)
-        {
-            var bodyInstructions = rouMethod.MethodDef.Body.Instructions;
-            var ret = bodyInstructions.Last();
-            Instruction afterOnSuccessNop;
-            if (bodyInstructions.Count > 1)
-            {
-                afterOnSuccessNop = ret.Previous;
-            }
-            else
-            {
-                afterOnSuccessNop = Create(OpCodes.Nop);
-                bodyInstructions.Insert(bodyInstructions.Count - 1, afterOnSuccessNop);
-            }
-
-            var instructions = InitMoArrayVariable(rouMethod, out var mosVariable);
-            var contextVariable = CreateMethodContextVariable(rouMethod.MethodDef, mosVariable, false, false, instructions);
-
-            ExecuteMoMethod(Constants.METHOD_OnEntry, rouMethod.MethodDef, rouMethod.Mos, mosVariable, contextVariable, instructions, false);
-
-            instructions.Add(Create(OpCodes.Ldloc, contextVariable));
-            instructions.Add(Create(OpCodes.Callvirt, _methodMethodContextGetReturnValueReplacedRef));
-            instructions.Add(Create(OpCodes.Brtrue_S, afterOnSuccessNop));
-
-            ExecuteMoMethod(Constants.METHOD_OnSuccess, rouMethod.MethodDef, rouMethod.Mos, mosVariable, contextVariable, instructions, _config.ReverseCallNonEntry);
-
-            rouMethod.MethodDef.Body.Instructions.InsertBefore(afterOnSuccessNop, instructions);
-
-            instructions = new List<Instruction>();
-            ExecuteMoMethod(Constants.METHOD_OnExit, rouMethod.MethodDef, rouMethod.Mos, mosVariable, contextVariable, instructions, _config.ReverseCallNonEntry);
-            rouMethod.MethodDef.Body.Instructions.InsertAfter(afterOnSuccessNop, instructions);
-            rouMethod.MethodDef.Body.OptimizePlus();
-        }
-
         #region LoadMosOnStack
-
-        private VariableDefinition[] LoadMosOnStack(RouMethod rouMethod, List<Instruction> instructions)
-        {
-            var mos = new VariableDefinition[rouMethod.Mos.Length];
-            var i = 0;
-            foreach (var mo in rouMethod.Mos)
-            {
-                mos[i++] = LoadMoOnStack(mo, rouMethod.MethodDef.Body, instructions);
-            }
-            return mos;
-        }
-
-        private VariableDefinition LoadMoOnStack(Mo mo, MethodBody methodBody, List<Instruction> instructions)
-        {
-            VariableDefinition variable;
-            if (mo.Attribute != null)
-            {
-                variable = methodBody.CreateVariable(Import(mo.Attribute.AttributeType));
-                instructions.AddRange(LoadAttributeArgumentIns(mo.Attribute.ConstructorArguments));
-                instructions.Add(Create(OpCodes.Newobj, Import(mo.Attribute.Constructor)));
-                instructions.Add(Create(OpCodes.Stloc, variable));
-                if (mo.Attribute.HasProperties)
-                {
-                    instructions.AddRange(LoadAttributePropertyIns(mo.Attribute.AttributeType.Resolve(), mo.Attribute.Properties, variable));
-                }
-            }
-            else
-            {
-                variable = methodBody.CreateVariable(Import(mo.TypeDef!));
-                instructions.Add(Create(OpCodes.Newobj, Import(mo.TypeDef!.GetZeroArgsCtor())));
-                instructions.Add(Create(OpCodes.Stloc, variable));
-            }
-            return variable;
-        }
-
-        private List<Instruction> InitMoArrayVariable(RouMethod rouMethod, out VariableDefinition mosVariable)
-        {
-            mosVariable = rouMethod.MethodDef.Body.CreateVariable(_typeIMoArrayRef);
-            var instructions = InitMoArray(rouMethod.Mos);
-            instructions.Add(Create(OpCodes.Stloc, mosVariable));
-
-            return instructions;
-        }
 
         private IList<Instruction> CreateTempMoArray(VariableDefinition[] moVariables)
         {
@@ -205,19 +124,6 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private Collection<Instruction> LoadAttributePropertyIns(TypeDefinition attrTypeDef, Collection<CustomAttributeNamedArgument> properties, VariableDefinition attributeDef)
-        {
-            var ins = new Collection<Instruction>();
-            for (var i = 0; i < properties.Count; i++)
-            {
-                ins.Add(Create(OpCodes.Ldloc, attributeDef));
-                ins.Add(LoadValueOnStack(properties[i].Argument.Type, properties[i].Argument.Value));
-                ins.Add(Create(OpCodes.Callvirt, attrTypeDef.RecursionImportPropertySet(ModuleDefinition, properties[i].Name)));
-            }
-
-            return ins;
-        }
-
         private Collection<Instruction> LoadAttributePropertyDup(TypeDefinition attrTypeDef, Collection<CustomAttributeNamedArgument> properties)
         {
             var ins = new Collection<Instruction>();
@@ -232,40 +138,6 @@ namespace Rougamo.Fody
         }
 
         #endregion LoadMosOnStack
-
-        private VariableDefinition CreateMethodContextVariable(MethodDefinition methodDef, VariableDefinition mosVariable, bool isAsync, bool isIterator, List<Instruction> instructions)
-        {
-            var variable = methodDef.Body.CreateVariable(_typeMethodContextRef);
-
-            InitMethodContext(methodDef, isAsync, isIterator, mosVariable, null, null, instructions);
-            instructions.Add(Create(OpCodes.Stloc, variable));
-
-            return variable;
-        }
-
-        private void InitMethodContext(MethodDefinition methodDef, bool isAsync, bool isIterator, VariableDefinition? mosVariable, VariableDefinition? stateMachineVariable, FieldReference? mosFieldRef, List<Instruction> instructions)
-        {
-            var isAsyncCode = isAsync ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0;
-            var isIteratorCode = isIterator ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0;
-            var mosNonEntryFIFO = _config.ReverseCallNonEntry ? OpCodes.Ldc_I4_0 : OpCodes.Ldc_I4_1;
-            instructions.Add(LoadThisOnStack(methodDef));
-            instructions.AddRange(LoadDeclaringTypeOnStack(methodDef));
-            instructions.AddRange(LoadMethodBaseOnStack(methodDef));
-            instructions.Add(Create(isAsyncCode));
-            instructions.Add(Create(isIteratorCode));
-            instructions.Add(Create(mosNonEntryFIFO));
-            if (stateMachineVariable == null)
-            {
-                instructions.Add(Create(OpCodes.Ldloc, mosVariable));
-            }
-            else
-            {
-                instructions.Add(stateMachineVariable.LdlocOrA());
-                instructions.Add(Create(OpCodes.Ldfld, mosFieldRef));
-            }
-            instructions.AddRange(LoadMethodArgumentsOnStack(methodDef));
-            instructions.Add(Create(OpCodes.Newobj, _methodMethodContextCtorRef));
-        }
 
         private List<Instruction> InitMethodContext(MethodDefinition methodDef, bool isAsync, bool isIterator, VariableDefinition? moArrayVariable, VariableDefinition? stateMachineVariable, FieldReference? mosFieldRef)
         {
@@ -293,15 +165,6 @@ namespace Rougamo.Fody
             instructions.Add(Create(OpCodes.Newobj, _methodMethodContextCtorRef));
 
             return instructions;
-        }
-
-        private void ExecuteMoMethod(string methodName, MethodDefinition methodDef, Mo[] mos, VariableDefinition moArrayVariable, VariableDefinition contextVariable, List<Instruction> instructions, bool reverseCall)
-        {
-            var loopExit = Create(OpCodes.Nop);
-
-            instructions.AddRange(ExecuteMoMethod(methodName, methodDef, mos, loopExit, moArrayVariable, contextVariable, null, null, reverseCall));
-
-            instructions.Add(loopExit);
         }
 
         private List<Instruction> ExecuteMoMethod(string methodName, MethodDefinition methodDef, Mo[] mos, Instruction loopExit, VariableDefinition? mosVariable, VariableDefinition? contextVariable, FieldReference? mosField, FieldReference? contextField, bool reverseCall)

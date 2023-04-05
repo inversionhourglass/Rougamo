@@ -2,12 +2,6 @@
 - [x] 需要织入的Mo不足X个时不使用数组保存
 - [x] 支持排序
 - [x] 支持按需织入
-	- [x] 同步织入
-		- [x] 优化织入内容，尝试省略try..catch..finally，如果没有OnException、OnSuccess以及OnExit的织入
-	- [x] 异步织入
-	- [x] 迭代器织入
-	- [x] 异步迭代器织入
-	- [x] 多个Mo同时应用时，根据当前Mo的feature决定是否执行OnEntry、OnException、OnSuccess以及OnExit
+- [x] 空方法织入优化，直接删除空方法织入的独立逻辑，如果希望空方法织入精简的代码，通过按需织入的方式实现
 - [ ] 支持更灵活的方法扫描
 - [ ] 增加CLI，结合CICD解决间接依赖的问题
-- [ ] 空方法织入优化
