@@ -19,26 +19,26 @@ namespace Rougamo.Fody
             var fields = IteratorResolveFields(rouMethod, stateMachineTypeDef);
             var variables = IteratorResolveVariables(rouMethod, moveNextMethodDef, stateMachineTypeDef);
             var anchors = IteratorCreateAnchors(rouMethod.MethodDef, moveNextMethodDef, variables);
-            IteratorSetAnchors(rouMethod.MethodDef, moveNextMethodDef, variables, anchors);
+            IteratorSetAnchors(rouMethod, moveNextMethodDef, variables, anchors);
             SetTryCatchFinally(rouMethod.Features, moveNextMethodDef, anchors);
 
             rouMethod.MethodDef.Body.Instructions.InsertAfter(anchors.InitMos, StateMachineInitMos(rouMethod, fields, variables));
             rouMethod.MethodDef.Body.Instructions.InsertAfter(anchors.InitContext, StateMachineInitMethodContext(rouMethod, fields, variables));
-            if (fields.RecordedReturn != null) rouMethod.MethodDef.Body.Instructions.InsertAfter(anchors.InitRecordedReturn, IteratorInitRecordedReturn(fields, variables));
+            rouMethod.MethodDef.Body.Instructions.InsertAfter(anchors.InitRecordedReturn, IteratorInitRecordedReturn(fields, variables));
 
             var instructions = moveNextMethodDef.Body.Instructions;
             instructions.InsertAfter(anchors.IfFirstTimeEntry, StateMachineIfFirstTimeEntry(rouMethod, 0, anchors.TryStart, fields));
             instructions.InsertAfter(anchors.OnEntry, StateMachineOnEntry(rouMethod, moveNextMethodDef, anchors.RewriteArg, fields));
             instructions.InsertAfter(anchors.RewriteArg, StateMachineRewriteArguments(rouMethod, anchors.TryStart, fields));
 
-            instructions.InsertAfter(anchors.CatchStart, IteratorSaveException(fields, variables));
+            instructions.InsertAfter(anchors.CatchStart, IteratorSaveException(rouMethod, fields, variables));
             instructions.InsertAfter(anchors.OnException, StateMachineOnException(rouMethod, moveNextMethodDef, anchors.OnExitAfterException, fields));
             instructions.InsertAfter(anchors.OnExitAfterException, StateMachineOnExit(rouMethod, moveNextMethodDef, anchors.Rethrow, fields));
 
-            if (fields.RecordedReturn != null) instructions.InsertAfter(anchors.FinallyStart, IteratorSaveYeildReturn(fields));
-            instructions.InsertAfter(anchors.IfLastYeild, IteratorIfLastYeild(anchors.EndFinally, variables));
-            instructions.InsertAfter(anchors.IfHasException, IteratorIfHasException(anchors.OnExitAfterSuccess, fields));
-            if (fields.RecordedReturn != null) instructions.InsertAfter(anchors.SaveReturnValue, IteratorSaveReturnValue(fields));
+            instructions.InsertAfter(anchors.FinallyStart, IteratorSaveYeildReturn(rouMethod, fields));
+            instructions.InsertAfter(anchors.IfLastYeild, IteratorIfLastYeild(rouMethod, anchors.EndFinally, variables));
+            instructions.InsertAfter(anchors.IfHasException, IteratorIfHasException(rouMethod, anchors.EndFinally, fields));
+            instructions.InsertAfter(anchors.SaveReturnValue, IteratorSaveReturnValue(rouMethod, fields));
             instructions.InsertAfter(anchors.OnSuccess, StateMachineOnSuccess(rouMethod, moveNextMethodDef, anchors.OnExitAfterSuccess, fields));
             instructions.InsertAfter(anchors.OnExitAfterSuccess, StateMachineOnExit(rouMethod, moveNextMethodDef, anchors.EndFinally, fields));
 
@@ -107,9 +107,9 @@ namespace Rougamo.Fody
             return new IteratorAnchors(variables, hostsReturn, tryStart, finallyEnd);
         }
 
-        private void IteratorSetAnchors(MethodDefinition methodDef, MethodDefinition moveNextMethodDef, IteratorVariables variables, IteratorAnchors anchors)
+        private void IteratorSetAnchors(RouMethod rouMethod, MethodDefinition moveNextMethodDef, IteratorVariables variables, IteratorAnchors anchors)
         {
-            methodDef.Body.Instructions.InsertBefore(anchors.HostsReturn, new[]
+            rouMethod.MethodDef.Body.Instructions.InsertBefore(anchors.HostsReturn, new[]
             {
                 Create(OpCodes.Stloc, variables.StateMachine),
                 anchors.InitMos,
@@ -118,10 +118,10 @@ namespace Rougamo.Fody
                 Create(OpCodes.Ldloc, variables.StateMachine),
             });
 
-            IteratorSetMoveNextAnchors(moveNextMethodDef, variables, anchors);
+            IteratorSetMoveNextAnchors(rouMethod, moveNextMethodDef, variables, anchors);
         }
 
-        private void IteratorSetMoveNextAnchors(MethodDefinition moveNextMethodDef, IteratorVariables variables, IteratorAnchors anchors)
+        private void IteratorSetMoveNextAnchors(RouMethod rouMethod, MethodDefinition moveNextMethodDef, IteratorVariables variables, IteratorAnchors anchors)
         {
             var instructions = moveNextMethodDef.Body.Instructions;
             var returns = instructions.Where(ins => ins.IsRet()).ToArray();
@@ -133,22 +133,35 @@ namespace Rougamo.Fody
                 anchors.RewriteArg
             });
 
-            instructions.Add(new[]
+            var brCode = OpCodes.Br;
+
+            if ((rouMethod.Features & (int)(Feature.OnException | Feature.OnSuccess | Feature.OnExit)) != 0)
             {
-                anchors.CatchStart,
-                anchors.OnException,
-                anchors.OnExitAfterException,
-                anchors.Rethrow,
-                anchors.FinallyStart,
-                anchors.IfLastYeild,
-                anchors.IfHasException,
-                anchors.SaveReturnValue,
-                anchors.OnSuccess,
-                anchors.OnExitAfterSuccess,
-                anchors.EndFinally,
-                anchors.FinallyEnd,
-                Create(OpCodes.Ret)
-            });
+                brCode = OpCodes.Leave;
+                instructions.Add(new[]
+                {
+                    anchors.CatchStart,
+                    anchors.OnException,
+                    anchors.OnExitAfterException,
+                    anchors.Rethrow
+                });
+            }
+            instructions.Add(anchors.FinallyStart);
+            if ((rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) != 0)
+            {
+                brCode = OpCodes.Leave;
+                instructions.Add(new[]
+                {
+                    anchors.IfLastYeild,
+                    anchors.IfHasException,
+                    anchors.SaveReturnValue,
+                    anchors.OnSuccess,
+                    anchors.OnExitAfterSuccess,
+                    anchors.EndFinally,
+                });
+            }
+            instructions.Add(anchors.FinallyEnd);
+            instructions.Add(Create(OpCodes.Ret));
 
             if (returns.Length != 0)
             {
@@ -156,13 +169,15 @@ namespace Rougamo.Fody
                 {
                     @return.OpCode = OpCodes.Stloc;
                     @return.Operand = variables.MoveNextReturn;
-                    instructions.InsertAfter(@return, Create(OpCodes.Leave, anchors.FinallyEnd));
+                    instructions.InsertAfter(@return, Create(brCode, anchors.FinallyEnd));
                 }
             }
         }
 
         private IList<Instruction> IteratorInitRecordedReturn(IIteratorFields fields, IIteratorVariables variables)
         {
+            if (fields.RecordedReturn == null) return EmptyInstructions;
+
             var returnsFieldRef = new FieldReference(fields.RecordedReturn!.Name, fields.RecordedReturn!.FieldType, variables.StateMachine.VariableType);
             var returnsTypeCtorDef = _typeListDef.GetZeroArgsCtor();
             var returnsTypeCtorRef = fields.RecordedReturn.FieldType.GenericTypeMethodReference(returnsTypeCtorDef, ModuleDefinition);
@@ -175,8 +190,10 @@ namespace Rougamo.Fody
             };
         }
 
-        private IList<Instruction> IteratorSaveException(IteratorFields fields, IteratorVariables variables)
+        private IList<Instruction> IteratorSaveException(RouMethod rouMethod, IteratorFields fields, IteratorVariables variables)
         {
+            if ((rouMethod.Features & (int)(Feature.OnException | Feature.OnSuccess | Feature.OnExit)) == 0) return EmptyInstructions;
+
             return new[]
             {
                 Create(OpCodes.Ldarg_0),
@@ -186,8 +203,10 @@ namespace Rougamo.Fody
             };
         }
 
-        private IList<Instruction> IteratorSaveYeildReturn(IIteratorFields fields)
+        private IList<Instruction> IteratorSaveYeildReturn(RouMethod rouMethod, IIteratorFields fields)
         {
+            if (fields.RecordedReturn == null || (rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) == 0) return EmptyInstructions;
+
             var listAddMethodRef = fields.RecordedReturn!.FieldType.GenericTypeMethodReference(_methodListAddRef, ModuleDefinition);
 
             return new[]
@@ -200,8 +219,10 @@ namespace Rougamo.Fody
             };
         }
 
-        private IList<Instruction> IteratorIfLastYeild(Instruction ifNotLastYeildGoto, IteratorVariables variables)
+        private IList<Instruction> IteratorIfLastYeild(RouMethod rouMethod, Instruction ifNotLastYeildGoto, IteratorVariables variables)
         {
+            if ((rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) == 0) return EmptyInstructions;
+
             return new[]
             {
                 Create(OpCodes.Ldloc, variables.MoveNextReturn),
@@ -209,8 +230,10 @@ namespace Rougamo.Fody
             };
         }
 
-        private IList<Instruction> IteratorIfHasException(Instruction ifHasExceptionGoto, IteratorFields fields)
+        private IList<Instruction> IteratorIfHasException(RouMethod rouMethod, Instruction ifHasExceptionGoto, IteratorFields fields)
         {
+            if ((rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) == 0) return EmptyInstructions;
+
             return new[]
             {
                 Create(OpCodes.Ldarg_0),
@@ -220,8 +243,10 @@ namespace Rougamo.Fody
             };
         }
 
-        private IList<Instruction> IteratorSaveReturnValue(IIteratorFields fields)
+        private IList<Instruction> IteratorSaveReturnValue(RouMethod rouMethod, IIteratorFields fields)
         {
+            if (fields.RecordedReturn == null || (rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) == 0) return EmptyInstructions;
+
             var listToArrayMethodRef = fields.RecordedReturn!.FieldType.GenericTypeMethodReference(_methodListToArrayRef, ModuleDefinition);
 
             return new[]

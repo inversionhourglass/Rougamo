@@ -21,7 +21,7 @@ namespace Rougamo.Fody
 
             rouMethod.MethodDef.Body.Instructions.InsertAfter(anchors.InitMos, StateMachineInitMos(rouMethod, fields, variables));
             rouMethod.MethodDef.Body.Instructions.InsertAfter(anchors.InitContext, StateMachineInitMethodContext(rouMethod, fields, variables));
-            if (fields.RecordedReturn != null) rouMethod.MethodDef.Body.Instructions.InsertAfter(anchors.InitRecordedReturn, IteratorInitRecordedReturn(fields, variables));
+            rouMethod.MethodDef.Body.Instructions.InsertAfter(anchors.InitRecordedReturn, IteratorInitRecordedReturn(fields, variables));
 
             var instructions = moveNextMethodDef.Body.Instructions;
             instructions.InsertAfter(anchors.IfFirstTimeEntry, StateMachineIfFirstTimeEntry(rouMethod, 0, anchors.HostsStart, fields));
@@ -32,11 +32,11 @@ namespace Rougamo.Fody
             instructions.InsertAfter(anchors.OnException, StateMachineOnException(rouMethod, moveNextMethodDef, anchors.OnExitAfterException, fields));
             instructions.InsertAfter(anchors.OnExitAfterException, StateMachineOnExit(rouMethod, moveNextMethodDef, anchors.HostsSetException, fields));
 
-            if (fields.RecordedReturn != null) instructions.InsertAfter(anchors.SaveReturnValue, IteratorSaveReturnValue(fields));
+            instructions.InsertAfter(anchors.SaveReturnValue, IteratorSaveReturnValue(rouMethod, fields));
             instructions.InsertAfter(anchors.OnSuccess, StateMachineOnSuccess(rouMethod, moveNextMethodDef, anchors.OnExitAfterSuccess, fields));
             instructions.InsertAfter(anchors.OnExitAfterSuccess, StateMachineOnExit(rouMethod, moveNextMethodDef, anchors.FinishSetResultLdarg0, fields));
 
-            if (fields.RecordedReturn != null && anchors.YieldReturn != null) instructions.InsertAfter(anchors.SaveYieldReturnValue, IteratorSaveYeildReturn(fields));
+            if (anchors.YieldReturn != null) instructions.InsertAfter(anchors.SaveYieldReturnValue, IteratorSaveYeildReturn(rouMethod, fields));
 
             rouMethod.MethodDef.Body.OptimizePlus();
             moveNextMethodDef.Body.OptimizePlus();
