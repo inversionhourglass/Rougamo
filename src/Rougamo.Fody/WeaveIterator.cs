@@ -27,9 +27,9 @@ namespace Rougamo.Fody
             if (fields.RecordedReturn != null) rouMethod.MethodDef.Body.Instructions.InsertAfter(anchors.InitRecordedReturn, IteratorInitRecordedReturn(fields, variables));
 
             var instructions = moveNextMethodDef.Body.Instructions;
-            instructions.InsertAfter(anchors.IfFirstTimeEntry, StateMachineIfFirstTimeEntry(0, anchors.TryStart, fields));
+            instructions.InsertAfter(anchors.IfFirstTimeEntry, StateMachineIfFirstTimeEntry(rouMethod, 0, anchors.TryStart, fields));
             instructions.InsertAfter(anchors.OnEntry, StateMachineOnEntry(rouMethod, moveNextMethodDef, anchors.RewriteArg, fields));
-            if (rouMethod.MethodDef.Parameters.Count > 0) instructions.InsertAfter(anchors.RewriteArg, StateMachineRewriteArguments(anchors.TryStart, fields));
+            instructions.InsertAfter(anchors.RewriteArg, StateMachineRewriteArguments(rouMethod, anchors.TryStart, fields));
 
             instructions.InsertAfter(anchors.CatchStart, IteratorSaveException(fields, variables));
             instructions.InsertAfter(anchors.OnException, StateMachineOnException(rouMethod, moveNextMethodDef, anchors.OnExitAfterException, fields));

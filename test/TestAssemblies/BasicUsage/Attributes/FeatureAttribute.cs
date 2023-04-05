@@ -5,7 +5,7 @@ using System;
 namespace BasicUsage.Attributes
 {
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
-    public class SyncFeatureAttribute : MoAttribute
+    public class FeatureAttribute : MoAttribute
     {
         public static readonly Exception RetryException = new InvalidOperationException();
         public static readonly Exception HandleableException = new ArgumentException();
@@ -14,7 +14,7 @@ namespace BasicUsage.Attributes
         public static readonly string RetryReturn = string.Empty;
         public static readonly string RetriedReturn = "retried";
 
-        public SyncFeatureAttribute(int seed)
+        public FeatureAttribute(int seed)
         {
             Seed = seed;
         }

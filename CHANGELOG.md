@@ -4,9 +4,10 @@
 - [ ] 支持按需织入
 	- [x] 同步织入
 		- [x] 优化织入内容，尝试省略try..catch..finally，如果没有OnException、OnSuccess以及OnExit的织入
-	- [ ] 异步织入
+	- [x] 异步织入
 	- [ ] 迭代器织入
 	- [ ] 异步迭代器织入
 	- [x] 多个Mo同时应用时，根据当前Mo的feature决定是否执行OnEntry、OnException、OnSuccess以及OnExit
 - [ ] 支持更灵活的方法扫描
 - [ ] 增加CLI，结合CICD解决间接依赖的问题
+- [ ] 空方法织入优化

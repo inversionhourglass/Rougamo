@@ -29,25 +29,25 @@ namespace Rougamo.Fody
             var setResultMethodRef = variables.ReplacedReturn == null ? AsyncGetSetResult(fields.Builder.FieldType) : AsyncGetGenericSetResult(fields.Builder.FieldType);
 
             var instructions = moveNextMethodDef.Body.Instructions;
-            instructions.InsertAfter(anchors.IfFirstTimeEntry, StateMachineIfFirstTimeEntry(-1, anchors.Retry, fields));
+            instructions.InsertAfter(anchors.IfFirstTimeEntry, StateMachineIfFirstTimeEntry(rouMethod, -1, anchors.Retry, fields));
             instructions.InsertAfter(anchors.OnEntry, StateMachineOnEntry(rouMethod, moveNextMethodDef, anchors.IfEntryReplaced, fields));
             instructions.InsertAfter(anchors.IfEntryReplaced, AsyncIfOnEntryReplacedReturn(rouMethod, moveNextMethodDef, returnBoxTypeRef, setResultMethodRef, anchors.RewriteArg, fields, variables));
-            if (rouMethod.MethodDef.Parameters.Count > 0) instructions.InsertAfter(anchors.RewriteArg, StateMachineRewriteArguments(anchors.Retry, fields));
+            instructions.InsertAfter(anchors.RewriteArg, StateMachineRewriteArguments(rouMethod, anchors.Retry, fields));
 
-            instructions.InsertAfter(anchors.SaveException, StateMachineSaveException(moveNextMethodName, anchors.CatchStart, fields));
+            instructions.InsertAfter(anchors.SaveException, StateMachineSaveException(rouMethod, moveNextMethodName, anchors.CatchStart, fields));
             instructions.InsertAfter(anchors.OnException, StateMachineOnException(rouMethod, moveNextMethodDef, anchors.IfExceptionRetry, fields));
-            instructions.InsertAfter(anchors.IfExceptionRetry, AsyncIfExceptionRetry(anchors.Retry, anchors.ExceptionContextStash, fields));
-            instructions.InsertAfter(anchors.ExceptionContextStash, AsyncExceptionContextStash(fields, variables));
+            instructions.InsertAfter(anchors.IfExceptionRetry, AsyncIfExceptionRetry(rouMethod, anchors.Retry, anchors.ExceptionContextStash, fields));
+            instructions.InsertAfter(anchors.ExceptionContextStash, AsyncExceptionContextStash(rouMethod, fields, variables));
             instructions.InsertAfter(anchors.OnExitAfterException, StateMachineOnExit(rouMethod, moveNextMethodDef, anchors.IfExceptionHandled, fields));
-            instructions.InsertAfter(anchors.IfExceptionHandled, AsyncIfExceptionHandled(returnBoxTypeRef, setResultMethodRef, anchors.HostsSetException, anchors.HostsLeaveCatch, fields, variables));
+            instructions.InsertAfter(anchors.IfExceptionHandled, AsyncIfExceptionHandled(rouMethod, returnBoxTypeRef, setResultMethodRef, anchors.HostsSetException, anchors.HostsLeaveCatch, fields, variables));
 
             if (anchors.HostsSetResult != null)
             {
                 var notVoid = anchors.HostsLdlocReturn != null;
-                if (notVoid) instructions.InsertAfter(anchors.SaveReturnValue, AsyncSaveReturnValue(returnBoxTypeRef, anchors.HostsLdlocReturn!, fields));
+                instructions.InsertAfter(anchors.SaveReturnValue, AsyncSaveReturnValue(rouMethod, returnBoxTypeRef, anchors.HostsLdlocReturn, fields));
                 instructions.InsertAfter(anchors.OnSuccess, StateMachineOnSuccess(rouMethod, moveNextMethodDef, anchors.IfSuccessRetry, fields));
-                instructions.InsertAfter(anchors.IfSuccessRetry, AsyncIfSuccessRetry(anchors.Retry, anchors.IfSuccessReplaced, fields));
-                if (notVoid) instructions.InsertAfter(anchors.IfSuccessReplaced, AsyncIfSuccessReplacedReturn(moveNextMethodName, returnBoxTypeRef, anchors.HostsLdlocReturn!, anchors.OnExitAfterSuccess, fields));
+                instructions.InsertAfter(anchors.IfSuccessRetry, AsyncIfSuccessRetry(rouMethod, anchors.Retry, anchors.IfSuccessReplaced, fields));
+                instructions.InsertAfter(anchors.IfSuccessReplaced, AsyncIfSuccessReplacedReturn(rouMethod, moveNextMethodName, returnBoxTypeRef, anchors.HostsLdlocReturn, anchors.OnExitAfterSuccess, fields));
                 instructions.InsertAfter(anchors.OnExitAfterSuccess, StateMachineOnExit(rouMethod, moveNextMethodDef, anchors.HostsSetResult, fields));
             }
 
@@ -288,8 +288,10 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private IList<Instruction> StateMachineIfFirstTimeEntry(int initialState, Instruction ifNotFirstTimeGoto, IStateMachineFields fields)
+        private IList<Instruction> StateMachineIfFirstTimeEntry(RouMethod rouMethod, int initialState, Instruction ifNotFirstTimeGoto, IStateMachineFields fields)
         {
+            if (!Feature.OnEntry.IsMatch(rouMethod.Features)) return EmptyInstructions;
+
             return new[]
             {
                 Create(OpCodes.Ldarg_0),
@@ -301,6 +303,8 @@ namespace Rougamo.Fody
 
         private IList<Instruction> StateMachineOnEntry(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction endAnchor, IStateMachineFields fields)
         {
+            if (rouMethod.Mos.All(x => !Feature.OnEntry.IsMatch(x.Features))) return EmptyInstructions;
+
             if (fields.MoArray != null)
             {
                 return ExecuteMoMethod(Constants.METHOD_OnEntry, moveNextMethodDef, rouMethod.Mos, endAnchor, null, null, fields.MoArray, fields.MethodContext, false);
@@ -310,6 +314,8 @@ namespace Rougamo.Fody
 
         private IList<Instruction> AsyncIfOnEntryReplacedReturn(RouMethod rouMethod, MethodDefinition moveNextMethodDef, BoxTypeReference returnBoxTypeRef, MethodReference setResultMethodRef, Instruction endAnchor, AsyncFields fields, AsyncVariables variables)
         {
+            if (!Feature.EntryReplace.IsMatch(rouMethod.Features)) return EmptyInstructions;
+
             var instructions = new List<Instruction>
             {
                 Create(OpCodes.Ldarg_0),
@@ -351,8 +357,10 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private IList<Instruction> StateMachineRewriteArguments(Instruction endAnchor, IStateMachineFields fields)
+        private IList<Instruction> StateMachineRewriteArguments(RouMethod rouMethod, Instruction endAnchor, IStateMachineFields fields)
         {
+            if (rouMethod.MethodDef.Parameters.Count == 0 || !Feature.RewriteArgs.IsMatch(rouMethod.Features)) return EmptyInstructions;
+
             var instructions = new List<Instruction>
             {
                 Create(OpCodes.Ldarg_0),
@@ -425,8 +433,10 @@ namespace Rougamo.Fody
             }
         }
 
-        private IList<Instruction> StateMachineSaveException(string methodName, Instruction stlocException, IStateMachineFields fields)
+        private IList<Instruction> StateMachineSaveException(RouMethod rouMethod, string methodName, Instruction stlocException, IStateMachineFields fields)
         {
+            if ((rouMethod.Features & (int)(Feature.OnException | Feature.OnSuccess | Feature.OnExit)) == 0) return EmptyInstructions;
+
             var ldlocException = stlocException.Stloc2Ldloc($"{methodName} exception handler first instruction is not stloc.* exception");
 
             return new[]
@@ -440,6 +450,8 @@ namespace Rougamo.Fody
 
         private IList<Instruction> StateMachineOnException(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction endAnchor, IStateMachineFields fields)
         {
+            if (rouMethod.Mos.All(x => !Feature.OnException.IsMatch(x.Features))) return EmptyInstructions;
+
             if (fields.MoArray != null)
             {
                 return ExecuteMoMethod(Constants.METHOD_OnException, moveNextMethodDef, rouMethod.Mos, endAnchor, null, null, fields.MoArray, fields.MethodContext, _config.ReverseCallNonEntry);
@@ -447,8 +459,10 @@ namespace Rougamo.Fody
             return ExecuteMoMethod(Constants.METHOD_OnException, rouMethod.Mos, null, null, fields.Mos, fields.MethodContext, _config.ReverseCallNonEntry);
         }
 
-        private IList<Instruction> AsyncIfExceptionRetry(Instruction retryStart, Instruction endAnchor, AsyncFields fields)
+        private IList<Instruction> AsyncIfExceptionRetry(RouMethod rouMethod, Instruction retryStart, Instruction endAnchor, AsyncFields fields)
         {
+            if (!Feature.ExceptionRetry.IsMatch(rouMethod.Features)) return EmptyInstructions;
+
             return new[]
             {
                 Create(OpCodes.Ldarg_0),
@@ -464,8 +478,10 @@ namespace Rougamo.Fody
             };
         }
 
-        private IList<Instruction> AsyncExceptionContextStash(AsyncFields fields, AsyncVariables variables)
+        private IList<Instruction> AsyncExceptionContextStash(RouMethod rouMethod, AsyncFields fields, AsyncVariables variables)
         {
+            if (!Feature.ExceptionHandle.IsMatch(rouMethod.Features)) return EmptyInstructions;
+
             var instructions = new List<Instruction>
             {
                 Create(OpCodes.Ldarg_0),
@@ -489,6 +505,8 @@ namespace Rougamo.Fody
 
         private IList<Instruction> StateMachineOnExit(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction endAnchor, IStateMachineFields fields)
         {
+            if (rouMethod.Mos.All(x => !Feature.OnExit.IsMatch(x.Features))) return EmptyInstructions;
+
             if (fields.MoArray != null)
             {
                 return ExecuteMoMethod(Constants.METHOD_OnExit, moveNextMethodDef, rouMethod.Mos, endAnchor, null, null, fields.MoArray, fields.MethodContext, _config.ReverseCallNonEntry);
@@ -496,8 +514,10 @@ namespace Rougamo.Fody
             return ExecuteMoMethod(Constants.METHOD_OnExit, rouMethod.Mos, null, null, fields.Mos, fields.MethodContext, _config.ReverseCallNonEntry);
         }
 
-        private IList<Instruction> AsyncIfExceptionHandled(BoxTypeReference returnBoxTypeRef, MethodReference setResultMethodRef, Instruction ifUnhandledBrTo, Instruction ifHandledBrTo, AsyncFields fields, AsyncVariables variables)
+        private IList<Instruction> AsyncIfExceptionHandled(RouMethod rouMethod, BoxTypeReference returnBoxTypeRef, MethodReference setResultMethodRef, Instruction ifUnhandledBrTo, Instruction ifHandledBrTo, AsyncFields fields, AsyncVariables variables)
         {
+            if (!Feature.ExceptionHandle.IsMatch(rouMethod.Features)) return EmptyInstructions;
+
             var instructions = new List<Instruction>
             {
                 Create(OpCodes.Ldloc, variables.ExceptionHandled),
@@ -519,8 +539,10 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private IList<Instruction> AsyncSaveReturnValue(BoxTypeReference returnBoxTypeRef, Instruction ldlocReturn, AsyncFields fields)
+        private IList<Instruction> AsyncSaveReturnValue(RouMethod rouMethod, BoxTypeReference returnBoxTypeRef, Instruction? ldlocReturn, AsyncFields fields)
         {
+            if (ldlocReturn == null || (rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) == 0) return EmptyInstructions;
+
             var instructions = new List<Instruction>
             {
                 Create(OpCodes.Ldarg_0),
@@ -538,6 +560,8 @@ namespace Rougamo.Fody
 
         private IList<Instruction> StateMachineOnSuccess(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction endAnchor, IStateMachineFields fields)
         {
+            if (rouMethod.Mos.All(x => !Feature.OnSuccess.IsMatch(x.Features))) return EmptyInstructions;
+
             if (fields.MoArray != null)
             {
                 return ExecuteMoMethod(Constants.METHOD_OnSuccess, moveNextMethodDef, rouMethod.Mos, endAnchor, null, null, fields.MoArray, fields.MethodContext, _config.ReverseCallNonEntry);
@@ -545,8 +569,10 @@ namespace Rougamo.Fody
             return ExecuteMoMethod(Constants.METHOD_OnSuccess, rouMethod.Mos, null, null, fields.Mos, fields.MethodContext, _config.ReverseCallNonEntry);
         }
 
-        private IList<Instruction> AsyncIfSuccessRetry(Instruction ifRetryGoTo, Instruction ifNotRetryGoTo, AsyncFields fields)
+        private IList<Instruction> AsyncIfSuccessRetry(RouMethod rouMethod, Instruction ifRetryGoTo, Instruction ifNotRetryGoTo, AsyncFields fields)
         {
+            if (!Feature.SuccessRetry.IsMatch(rouMethod.Features)) return EmptyInstructions;
+
             return new[]
             {
                 Create(OpCodes.Ldarg_0),
@@ -562,8 +588,10 @@ namespace Rougamo.Fody
             };
         }
 
-        private IList<Instruction> AsyncIfSuccessReplacedReturn(string methodName, BoxTypeReference returnBoxTypeRef, Instruction ldlocReturn, Instruction ifNotReplacedGoTo, AsyncFields fields)
+        private IList<Instruction> AsyncIfSuccessReplacedReturn(RouMethod rouMethod, string methodName, BoxTypeReference returnBoxTypeRef, Instruction? ldlocReturn, Instruction ifNotReplacedGoTo, AsyncFields fields)
         {
+            if (ldlocReturn == null || !Feature.SuccessReplace.IsMatch(rouMethod.Features)) return EmptyInstructions;
+
             var instructions = new List<Instruction>
             {
                 Create(OpCodes.Ldarg_0),

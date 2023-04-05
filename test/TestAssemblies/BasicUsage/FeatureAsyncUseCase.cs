@@ -2,10 +2,11 @@
 using Rougamo;
 using System;
 using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace BasicUsage
 {
-    public class FeatureSyncUseCase : IRecording
+    public class FeatureAsyncUseCase : IRecording
     {
         public List<string> Recording { get; } = new List<string>();
 
@@ -13,50 +14,58 @@ namespace BasicUsage
         public static string[] Expect_OnEntry = new[] { "OnEntry-1" };
 
         [Feature(1, Features = Feature.OnEntry)]
-        public string OnEntry(string value)
+        public async Task<string> OnEntry(string value)
         {
+            await Task.Yield();
             return value + Guid.NewGuid().ToString();
         }
 
         [Feature(1, Features = Feature.OnEntry)]
-        public Guid OnEntry_RewriteArgs(Guid guid)
+        public async ValueTask<Guid> OnEntry_RewriteArgs(Guid guid)
         {
+            await Task.Yield();
             return guid;
         }
 
         [Feature(1, Features = Feature.OnEntry)]
-        public string OnEntry_EntryReplace(string x, string y)
+        public async Task<string> OnEntry_EntryReplace(string x, string y)
         {
+            await Task.Yield();
             return x + y;
         }
 
         [Feature(1, Features = Feature.OnEntry)]
-        public void OnEntry_Exception()
+        public async ValueTask OnEntry_Exception()
         {
+            await Task.Yield();
             throw new NotImplementedException();
         }
 
         [Feature(1, Features = Feature.OnEntry)]
-        public string OnEntry_ExceptionRetry()
+        public async Task<string> OnEntry_ExceptionRetry()
         {
+            await Task.Yield();
             throw FeatureAttribute.RetryException;
         }
 
         [Feature(1, Features = Feature.OnEntry)]
-        public string OnEntry_ExceptionHandled()
+        public async ValueTask<string> OnEntry_ExceptionHandled()
         {
+            await Task.Yield();
             throw FeatureAttribute.HandleableException;
         }
 
         [Feature(1, Features = Feature.OnEntry)]
-        public string OnEntry_SuccessRetry()
+        public async Task<string> OnEntry_SuccessRetry()
         {
+            await Task.Yield();
             return FeatureAttribute.RetryReturn;
         }
 
         [Feature(1, Features = Feature.OnEntry)]
-        public string OnEntry_SuccessReplaced()
+        public async ValueTask<string> OnEntry_SuccessReplaced()
         {
+            await Task.Yield();
             return FeatureAttribute.ReplaceableReturn;
         }
         #endregion OnEntry
@@ -65,50 +74,58 @@ namespace BasicUsage
         public static string[] Expect_OnException = new[] { "OnException-1" };
 
         [Feature(1, Features = Feature.OnException)]
-        public string OnException(string value)
+        public async Task<string> OnException(string value)
         {
+            await Task.Yield();
             return value + Guid.NewGuid().ToString();
         }
 
         [Feature(1, Features = Feature.OnException)]
-        public Guid OnException_RewriteArgs(Guid guid)
+        public async ValueTask<Guid> OnException_RewriteArgs(Guid guid)
         {
+            await Task.Yield();
             return guid;
         }
 
         [Feature(1, Features = Feature.OnException)]
-        public string OnException_EntryReplace(string x, string y)
+        public async Task<string> OnException_EntryReplace(string x, string y)
         {
+            await Task.Yield();
             return x + y;
         }
 
         [Feature(1, Features = Feature.OnException)]
-        public void OnException_Exception()
+        public async ValueTask OnException_Exception()
         {
+            await Task.Yield();
             throw new NotImplementedException();
         }
 
         [Feature(1, Features = Feature.OnException)]
-        public string OnException_ExceptionRetry()
+        public async Task<string> OnException_ExceptionRetry()
         {
+            await Task.Yield();
             throw FeatureAttribute.RetryException;
         }
 
         [Feature(1, Features = Feature.OnException)]
-        public string OnException_ExceptionHandled()
+        public async ValueTask<string> OnException_ExceptionHandled()
         {
+            await Task.Yield();
             throw FeatureAttribute.HandleableException;
         }
 
         [Feature(1, Features = Feature.OnException)]
-        public string OnException_SuccessRetry()
+        public async Task<string> OnException_SuccessRetry()
         {
+            await Task.Yield();
             return FeatureAttribute.RetryReturn;
         }
 
         [Feature(1, Features = Feature.OnException)]
-        public string OnException_SuccessReplaced()
+        public async ValueTask<string> OnException_SuccessReplaced()
         {
+            await Task.Yield();
             return FeatureAttribute.ReplaceableReturn;
         }
         #endregion OnException
@@ -117,50 +134,58 @@ namespace BasicUsage
         public static string[] Expect_OnSuccess = new[] { "OnSuccess-1" };
 
         [Feature(1, Features = Feature.OnSuccess)]
-        public string OnSuccess(string value)
+        public async Task<string> OnSuccess(string value)
         {
+            await Task.Yield();
             return value + Guid.NewGuid().ToString();
         }
 
         [Feature(1, Features = Feature.OnSuccess)]
-        public Guid OnSuccess_RewriteArgs(Guid guid)
+        public async ValueTask<Guid> OnSuccess_RewriteArgs(Guid guid)
         {
+            await Task.Yield();
             return guid;
         }
 
         [Feature(1, Features = Feature.OnSuccess)]
-        public string OnSuccess_EntryReplace(string x, string y)
+        public async Task<string> OnSuccess_EntryReplace(string x, string y)
         {
+            await Task.Yield();
             return x + y;
         }
 
         [Feature(1, Features = Feature.OnSuccess)]
-        public void OnSuccess_Exception()
+        public async ValueTask OnSuccess_Exception()
         {
+            await Task.Yield();
             throw new NotImplementedException();
         }
 
         [Feature(1, Features = Feature.OnSuccess)]
-        public string OnSuccess_ExceptionRetry()
+        public async Task<string> OnSuccess_ExceptionRetry()
         {
+            await Task.Yield();
             throw FeatureAttribute.RetryException;
         }
 
         [Feature(1, Features = Feature.OnSuccess)]
-        public string OnSuccess_ExceptionHandled()
+        public async ValueTask<string> OnSuccess_ExceptionHandled()
         {
+            await Task.Yield();
             throw FeatureAttribute.HandleableException;
         }
 
         [Feature(1, Features = Feature.OnSuccess)]
-        public string OnSuccess_SuccessRetry()
+        public async Task<string> OnSuccess_SuccessRetry()
         {
+            await Task.Yield();
             return FeatureAttribute.RetryReturn;
         }
 
         [Feature(1, Features = Feature.OnSuccess)]
-        public string OnSuccess_SuccessReplaced()
+        public async ValueTask<string> OnSuccess_SuccessReplaced()
         {
+            await Task.Yield();
             return FeatureAttribute.ReplaceableReturn;
         }
         #endregion OnSuccess
@@ -169,50 +194,58 @@ namespace BasicUsage
         public static string[] Expect_OnExit = new[] { "OnExit-1" };
 
         [Feature(1, Features = Feature.OnExit)]
-        public string OnExit(string value)
+        public async Task<string> OnExit(string value)
         {
+            await Task.Yield();
             return value + Guid.NewGuid().ToString();
         }
 
         [Feature(1, Features = Feature.OnExit)]
-        public Guid OnExit_RewriteArgs(Guid guid)
+        public async ValueTask<Guid> OnExit_RewriteArgs(Guid guid)
         {
+            await Task.Yield();
             return guid;
         }
 
         [Feature(1, Features = Feature.OnExit)]
-        public string OnExit_EntryReplace(string x, string y)
+        public async Task<string> OnExit_EntryReplace(string x, string y)
         {
+            await Task.Yield();
             return x + y;
         }
 
         [Feature(1, Features = Feature.OnExit)]
-        public void OnExit_Exception()
+        public async ValueTask OnExit_Exception()
         {
+            await Task.Yield();
             throw new NotImplementedException();
         }
 
         [Feature(1, Features = Feature.OnExit)]
-        public string OnExit_ExceptionRetry()
+        public async Task<string> OnExit_ExceptionRetry()
         {
+            await Task.Yield();
             throw FeatureAttribute.RetryException;
         }
 
         [Feature(1, Features = Feature.OnExit)]
-        public string OnExit_ExceptionHandled()
+        public async ValueTask<string> OnExit_ExceptionHandled()
         {
+            await Task.Yield();
             throw FeatureAttribute.HandleableException;
         }
 
         [Feature(1, Features = Feature.OnExit)]
-        public string OnExit_SuccessRetry()
+        public async Task<string> OnExit_SuccessRetry()
         {
+            await Task.Yield();
             return FeatureAttribute.RetryReturn;
         }
 
         [Feature(1, Features = Feature.OnExit)]
-        public string OnExit_SuccessReplaced()
+        public async ValueTask<string> OnExit_SuccessReplaced()
         {
+            await Task.Yield();
             return FeatureAttribute.ReplaceableReturn;
         }
         #endregion OnExit
@@ -221,50 +254,58 @@ namespace BasicUsage
         public static string[] Expect_RewriteArgs = new[] { "OnEntry-1" };
 
         [Feature(1, Features = Feature.RewriteArgs)]
-        public string RewriteArgs(string value)
+        public async Task<string> RewriteArgs(string value)
         {
+            await Task.Yield();
             return value + Guid.NewGuid().ToString();
         }
 
         [Feature(1, Features = Feature.RewriteArgs)]
-        public Guid RewriteArgs_RewriteArgs(Guid guid)
+        public async ValueTask<Guid> RewriteArgs_RewriteArgs(Guid guid)
         {
+            await Task.Yield();
             return guid;
         }
 
         [Feature(1, Features = Feature.RewriteArgs)]
-        public string RewriteArgs_EntryReplace(string x, string y)
+        public async Task<string> RewriteArgs_EntryReplace(string x, string y)
         {
+            await Task.Yield();
             return x + y;
         }
 
         [Feature(1, Features = Feature.RewriteArgs)]
-        public void RewriteArgs_Exception()
+        public async ValueTask RewriteArgs_Exception()
         {
+            await Task.Yield();
             throw new NotImplementedException();
         }
 
         [Feature(1, Features = Feature.RewriteArgs)]
-        public string RewriteArgs_ExceptionRetry()
+        public async Task<string> RewriteArgs_ExceptionRetry()
         {
+            await Task.Yield();
             throw FeatureAttribute.RetryException;
         }
 
         [Feature(1, Features = Feature.RewriteArgs)]
-        public string RewriteArgs_ExceptionHandled()
+        public async ValueTask<string> RewriteArgs_ExceptionHandled()
         {
+            await Task.Yield();
             throw FeatureAttribute.HandleableException;
         }
 
         [Feature(1, Features = Feature.RewriteArgs)]
-        public string RewriteArgs_SuccessRetry()
+        public async Task<string> RewriteArgs_SuccessRetry()
         {
+            await Task.Yield();
             return FeatureAttribute.RetryReturn;
         }
 
         [Feature(1, Features = Feature.RewriteArgs)]
-        public string RewriteArgs_SuccessReplaced()
+        public async ValueTask<string> RewriteArgs_SuccessReplaced()
         {
+            await Task.Yield();
             return FeatureAttribute.ReplaceableReturn;
         }
         #endregion RewriteArgs
@@ -273,50 +314,58 @@ namespace BasicUsage
         public static string[] Expect_EntryReplace = new[] { "OnEntry-1" };
 
         [Feature(1, Features = Feature.EntryReplace)]
-        public string EntryReplace(string value)
+        public async Task<string> EntryReplace(string value)
         {
+            await Task.Yield();
             return value + Guid.NewGuid().ToString();
         }
 
         [Feature(1, Features = Feature.EntryReplace)]
-        public Guid EntryReplace_RewriteArgs(Guid guid)
+        public async ValueTask<Guid> EntryReplace_RewriteArgs(Guid guid)
         {
+            await Task.Yield();
             return guid;
         }
 
         [Feature(1, Features = Feature.EntryReplace)]
-        public string EntryReplace_EntryReplace(string x, string y)
+        public async Task<string> EntryReplace_EntryReplace(string x, string y)
         {
+            await Task.Yield();
             return x + y;
         }
 
         [Feature(1, Features = Feature.EntryReplace)]
-        public void EntryReplace_Exception()
+        public async ValueTask EntryReplace_Exception()
         {
+            await Task.Yield();
             throw new NotImplementedException();
         }
 
         [Feature(1, Features = Feature.EntryReplace)]
-        public string EntryReplace_ExceptionRetry()
+        public async Task<string> EntryReplace_ExceptionRetry()
         {
+            await Task.Yield();
             throw FeatureAttribute.RetryException;
         }
 
         [Feature(1, Features = Feature.EntryReplace)]
-        public string EntryReplace_ExceptionHandled()
+        public async ValueTask<string> EntryReplace_ExceptionHandled()
         {
+            await Task.Yield();
             throw FeatureAttribute.HandleableException;
         }
 
         [Feature(1, Features = Feature.EntryReplace)]
-        public string EntryReplace_SuccessRetry()
+        public async Task<string> EntryReplace_SuccessRetry()
         {
+            await Task.Yield();
             return FeatureAttribute.RetryReturn;
         }
 
         [Feature(1, Features = Feature.EntryReplace)]
-        public string EntryReplace_SuccessReplaced()
+        public async ValueTask<string> EntryReplace_SuccessReplaced()
         {
+            await Task.Yield();
             return FeatureAttribute.ReplaceableReturn;
         }
         #endregion EntryReplace
@@ -325,50 +374,58 @@ namespace BasicUsage
         public static string[] Expect_ExceptionHandle = new[] { "OnException-1" };
 
         [Feature(1, Features = Feature.ExceptionHandle)]
-        public string ExceptionHandle(string value)
+        public async ValueTask<string> ExceptionHandle(string value)
         {
+            await Task.Yield();
             return value + Guid.NewGuid().ToString();
         }
 
         [Feature(1, Features = Feature.ExceptionHandle)]
-        public Guid ExceptionHandle_RewriteArgs(Guid guid)
+        public async Task<Guid> ExceptionHandle_RewriteArgs(Guid guid)
         {
+            await Task.Yield();
             return guid;
         }
 
         [Feature(1, Features = Feature.ExceptionHandle)]
-        public string ExceptionHandle_EntryReplace(string x, string y)
+        public async ValueTask<string> ExceptionHandle_EntryReplace(string x, string y)
         {
+            await Task.Yield();
             return x + y;
         }
 
         [Feature(1, Features = Feature.ExceptionHandle)]
-        public void ExceptionHandle_Exception()
+        public async Task ExceptionHandle_Exception()
         {
+            await Task.Yield();
             throw new NotImplementedException();
         }
 
         [Feature(1, Features = Feature.ExceptionHandle)]
-        public string ExceptionHandle_ExceptionRetry()
+        public async ValueTask<string> ExceptionHandle_ExceptionRetry()
         {
+            await Task.Yield();
             throw FeatureAttribute.RetryException;
         }
 
         [Feature(1, Features = Feature.ExceptionHandle)]
-        public string ExceptionHandle_ExceptionHandled()
+        public async Task<string> ExceptionHandle_ExceptionHandled()
         {
+            await Task.Yield();
             throw FeatureAttribute.HandleableException;
         }
 
         [Feature(1, Features = Feature.ExceptionHandle)]
-        public string ExceptionHandle_SuccessRetry()
+        public async ValueTask<string> ExceptionHandle_SuccessRetry()
         {
+            await Task.Yield();
             return FeatureAttribute.RetryReturn;
         }
 
         [Feature(1, Features = Feature.ExceptionHandle)]
-        public string ExceptionHandle_SuccessReplaced()
+        public async Task<string> ExceptionHandle_SuccessReplaced()
         {
+            await Task.Yield();
             return FeatureAttribute.ReplaceableReturn;
         }
         #endregion ExceptionHandle
@@ -377,51 +434,59 @@ namespace BasicUsage
         public static string[] Expect_ExceptionRetry = new[] { "OnException-1" };
 
         [Feature(1, Features = Feature.ExceptionRetry)]
-        public string ExceptionRetry(string value)
+        public async ValueTask<string> ExceptionRetry(string value)
         {
+            await Task.Yield();
             return value + Guid.NewGuid().ToString();
         }
 
         [Feature(1, Features = Feature.ExceptionRetry)]
-        public Guid ExceptionRetry_RewriteArgs(Guid guid)
+        public async Task<Guid> ExceptionRetry_RewriteArgs(Guid guid)
         {
+            await Task.Yield();
             return guid;
         }
 
         [Feature(1, Features = Feature.ExceptionRetry)]
-        public string ExceptionRetry_EntryReplace(string x, string y)
+        public async ValueTask<string> ExceptionRetry_EntryReplace(string x, string y)
         {
+            await Task.Yield();
             return x + y;
         }
 
         [Feature(1, Features = Feature.ExceptionRetry)]
-        public void ExceptionRetry_Exception()
+        public async Task ExceptionRetry_Exception()
         {
+            await Task.Yield();
             throw new NotImplementedException();
         }
 
         public static string[] Expect_ExceptionRetried = new[] { "OnException-1", "OnException-1" };
         [Feature(1, Features = Feature.ExceptionRetry)]
-        public string ExceptionRetry_ExceptionRetry()
+        public async ValueTask<string> ExceptionRetry_ExceptionRetry()
         {
+            await Task.Yield();
             throw FeatureAttribute.RetryException;
         }
 
         [Feature(1, Features = Feature.ExceptionRetry)]
-        public string ExceptionRetry_ExceptionHandled()
+        public async Task<string> ExceptionRetry_ExceptionHandled()
         {
+            await Task.Yield();
             throw FeatureAttribute.HandleableException;
         }
 
         [Feature(1, Features = Feature.ExceptionRetry)]
-        public string ExceptionRetry_SuccessRetry()
+        public async ValueTask<string> ExceptionRetry_SuccessRetry()
         {
+            await Task.Yield();
             return FeatureAttribute.RetryReturn;
         }
 
         [Feature(1, Features = Feature.ExceptionRetry)]
-        public string ExceptionRetry_SuccessReplaced()
+        public async Task<string> ExceptionRetry_SuccessReplaced()
         {
+            await Task.Yield();
             return FeatureAttribute.ReplaceableReturn;
         }
         #endregion ExceptionRetry
@@ -430,50 +495,58 @@ namespace BasicUsage
         public static string[] Expect_SuccessReplace = new[] { "OnSuccess-1" };
 
         [Feature(1, Features = Feature.SuccessReplace)]
-        public string SuccessReplace(string value)
+        public async ValueTask<string> SuccessReplace(string value)
         {
+            await Task.Yield();
             return value + Guid.NewGuid().ToString();
         }
 
         [Feature(1, Features = Feature.SuccessReplace)]
-        public Guid SuccessReplace_RewriteArgs(Guid guid)
+        public async Task<Guid> SuccessReplace_RewriteArgs(Guid guid)
         {
+            await Task.Yield();
             return guid;
         }
 
         [Feature(1, Features = Feature.SuccessReplace)]
-        public string SuccessReplace_EntryReplace(string x, string y)
+        public async ValueTask<string> SuccessReplace_EntryReplace(string x, string y)
         {
+            await Task.Yield();
             return x + y;
         }
 
         [Feature(1, Features = Feature.SuccessReplace)]
-        public void SuccessReplace_Exception()
+        public async Task SuccessReplace_Exception()
         {
+            await Task.Yield();
             throw new NotImplementedException();
         }
 
         [Feature(1, Features = Feature.SuccessReplace)]
-        public string SuccessReplace_ExceptionRetry()
+        public async ValueTask<string> SuccessReplace_ExceptionRetry()
         {
+            await Task.Yield();
             throw FeatureAttribute.RetryException;
         }
 
         [Feature(1, Features = Feature.SuccessReplace)]
-        public string SuccessReplace_ExceptionHandled()
+        public async Task<string> SuccessReplace_ExceptionHandled()
         {
+            await Task.Yield();
             throw FeatureAttribute.HandleableException;
         }
 
         [Feature(1, Features = Feature.SuccessReplace)]
-        public string SuccessReplace_SuccessRetry()
+        public async ValueTask<string> SuccessReplace_SuccessRetry()
         {
+            await Task.Yield();
             return FeatureAttribute.RetryReturn;
         }
 
         [Feature(1, Features = Feature.SuccessReplace)]
-        public string SuccessReplace_SuccessReplaced()
+        public async Task<string> SuccessReplace_SuccessReplaced()
         {
+            await Task.Yield();
             return FeatureAttribute.ReplaceableReturn;
         }
         #endregion SuccessReplace
@@ -482,51 +555,59 @@ namespace BasicUsage
         public static string[] Expect_SuccessRetry = new[] { "OnSuccess-1" };
 
         [Feature(1, Features = Feature.SuccessRetry)]
-        public string SuccessRetry(string value)
+        public async ValueTask<string> SuccessRetry(string value)
         {
+            await Task.Yield();
             return value + Guid.NewGuid().ToString();
         }
 
         [Feature(1, Features = Feature.SuccessRetry)]
-        public Guid SuccessRetry_RewriteArgs(Guid guid)
+        public async Task<Guid> SuccessRetry_RewriteArgs(Guid guid)
         {
+            await Task.Yield();
             return guid;
         }
 
         [Feature(1, Features = Feature.SuccessRetry)]
-        public string SuccessRetry_EntryReplace(string x, string y)
+        public async ValueTask<string> SuccessRetry_EntryReplace(string x, string y)
         {
+            await Task.Yield();
             return x + y;
         }
 
         [Feature(1, Features = Feature.SuccessRetry)]
-        public void SuccessRetry_Exception()
+        public async Task SuccessRetry_Exception()
         {
+            await Task.Yield();
             throw new NotImplementedException();
         }
 
         [Feature(1, Features = Feature.SuccessRetry)]
-        public string SuccessRetry_ExceptionRetry()
+        public async ValueTask<string> SuccessRetry_ExceptionRetry()
         {
+            await Task.Yield();
             throw FeatureAttribute.RetryException;
         }
 
         [Feature(1, Features = Feature.SuccessRetry)]
-        public string SuccessRetry_ExceptionHandled()
+        public async Task<string> SuccessRetry_ExceptionHandled()
         {
+            await Task.Yield();
             throw FeatureAttribute.HandleableException;
         }
 
         public static string[] Expect_SuccessRetried = new[] { "OnSuccess-1", "OnSuccess-1" };
         [Feature(1, Features = Feature.SuccessRetry)]
-        public string SuccessRetry_SuccessRetry()
+        public async ValueTask<string> SuccessRetry_SuccessRetry()
         {
+            await Task.Yield();
             return FeatureAttribute.RetryReturn;
         }
 
         [Feature(1, Features = Feature.SuccessRetry)]
-        public string SuccessRetry_SuccessReplaced()
+        public async Task<string> SuccessRetry_SuccessReplaced()
         {
+            await Task.Yield();
             return FeatureAttribute.ReplaceableReturn;
         }
         #endregion SuccessRetry
@@ -536,50 +617,58 @@ namespace BasicUsage
         public static string[] Expect_Observe_Failed = new[] { "OnEntry-1", "OnException-1", "OnExit-1" };
 
         [Feature(1, Features = Feature.Observe)]
-        public string Observe(string value)
+        public async ValueTask<string> Observe(string value)
         {
+            await Task.Yield();
             return value + Guid.NewGuid().ToString();
         }
 
         [Feature(1, Features = Feature.Observe)]
-        public Guid Observe_RewriteArgs(Guid guid)
+        public async Task<Guid> Observe_RewriteArgs(Guid guid)
         {
+            await Task.Yield();
             return guid;
         }
 
         [Feature(1, Features = Feature.Observe)]
-        public string Observe_EntryReplace(string x, string y)
+        public async ValueTask<string> Observe_EntryReplace(string x, string y)
         {
+            await Task.Yield();
             return x + y;
         }
 
         [Feature(1, Features = Feature.Observe)]
-        public void Observe_Exception()
+        public async Task Observe_Exception()
         {
+            await Task.Yield();
             throw new NotImplementedException();
         }
 
         [Feature(1, Features = Feature.Observe)]
-        public string Observe_ExceptionRetry()
+        public async ValueTask<string> Observe_ExceptionRetry()
         {
+            await Task.Yield();
             throw FeatureAttribute.RetryException;
         }
 
         [Feature(1, Features = Feature.Observe)]
-        public string Observe_ExceptionHandled()
+        public async Task<string> Observe_ExceptionHandled()
         {
+            await Task.Yield();
             throw FeatureAttribute.HandleableException;
         }
 
         [Feature(1, Features = Feature.Observe)]
-        public string Observe_SuccessRetry()
+        public async ValueTask<string> Observe_SuccessRetry()
         {
+            await Task.Yield();
             return FeatureAttribute.RetryReturn;
         }
 
         [Feature(1, Features = Feature.Observe)]
-        public string Observe_SuccessReplaced()
+        public async Task<string> Observe_SuccessReplaced()
         {
+            await Task.Yield();
             return FeatureAttribute.ReplaceableReturn;
         }
         #endregion Observe
@@ -592,50 +681,58 @@ namespace BasicUsage
         public static string[] Expect_NonRewriteArgs_SuccessRetried = new[] { "OnEntry-1", "OnSuccess-1", "OnSuccess-1", "OnExit-1" };
 
         [Feature(1, Features = Feature.NonRewriteArgs)]
-        public string NonRewriteArgs(string value)
+        public async ValueTask<string> NonRewriteArgs(string value)
         {
+            await Task.Yield();
             return value + Guid.NewGuid().ToString();
         }
 
         [Feature(1, Features = Feature.NonRewriteArgs)]
-        public Guid NonRewriteArgs_RewriteArgs(Guid guid)
+        public async Task<Guid> NonRewriteArgs_RewriteArgs(Guid guid)
         {
+            await Task.Yield();
             return guid;
         }
 
         [Feature(1, Features = Feature.NonRewriteArgs)]
-        public string NonRewriteArgs_EntryReplace(string x, string y)
+        public async ValueTask<string> NonRewriteArgs_EntryReplace(string x, string y)
         {
+            await Task.Yield();
             return x + y;
         }
 
         [Feature(1, Features = Feature.NonRewriteArgs)]
-        public void NonRewriteArgs_Exception()
+        public async Task NonRewriteArgs_Exception()
         {
+            await Task.Yield();
             throw new NotImplementedException();
         }
 
         [Feature(1, Features = Feature.NonRewriteArgs)]
-        public string NonRewriteArgs_ExceptionRetry()
+        public async ValueTask<string> NonRewriteArgs_ExceptionRetry()
         {
+            await Task.Yield();
             throw FeatureAttribute.RetryException;
         }
 
         [Feature(1, Features = Feature.NonRewriteArgs)]
-        public string NonRewriteArgs_ExceptionHandled()
+        public async Task<string> NonRewriteArgs_ExceptionHandled()
         {
+            await Task.Yield();
             throw FeatureAttribute.HandleableException;
         }
 
         [Feature(1, Features = Feature.NonRewriteArgs)]
-        public string NonRewriteArgs_SuccessRetry()
+        public async ValueTask<string> NonRewriteArgs_SuccessRetry()
         {
+            await Task.Yield();
             return FeatureAttribute.RetryReturn;
         }
 
         [Feature(1, Features = Feature.NonRewriteArgs)]
-        public string NonRewriteArgs_SuccessReplaced()
+        public async Task<string> NonRewriteArgs_SuccessReplaced()
         {
+            await Task.Yield();
             return FeatureAttribute.ReplaceableReturn;
         }
         #endregion NonRewriteArgs
@@ -646,50 +743,58 @@ namespace BasicUsage
         public static string[] Expect_NonRetry_Failed = new[] { "OnEntry-1", "OnException-1", "OnExit-1" };
 
         [Feature(1, Features = Feature.NonRetry)]
-        public string NonRetry(string value)
+        public async ValueTask<string> NonRetry(string value)
         {
+            await Task.Yield();
             return value + Guid.NewGuid().ToString();
         }
 
         [Feature(1, Features = Feature.NonRetry)]
-        public Guid NonRetry_RewriteArgs(Guid guid)
+        public async Task<Guid> NonRetry_RewriteArgs(Guid guid)
         {
+            await Task.Yield();
             return guid;
         }
 
         [Feature(1, Features = Feature.NonRetry)]
-        public string NonRetry_EntryReplace(string x, string y)
+        public async ValueTask<string> NonRetry_EntryReplace(string x, string y)
         {
+            await Task.Yield();
             return x + y;
         }
 
         [Feature(1, Features = Feature.NonRetry)]
-        public void NonRetry_Exception()
+        public async Task NonRetry_Exception()
         {
+            await Task.Yield();
             throw new NotImplementedException();
         }
 
         [Feature(1, Features = Feature.NonRetry)]
-        public string NonRetry_ExceptionRetry()
+        public async ValueTask<string> NonRetry_ExceptionRetry()
         {
+            await Task.Yield();
             throw FeatureAttribute.RetryException;
         }
 
         [Feature(1, Features = Feature.NonRetry)]
-        public string NonRetry_ExceptionHandled()
+        public async Task<string> NonRetry_ExceptionHandled()
         {
+            await Task.Yield();
             throw FeatureAttribute.HandleableException;
         }
 
         [Feature(1, Features = Feature.NonRetry)]
-        public string NonRetry_SuccessRetry()
+        public async ValueTask<string> NonRetry_SuccessRetry()
         {
+            await Task.Yield();
             return FeatureAttribute.RetryReturn;
         }
 
         [Feature(1, Features = Feature.NonRetry)]
-        public string NonRetry_SuccessReplaced()
+        public async Task<string> NonRetry_SuccessReplaced()
         {
+            await Task.Yield();
             return FeatureAttribute.ReplaceableReturn;
         }
         #endregion NonRetry
@@ -698,50 +803,58 @@ namespace BasicUsage
         public static string[] Expect_OnEntryExit = new[] { "OnEntry-1", "OnExit-1" };
 
         [Feature(1, Features = Feature.OnEntry | Feature.OnExit)]
-        public string OnEntryExit(string value)
+        public async ValueTask<string> OnEntryExit(string value)
         {
+            await Task.Yield();
             return value + Guid.NewGuid().ToString();
         }
 
         [Feature(1, Features = Feature.OnEntry | Feature.OnExit)]
-        public Guid OnEntryExit_RewriteArgs(Guid guid)
+        public async Task<Guid> OnEntryExit_RewriteArgs(Guid guid)
         {
+            await Task.Yield();
             return guid;
         }
 
         [Feature(1, Features = Feature.OnEntry | Feature.OnExit)]
-        public string OnEntryExit_EntryReplace(string x, string y)
+        public async ValueTask<string> OnEntryExit_EntryReplace(string x, string y)
         {
+            await Task.Yield();
             return x + y;
         }
 
         [Feature(1, Features = Feature.OnEntry | Feature.OnExit)]
-        public void OnEntryExit_Exception()
+        public async Task OnEntryExit_Exception()
         {
+            await Task.Yield();
             throw new NotImplementedException();
         }
 
         [Feature(1, Features = Feature.OnEntry | Feature.OnExit)]
-        public string OnEntryExit_ExceptionRetry()
+        public async ValueTask<string> OnEntryExit_ExceptionRetry()
         {
+            await Task.Yield();
             throw FeatureAttribute.RetryException;
         }
 
         [Feature(1, Features = Feature.OnEntry | Feature.OnExit)]
-        public string OnEntryExit_ExceptionHandled()
+        public async Task<string> OnEntryExit_ExceptionHandled()
         {
+            await Task.Yield();
             throw FeatureAttribute.HandleableException;
         }
 
         [Feature(1, Features = Feature.OnEntry | Feature.OnExit)]
-        public string OnEntryExit_SuccessRetry()
+        public async ValueTask<string> OnEntryExit_SuccessRetry()
         {
+            await Task.Yield();
             return FeatureAttribute.RetryReturn;
         }
 
         [Feature(1, Features = Feature.OnEntry | Feature.OnExit)]
-        public string OnEntryExit_SuccessReplaced()
+        public async Task<string> OnEntryExit_SuccessReplaced()
         {
+            await Task.Yield();
             return FeatureAttribute.ReplaceableReturn;
         }
         #endregion OnEntry and OnExit
@@ -751,8 +864,9 @@ namespace BasicUsage
         [Feature(1, Features = Feature.OnEntry)]
         [Feature(2, Features = Feature.OnException)]
         [Feature(3, Features = Feature.OnEntry | Feature.OnException)]
-        public string DiffApplyVariables()
+        public async Task<string> DiffApplyVariables()
         {
+            await Task.Yield();
             throw new NotImplementedException();
         }
 
@@ -762,8 +876,9 @@ namespace BasicUsage
         [Feature(3, Features = Feature.OnEntry)]
         [Feature(4, Features = Feature.OnEntry | Feature.OnException)]
         [Feature(5, Features = Feature.OnEntry)]
-        public string DiffApplyArray()
+        public async ValueTask<string> DiffApplyArray()
         {
+            await Task.Yield();
             throw new NotImplementedException();
         }
         #endregion Different Feature Apply
