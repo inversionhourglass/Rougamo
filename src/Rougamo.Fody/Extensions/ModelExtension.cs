@@ -10,6 +10,15 @@ namespace Rougamo.Fody
 {
     internal static class ModelExtension
     {
+        private static readonly Lazy<Delegate> _IsMatch = new Lazy<Delegate>(() =>
+        {
+            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
+            var rougamoAssembly = assemblies.Single(x => x.GetName().Name == nameof(Rougamo));
+            var idiscoverer = Type.GetType($"{Constants.TYPE_IMethodDiscoverer}, {rougamoAssembly.FullName}");
+            var isMatchMethod = idiscoverer.GetMethod(Constants.METHOD_IsMatch);
+            return isMatchMethod.CreateDelegate(typeof(Func<,,>).MakeGenericType(idiscoverer, typeof(MethodInfo), typeof(bool)));
+        });
+
         #region Mo
 
         #region Extract-Mo-Flags
@@ -46,6 +55,7 @@ namespace Rougamo.Fody
         {
             TypeDefinition? discovererTypeDef = null;
             var typeDef = mo.TypeDef;
+            var self = false;
             if (mo.Attribute != null)
             {
                 if (mo.Attribute.Properties.TryGet(Constants.PROP_DiscovererType, out var property))
@@ -64,6 +74,11 @@ namespace Rougamo.Fody
                         throw new RougamoException($"Unknow discoverer type({value.GetType()}) from {mo.Attribute.AttributeType}");
                     }
                 }
+                else if (mo.Attribute.AttributeType.Implement(Constants.TYPE_IMethodDiscoverer))
+                {
+                    discovererTypeDef = mo.Attribute.AttributeType.Resolve();
+                    self = true;
+                }
                 else
                 {
                     typeDef = mo.Attribute.AttributeType.Resolve();
@@ -72,22 +87,16 @@ namespace Rougamo.Fody
             discovererTypeDef ??= ExtractFromIl(typeDef!, Constants.PROP_DiscovererType, Constants.TYPE_Type, ParseDiscoverer);
             if (discovererTypeDef == null) return null;
 
-            string assemblyName;
-            if (discovererTypeDef.Scope is AssemblyNameReference anRef)
+            var discovererType = discovererTypeDef.ResolveType();
+            var args = self ? mo.Attribute!.ConstructorArguments.Select(x => x.Value).ToArray() : new object[0];
+            var discoverer = Activator.CreateInstance(discovererType, args) ?? throw new RougamoException($"Cannot create instance of {discovererTypeDef.FullName}");
+            if (self)
             {
-                assemblyName = anRef.FullName;
+                foreach (var property in mo.Attribute!.Properties)
+                {
+                    discovererType.GetProperty(property.Name).SetValue(discoverer, property.Argument.Value);
+                }
             }
-            else if (discovererTypeDef.Scope is ModuleDefinition moduleDef)
-            {
-                assemblyName = moduleDef.Assembly.FullName;
-            }
-            else
-            {
-                throw new RougamoException($"Cannot resolve discoverer({discovererTypeDef.FullName}), scope type is {discovererTypeDef.Scope.GetType()}");
-            }
-            var fullName = $"{discovererTypeDef.FullName}, {assemblyName}";
-            var discovererType = Type.GetType(fullName);
-            var discoverer = Activator.CreateInstance(discovererType) ?? throw new RougamoException($"Cannot create instance of {fullName}");
             return discoverer;
         }
 
@@ -272,7 +281,7 @@ namespace Rougamo.Fody
             ignores.AddRange(typeIgnores);
             ignores.AddRange(methodIgnores);
 
-            var rouMethod = new RouMethod(methdDef);
+            var rouMethod = new RouMethod(rouType, methdDef);
 
             rouMethod.AddMo(methodAttributes.Where(x => !ignores.Contains(x.AttributeType.FullName)), MoFrom.Method);
             rouMethod.AddMo(methodProxies.Where(x => !ignores.Contains(x.FullName)), MoFrom.Method);
@@ -296,25 +305,34 @@ namespace Rougamo.Fody
             }
         }
 
-        public static void AddMo(this RouMethod method, TypeDefinition typeDef, MoFrom from)
-        {
-            var mo = new Mo(typeDef, from);
-            if((method.Flags(from) & mo.Flags) != 0)
-            {
-                method.AddMo(mo);
-            }
-        }
+        public static void AddMo(this RouMethod method, TypeDefinition typeDef, MoFrom from) => AddMo(method, new[] { typeDef }, from);
 
         public static void AddMo(this RouMethod method, IEnumerable<CustomAttribute> attributes, MoFrom from)
         {
-            var mos = attributes.Select(x => new Mo(x, from)).Where(x => (x.Flags & method.Flags(from)) != 0);
+            var mos = attributes.Select(x => new Mo(x, from)).Where(x => MatchMo(method, x, from));
             method.AddMo(mos);
         }
 
         public static void AddMo(this RouMethod method, IEnumerable<TypeDefinition> typeDefs, MoFrom from)
         {
-            var mos = typeDefs.Select(x => new Mo(x, from)).Where(x => (x.Flags & method.Flags(from)) != 0);
+            var mos = typeDefs.Select(x => new Mo(x, from)).Where(x => MatchMo(method, x, from));
             method.AddMo(mos);
+        }
+
+        private static bool MatchMo(RouMethod method, Mo mo, MoFrom from)
+        {
+            if (from == MoFrom.Method) return true;
+
+            if(mo.Discoverer != null)
+            {
+                return (bool)_IsMatch.Value.DynamicInvoke(mo.Discoverer, method.Method);
+            }
+
+            var methodFlags = method.Flags(from);
+            var accessable = methodFlags & AccessFlags.All;
+            var category = methodFlags & (AccessFlags.Method | AccessFlags.Property);
+            var categoryMatch = category == 0 || category == (AccessFlags.Method | AccessFlags.Property) || (mo.Flags & category) != 0;
+            return categoryMatch && (mo.Flags & accessable) != 0;
         }
 
         public static bool Any(this RouMethod method, TypeDefinition typeDef)

@@ -7,7 +7,11 @@ namespace Rougamo
     /// <summary>
     /// </summary>
     [Flags]
+#if FODY
+    internal enum Feature
+#else
     public enum Feature
+#endif
     {
         /// <summary>
         /// OnEntry

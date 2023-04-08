@@ -5,7 +5,7 @@ namespace Rougamo
     /// <summary>
     /// A marked type or method will ignore code weaving.
     /// </summary>
-    [AttributeUsage(AttributeTargets.Assembly|AttributeTargets.Module|AttributeTargets.Class|AttributeTargets.Method, AllowMultiple = true)]
+    [AttributeUsage(AttributeTargets.Assembly|AttributeTargets.Module|AttributeTargets.Class|AttributeTargets.Method|AttributeTargets.Property, AllowMultiple = true)]
     public sealed class IgnoreMoAttribute : Attribute
     {
         /// <summary>

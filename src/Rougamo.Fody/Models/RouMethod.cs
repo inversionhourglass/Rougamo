@@ -2,24 +2,32 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace Rougamo.Fody
 {
     internal sealed class RouMethod
     {
+        private static readonly BindingFlags _BindingFlags = BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+
         private bool? _isAsync;
         private bool? _isIterator;
         private bool? _isAsyncIterator;
         private readonly HashSet<Mo> _mos;
+        private readonly RouType _rouType;
         private Mo[]? _sortedMos;
 
-        public RouMethod(MethodDefinition methodDef)
+        public RouMethod(RouType rouType, MethodDefinition methodDef)
         {
             _mos = new HashSet<Mo>(Mo.Comparer);
+            _rouType = rouType;
             MethodDef = methodDef;
+            Method = rouType.Type.GetMethod(methodDef.Name, _BindingFlags) ?? throw new RougamoException($"Cannot find method {MethodDef.Name} from {rouType.TypeDef.FullName}");
         }
 
         public MethodDefinition MethodDef { get; set; }
+
+        public MethodInfo Method { get; set; }
 
         public Mo[] Mos
         {
@@ -68,6 +76,23 @@ namespace Rougamo.Fody
             if (isPublic.HasValue)
             {
                 flags &= isPublic.Value ? AccessFlags.Public : AccessFlags.NonPublic;
+            }
+            foreach (var propertyDef in _rouType.TypeDef.Properties)
+            {
+                if (propertyDef.GetMethod == MethodDef)
+                {
+                    flags |= AccessFlags.PropertyGetter;
+                    break;
+                }
+                else if (propertyDef.SetMethod == MethodDef)
+                {
+                    flags |= AccessFlags.PropertySetter;
+                    break;
+                }
+            }
+            if ((flags & AccessFlags.Property) == 0)
+            {
+                flags |= AccessFlags.Method;
             }
             return flags;
         }

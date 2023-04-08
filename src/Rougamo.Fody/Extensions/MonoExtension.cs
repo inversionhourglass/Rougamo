@@ -29,6 +29,8 @@ namespace Rougamo.Fody
             return Is(typeRef, className) || DerivesFrom(typeRef, className);
         }
 
+        public static bool Implement(this TypeReference typeRef, string @interface) => Implement(typeRef.Resolve(), @interface);
+
         public static bool Implement(this TypeDefinition typeDef, string @interface)
         {
             do
@@ -239,6 +241,25 @@ namespace Rougamo.Fody
             } while (typeDef != null);
 
             return null;
+        }
+
+        public static Type ResolveType(this TypeDefinition typeDef)
+        {
+            string assemblyName;
+            if (typeDef.Scope is AssemblyNameReference anRef)
+            {
+                assemblyName = anRef.FullName;
+            }
+            else if (typeDef.Scope is ModuleDefinition moduleDef)
+            {
+                assemblyName = moduleDef.Assembly.FullName;
+            }
+            else
+            {
+                throw new RougamoException($"Cannot resolve discoverer({typeDef.FullName}), scope type is {typeDef.Scope.GetType()}");
+            }
+            var fullName = $"{typeDef.FullName}, {assemblyName}";
+            return Type.GetType(fullName);
         }
 
         #region Import

@@ -51,6 +51,22 @@ namespace Rougamo
         /// <summary>
         /// All
         /// </summary>
-        All = Static | Instance
+        All = Static | Instance,
+        /// <summary>
+        /// Method only(except property get set methods)
+        /// </summary>
+        Method = 0b1_0000,
+        /// <summary>
+        /// Property getter only
+        /// </summary>
+        PropertyGetter = 0b10_0000,
+        /// <summary>
+        /// Property setter only
+        /// </summary>
+        PropertySetter = 0b100_0000,
+        /// <summary>
+        /// Property getter and setter
+        /// </summary>
+        Property = PropertyGetter | PropertySetter,
     }
 }

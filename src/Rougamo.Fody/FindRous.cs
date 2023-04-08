@@ -39,10 +39,18 @@ namespace Rougamo.Fody
                 {
                     if (methodDef.IsConstructor || (methodDef.Attributes & MethodAttributes.Abstract) != 0) continue;
 
-                    var methodIgnores = ExtractIgnores(methodDef.CustomAttributes);
+                    var attributes = new Collection<CustomAttribute>();
+                    var property = typeDef.Properties.SingleOrDefault(x => x.SetMethod == methodDef || x.GetMethod == methodDef);
+                    if (property != null)
+                    {
+                        attributes.Add(property.CustomAttributes);
+                    }
+                    attributes.Add(methodDef.CustomAttributes);
+
+                    var methodIgnores = ExtractIgnores(attributes);
                     if (methodIgnores == null) continue;
 
-                    var methodExtracts = ExtractAttributes(methodDef.CustomAttributes, globalMos.Proxies!, $"method[{methodDef.FullName}]");
+                    var methodExtracts = ExtractAttributes(attributes, globalMos.Proxies!, $"method[{methodDef.FullName}]");
                     rouType.Initialize(methodDef, globalMos.Directs!, implementations, classExtracts.Mos, classExtracts.Proxied, methodExtracts.Mos, methodExtracts.Proxied, globalMos.Ignores!, typeIgnores, methodIgnores);
                 }
                 if (rouType.HasMo)
@@ -53,7 +61,7 @@ namespace Rougamo.Fody
         }
 
         /// <summary>
-        /// 提取后续常用的TypeReference
+        /// extract common usage TypeReferences
         /// </summary>
         private void ExtractTypeReferences()
         {
@@ -201,7 +209,11 @@ namespace Rougamo.Fody
                 }
                 else if (attrType.Is(Constants.TYPE_IgnoreMoAttribute))
                 {
-                    if (!ExtractIgnores(ref ignores, attribute)) break;
+                    if (!ExtractIgnores(ignores, attribute))
+                    {
+                        ignores = null;
+                        break;
+                    }
                 }
             }
 
@@ -209,7 +221,7 @@ namespace Rougamo.Fody
         }
 
         /// <summary>
-        /// 从接口继承的方式中提取IMo已经对应的互斥类型
+        /// 从接口继承的方式中提取IMo以及对应的互斥类型
         /// </summary>
         /// <param name="typeDef">程序集中的类型</param>
         /// <returns>
@@ -366,7 +378,7 @@ namespace Rougamo.Fody
             var ignores = new Dictionary<string, TypeDefinition>();
             foreach (var attribute in attributes)
             {
-                if (attribute.AttributeType.Is(Constants.TYPE_IgnoreMoAttribute) && !ExtractIgnores(ref ignores, attribute)) break;
+                if (attribute.AttributeType.Is(Constants.TYPE_IgnoreMoAttribute) && !ExtractIgnores(ignores, attribute)) return null;
             }
             return ignores?.Keys.ToArray();
         }
@@ -377,11 +389,10 @@ namespace Rougamo.Fody
         /// <param name="ignores">已有的忽略类型</param>
         /// <param name="attribute">IgnoreAttribute</param>
         /// <returns>如果忽略全部返回false，否则返回true</returns>
-        private bool ExtractIgnores(ref Dictionary<string, TypeDefinition>? ignores, CustomAttribute attribute)
+        private bool ExtractIgnores(Dictionary<string, TypeDefinition>? ignores, CustomAttribute attribute)
         {
             if (!attribute.HasProperties || !attribute.Properties.TryGet(Constants.PROP_MoTypes, out var property))
             {
-                ignores = null;
                 return false;
             }
 

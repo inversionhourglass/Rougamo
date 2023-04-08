@@ -5,10 +5,9 @@ using System;
 
 namespace BasicUsage.Attributes
 {
-    [AttributeUsage(AttributeTargets.Class | AttributeTargets.Method | AttributeTargets.Property, AllowMultiple = true)]
-    public class DiscoveryAttribute : MoAttribute
+    public class PublicDiscoveryAttribute : MoAttribute
     {
-        public override Type DiscovererType { get; set; } = typeof(EnumGetterDiscoverer);
+        public override Type DiscovererType => typeof(PublicDiscoverer);
 
         public override Feature Features => Feature.OnEntry;
 

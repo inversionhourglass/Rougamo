@@ -57,51 +57,6 @@ namespace Rougamo.Fody
 
             LoadLocalAssemblies();
             LoadBasicReference();
-
-            #region Test
-            //var assemblies = AppDomain.CurrentDomain.GetAssemblies();
-            //var rougamoAssembly = assemblies.Single(x => x.GetName().Name == "Rougamo");
-            //var usecaseTypeDef = ModuleDefinition.Types.Single(x => x.Name == "PublicDiscoveryUseCase");
-            //var usecaseType = Type.GetType($"{usecaseTypeDef.FullName}, {usecaseTypeDef.Module.Assembly.FullName}");
-            //var idiscoverer = Type.GetType($"Rougamo.IMethodDiscoverer, {rougamoAssembly.FullName}");
-            //var isMatchMethod = idiscoverer.GetMethod("IsMatch");
-            //var isMatch = isMatchMethod.CreateDelegate(typeof(Func<,,>).MakeGenericType(idiscoverer, typeof(System.Reflection.MethodInfo), typeof(bool)));
-            //foreach (var attribute in usecaseTypeDef.CustomAttributes)
-            //{
-            //    var argument = attribute.Properties.Single(x => x.Name == "DiscovererType");
-            //    var typeRef = (TypeReference)argument.Argument.Value;
-            //    string assemblyName;
-            //    if (typeRef.Scope is AssemblyNameReference anRef)
-            //    {
-            //        assemblyName = anRef.FullName;
-            //    }
-            //    else if (typeRef.Scope is ModuleDefinition moduleDef)
-            //    {
-            //        assemblyName = moduleDef.Assembly.FullName;
-            //    }
-            //    else
-            //    {
-            //        throw new RougamoException($"Cannot resolve discoverer({typeRef.FullName}), scope type is {typeRef.Scope.GetType()}");
-            //    }
-            //    var type = Type.GetType($"{typeRef.FullName}, {assemblyName}");
-            //    var discoverer = Activator.CreateInstance(type);
-            //    foreach (var method in usecaseType.GetMethods(System.Reflection.BindingFlags.DeclaredOnly | System.Reflection.BindingFlags.Instance | System.Reflection.BindingFlags.Static | System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.NonPublic))
-            //    {
-            //        if ((bool)isMatch.DynamicInvoke(discoverer, method))
-            //        {
-
-            //        }
-            //    }
-            //    //var assembly = assemblies.SingleOrDefault(x => x.FullName == typeRef.Module.Assembly.FullName);
-            //    //if (assembly == null)
-            //    //{
-            //    //    throw new NotImplementedException();
-            //    //}
-            //    //var type = assembly.GetType(typeRef.FullName);
-            //}
-            //return;
-            #endregion Test
-
             FindRous();
             if (_rouTypes.Count == 0) return;
             WeaveMos();
