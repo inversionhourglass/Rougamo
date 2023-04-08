@@ -42,7 +42,7 @@ namespace Rougamo.Fody
 
             instructions.InsertAfter(anchors.FinallyEnd, SyncRetryFork(rouMethod, anchors.TryStart, anchors.Ret, variables));
 
-            rouMethod.MethodDef.Body.OptimizePlus();
+            rouMethod.MethodDef.Body.OptimizePlus(anchors.GetNops());
         }
 
         private SyncVariables SyncCreateVariables(RouMethod rouMethod)

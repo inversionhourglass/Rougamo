@@ -4,7 +4,7 @@ using static Mono.Cecil.Cil.Instruction;
 
 namespace Rougamo.Fody.Enhances.Iterator
 {
-    internal class IteratorAnchors : ITryCatchFinallyAnchors
+    internal class IteratorAnchors : ITryCatchFinallyAnchors, IAnchors
     {
         public IteratorAnchors(IteratorVariables variables, Instruction hostsReturn, Instruction tryStart, Instruction finallyEnd)
         {

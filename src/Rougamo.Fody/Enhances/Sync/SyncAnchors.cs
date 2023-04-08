@@ -4,7 +4,7 @@ using static Mono.Cecil.Cil.Instruction;
 
 namespace Rougamo.Fody.Enhances.Sync
 {
-    internal class SyncAnchors : ITryCatchFinallyAnchors
+    internal class SyncAnchors : ITryCatchFinallyAnchors, IAnchors
     {
         public SyncAnchors(SyncVariables variables, Instruction hostsStart)
         {

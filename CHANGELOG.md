@@ -6,4 +6,4 @@
 - [x] 支持更灵活的方法扫描
 - [ ] 增加CLI，结合CICD解决间接依赖的问题
 - [x] Attribute属性值获取支持在构造方法对属性进行初始化的方式，这种方式是调用属性Set方法赋值的
-- [ ] 优化nop anchors
+- [x] 优化nop anchors

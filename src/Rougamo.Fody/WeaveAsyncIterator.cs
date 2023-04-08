@@ -1,5 +1,6 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Rougamo.Fody.Enhances;
 using Rougamo.Fody.Enhances.AsyncIterator;
 using System.Linq;
 using static Mono.Cecil.Cil.Instruction;
@@ -38,8 +39,8 @@ namespace Rougamo.Fody
 
             if (anchors.YieldReturn != null) instructions.InsertAfter(anchors.SaveYieldReturnValue, IteratorSaveYeildReturn(rouMethod, fields));
 
-            rouMethod.MethodDef.Body.OptimizePlus();
-            moveNextMethodDef.Body.OptimizePlus();
+            rouMethod.MethodDef.Body.OptimizePlus(EmptyInstructions);
+            moveNextMethodDef.Body.OptimizePlus(anchors.GetNops());
         }
 
         private AiteratorFields AiteratorResolveFields(RouMethod rouMethod, TypeDefinition stateMachineTypeDef)

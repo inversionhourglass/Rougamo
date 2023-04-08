@@ -51,8 +51,8 @@ namespace Rougamo.Fody
                 instructions.InsertAfter(anchors.OnExitAfterSuccess, StateMachineOnExit(rouMethod, moveNextMethodDef, anchors.HostsSetResult, fields));
             }
 
-            moveNextMethodDef.Body.OptimizePlus();
-            rouMethod.MethodDef.Body.OptimizePlus();
+            moveNextMethodDef.Body.OptimizePlus(EmptyInstructions);
+            rouMethod.MethodDef.Body.OptimizePlus(anchors.GetNops());
         }
 
         private AsyncFields AsyncResolveFields(RouMethod rouMethod, TypeDefinition stateMachineTypeDef)

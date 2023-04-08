@@ -4,7 +4,7 @@ using static Mono.Cecil.Cil.Instruction;
 
 namespace Rougamo.Fody.Enhances.Async
 {
-    internal class AsyncAnchors
+    internal class AsyncAnchors : IAnchors
     {
         public AsyncAnchors(Instruction hostsBuilderCreate, Instruction catchStart, Instruction hostsSetException, Instruction hostsLeaveCatch, Instruction? hostsSetResult, Instruction? hostsLdlocReturn)
         {

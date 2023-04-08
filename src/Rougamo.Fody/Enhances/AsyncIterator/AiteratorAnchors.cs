@@ -4,7 +4,7 @@ using static Mono.Cecil.Cil.Instruction;
 
 namespace Rougamo.Fody.Enhances.AsyncIterator
 {
-    internal class AiteratorAnchors
+    internal class AiteratorAnchors : IAnchors
     {
         public AiteratorAnchors(Instruction hostsReturn, Instruction hostsStart, Instruction hostsCatchStart, Instruction hostsSetException, Instruction finishReturn, Instruction? yieldReturn)
         {

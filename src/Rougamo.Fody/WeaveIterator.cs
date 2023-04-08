@@ -42,8 +42,8 @@ namespace Rougamo.Fody
             instructions.InsertAfter(anchors.OnSuccess, StateMachineOnSuccess(rouMethod, moveNextMethodDef, anchors.OnExitAfterSuccess, fields));
             instructions.InsertAfter(anchors.OnExitAfterSuccess, StateMachineOnExit(rouMethod, moveNextMethodDef, anchors.EndFinally, fields));
 
-            rouMethod.MethodDef.Body.OptimizePlus();
-            moveNextMethodDef.Body.OptimizePlus();
+            rouMethod.MethodDef.Body.OptimizePlus(EmptyInstructions);
+            moveNextMethodDef.Body.OptimizePlus(anchors.GetNops());
         }
 
         private IteratorFields IteratorResolveFields(RouMethod rouMethod, TypeDefinition stateMachineTypeDef)
