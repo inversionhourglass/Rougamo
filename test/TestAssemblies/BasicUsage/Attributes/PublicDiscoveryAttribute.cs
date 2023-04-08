@@ -1,13 +1,15 @@
 ﻿using Discoverers;
 using Rougamo;
 using Rougamo.Context;
-using System;
 
 namespace BasicUsage.Attributes
 {
     public class PublicDiscoveryAttribute : MoAttribute
     {
-        public override Type DiscovererType => typeof(PublicDiscoverer);
+        public PublicDiscoveryAttribute()
+        {
+            DiscovererType = typeof(PublicDiscoverer);
+        }
 
         public override Feature Features => Feature.OnEntry;
 

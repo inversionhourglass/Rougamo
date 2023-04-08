@@ -33,6 +33,7 @@
 
         public const string TYPE_ARRAY_Type = "System.Type[]";
 
+        public const string PROP_SetterFormat = "set_{0}";
         public const string PROP_Flags = "Flags";
         public const string PROP_DiscovererType = "DiscovererType";
         public const string PROP_Features = "Features";

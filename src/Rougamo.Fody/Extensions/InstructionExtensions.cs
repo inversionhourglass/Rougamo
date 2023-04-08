@@ -41,6 +41,11 @@ namespace Rougamo.Fody
             return def != null && def.Name == fieldName && def.FieldType.Is(fieldType);
         }
 
+        public static bool IsCallAny(this Instruction instruction, string methodName)
+        {
+            return (instruction.OpCode.Code == Code.Call || instruction.OpCode.Code == Code.Callvirt) && ((MethodReference)instruction.Operand).Name == methodName;
+        }
+
         public static Instruction Copy(this Instruction instruction)
         {
             if (instruction.Operand == null) return Instruction.Create(instruction.OpCode);
