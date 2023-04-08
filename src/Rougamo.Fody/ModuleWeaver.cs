@@ -81,8 +81,9 @@ namespace Rougamo.Fody
             var recordingIteratorReturns = "true".Equals(GetConfigValue("true", "iterator-returns", "enumerable-returns"), StringComparison.OrdinalIgnoreCase);
 #endif
             var reverseCallNonEntry = "true".Equals(GetConfigValue("true", "reverse-call-nonentry", "reverse-call-ending"), StringComparison.OrdinalIgnoreCase);
+            var exceptTypePatterns = GetConfigValue(string.Empty, "except-type-patterns").Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
 
-            _config = new Config(enabled, moArrayThreshold, recordingIteratorReturns, reverseCallNonEntry);
+            _config = new Config(enabled, moArrayThreshold, recordingIteratorReturns, reverseCallNonEntry, exceptTypePatterns);
         }
 
         private string GetConfigValue(string defaultValue, params string[] configKeys)

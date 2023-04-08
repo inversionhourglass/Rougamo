@@ -27,6 +27,7 @@ namespace Rougamo.Fody
             {
                 if (!typeDef.IsClass || typeDef.IsValueType || typeDef.IsDelegate() || !typeDef.HasMethods) continue;
                 if (typeDef.Implement(Constants.TYPE_IMo) || typeDef.DerivesFromAny(Constants.TYPE_MoRepulsion, Constants.TYPE_IgnoreMoAttribute, Constants.TYPE_MoProxyAttribute)) continue;
+                if (_config.ExceptTypePatterns.Any(x => x.IsMatch(typeDef.FullName))) continue;
 
                 var typeIgnores = ExtractIgnores(typeDef.CustomAttributes);
                 if (typeIgnores == null) continue;
