@@ -57,6 +57,26 @@ namespace Rougamo.Fody
 
             LoadLocalAssemblies();
             LoadBasicReference();
+
+            //try
+            //{
+            //    var stream = new MemoryStream();
+            //    ModuleDefinition.Write(@"D:\x.dll");
+            //    ModuleDefinition.Write(stream);
+            //    var assembly = Assembly.Load(stream.ToArray());
+            //    var types = assembly.GetTypes().Select(x => x.FullName);
+            //    WriteInfo($"found types from {assembly.FullName}:\n\t{string.Join("\n\t -> ", types)}");
+            //}
+            //catch(ReflectionTypeLoadException e)
+            //{
+            //    WriteInfo("------------------------------------------------------------------------");
+            //    foreach(var exception in e.LoaderExceptions)
+            //    {
+            //        WriteError(exception.ToString());
+            //        WriteInfo("------------------------------------------------------------------------");
+            //    }
+            //}
+
             FindRous();
             if (_rouTypes.Count == 0) return;
             WeaveMos();
@@ -105,19 +125,31 @@ namespace Rougamo.Fody
             var assemblyPaths = System.IO.Directory.GetFiles(folderPath, "*.dll");
             foreach (var assemblyPath in assemblyPaths)
             {
-                if (assemblyPath == this.AssemblyFilePath)
-                {
-                    continue;
-                }
+                //if (assemblyPath == this.AssemblyFilePath)
+                //{
+                //    continue;
+                //}
                 try
                 {
                     System.Reflection.Assembly.LoadFrom(assemblyPath);
                 }
                 catch
                 {
-                    // ignore
+                    WriteWarning($"Load {assemblyPath} failed");
                 }
             }
+            var assembliestr = string.Join("\n\t-> ", AppDomain.CurrentDomain.GetAssemblies().Select(x =>
+            {
+                try
+                {
+                    return $"{x.FullName} <-> {x.Location}";
+                }
+                catch
+                {
+                    return x.FullName;
+                }
+            }));
+            WriteInfo($"Loaded assemblies: \n\t-> {assembliestr}");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

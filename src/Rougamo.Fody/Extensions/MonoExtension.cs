@@ -256,7 +256,7 @@ namespace Rougamo.Fody
             }
             else
             {
-                throw new RougamoException($"Cannot resolve discoverer({typeDef.FullName}), scope type is {typeDef.Scope.GetType()}");
+                throw new RougamoException($"Cannot resolve {typeDef.FullName}, scope type is {typeDef.Scope.GetType()}");
             }
             var fullName = $"{typeDef.FullName}, {assemblyName}";
             return Type.GetType(fullName);
