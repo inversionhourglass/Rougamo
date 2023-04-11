@@ -57,26 +57,6 @@ namespace Rougamo.Fody
 
             LoadLocalAssemblies();
             LoadBasicReference();
-
-            //try
-            //{
-            //    var stream = new MemoryStream();
-            //    ModuleDefinition.Write(@"D:\x.dll");
-            //    ModuleDefinition.Write(stream);
-            //    var assembly = Assembly.Load(stream.ToArray());
-            //    var types = assembly.GetTypes().Select(x => x.FullName);
-            //    WriteInfo($"found types from {assembly.FullName}:\n\t{string.Join("\n\t -> ", types)}");
-            //}
-            //catch(ReflectionTypeLoadException e)
-            //{
-            //    WriteInfo("------------------------------------------------------------------------");
-            //    foreach(var exception in e.LoaderExceptions)
-            //    {
-            //        WriteError(exception.ToString());
-            //        WriteInfo("------------------------------------------------------------------------");
-            //    }
-            //}
-
             FindRous();
             if (_rouTypes.Count == 0) return;
             WeaveMos();

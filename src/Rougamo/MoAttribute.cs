@@ -7,29 +7,11 @@ namespace Rougamo
     [AttributeUsage(AttributeTargets.Assembly|AttributeTargets.Module|AttributeTargets.Class|AttributeTargets.Method|AttributeTargets.Property)]
     public abstract class MoAttribute : Attribute, IMo
     {
-        #region todo
-        ///// <summary>
-        ///// 默认构造方法
-        ///// </summary>
-        //protected MoAttribute() { }
-
-        ///// <summary>
-        ///// 通过构造方法传入的<see cref="AccessFlags"/>会覆盖类定义的<see cref="AccessFlags"/>
-        ///// </summary>
-        //protected MoAttribute(AccessFlags flags)
-        //{
-        //    Flags = flags;
-        //}
-        #endregion todo
-
         /// <inheritdoc/>
-        public virtual AccessFlags Flags { get; }
+        public virtual AccessFlags Flags { get; set; }
 
         /// <inheritdoc/>
         public virtual Feature Features { get; set; }
-
-        /// <inheritdoc/>
-        public virtual Type? DiscovererType { get; set; }
 
         /// <inheritdoc/>
         public virtual double Order { get; set; }

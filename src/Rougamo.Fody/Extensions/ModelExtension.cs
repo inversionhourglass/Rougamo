@@ -10,15 +10,6 @@ namespace Rougamo.Fody
 {
     internal static class ModelExtension
     {
-        private static readonly Lazy<Delegate> _IsMatch = new Lazy<Delegate>(() =>
-        {
-            var assemblies = AppDomain.CurrentDomain.GetAssemblies();
-            var rougamoAssembly = assemblies.Single(x => x.GetName().Name == nameof(Rougamo));
-            var idiscoverer = Type.GetType($"{Constants.TYPE_IMethodDiscoverer}, {rougamoAssembly.FullName}");
-            var isMatchMethod = idiscoverer.GetMethod(Constants.METHOD_IsMatch);
-            return isMatchMethod.CreateDelegate(typeof(Func<,,>).MakeGenericType(idiscoverer, typeof(MethodInfo), typeof(bool)));
-        });
-
         #region Mo
 
         #region Extract-Mo-Flags
@@ -48,71 +39,6 @@ namespace Rougamo.Fody
         }
 
         #endregion Extract-Mo-Flags
-
-        #region Extract-Mo-Discoverer
-
-        public static object? ExtractDiscoverer(this Mo mo)
-        {
-            TypeDefinition? discovererTypeDef = null;
-            var typeDef = mo.TypeDef;
-            var self = false;
-            if (mo.Attribute != null)
-            {
-                if (mo.Attribute.Properties.TryGet(Constants.PROP_DiscovererType, out var property))
-                {
-                    var value = property!.Value.Argument.Value;
-                    if (value is TypeReference typeRef)
-                    {
-                        discovererTypeDef = typeRef.Resolve();
-                    }
-                    else if (value is TypeDefinition typeDef2)
-                    {
-                        discovererTypeDef = typeDef2;
-                    }
-                    else
-                    {
-                        throw new RougamoException($"Unknow discoverer type({value.GetType()}) from {mo.Attribute.AttributeType}");
-                    }
-                }
-                else if (mo.Attribute.AttributeType.Implement(Constants.TYPE_IMethodDiscoverer))
-                {
-                    discovererTypeDef = mo.Attribute.AttributeType.Resolve();
-                    self = true;
-                }
-                else
-                {
-                    typeDef = mo.Attribute.AttributeType.Resolve();
-                }
-            }
-            discovererTypeDef ??= ExtractFromIl(typeDef!, Constants.PROP_DiscovererType, Constants.TYPE_Type, ParseDiscoverer);
-            if (discovererTypeDef == null) return null;
-
-            var discovererType = discovererTypeDef.ResolveType();
-            var args = self ? mo.Attribute!.ConstructorArguments.Select(x => x.Value).ToArray() : new object[0];
-            var discoverer = Activator.CreateInstance(discovererType, args) ?? throw new RougamoException($"Cannot create instance of {discovererTypeDef.FullName}");
-            if (self)
-            {
-                foreach (var property in mo.Attribute!.Properties)
-                {
-                    discovererType.GetProperty(property.Name).SetValue(discoverer, property.Argument.Value);
-                }
-            }
-            return discoverer;
-        }
-
-        private static TypeDefinition? ParseDiscoverer(Instruction instruction)
-        {
-            if(instruction.OpCode.Code == Code.Call &&
-                instruction.Operand is MethodReference methodRef && methodRef.Name == nameof(Type.GetTypeFromHandle) &&
-                instruction.Previous.OpCode.Code == Code.Ldtoken)
-            {
-                var operand = instruction.Previous.Operand;
-                return operand as TypeDefinition ?? (operand as TypeReference)!.Resolve();
-            }
-            return null;
-        }
-
-        #endregion Extract-Mo-Discoverer
 
         #region Extract-Mo-Features
 
@@ -326,11 +252,6 @@ namespace Rougamo.Fody
         private static bool MatchMo(RouMethod method, Mo mo, MoFrom from)
         {
             if (from == MoFrom.Method) return true;
-
-            if(mo.Discoverer != null)
-            {
-                return (bool)_IsMatch.Value.DynamicInvoke(mo.Discoverer, method.Method);
-            }
 
             var methodFlags = method.Flags(from);
             var accessable = methodFlags & AccessFlags.All;

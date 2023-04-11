@@ -1,7 +1,6 @@
 using BasicUsage;
 using System;
 using System.Collections.Generic;
-using System.Runtime.Remoting;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -57,43 +56,6 @@ namespace Rougamo.Fody.Tests
             staticRecording.Clear();
             await (Task<int>)staticInstance.TransferAsync(1);
             Assert.Equal(AccessableUseCase.Expected_Method, staticRecording);
-        }
-
-        [Fact]
-        public async Task DiscovererTest()
-        {
-            var instance = GetInstance(nameof(DiscoveryUseCase));
-            var recording = (List<string>)instance.Recording;
-            var type = (Type)instance.GetType();
-
-            recording.Clear();
-            instance.Name = "10";
-            Assert.Equal(DiscoveryUseCase.Expected_Name, recording);
-
-            recording.Clear();
-            var salary = (int)instance.Salary;
-            Assert.Equal(DiscoveryUseCase.Expected_Salary, recording);
-            Assert.Equal(0, salary);
-
-            recording.Clear();
-            instance.GetNameSalary();
-            Assert.Equal(DiscoveryUseCase.Expected_GetNameSalary, recording);
-
-            recording.Clear();
-            instance.GetSalaryName();
-            Assert.Equal(DiscoveryUseCase.Expected_GetSalaryName, recording);
-
-            recording.Clear();
-            await (Task<int>)instance.GetRawSalaryAsync();
-            Assert.Equal(DiscoveryUseCase.Expected_GetRawSalaryAsync, recording);
-
-            recording.Clear();
-            await (Task<string>)instance.RandomStringAsync();
-            Assert.Equal(DiscoveryUseCase.Expected_RandomStringAsync, recording);
-
-            recording.Clear();
-            instance.RandomInt();
-            Assert.Equal(DiscoveryUseCase.Expected_RandomInt, recording);
         }
     }
 }

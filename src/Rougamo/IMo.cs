@@ -1,5 +1,4 @@
 ﻿using Rougamo.Context;
-using System;
 
 namespace Rougamo
 {
@@ -13,19 +12,14 @@ namespace Rougamo
         AccessFlags Flags { get; }
 
         /// <summary>
-        /// Type instance of <see cref="IMethodDiscoverer"/>
-        /// </summary>
-        Type? DiscovererType { get; set; }
-
-        /// <summary>
         /// Which features will be weaving.
         /// </summary>
-        Feature Features { get; set; }
+        Feature Features { get; }
 
         /// <summary>
         /// Execution order.
         /// </summary>
-        double Order { get; set; }
+        double Order { get; }
 
         /// <summary>
         /// Before the method executing.
