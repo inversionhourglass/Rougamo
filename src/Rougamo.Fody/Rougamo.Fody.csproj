@@ -16,4 +16,8 @@
     <PackageReference Include="FodyHelpers" Version="6.2.5" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Signature\Matchers\" />
+  </ItemGroup>
+
 </Project>

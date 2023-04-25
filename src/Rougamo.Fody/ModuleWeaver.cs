@@ -55,7 +55,6 @@ namespace Rougamo.Fody
             ReadConfig();
             if (!_config.Enabled) return;
 
-            LoadLocalAssemblies();
             LoadBasicReference();
             FindRous();
             if (_rouTypes.Count == 0) return;
@@ -97,39 +96,6 @@ namespace Rougamo.Fody
             }
 
             return defaultValue;
-        }
-
-        private void LoadLocalAssemblies()
-        {
-            var folderPath = System.IO.Path.GetDirectoryName(AssemblyFilePath);
-            var assemblyPaths = System.IO.Directory.GetFiles(folderPath, "*.dll");
-            foreach (var assemblyPath in assemblyPaths)
-            {
-                //if (assemblyPath == this.AssemblyFilePath)
-                //{
-                //    continue;
-                //}
-                try
-                {
-                    System.Reflection.Assembly.LoadFrom(assemblyPath);
-                }
-                catch
-                {
-                    WriteWarning($"Load {assemblyPath} failed");
-                }
-            }
-            var assembliestr = string.Join("\n\t-> ", AppDomain.CurrentDomain.GetAssemblies().Select(x =>
-            {
-                try
-                {
-                    return $"{x.FullName} <-> {x.Location}";
-                }
-                catch
-                {
-                    return x.FullName;
-                }
-            }));
-            WriteInfo($"Loaded assemblies: \n\t-> {assembliestr}");
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

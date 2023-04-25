@@ -12,6 +12,11 @@ namespace Rougamo
         AccessFlags Flags { get; }
 
         /// <summary>
+        /// Method matched with this pattern will be weaving. This attribute has no effect when applied at the method level. It has a higher priority than <see cref="Flags"/>
+        /// </summary>
+        string? Signature { get; }
+
+        /// <summary>
         /// Which features will be weaving.
         /// </summary>
         Feature Features { get; }

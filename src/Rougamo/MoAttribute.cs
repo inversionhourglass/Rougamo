@@ -11,6 +11,9 @@ namespace Rougamo
         public virtual AccessFlags Flags { get; set; }
 
         /// <inheritdoc/>
+        public virtual string? Signature { get; set; }
+
+        /// <inheritdoc/>
         public virtual Feature Features { get; set; }
 
         /// <inheritdoc/>
