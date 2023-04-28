@@ -1,4 +1,6 @@
-﻿namespace Rougamo.Fody.Signature
+﻿using System.Linq;
+
+namespace Rougamo.Fody.Signature
 {
     /// <summary>
     /// Generic type
@@ -14,5 +16,10 @@
         /// Generic parameters
         /// </summary>
         public TypeSignature[] GenericParameters { get; set; }
+
+        public override string ToString()
+        {
+            return $"{Name}<{string.Join(", ", GenericParameters.AsEnumerable())}>";
+        }
     }
 }

@@ -29,6 +29,7 @@
     <ProjectReference Include="..\TestAssemblies\BasicUsage\BasicUsage.csproj" />
     <ProjectReference Include="..\TestAssemblies\ExUsage\ExUsage.csproj" />
     <ProjectReference Include="..\TestAssemblies\Issues\Issues.csproj" />
+    <ProjectReference Include="..\TestAssemblies\SignatureUsage\SignatureUsage.csproj" />
   </ItemGroup>
 
 </Project>

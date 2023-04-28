@@ -22,15 +22,15 @@ namespace Rougamo.Fody.Signature
             {
                 sb.Append("private ");
             }
-            else if ((modifier & Modifier.Protected) != 0)
+            if ((modifier & Modifier.Protected) != 0)
             {
                 sb.Append("protected ");
             }
-            else if ((modifier & Modifier.Public) != 0)
+            if ((modifier & Modifier.Public) != 0)
             {
                 sb.Append("public ");
             }
-            else if ((modifier & Modifier.Internal) != 0)
+            if ((modifier & Modifier.Internal) != 0)
             {
                 sb.Append("internal ");
             }
