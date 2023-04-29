@@ -7,7 +7,7 @@ namespace Rougamo.Fody.Signature
     /// </summary>
     public class GenericTypeSignature : TypeSignature
     {
-        public GenericTypeSignature(string name, TypeSignature[] parameters) : base(name, TypeCategory.Generic)
+        public GenericTypeSignature(string name, TypeSignature? declaringType, TypeSignature[] parameters) : base(name, declaringType, TypeCategory.Generic)
         {
             GenericParameters = parameters;
         }
@@ -17,9 +17,6 @@ namespace Rougamo.Fody.Signature
         /// </summary>
         public TypeSignature[] GenericParameters { get; set; }
 
-        public override string ToString()
-        {
-            return $"{Name}<{string.Join(", ", GenericParameters.AsEnumerable())}>";
-        }
+        protected override string FormatName => $"{Name}<{string.Join(",", GenericParameters.AsEnumerable())}>";
     }
 }

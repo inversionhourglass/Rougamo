@@ -5,15 +5,17 @@
     /// </summary>
     public class TypeSignature
     {
-        /// <summary/>
-        public TypeSignature(string name) : this(name, TypeCategory.Simple) { }
+        public const char NESTED_SEPARATOR = '/';
 
         /// <summary/>
-        public TypeSignature(string name, TypeCategory category)
+        public TypeSignature(string name, TypeSignature? declaringType, TypeCategory category)
         {
+            DeclaringType = declaringType;
             Name = name;
             Category = category;
         }
+
+        public TypeSignature? DeclaringType { get; }
 
         /// <summary>
         /// Type full name
@@ -25,9 +27,13 @@
         /// </summary>
         public TypeCategory Category { get; }
 
+        protected virtual char Separator => NESTED_SEPARATOR;
+
+        protected virtual string FormatName => Name;
+
         public override string ToString()
         {
-            return Name;
+            return DeclaringType == null ? FormatName : $"{DeclaringType}{DeclaringType.Separator}{FormatName}";
         }
     }
 }

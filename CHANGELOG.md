@@ -3,7 +3,14 @@
 - [x] 支持排序
 - [x] 支持按需织入
 - [x] 空方法织入优化。【直接删除空方法织入的独立逻辑，如果希望空方法织入精简的代码，通过按需织入的方式实现】
-- [ ] 支持更灵活的方法扫描，discoverer的思路行不通，直接尝试pattern吧
-- [ ] 增加CLI，结合CICD解决间接依赖的问题
 - [x] Attribute属性值获取支持在构造方法对属性进行初始化的方式，这种方式是调用属性Set方法赋值的
 - [x] 优化nop anchors
+- [ ] 支持更灵活的方法扫描，discoverer的思路行不通，直接尝试pattern吧
+  - [ ] 支持regex()
+  - [ ] 支持method()
+  - [ ] 支持getter()
+  - [ ] 支持setter()
+  - [ ] 支持property()
+  - [ ] 考虑method与type的访问修饰符问题
+- [ ] 增加CLI，结合CICD解决间接依赖的问题
+- [ ] 解决debug断点问题([#36](https://github.com/inversionhourglass/Rougamo/issues/36))

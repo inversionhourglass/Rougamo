@@ -1,44 +1,42 @@
 ﻿using System;
-using System.Text;
 
 namespace Rougamo.Fody.Signature
 {
     [Flags]
     public enum Modifier
     {
-        Private = 0x1,
-        Protected = 0x2,
-        Public = 0x4,
-        Internal = 0x8,
-        Static = 0x10
+        WithinClass = 0x1,
+        DerivedClassSameAssembly = 0x2,
+        NonDerivedClassSameAssembly = 0x4,
+        DerivedClassDifferentAssembly = 0x8,
+        NonDerivedClassDifferentAssembly = 0x10,
+
+        Static = 0x20,
+
+        Private = WithinClass,
+        PrivateProtected = WithinClass | DerivedClassSameAssembly,
+        Internal = WithinClass | DerivedClassSameAssembly | NonDerivedClassSameAssembly,
+        Protected = WithinClass | DerivedClassSameAssembly | DerivedClassDifferentAssembly,
+        ProtectedInternal = WithinClass | DerivedClassSameAssembly | NonDerivedClassSameAssembly | DerivedClassDifferentAssembly,
+        Public = WithinClass | DerivedClassSameAssembly | NonDerivedClassSameAssembly | DerivedClassDifferentAssembly | NonDerivedClassDifferentAssembly,
     }
 
     public static class ModifierExtensions
     {
         public static string ToDefinitionString(this Modifier modifier)
         {
-            var sb = new StringBuilder();
-            if ((modifier & Modifier.Private) != 0)
+            var str = (modifier & Modifier.Public) switch
             {
-                sb.Append("private ");
-            }
-            if ((modifier & Modifier.Protected) != 0)
-            {
-                sb.Append("protected ");
-            }
-            if ((modifier & Modifier.Public) != 0)
-            {
-                sb.Append("public ");
-            }
-            if ((modifier & Modifier.Internal) != 0)
-            {
-                sb.Append("internal ");
-            }
-            if ((modifier & Modifier.Static) != 0)
-            {
-                sb.Append("static ");
-            }
-            return sb.ToString(0, sb.Length - 1);
+                Modifier.Public => "public",
+                Modifier.ProtectedInternal => "protected internal",
+                Modifier.Protected => "protected",
+                Modifier.Internal => "internal",
+                Modifier.PrivateProtected => "private protected",
+                Modifier.Private => "private",
+                _ => throw new ArgumentException($"Unknow modifier value ({modifier})")
+            };
+
+            return (modifier & Modifier.Static) == 0 ? str : str + " static";
         }
     }
 }
