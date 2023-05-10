@@ -15,13 +15,6 @@ namespace Rougamo.Fody.Signature.Tokens
                 if (token == null) break;
 
                 tokens.Add(token);
-                if (tokens.Count == 1 && token.IsRegex())
-                {
-                    var regexToken = BuildRegex(pattern, ref index);
-                    tokens.Add(new Token('('));
-                    tokens.Add(regexToken);
-                    tokens.Add(new Token(')'));
-                }
             }
             if (index != pattern.Length) throw new ArgumentException($"Cannot parse pattern({pattern}) to tokens, stopped at index {index}");
 
@@ -57,51 +50,6 @@ namespace Rougamo.Fody.Signature.Tokens
             }
 
             return null;
-        }
-
-        private static Token BuildRegex(string pattern, ref int index)
-        {
-            var ch = pattern[index];
-            if (ch != '(') throw new ArgumentException($"Regex token source expected '(' but actualy {ch}, at index {index} of pattern({pattern})");
-            var start = ++index;
-            var groups = 0;
-            var escape = false;
-            var inRange = false;
-            while (index < pattern.Length)
-            {
-                ch = pattern[index];
-                switch (ch)
-                {
-                    case '\\':
-                        escape ^= true;
-                        break;
-                    case '[':
-                        inRange = !escape;
-                        escape = false;
-                        break;
-                    case ']':
-                        inRange = inRange && escape;
-                        escape = false;
-                        break;
-                    case '(':
-                        if (!escape && !inRange) groups++;
-                        escape = false;
-                        break;
-                    case ')':
-                        if (!escape && !inRange)
-                        {
-                            if (groups == 0) return new Token(pattern.Substring(start, index++ - start));
-                            groups--;
-                        }
-                        escape = false;
-                        break;
-                    default:
-                        escape = false;
-                        break;
-                }
-                index++;
-            }
-            throw new ArgumentException($"Unable parse regex token source from index {start} to the end of pattern({pattern})");
         }
 
         private static Token BuildNameIdentifier(string pattern, ref int index)
