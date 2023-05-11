@@ -28,10 +28,10 @@ namespace Rougamo.Fody.Signature
             var str = (modifier & Modifier.Public) switch
             {
                 Modifier.Public => "public",
-                Modifier.ProtectedInternal => "protected internal",
+                Modifier.ProtectedInternal => "protectedinternal",
                 Modifier.Protected => "protected",
                 Modifier.Internal => "internal",
-                Modifier.PrivateProtected => "private protected",
+                Modifier.PrivateProtected => "privateprotected",
                 Modifier.Private => "private",
                 _ => throw new ArgumentException($"Unknow modifier value ({modifier})")
             };

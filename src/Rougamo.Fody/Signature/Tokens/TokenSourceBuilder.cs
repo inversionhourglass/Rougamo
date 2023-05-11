@@ -25,7 +25,7 @@ namespace Rougamo.Fody.Signature.Tokens
         {
             while (index < pattern.Length)
             {
-                var ch = pattern[index];
+                var ch = pattern[index++];
                 switch (ch)
                 {
                     case ' ':
@@ -33,8 +33,8 @@ namespace Rougamo.Fody.Signature.Tokens
                     case '\t':
                     case '\r':
                     case '\n':
-                        index++;
-                        continue;
+                        while (index < pattern.Length && pattern[index].IsWhiteSpace()) index++;
+                        return Token.Space;
                     case '*':
                     case '+':
                     case ',':
@@ -43,8 +43,31 @@ namespace Rougamo.Fody.Signature.Tokens
                     case ')':
                     case '<':
                     case '>':
+                    case '[':
+                    case ']':
                         return new Token(ch);
+                    case '.':
+                        if (index < pattern.Length)
+                        {
+                            var next = pattern[index];
+                            if (next == '.')
+                            {
+                                index++;
+                                return new Token("..");
+                            }
+                        }
+                        return new Token(ch);
+                    case '&':
+                    case '|':
+                        if(index < pattern.Length)
+                        {
+                            var next = pattern[index++];
+                            if (next != ch) throw new ArgumentException($"Unexpected connector symbol '{next}' at index {index - 1} of {pattern}");
+                            return new Token(new string(ch, 2));
+                        }
+                        throw new ArgumentException($"Unexpected connector symbol '{ch}' at index {index - 1} of {pattern}");
                     default:
+                        index--;
                         return BuildNameIdentifier(pattern, ref index);
                 }
             }

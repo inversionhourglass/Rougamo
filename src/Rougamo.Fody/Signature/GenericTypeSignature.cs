@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using Mono.Cecil;
+using System.Linq;
 
 namespace Rougamo.Fody.Signature
 {
@@ -7,7 +8,7 @@ namespace Rougamo.Fody.Signature
     /// </summary>
     public class GenericTypeSignature : TypeSignature
     {
-        public GenericTypeSignature(string name, TypeSignature? declaringType, TypeSignature[] parameters) : base(name, declaringType, TypeCategory.Generic)
+        public GenericTypeSignature(string name, TypeSignature? declaringType, TypeSignature[] parameters, TypeReference reference) : base(name, declaringType, TypeCategory.Generic, reference)
         {
             GenericParameters = parameters;
         }

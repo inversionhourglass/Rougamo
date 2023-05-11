@@ -34,5 +34,10 @@
         {
             return value._ch;
         }
+
+        public override string ToString()
+        {
+            return _str ?? _ch.ToString();
+        }
     }
 }

@@ -11,16 +11,32 @@
 
         public Token[] Tokens { get; }
 
-        public Token? Peek()
+        public Token? Peek(int offset = 0)
         {
-            if (_index >= Tokens.Length) return null;
-            return Tokens[_index];
+            var index = _index + offset;
+            if (index >= Tokens.Length || index < 0) return null;
+            return Tokens[index];
         }
 
-        public Token? Read()
+        public Token? Read(uint offset = 0)
         {
+            _index += (int)offset;
             if (_index >= Tokens.Length) return null;
             return Tokens[_index++];
+        }
+    }
+
+    public static class TokenSourceExtensions
+    {
+        public static bool TryPeekNotSpace(this TokenSource tokens, out Token? token)
+        {
+            while ((token = tokens.Peek()) != null)
+            {
+                if (!token.IsSpace()) return true;
+
+                tokens.Read();
+            }
+            return false;
         }
     }
 }

@@ -101,7 +101,7 @@ namespace Rougamo.Fody.Signature
         {
             if (typeRef is GenericParameter gp)
             {
-                var signature = new GenericParameterTypeSignature(typeRef.Name);
+                var signature = new GenericParameterTypeSignature(typeRef.Name, typeRef);
                 if (genericParameters != null)
                 {
                     genericParameters.Add(new GenericParameterItem(gp, signature));
@@ -122,7 +122,7 @@ namespace Rougamo.Fody.Signature
                     var argumentSignature = ParseType(git.GenericArguments[i], genericParameters, genericNameMap);
                     argumentSignatures.Add(argumentSignature!);
                 }
-                return new GenericTypeSignature(name, ParseDeclaringType(typeRef, genericParameters, genericNameMap), argumentSignatures.AsEnumerable().Reverse().ToArray());
+                return new GenericTypeSignature(name, ParseDeclaringType(typeRef, genericParameters, genericNameMap), argumentSignatures.AsEnumerable().Reverse().ToArray(), typeRef);
             }
 
             if (typeRef.HasGenericParameters)
@@ -134,10 +134,10 @@ namespace Rougamo.Fody.Signature
                     var parameterSignature = ParseType(typeRef.GenericParameters[i], genericParameters, genericNameMap);
                     parameterSignatures.Add(parameterSignature!);
                 }
-                return new GenericTypeSignature(name, ParseDeclaringType(typeRef, genericParameters, genericNameMap), parameterSignatures.AsEnumerable().Reverse().ToArray());
+                return new GenericTypeSignature(name, ParseDeclaringType(typeRef, genericParameters, genericNameMap), parameterSignatures.AsEnumerable().Reverse().ToArray(), typeRef);
             }
 
-            return new SimpleTypeSignature(typeRef.Name, ParseDeclaringType(typeRef, genericParameters, genericNameMap));
+            return new SimpleTypeSignature(typeRef.Name, ParseDeclaringType(typeRef, genericParameters, genericNameMap), typeRef);
         }
 
         private static TypeSignature ParseDeclaringType(TypeReference typeRef, List<GenericParameterItem>? genericParameters, Dictionary<string, string>? genericNameMap)

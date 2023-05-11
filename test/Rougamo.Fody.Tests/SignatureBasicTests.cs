@@ -39,10 +39,10 @@ namespace Rougamo.Fody.Tests
             Assert.Equal($"internal System.String {typeDef.FullName}.Internal()", internalSignature.ToString());
 
             var protectedInternalSignature = SignatureParser.ParseMethod(methods.ProtectedInternal);
-            Assert.Equal($"protected internal System.String {typeDef.FullName}.ProtectedInternal()", protectedInternalSignature.ToString());
+            Assert.Equal($"protectedinternal System.String {typeDef.FullName}.ProtectedInternal()", protectedInternalSignature.ToString());
 
             var privateProtectedSignature = SignatureParser.ParseMethod(methods.PrivateProtected);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.PrivateProtected()", privateProtectedSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.PrivateProtected()", privateProtectedSignature.ToString());
 
             var defaultSignature = SignatureParser.ParseMethod(methods.Default);
             Assert.Equal($"private System.String {typeDef.FullName}.Default()", defaultSignature.ToString());
@@ -51,10 +51,10 @@ namespace Rougamo.Fody.Tests
             Assert.Equal($"private static System.String {typeDef.FullName}.DefaultStatic()", defaultStaticSignature.ToString());
 
             var protectedInternalStaticSignature = SignatureParser.ParseMethod(methods.ProtectedInternalStatic);
-            Assert.Equal($"protected internal static System.String {typeDef.FullName}.ProtectedInternalStatic()", protectedInternalStaticSignature.ToString());
+            Assert.Equal($"protectedinternal static System.String {typeDef.FullName}.ProtectedInternalStatic()", protectedInternalStaticSignature.ToString());
 
             var privateProtectedStaticSignature = SignatureParser.ParseMethod(methods.PrivateProtectedStatic);
-            Assert.Equal($"private protected static System.String {typeDef.FullName}.PrivateProtectedStatic()", privateProtectedStaticSignature.ToString());
+            Assert.Equal($"privateprotected static System.String {typeDef.FullName}.PrivateProtectedStatic()", privateProtectedStaticSignature.ToString());
         }
 
         [Fact]
@@ -67,7 +67,7 @@ namespace Rougamo.Fody.Tests
             Assert.Equal($"internal System.String {typeDef.FullName}.Public()", publicSignature.ToString());
 
             var protectSignature = SignatureParser.ParseMethod(methods.Protected);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.Protected()", protectSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.Protected()", protectSignature.ToString());
 
             var privateSignature = SignatureParser.ParseMethod(methods.Private);
             Assert.Equal($"private System.String {typeDef.FullName}.Private()", privateSignature.ToString());
@@ -79,7 +79,7 @@ namespace Rougamo.Fody.Tests
             Assert.Equal($"internal System.String {typeDef.FullName}.ProtectedInternal()", protectedInternalSignature.ToString());
 
             var privateProtectedSignature = SignatureParser.ParseMethod(methods.PrivateProtected);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.PrivateProtected()", privateProtectedSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.PrivateProtected()", privateProtectedSignature.ToString());
 
             var defaultSignature = SignatureParser.ParseMethod(methods.Default);
             Assert.Equal($"private System.String {typeDef.FullName}.Default()", defaultSignature.ToString());
@@ -91,7 +91,7 @@ namespace Rougamo.Fody.Tests
             Assert.Equal($"internal static System.String {typeDef.FullName}.ProtectedInternalStatic()", protectedInternalStaticSignature.ToString());
 
             var privateProtectedStaticSignature = SignatureParser.ParseMethod(methods.PrivateProtectedStatic);
-            Assert.Equal($"private protected static System.String {typeDef.FullName}.PrivateProtectedStatic()", privateProtectedStaticSignature.ToString());
+            Assert.Equal($"privateprotected static System.String {typeDef.FullName}.PrivateProtectedStatic()", privateProtectedStaticSignature.ToString());
         }
 
         [Fact]
@@ -104,7 +104,7 @@ namespace Rougamo.Fody.Tests
             Assert.Equal($"internal System.String {typeDef.FullName}.Public()", publicSignature.ToString());
 
             var protectSignature = SignatureParser.ParseMethod(methods.Protected);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.Protected()", protectSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.Protected()", protectSignature.ToString());
 
             var privateSignature = SignatureParser.ParseMethod(methods.Private);
             Assert.Equal($"private System.String {typeDef.FullName}.Private()", privateSignature.ToString());
@@ -116,7 +116,7 @@ namespace Rougamo.Fody.Tests
             Assert.Equal($"internal System.String {typeDef.FullName}.ProtectedInternal()", protectedInternalSignature.ToString());
 
             var privateProtectedSignature = SignatureParser.ParseMethod(methods.PrivateProtected);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.PrivateProtected()", privateProtectedSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.PrivateProtected()", privateProtectedSignature.ToString());
 
             var defaultSignature = SignatureParser.ParseMethod(methods.Default);
             Assert.Equal($"private System.String {typeDef.FullName}.Default()", defaultSignature.ToString());
@@ -128,7 +128,7 @@ namespace Rougamo.Fody.Tests
             Assert.Equal($"internal static System.String {typeDef.FullName}.ProtectedInternalStatic()", protectedInternalStaticSignature.ToString());
 
             var privateProtectedStaticSignature = SignatureParser.ParseMethod(methods.PrivateProtectedStatic);
-            Assert.Equal($"private protected static System.String {typeDef.FullName}.PrivateProtectedStatic()", privateProtectedStaticSignature.ToString());
+            Assert.Equal($"privateprotected static System.String {typeDef.FullName}.PrivateProtectedStatic()", privateProtectedStaticSignature.ToString());
         }
 
         [Fact]
@@ -150,10 +150,10 @@ namespace Rougamo.Fody.Tests
             Assert.Equal($"internal System.String {typeDef.FullName}.Internal()", internalSignature.ToString());
 
             var protectedInternalSignature = SignatureParser.ParseMethod(methods.ProtectedInternal);
-            Assert.Equal($"protected internal System.String {typeDef.FullName}.ProtectedInternal()", protectedInternalSignature.ToString());
+            Assert.Equal($"protectedinternal System.String {typeDef.FullName}.ProtectedInternal()", protectedInternalSignature.ToString());
 
             var privateProtectedSignature = SignatureParser.ParseMethod(methods.PrivateProtected);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.PrivateProtected()", privateProtectedSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.PrivateProtected()", privateProtectedSignature.ToString());
         }
 
         [Fact]
@@ -172,13 +172,13 @@ namespace Rougamo.Fody.Tests
             Assert.Equal($"private System.String {typeDef.FullName}.Private()", privateSignature.ToString());
 
             var internalSignature = SignatureParser.ParseMethod(methods.Internal);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.Internal()", internalSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.Internal()", internalSignature.ToString());
 
             var protectedInternalSignature = SignatureParser.ParseMethod(methods.ProtectedInternal);
             Assert.Equal($"protected System.String {typeDef.FullName}.ProtectedInternal()", protectedInternalSignature.ToString());
 
             var privateProtectedSignature = SignatureParser.ParseMethod(methods.PrivateProtected);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.PrivateProtected()", privateProtectedSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.PrivateProtected()", privateProtectedSignature.ToString());
         }
 
         [Fact]
@@ -216,7 +216,7 @@ namespace Rougamo.Fody.Tests
             Assert.Equal($"internal System.String {typeDef.FullName}.Public()", publicSignature.ToString());
 
             var protectSignature = SignatureParser.ParseMethod(methods.Protected);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.Protected()", protectSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.Protected()", protectSignature.ToString());
 
             var privateSignature = SignatureParser.ParseMethod(methods.Private);
             Assert.Equal($"private System.String {typeDef.FullName}.Private()", privateSignature.ToString());
@@ -228,7 +228,7 @@ namespace Rougamo.Fody.Tests
             Assert.Equal($"internal System.String {typeDef.FullName}.ProtectedInternal()", protectedInternalSignature.ToString());
 
             var privateProtectedSignature = SignatureParser.ParseMethod(methods.PrivateProtected);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.PrivateProtected()", privateProtectedSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.PrivateProtected()", privateProtectedSignature.ToString());
         }
 
         [Fact]
@@ -238,7 +238,7 @@ namespace Rougamo.Fody.Tests
             var methods = ResolveMethods(typeDef);
 
             var publicSignature = SignatureParser.ParseMethod(methods.Public);
-            Assert.Equal($"protected internal System.String {typeDef.FullName}.Public()", publicSignature.ToString());
+            Assert.Equal($"protectedinternal System.String {typeDef.FullName}.Public()", publicSignature.ToString());
 
             var protectSignature = SignatureParser.ParseMethod(methods.Protected);
             Assert.Equal($"protected System.String {typeDef.FullName}.Protected()", protectSignature.ToString());
@@ -250,10 +250,10 @@ namespace Rougamo.Fody.Tests
             Assert.Equal($"internal System.String {typeDef.FullName}.Internal()", internalSignature.ToString());
 
             var protectedInternalSignature = SignatureParser.ParseMethod(methods.ProtectedInternal);
-            Assert.Equal($"protected internal System.String {typeDef.FullName}.ProtectedInternal()", protectedInternalSignature.ToString());
+            Assert.Equal($"protectedinternal System.String {typeDef.FullName}.ProtectedInternal()", protectedInternalSignature.ToString());
 
             var privateProtectedSignature = SignatureParser.ParseMethod(methods.PrivateProtected);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.PrivateProtected()", privateProtectedSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.PrivateProtected()", privateProtectedSignature.ToString());
         }
 
         [Fact]
@@ -263,22 +263,22 @@ namespace Rougamo.Fody.Tests
             var methods = ResolveMethods(typeDef);
 
             var publicSignature = SignatureParser.ParseMethod(methods.Public);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.Public()", publicSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.Public()", publicSignature.ToString());
 
             var protectSignature = SignatureParser.ParseMethod(methods.Protected);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.Protected()", protectSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.Protected()", protectSignature.ToString());
 
             var privateSignature = SignatureParser.ParseMethod(methods.Private);
             Assert.Equal($"private System.String {typeDef.FullName}.Private()", privateSignature.ToString());
 
             var internalSignature = SignatureParser.ParseMethod(methods.Internal);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.Internal()", internalSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.Internal()", internalSignature.ToString());
 
             var protectedInternalSignature = SignatureParser.ParseMethod(methods.ProtectedInternal);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.ProtectedInternal()", protectedInternalSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.ProtectedInternal()", protectedInternalSignature.ToString());
 
             var privateProtectedSignature = SignatureParser.ParseMethod(methods.PrivateProtected);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.PrivateProtected()", privateProtectedSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.PrivateProtected()", privateProtectedSignature.ToString());
         }
 
         [Fact]
@@ -291,7 +291,7 @@ namespace Rougamo.Fody.Tests
             Assert.Equal($"internal System.String {typeDef.FullName}.Public()", publicSignature.ToString());
 
             var protectSignature = SignatureParser.ParseMethod(methods.Protected);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.Protected()", protectSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.Protected()", protectSignature.ToString());
 
             var privateSignature = SignatureParser.ParseMethod(methods.Private);
             Assert.Equal($"private System.String {typeDef.FullName}.Private()", privateSignature.ToString());
@@ -303,7 +303,7 @@ namespace Rougamo.Fody.Tests
             Assert.Equal($"internal System.String {typeDef.FullName}.ProtectedInternal()", protectedInternalSignature.ToString());
 
             var privateProtectedSignature = SignatureParser.ParseMethod(methods.PrivateProtected);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.PrivateProtected()", privateProtectedSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.PrivateProtected()", privateProtectedSignature.ToString());
         }
 
         [Fact]
@@ -313,22 +313,22 @@ namespace Rougamo.Fody.Tests
             var methods = ResolveMethods(typeDef);
 
             var publicSignature = SignatureParser.ParseMethod(methods.Public);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.Public()", publicSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.Public()", publicSignature.ToString());
 
             var protectSignature = SignatureParser.ParseMethod(methods.Protected);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.Protected()", protectSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.Protected()", protectSignature.ToString());
 
             var privateSignature = SignatureParser.ParseMethod(methods.Private);
             Assert.Equal($"private System.String {typeDef.FullName}.Private()", privateSignature.ToString());
 
             var internalSignature = SignatureParser.ParseMethod(methods.Internal);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.Internal()", internalSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.Internal()", internalSignature.ToString());
 
             var protectedInternalSignature = SignatureParser.ParseMethod(methods.ProtectedInternal);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.ProtectedInternal()", protectedInternalSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.ProtectedInternal()", protectedInternalSignature.ToString());
 
             var privateProtectedSignature = SignatureParser.ParseMethod(methods.PrivateProtected);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.PrivateProtected()", privateProtectedSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.PrivateProtected()", privateProtectedSignature.ToString());
         }
 
         [Fact]
@@ -366,7 +366,7 @@ namespace Rougamo.Fody.Tests
             Assert.Equal($"internal System.String {typeDef.FullName}.Public()", publicSignature.ToString());
 
             var protectSignature = SignatureParser.ParseMethod(methods.Protected);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.Protected()", protectSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.Protected()", protectSignature.ToString());
 
             var privateSignature = SignatureParser.ParseMethod(methods.Private);
             Assert.Equal($"private System.String {typeDef.FullName}.Private()", privateSignature.ToString());
@@ -378,7 +378,7 @@ namespace Rougamo.Fody.Tests
             Assert.Equal($"internal System.String {typeDef.FullName}.ProtectedInternal()", protectedInternalSignature.ToString());
 
             var privateProtectedSignature = SignatureParser.ParseMethod(methods.PrivateProtected);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.PrivateProtected()", privateProtectedSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.PrivateProtected()", privateProtectedSignature.ToString());
         }
 
         [Fact]
@@ -391,7 +391,7 @@ namespace Rougamo.Fody.Tests
             Assert.Equal($"internal System.String {typeDef.FullName}.Public()", publicSignature.ToString());
 
             var protectSignature = SignatureParser.ParseMethod(methods.Protected);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.Protected()", protectSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.Protected()", protectSignature.ToString());
 
             var privateSignature = SignatureParser.ParseMethod(methods.Private);
             Assert.Equal($"private System.String {typeDef.FullName}.Private()", privateSignature.ToString());
@@ -403,7 +403,7 @@ namespace Rougamo.Fody.Tests
             Assert.Equal($"internal System.String {typeDef.FullName}.ProtectedInternal()", protectedInternalSignature.ToString());
 
             var privateProtectedSignature = SignatureParser.ParseMethod(methods.PrivateProtected);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.PrivateProtected()", privateProtectedSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.PrivateProtected()", privateProtectedSignature.ToString());
         }
 
         [Fact]
@@ -413,22 +413,22 @@ namespace Rougamo.Fody.Tests
             var methods = ResolveMethods(typeDef);
 
             var publicSignature = SignatureParser.ParseMethod(methods.Public);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.Public()", publicSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.Public()", publicSignature.ToString());
 
             var protectSignature = SignatureParser.ParseMethod(methods.Protected);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.Protected()", protectSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.Protected()", protectSignature.ToString());
 
             var privateSignature = SignatureParser.ParseMethod(methods.Private);
             Assert.Equal($"private System.String {typeDef.FullName}.Private()", privateSignature.ToString());
 
             var internalSignature = SignatureParser.ParseMethod(methods.Internal);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.Internal()", internalSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.Internal()", internalSignature.ToString());
 
             var protectedInternalSignature = SignatureParser.ParseMethod(methods.ProtectedInternal);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.ProtectedInternal()", protectedInternalSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.ProtectedInternal()", protectedInternalSignature.ToString());
 
             var privateProtectedSignature = SignatureParser.ParseMethod(methods.PrivateProtected);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.PrivateProtected()", privateProtectedSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.PrivateProtected()", privateProtectedSignature.ToString());
         }
 
         [Fact]
@@ -441,7 +441,7 @@ namespace Rougamo.Fody.Tests
             Assert.Equal($"internal System.String {typeDef.FullName}.Public()", publicSignature.ToString());
 
             var protectSignature = SignatureParser.ParseMethod(methods.Protected);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.Protected()", protectSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.Protected()", protectSignature.ToString());
 
             var privateSignature = SignatureParser.ParseMethod(methods.Private);
             Assert.Equal($"private System.String {typeDef.FullName}.Private()", privateSignature.ToString());
@@ -453,7 +453,7 @@ namespace Rougamo.Fody.Tests
             Assert.Equal($"internal System.String {typeDef.FullName}.ProtectedInternal()", protectedInternalSignature.ToString());
 
             var privateProtectedSignature = SignatureParser.ParseMethod(methods.PrivateProtected);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.PrivateProtected()", privateProtectedSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.PrivateProtected()", privateProtectedSignature.ToString());
         }
 
         [Fact]
@@ -463,22 +463,22 @@ namespace Rougamo.Fody.Tests
             var methods = ResolveMethods(typeDef);
 
             var publicSignature = SignatureParser.ParseMethod(methods.Public);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.Public()", publicSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.Public()", publicSignature.ToString());
 
             var protectSignature = SignatureParser.ParseMethod(methods.Protected);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.Protected()", protectSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.Protected()", protectSignature.ToString());
 
             var privateSignature = SignatureParser.ParseMethod(methods.Private);
             Assert.Equal($"private System.String {typeDef.FullName}.Private()", privateSignature.ToString());
 
             var internalSignature = SignatureParser.ParseMethod(methods.Internal);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.Internal()", internalSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.Internal()", internalSignature.ToString());
 
             var protectedInternalSignature = SignatureParser.ParseMethod(methods.ProtectedInternal);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.ProtectedInternal()", protectedInternalSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.ProtectedInternal()", protectedInternalSignature.ToString());
 
             var privateProtectedSignature = SignatureParser.ParseMethod(methods.PrivateProtected);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.PrivateProtected()", privateProtectedSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.PrivateProtected()", privateProtectedSignature.ToString());
         }
 
         [Fact]
@@ -516,7 +516,7 @@ namespace Rougamo.Fody.Tests
             Assert.Equal($"internal System.String {typeDef.FullName}.Public()", publicSignature.ToString());
 
             var protectSignature = SignatureParser.ParseMethod(methods.Protected);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.Protected()", protectSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.Protected()", protectSignature.ToString());
 
             var privateSignature = SignatureParser.ParseMethod(methods.Private);
             Assert.Equal($"private System.String {typeDef.FullName}.Private()", privateSignature.ToString());
@@ -528,7 +528,7 @@ namespace Rougamo.Fody.Tests
             Assert.Equal($"internal System.String {typeDef.FullName}.ProtectedInternal()", protectedInternalSignature.ToString());
 
             var privateProtectedSignature = SignatureParser.ParseMethod(methods.PrivateProtected);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.PrivateProtected()", privateProtectedSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.PrivateProtected()", privateProtectedSignature.ToString());
         }
 
         [Fact]
@@ -541,7 +541,7 @@ namespace Rougamo.Fody.Tests
             Assert.Equal($"internal System.String {typeDef.FullName}.Public()", publicSignature.ToString());
 
             var protectSignature = SignatureParser.ParseMethod(methods.Protected);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.Protected()", protectSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.Protected()", protectSignature.ToString());
 
             var privateSignature = SignatureParser.ParseMethod(methods.Private);
             Assert.Equal($"private System.String {typeDef.FullName}.Private()", privateSignature.ToString());
@@ -553,7 +553,7 @@ namespace Rougamo.Fody.Tests
             Assert.Equal($"internal System.String {typeDef.FullName}.ProtectedInternal()", protectedInternalSignature.ToString());
 
             var privateProtectedSignature = SignatureParser.ParseMethod(methods.PrivateProtected);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.PrivateProtected()", privateProtectedSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.PrivateProtected()", privateProtectedSignature.ToString());
         }
 
         [Fact]
@@ -563,22 +563,22 @@ namespace Rougamo.Fody.Tests
             var methods = ResolveMethods(typeDef);
 
             var publicSignature = SignatureParser.ParseMethod(methods.Public);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.Public()", publicSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.Public()", publicSignature.ToString());
 
             var protectSignature = SignatureParser.ParseMethod(methods.Protected);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.Protected()", protectSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.Protected()", protectSignature.ToString());
 
             var privateSignature = SignatureParser.ParseMethod(methods.Private);
             Assert.Equal($"private System.String {typeDef.FullName}.Private()", privateSignature.ToString());
 
             var internalSignature = SignatureParser.ParseMethod(methods.Internal);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.Internal()", internalSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.Internal()", internalSignature.ToString());
 
             var protectedInternalSignature = SignatureParser.ParseMethod(methods.ProtectedInternal);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.ProtectedInternal()", protectedInternalSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.ProtectedInternal()", protectedInternalSignature.ToString());
 
             var privateProtectedSignature = SignatureParser.ParseMethod(methods.PrivateProtected);
-            Assert.Equal($"private protected System.String {typeDef.FullName}.PrivateProtected()", privateProtectedSignature.ToString());
+            Assert.Equal($"privateprotected System.String {typeDef.FullName}.PrivateProtected()", privateProtectedSignature.ToString());
         }
 
         [Fact]

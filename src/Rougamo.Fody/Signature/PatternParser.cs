@@ -58,7 +58,7 @@ namespace Rougamo.Fody.Signature
             while (index < pattern.Length)
             {
                 var ch = pattern[index++];
-                if (IsWhiteSpace(ch)) continue;
+                if (ch.IsWhiteSpace()) continue;
                 if (ch == '!') return true;
                 break;
             }
@@ -71,7 +71,7 @@ namespace Rougamo.Fody.Signature
             while (index < pattern.Length)
             {
                 var ch = pattern[index++];
-                if (IsWhiteSpace(ch)) continue;
+                if (ch.IsWhiteSpace()) continue;
                 if (ch == '&')
                 {
                     if (index < pattern.Length)
@@ -103,7 +103,7 @@ namespace Rougamo.Fody.Signature
             while (index < pattern.Length)
             {
                 var ch = pattern[index++];
-                if (IsWhiteSpace(ch)) continue;
+                if (ch.IsWhiteSpace()) continue;
                 if (ch < 'A' || ch > 'Z' && ch < 'a' || ch > 'z')
                 {
                     index--;
@@ -158,8 +158,6 @@ namespace Rougamo.Fody.Signature
             }
             throw new ArgumentException($"Unable parse regex token source from index {start} to the end of pattern({pattern})");
         }
-
-        private static bool IsWhiteSpace(char ch) => ch == ' ' || ch == '\t' || ch == '\n' || ch == '\r' || ch == '　';
 
         enum Connector
         {

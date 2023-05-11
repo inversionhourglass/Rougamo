@@ -1,4 +1,6 @@
-﻿namespace Rougamo.Fody.Signature
+﻿using Mono.Cecil;
+
+namespace Rougamo.Fody.Signature
 {
     /// <summary>
     /// Type signature
@@ -8,14 +10,17 @@
         public const char NESTED_SEPARATOR = '/';
 
         /// <summary/>
-        public TypeSignature(string name, TypeSignature? declaringType, TypeCategory category)
+        public TypeSignature(string name, TypeSignature? declaringType, TypeCategory category, TypeReference? reference)
         {
             DeclaringType = declaringType;
             Name = name;
             Category = category;
+            Reference = reference;
         }
 
         public TypeSignature? DeclaringType { get; }
+
+        public TypeReference? Reference { get; set; }
 
         /// <summary>
         /// Type full name
