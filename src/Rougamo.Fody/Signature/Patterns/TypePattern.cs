@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Rougamo.Fody.Signature.Patterns
+﻿namespace Rougamo.Fody.Signature.Patterns
 {
-    public class TypePattern
+    public abstract class TypePattern
     {
+        public abstract GenericNamePattern ExtractNamePattern();
+
+        public abstract bool IsMatch(TypeSignature signature);
     }
 }

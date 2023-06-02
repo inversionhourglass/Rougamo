@@ -12,8 +12,11 @@ namespace Rougamo.Fody.Signature.Patterns
             var tokens = TokenSourceBuilder.Build(pattern);
             
             var modifier = ParseModifier(tokens);
-
-            throw new NotImplementedException();
+            var returnTypePattern = ParseType(tokens);
+            var declareTypePattern = ParseType(tokens);
+            var methodNamePattern = declareTypePattern.ExtractNamePattern();
+            var parameterTypePattern = ParseParameters(tokens);
+            return default;
         }
     }
 }

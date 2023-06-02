@@ -2,6 +2,7 @@
 using Mono.Cecil;
 using Mono.Cecil.Rocks;
 using Rougamo.Fody.Signature;
+using System.Linq;
 using Xunit;
 
 namespace Rougamo.Fody.Tests
@@ -55,6 +56,10 @@ namespace Rougamo.Fody.Tests
 
             var privateProtectedStaticSignature = SignatureParser.ParseMethod(methods.PrivateProtectedStatic);
             Assert.Equal($"privateprotected static System.String {typeDef.FullName}.PrivateProtectedStatic()", privateProtectedStaticSignature.ToString());
+
+            var voidMethod = typeDef.GetMethods().Single(x => x.Name == "Void");
+            var voidSignature = SignatureParser.ParseMethod(voidMethod);
+            Assert.Equal($"public System.Void {typeDef.FullName}.Void()", voidSignature.ToString());
         }
 
         [Fact]

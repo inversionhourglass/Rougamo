@@ -2,6 +2,8 @@
 {
     public class PublicCls
     {
+        public void Void() { }
+
         public string Public()
         {
             return nameof(Public);

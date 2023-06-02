@@ -1,6 +1,8 @@
-﻿namespace Rougamo.Fody.Signature.Tokens
+﻿using System;
+
+namespace Rougamo.Fody.Signature.Tokens
 {
-    public class StringOrChar
+    public class StringOrChar : IEquatable<StringOrChar>
     {
         private readonly string? _str;
         private readonly char _ch;
@@ -38,6 +40,11 @@
         public override string ToString()
         {
             return _str ?? _ch.ToString();
+        }
+
+        public bool Equals(StringOrChar other)
+        {
+            return _str == other._str && _ch == other._ch;
         }
     }
 }

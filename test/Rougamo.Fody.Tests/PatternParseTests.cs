@@ -110,6 +110,15 @@ namespace Rougamo.Fody.Tests
             Assert.True(pattern.IsMatch(Modifier.PrivateProtected | Modifier.Static));
         }
 
+        [Fact]
+        public void Test()
+        {
+            //ExecutionPatternParser.Parse("* *.*(..)");
+            //ExecutionPatternParser.Parse("a.b.c.d.Efg d.e.f.g.Hkk.Uvw(int, double, string)");
+            ExecutionPatternParser.Parse("public static * d.e.f.g.Hkk<T1>/Xyz<T2, T3>.Uvw<T4, T5>(T1, T2, T3, T4, T5)");
+            //ExecutionPatternParser.Parse("private !static void d..g..Hkk/Xyz<T1, T2, T3>+.Uvw<T4, T5>(..)");
+        }
+
         private ModifierPattern ExtractModifier(string matchPattern)
         {
             var tokens = TokenSourceBuilder.Build(matchPattern);

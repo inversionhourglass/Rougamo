@@ -4,7 +4,8 @@ using System.Text;
 
 namespace Rougamo.Fody.Signature.Patterns
 {
-    public class NamePattern
+    public abstract class NamePattern
     {
+        public abstract bool IsMatch(string name);
     }
 }

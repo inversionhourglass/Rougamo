@@ -1,42 +1,58 @@
-﻿namespace Rougamo.Fody.Signature.Tokens
+﻿using System.Linq;
+
+namespace Rougamo.Fody.Signature.Tokens
 {
     public class TokenSource
     {
+        private readonly int _start;
+        private readonly int _end;
         private int _index;
 
-        public TokenSource(Token[] tokens)
+        public TokenSource(string value, Token[] tokens) : this(value, tokens, 0, tokens.Length) { }
+
+        public TokenSource(string value, Token[] tokens, int start, int end)
         {
+            _index = start;
+            _start = start;
+            _end = end;
+            Value = value;
             Tokens = tokens;
         }
+
+        public string Value { get; }
+
+        public int Start => _start;
+
+        public int End => _end;
+
+        public int Index => _index;
 
         public Token[] Tokens { get; }
 
         public Token? Peek(int offset = 0)
         {
             var index = _index + offset;
-            if (index >= Tokens.Length || index < 0) return null;
+            if (index >= _end || index < 0) return null;
             return Tokens[index];
         }
 
         public Token? Read(uint offset = 0)
         {
             _index += (int)offset;
-            if (_index >= Tokens.Length) return null;
+            if (_index >= _end) return null;
             return Tokens[_index++];
         }
-    }
 
-    public static class TokenSourceExtensions
-    {
-        public static bool TryPeekNotSpace(this TokenSource tokens, out Token? token)
+        public TokenSource Slice(int start, int end)
         {
-            while ((token = tokens.Peek()) != null)
-            {
-                if (!token.IsSpace()) return true;
+            return new TokenSource(Value, Tokens, start, end);
+        }
 
-                tokens.Read();
-            }
-            return false;
+        public override string ToString()
+        {
+            var start = Tokens[_start].Start;
+            var end = Tokens[_end - 1].End;
+            return Value.Substring(start, end - start);
         }
     }
 }
