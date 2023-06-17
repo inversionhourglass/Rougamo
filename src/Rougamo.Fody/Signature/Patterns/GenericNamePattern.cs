@@ -1,22 +1,33 @@
-﻿using System;
+﻿using System.Collections.Generic;
 
 namespace Rougamo.Fody.Signature.Patterns
 {
-    public class GenericNamePattern : NamePattern
+    public class GenericNamePattern
     {
-        public GenericNamePattern(string name, TypePattern[]? genericParameters)
+        public GenericNamePattern(string name, ITypePatterns genericPatterns)
         {
             Name = name;
-            GenericParameters = genericParameters;
+            GenericPatterns = genericPatterns;
         }
 
         public string Name { get; }
 
-        public TypePattern[]? GenericParameters { get; }
+        public ITypePatterns GenericPatterns { get; }
 
-        public override bool IsMatch(string name)
+        public void ExtractGenerics(List<GenericParameterTypePattern> list)
         {
-            throw new NotImplementedException();
+            if (GenericPatterns is TypePatterns patterns)
+            {
+                foreach (var pattern in patterns.Patterns)
+                {
+                    if (pattern is GenericParameterTypePattern gptp) list.Add(gptp);
+                }
+            }
+        }
+
+        public bool IsMatch(GenericSignature method)
+        {
+            return Name == method.Name && GenericPatterns.IsMatch(method.Generics);
         }
     }
 }

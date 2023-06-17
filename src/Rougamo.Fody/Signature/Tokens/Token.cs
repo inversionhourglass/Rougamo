@@ -15,6 +15,7 @@ namespace Rougamo.Fody.Signature.Tokens
         public const string OR = "||";
         public const char NOT = '!';
         public const char STAR = '*';
+        public const char PLUS = '+';
         public const char DOT = '.';
         public const char COMMA = ',';
         public const char L_BRACKET = '(';
@@ -77,6 +78,8 @@ namespace Rougamo.Fody.Signature.Tokens
         public static bool IsNot(this Token? token) => token != null && token.Value == Token.NOT;
 
         public static bool IsStar(this Token? token) => token != null && token.Value == Token.STAR;
+
+        public static bool IsPlus(this Token? token) => token != null && token.Value == Token.PLUS;
 
         public static bool IsDot(this Token? token) => token != null && token.Value == Token.DOT;
 

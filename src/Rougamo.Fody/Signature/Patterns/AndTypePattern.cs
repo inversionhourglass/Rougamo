@@ -1,23 +1,33 @@
-﻿namespace Rougamo.Fody.Signature.Patterns
+﻿using System.Collections.Generic;
+
+namespace Rougamo.Fody.Signature.Patterns
 {
-    public class AndTypePattern : TypePattern
+    public class AndTypePattern : IIntermediateTypePattern
     {
-        public AndTypePattern(TypePattern left, TypePattern right)
+        public AndTypePattern(IIntermediateTypePattern left, IIntermediateTypePattern right)
         {
             Left = left;
             Right = right;
         }
 
-        public TypePattern Left { get; }
+        public IIntermediateTypePattern Left { get; }
 
-        public TypePattern Right { get; }
+        public IIntermediateTypePattern Right { get; }
 
-        public override GenericNamePattern ExtractNamePattern()
+        public bool AssignableMatch => Left.AssignableMatch || Right.AssignableMatch;
+
+        public GenericNamePattern ExtractNamePattern()
         {
             return Right.ExtractNamePattern();
         }
 
-        public override bool IsMatch(TypeSignature signature)
+        public void Compile(List<GenericParameterTypePattern> genericParameters, bool genericIn)
+        {
+            Left.Compile(genericParameters, genericIn);
+            Right.Compile(genericParameters, genericIn);
+        }
+
+        public bool IsMatch(TypeSignature signature)
         {
             return Left.IsMatch(signature) && Right.IsMatch(signature);
         }

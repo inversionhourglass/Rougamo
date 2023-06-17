@@ -1,10 +1,9 @@
-﻿using Rougamo.Fody.Signature.Matchers;
-using Rougamo.Fody.Signature.Tokens;
+﻿using Rougamo.Fody.Signature.Tokens;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Rougamo.Fody.Signature.Patterns
+namespace Rougamo.Fody.Signature.Patterns.Parsers
 {
     public class Parser
     {
@@ -40,7 +39,7 @@ namespace Rougamo.Fody.Signature.Patterns
             return new ModifierPattern(required, forbidden);
         }
 
-        public static TypeListPattern ParseParameters(TokenSource tokens)
+        public static ITypePatterns ParseParameters(TokenSource tokens)
         {
             var token = tokens.Read();
             if (!token.IsLBracket()) throw new ArgumentException($"Unknow method parameter definition of pattern({tokens.Value})");
@@ -48,17 +47,17 @@ namespace Rougamo.Fody.Signature.Patterns
             if (token.IsEllipsis())
             {
                 if (!tokens.Read(1).IsRBracket()) throw new ArgumentException($"Unknow method parameter definition of pattern({tokens.Value})");
-                return new AnyTypeListPattern();
+                return new AnyTypePatterns();
             }
-            var typePatterns = new List<TypePattern>();
+            var typePatterns = new List<IIntermediateTypePattern>();
             do
             {
                 typePatterns.Add(ParseType(tokens));
-            } while(!tokens.Read().IsRBracket());
-            return new DefaultTypeListPattern(typePatterns.ToArray());
+            } while (!tokens.Read().IsRBracket());
+            return new TypePatterns(typePatterns.ToArray());
         }
 
-        public static TypePattern ParseType(TokenSource tokens)
+        public static IIntermediateTypePattern ParseType(TokenSource tokens)
         {
             var typePattern = ParseSingleType(tokens);
             var token = tokens.Peek();
@@ -75,7 +74,7 @@ namespace Rougamo.Fody.Signature.Patterns
             return typePattern;
         }
 
-        public static TypePattern ParseNotOrType(TokenSource tokens)
+        public static IIntermediateTypePattern ParseNotOrType(TokenSource tokens)
         {
             var typePattern = ParseSingleType(tokens);
             var token = tokens.Peek();
@@ -88,7 +87,7 @@ namespace Rougamo.Fody.Signature.Patterns
             return typePattern;
         }
 
-        public static TypePattern ParseSingleType(TokenSource tokens)
+        public static IIntermediateTypePattern ParseSingleType(TokenSource tokens)
         {
             var start = tokens.Index;
             var token = tokens.Read();
@@ -113,7 +112,7 @@ namespace Rougamo.Fody.Signature.Patterns
 
         private static TupleTypePattern ParseTupleTypePattern(TokenSource tokens)
         {
-            var tupleItems = new List<TypePattern>();
+            var tupleItems = new List<IIntermediateTypePattern>();
             Token? token;
             while ((token = tokens.Read()) != null)
             {

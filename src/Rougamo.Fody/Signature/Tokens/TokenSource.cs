@@ -27,6 +27,8 @@ namespace Rougamo.Fody.Signature.Tokens
 
         public int Index => _index;
 
+        public int Count => _end - _start;
+
         public Token[] Tokens { get; }
 
         public Token? Peek(int offset = 0)

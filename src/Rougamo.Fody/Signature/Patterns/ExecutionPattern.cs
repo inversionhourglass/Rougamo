@@ -2,16 +2,45 @@
 {
     public class ExecutionPattern
     {
-        public ModifierPattern Modifiers { get; set; }
+        public ExecutionPattern(ModifierPattern modifier, ITypePattern returnType, ITypePattern declareType, GenericNamePattern method, ITypePatterns methodParameters)
+        {
+            Modifier = modifier;
+            ReturnType = returnType;
+            DeclareType = declareType;
+            Method = method;
+            MethodParameters = methodParameters;
+        }
 
-        public TypePattern ReturnType { get; set; }
+        public ModifierPattern Modifier { get; }
 
-        public TypePattern DeclareType { get; set; }
+        public ITypePattern ReturnType { get; }
 
-        public NamePattern MethodName { get; set; }
+        public ITypePattern DeclareType { get; }
 
-        public TypePattern[] MethodGenericParameters { get; set; }
+        public GenericNamePattern Method { get; }
 
-        public TypePattern[] MethodParameters { get; set; }
+        public ITypePatterns MethodParameters { get; }
+
+        public bool IsMatch(MethodSignature signature)
+        {
+            if (MethodParameters.Count != signature.Method.Generics.Length) return false;
+
+            if (!Modifier.IsMatch(signature.Modifiers)) return false;
+
+            if (!Method.IsMatch(signature.Method)) return false;
+
+            if (ReturnType.AssignableMatch)
+            {
+                if (!DeclareType.IsMatch(signature.DeclareType)) return false;
+                if (!ReturnType.IsMatch(signature.ReturnType)) return false;
+            }
+            else
+            {
+                if (!ReturnType.IsMatch(signature.ReturnType)) return false;
+                if (!DeclareType.IsMatch(signature.DeclareType)) return false;
+            }
+
+            return MethodParameters.IsMatch(signature.MethodParameters);
+        }
     }
 }

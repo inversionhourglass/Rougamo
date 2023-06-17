@@ -4,12 +4,20 @@ namespace Rougamo.Fody.Signature
 {
     public class GenericParameterTypeSignature : TypeSignature
     {
-        public GenericParameterTypeSignature(string name, TypeReference reference) : base(name, null, TypeCategory.GenericParameter, reference)
+        public GenericParameterTypeSignature(string name, TypeReference reference) : base(string.Empty, GenericSignature.EmptyArray, reference)
         {
+            Name = name;
         }
+
+        public string Name { get; }
 
         public string? SortName { get; set; }
 
-        protected override string FormatName => SortName ?? Name;
+        public string? VirtualName { get; set; }
+
+        public override string ToString()
+        {
+            return SortName ?? Name;
+        }
     }
 }

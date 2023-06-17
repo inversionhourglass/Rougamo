@@ -9,16 +9,17 @@ namespace Rougamo.Fody.Signature
     {
         public static MethodSignature ParseMethod(MethodDefinition methodDef)
         {
-            var genericParameters = new List<GenericParameterItem>();
+            var genericParameters = new List<GenericParameterTypeSignature>();
             var modifier = ParseModifier(methodDef);
             var declareType = ParseType(methodDef.DeclaringType, genericParameters, null);
             var typeGenericCount = genericParameters.Count;
-            var methodName = methodDef.Name;
-            var methodGenericParameters = ParseMethodGenericParameters(methodDef, genericParameters);
-            var genericNameMap = SortGenericParameter(typeGenericCount, genericParameters);
-            var returnType = ParseType(methodDef.ReturnType, null, genericNameMap);
-            var parameters = ParseMethodParameters(methodDef, genericNameMap);
-            return new MethodSignature(modifier, returnType, declareType, methodName, methodGenericParameters, parameters);
+            var method = new GenericSignature(methodDef.Name, ParseMethodGenericParameters(methodDef, genericParameters));
+            ParseGenericVirtualNames(declareType);
+            ParseGenericVirtualNames(method, "TM");
+            var genericMap = SortGenericParameter(typeGenericCount, genericParameters);
+            var returnType = ParseType(methodDef.ReturnType, null, genericMap);
+            var parameters = ParseMethodParameters(methodDef, genericMap);
+            return new MethodSignature(modifier, returnType, declareType, method, parameters);
         }
 
         private static Modifier ParseModifier(MethodDefinition methodDef)
@@ -97,85 +98,134 @@ namespace Rougamo.Fody.Signature
             throw new ArgumentException($"Unable parse {attribute} to Modifier", nameof(attribute));
         }
 
-        public static TypeSignature ParseType(TypeReference typeRef, List<GenericParameterItem>? genericParameters, Dictionary<string, string>? genericNameMap)
+        public static TypeSignature ParseType(TypeReference typeRef, List<GenericParameterTypeSignature>? genericParameters, Dictionary<string, TypeSignature>? genericMap)
         {
-            if (typeRef is GenericParameter gp)
+            if (typeRef is GenericParameter)
             {
+                if (genericMap != null && genericMap.TryGetValue(typeRef.Name, out var singature)) return singature;
+
                 var signature = new GenericParameterTypeSignature(typeRef.Name, typeRef);
-                if (genericParameters != null)
-                {
-                    genericParameters.Add(new GenericParameterItem(gp, signature));
-                }
-                if (genericNameMap != null && genericNameMap.TryGetValue(typeRef.Name, out var sortName))
-                {
-                    signature.SortName = sortName;
-                }
+                genericParameters!.Add(signature);
                 return signature;
             }
 
             if (typeRef is GenericInstanceType git)
             {
-                var name = ShortGenericName(typeRef.Name, out var genericCount);
-                var argumentSignatures = new List<TypeSignature>();
-                for (var i = git.GenericArguments.Count - 1; i >= git.GenericArguments.Count - genericCount; i--)
+                var typeReference = typeRef;
+                var i = git.GenericArguments.Count - 1;
+                var boundary = git.GenericArguments.Count;
+                var nestedTypes = new Stack<GenericSignature>();
+                string gitNs;
+                do
                 {
-                    var argumentSignature = ParseType(git.GenericArguments[i], genericParameters, genericNameMap);
-                    argumentSignatures.Add(argumentSignature!);
-                }
-                return new GenericTypeSignature(name, ParseDeclaringType(typeRef, genericParameters, genericNameMap), argumentSignatures.AsEnumerable().Reverse().ToArray(), typeRef);
+                    gitNs = typeReference.Namespace;
+                    var name = ShortGenericName(typeReference.Name, out var genericCount);
+                    var argumentSignatures = new Stack<TypeSignature>();
+                    boundary -= genericCount;
+                    for (; i >= boundary; i--)
+                    {
+                        var argumentSignature = ParseType(git.GenericArguments[i], genericParameters, genericMap);
+                        argumentSignatures.Push(argumentSignature!);
+                    }
+                    nestedTypes.Push(new GenericSignature(name, argumentSignatures));
+                } while ((typeReference = typeReference.DeclaringType) != null);
+                return new TypeSignature(gitNs, nestedTypes, typeRef);
             }
 
             if (typeRef.HasGenericParameters)
             {
-                var name = ShortGenericName(typeRef.Name, out var genericCount);
-                var parameterSignatures = new List<TypeSignature>();
-                for (var i = typeRef.GenericParameters.Count - 1; i >= typeRef.GenericParameters.Count - genericCount; i--)
+                var typeReference = typeRef;
+                var i = typeRef.GenericParameters.Count - 1;
+                var boundary = typeRef.GenericParameters.Count;
+                var nestedTypes = new Stack<GenericSignature>();
+                string gptNs;
+                do
                 {
-                    var parameterSignature = ParseType(typeRef.GenericParameters[i], genericParameters, genericNameMap);
-                    parameterSignatures.Add(parameterSignature!);
-                }
-                return new GenericTypeSignature(name, ParseDeclaringType(typeRef, genericParameters, genericNameMap), parameterSignatures.AsEnumerable().Reverse().ToArray(), typeRef);
+                    gptNs = typeReference.Namespace;
+                    var name = ShortGenericName(typeReference.Name, out var genericCount);
+                    var argumentSignatures = new Stack<TypeSignature>();
+                    boundary -= genericCount;
+                    for (; i >= boundary; i--)
+                    {
+                        var argumentSignature = ParseType(typeRef.GenericParameters[i], genericParameters, genericMap);
+                        argumentSignatures.Push(argumentSignature!);
+                    }
+                    nestedTypes.Push(new GenericSignature(name, argumentSignatures));
+                } while ((typeReference = typeReference.DeclaringType) != null);
+                return new TypeSignature(gptNs, nestedTypes, typeRef);
             }
 
-            return new SimpleTypeSignature(typeRef.Name, ParseDeclaringType(typeRef, genericParameters, genericNameMap), typeRef);
+            var reference = typeRef;
+            var nesteds = new Stack<GenericSignature>();
+            string @namespace;
+            do
+            {
+                @namespace = reference.Namespace;
+                nesteds.Push(new GenericSignature(reference.Name, TypeSignature.EmptyArray));
+            } while ((reference = reference.DeclaringType) != null);
+            return new TypeSignature(@namespace, nesteds, typeRef);
         }
 
-        private static TypeSignature ParseDeclaringType(TypeReference typeRef, List<GenericParameterItem>? genericParameters, Dictionary<string, string>? genericNameMap)
+        private static TypeSignature[] ParseMethodGenericParameters(MethodDefinition methodDef, List<GenericParameterTypeSignature> genericParameters)
         {
-            return typeRef.DeclaringType == null ? new NamespaceSignature(typeRef.Namespace) : ParseType(typeRef.DeclaringType, genericParameters, genericNameMap);
+            return methodDef.HasGenericParameters ? methodDef.GenericParameters.Select(x => ParseType(x, genericParameters, null)!).ToArray() : TypeSignature.EmptyArray;
         }
 
-        private static TypeSignature[] ParseMethodGenericParameters(MethodDefinition methodDef, List<GenericParameterItem> genericParameters)
+        private static TypeSignature[] ParseMethodParameters(MethodDefinition methodDef, Dictionary<string, TypeSignature>? genericNameMap)
         {
-            return methodDef.HasGenericParameters ? methodDef.GenericParameters.Select(x => ParseType(x, genericParameters, null)!).ToArray() : new TypeSignature[0];
+            return methodDef.HasParameters ? methodDef.Parameters.Select(x => ParseType(x.ParameterType, null, genericNameMap)!).ToArray() : TypeSignature.EmptyArray;
         }
 
-        private static TypeSignature[] ParseMethodParameters(MethodDefinition methodDef, Dictionary<string, string>? genericNameMap)
-        {
-            return methodDef.HasParameters ? methodDef.Parameters.Select(x => ParseType(x.ParameterType, null, genericNameMap)!).ToArray() : new TypeSignature[0];
-        }
-
-        private static Dictionary<string, string>? SortGenericParameter(int typeGenericCount, List<GenericParameterItem> genericParameters)
+        private static Dictionary<string, TypeSignature>? SortGenericParameter(int typeGenericCount, List<GenericParameterTypeSignature> genericParameters)
         {
             if (genericParameters.Count == 0) return null;
             if (genericParameters.Count == 1)
             {
                 var genericParameter = genericParameters[0];
-                genericParameter.Signature.SortName = "T";
-                return new Dictionary<string, string> { { genericParameter.Parameter.Name, genericParameter.Signature.SortName } };
+                genericParameter.SortName = "T";
+                return new Dictionary<string, TypeSignature> { { genericParameter.Name, genericParameter } };
             }
             for (var i = 0; i < genericParameters.Count; i++)
             {
                 if (i < typeGenericCount)
                 {
-                    genericParameters[i].Signature.SortName = $"T{typeGenericCount - i}";
+                    genericParameters[i].SortName = $"T{typeGenericCount - i}";
                 }
                 else
                 {
-                    genericParameters[i].Signature.SortName = $"T{i + 1}";
+                    genericParameters[i].SortName = $"T{i + 1}";
                 }
             }
-            return genericParameters.ToDictionary(x => x.Parameter.Name, x => x.Signature.SortName);
+            return genericParameters.ToDictionary(x => x.Name, x => (TypeSignature)x);
+        }
+
+        private static void ParseGenericVirtualNames(TypeSignature signature)
+        {
+            if (signature.NestedTypes.Length == 0) return;
+
+            var j = 1;
+            for (var i = signature.NestedTypes.Length - 1; i >= 0; i--)
+            {
+                ParseGenericVirtualNames(signature.NestedTypes[i], $"T{j}");
+                j++;
+            }
+            //for (int i = 0; i < signature.NestedTypes.Length; i++)
+            //{
+            //    ParseGenericVirtualNames(signature.NestedTypes[i], $"T{i + 1}");
+            //}
+        }
+
+        private static void ParseGenericVirtualNames(GenericSignature signature, string prefix)
+        {
+            if (signature.Generics.Length == 0) return;
+
+            for (var i = 0; i < signature.Generics.Length; i++)
+            {
+                if (signature.Generics[i] is GenericParameterTypeSignature genericParameter)
+                {
+                    genericParameter.VirtualName = prefix + (i + 1);
+                }
+            }
         }
 
         private static string ShortGenericName(string name, out int genericCount)
@@ -184,19 +234,6 @@ namespace Rougamo.Fody.Signature
             if (index == -1) throw new ArgumentException($"{name} is not a generic name", nameof(name));
             genericCount = int.Parse(name.Substring(index + 1));
             return name.Substring(0, index);
-        }
-
-        public struct GenericParameterItem
-        {
-            public GenericParameterItem(GenericParameter parameter, GenericParameterTypeSignature signature)
-            {
-                Parameter = parameter;
-                Signature = signature;
-            }
-
-            public GenericParameter Parameter { get; }
-
-            public GenericParameterTypeSignature Signature { get; }
         }
     }
 }

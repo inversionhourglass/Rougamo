@@ -1,30 +1,44 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 
 namespace Rougamo.Fody.Signature.Patterns
 {
-    public class TupleTypePattern : TypePattern
+    public class TupleTypePattern : IIntermediateTypePattern
     {
-        public TupleTypePattern(TypePattern[] items)
+        public TupleTypePattern(IIntermediateTypePattern[] items)
         {
             Items = items;
         }
 
-        public TypePattern[] Items { get; }
+        public IIntermediateTypePattern[] Items { get; }
 
-        public override GenericNamePattern ExtractNamePattern()
+        public bool AssignableMatch => Items.Any(x => x.AssignableMatch);
+
+        public GenericNamePattern ExtractNamePattern()
         {
             return Items.Last().ExtractNamePattern();
         }
 
-        public override bool IsMatch(TypeSignature signature)
+        public void Compile(List<GenericParameterTypePattern> genericParameters, bool genericIn)
         {
-            if (signature.Name != "System.Tuple" && signature.Name != "System.ValueTuple") return false;
-            if (signature is not GenericTypeSignature genericSignature) return false;
-            if (Items.Length != genericSignature.GenericParameters.Length) return false;
+            foreach (var item in Items)
+            {
+                item.Compile(genericParameters, genericIn);
+            }
+        }
+
+        public bool IsMatch(TypeSignature signature)
+        {
+            if (signature.NestedTypes.Length != 1) return false;
+
+            var genericSignature = signature.NestedTypes[0];
+            if (genericSignature.Generics.Length != Items.Length) return false;
+
+            if (signature.Namespace != "System" || genericSignature.Name != "Tuple" && genericSignature.Name != "ValueTuple") return false;
 
             for(var i = 0; i < Items.Length; i++)
             {
-                if (!Items[i].IsMatch(genericSignature.GenericParameters[i])) return false;
+                if (!Items[i].IsMatch(genericSignature.Generics[i])) return false;
             }
 
             return true;

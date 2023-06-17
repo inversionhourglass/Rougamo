@@ -1,4 +1,6 @@
 ﻿using Mono.Cecil;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace Rougamo.Fody.Signature
 {
@@ -9,36 +11,25 @@ namespace Rougamo.Fody.Signature
     {
         public const char NESTED_SEPARATOR = '/';
 
+        public static readonly TypeSignature[] EmptyArray = new TypeSignature[0];
+
         /// <summary/>
-        public TypeSignature(string name, TypeSignature? declaringType, TypeCategory category, TypeReference? reference)
+        public TypeSignature(string @namespace, IReadOnlyCollection<GenericSignature> nestedTypes, TypeReference reference)
         {
-            DeclaringType = declaringType;
-            Name = name;
-            Category = category;
+            Namespace = @namespace;
+            NestedTypes = nestedTypes.ToArray();
             Reference = reference;
         }
 
-        public TypeSignature? DeclaringType { get; }
+        public string Namespace { get; }
 
-        public TypeReference? Reference { get; set; }
+        public GenericSignature[] NestedTypes { get; }
 
-        /// <summary>
-        /// Type full name
-        /// </summary>
-        public string Name { get; }
-
-        /// <summary>
-        /// Category
-        /// </summary>
-        public TypeCategory Category { get; }
-
-        protected virtual char Separator => NESTED_SEPARATOR;
-
-        protected virtual string FormatName => Name;
+        public TypeReference Reference { get; }
 
         public override string ToString()
         {
-            return DeclaringType == null ? FormatName : $"{DeclaringType}{DeclaringType.Separator}{FormatName}";
+            return $"{Namespace}.{string.Join(NESTED_SEPARATOR.ToString(), NestedTypes.AsEnumerable())}";
         }
     }
 }

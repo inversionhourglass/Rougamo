@@ -1,17 +1,20 @@
 ﻿namespace Rougamo.Fody.Signature.Patterns
 {
-    public class DefaultTypeListPattern : TypeListPattern
+    public class TypePatterns : ITypePatterns
     {
-        public DefaultTypeListPattern(TypePattern[] patterns)
+        public TypePatterns(ITypePattern[] patterns)
         {
             Patterns = patterns;
         }
 
-        public TypePattern[] Patterns { get; }
+        public ITypePattern[] Patterns { get; }
 
-        public override bool IsMatch(TypeSignature[] signature)
+        public CollectionCount Count => Patterns.Length;
+
+        public bool IsMatch(TypeSignature[] signature)
         {
             if (signature.Length != Patterns.Length) return false;
+
             for (var i = 0; i < Patterns.Length; i++)
             {
                 if (!Patterns[i].IsMatch(signature[i])) return false;

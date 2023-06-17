@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Rougamo.Fody.Signature.Patterns
 {
-    public class GenericParameterTypePattern : TypePattern
+    public class GenericParameterTypePattern : ITypePattern, IIntermediateTypePattern
     {
         public GenericParameterTypePattern(string name)
         {
@@ -11,12 +12,21 @@ namespace Rougamo.Fody.Signature.Patterns
 
         public string Name { get; }
 
-        public override GenericNamePattern ExtractNamePattern()
+        public string? VirtualName { get; set; }
+
+        public bool AssignableMatch => false;
+
+        public bool IsMatch(TypeSignature signature)
         {
-            throw new NotImplementedException();
+            return signature is GenericParameterTypeSignature gpts && gpts.VirtualName == VirtualName;
         }
 
-        public override bool IsMatch(TypeSignature signature)
+        public void Compile(List<GenericParameterTypePattern> genericParameters, bool genericIn)
+        {
+
+        }
+
+        public GenericNamePattern ExtractNamePattern()
         {
             throw new NotImplementedException();
         }

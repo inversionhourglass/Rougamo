@@ -1,6 +1,7 @@
 ﻿using Rougamo.Fody.Signature;
 using Rougamo.Fody.Signature.Matchers;
 using Rougamo.Fody.Signature.Patterns;
+using Rougamo.Fody.Signature.Patterns.Parsers;
 using Rougamo.Fody.Signature.Tokens;
 using Xunit;
 
