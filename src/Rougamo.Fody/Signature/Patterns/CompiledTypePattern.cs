@@ -19,7 +19,7 @@ namespace Rougamo.Fody.Signature.Patterns
 
         public bool AssignableMatch { get; }
 
-        public bool IsMatch(TypeSignature signature)
+        public virtual bool IsMatch(TypeSignature signature)
         {
             var matched = false;
             if (NestedTypePatterns.Count == signature.NestedTypes.Length)
@@ -29,7 +29,7 @@ namespace Rougamo.Fody.Signature.Patterns
                     matched = NestedTypePatterns.IsMatch(signature.NestedTypes);
                 }
             }
-            if (!AssignableMatch) return matched;
+            if (matched || !AssignableMatch) return matched;
             return IsAssignableMatch(signature);
         }
 
@@ -38,6 +38,8 @@ namespace Rougamo.Fody.Signature.Patterns
             var genericMap = new Dictionary<string, TypeSignature>();
             var typeRef = signature.Reference;
             var typeDef = typeRef.Resolve();
+
+            if (typeDef == null) return false;
             if (typeDef.HasGenericParameters)
             {
                 var genericSignature = signature.NestedTypes.SelectMany(x => x.Generics).ToArray();
@@ -46,6 +48,7 @@ namespace Rougamo.Fody.Signature.Patterns
                     genericMap[typeDef.GenericParameters[i].Name] = genericSignature[i];
                 }
             }
+
             while (true)
             {
                 foreach (var @interface in typeDef.Interfaces)

@@ -3,9 +3,9 @@ using System.Collections.Generic;
 
 namespace Rougamo.Fody.Signature.Patterns
 {
-    public class GenericParameterTypePattern : ITypePattern, IIntermediateTypePattern
+    public class GenericParameterTypePattern : CompiledTypePattern, ITypePattern, IIntermediateTypePattern
     {
-        public GenericParameterTypePattern(string name)
+        public GenericParameterTypePattern(string name) : base(new AnyNamespacePattern(), new AnyGenericNamePatterns(), false)
         {
             Name = name;
         }
@@ -14,9 +14,7 @@ namespace Rougamo.Fody.Signature.Patterns
 
         public string? VirtualName { get; set; }
 
-        public bool AssignableMatch => false;
-
-        public bool IsMatch(TypeSignature signature)
+        public override bool IsMatch(TypeSignature signature)
         {
             return signature is GenericParameterTypeSignature gpts && gpts.VirtualName == VirtualName;
         }
@@ -26,7 +24,7 @@ namespace Rougamo.Fody.Signature.Patterns
 
         }
 
-        public GenericNamePattern ExtractNamePattern()
+        public GenericNamePattern SeparateOutMethod()
         {
             throw new NotImplementedException();
         }

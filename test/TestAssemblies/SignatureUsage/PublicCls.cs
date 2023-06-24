@@ -1,7 +1,21 @@
-﻿namespace SignatureUsage
+﻿using System.Threading.Tasks;
+
+namespace SignatureUsage
 {
     public class PublicCls
     {
+        public int PublicProp { get; set; }
+
+        protected string ProtectedProp { get; set; }
+
+        internal double InternalProp { get; }
+
+        private decimal _privatePropValue;
+        private decimal PrivateProp
+        {
+            set => _privatePropValue = value;
+        }
+
         public void Void() { }
 
         public string Public()
@@ -84,6 +98,16 @@
             private protected string PrivateProtected()
             {
                 return nameof(PrivateProtected);
+            }
+
+            public class PublicDeepCls
+            {
+                public async Task<string> PublicAsync() => default;
+
+                public class PublicDeeplyCls
+                {
+                    public Task<int> Public() => Task.FromResult(123);
+                }
             }
         }
 

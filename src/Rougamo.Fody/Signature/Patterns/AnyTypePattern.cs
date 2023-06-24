@@ -11,7 +11,7 @@ namespace Rougamo.Fody.Signature.Patterns
             
         }
 
-        public GenericNamePattern ExtractNamePattern()
+        public GenericNamePattern SeparateOutMethod()
         {
             throw new System.NotImplementedException();
         }

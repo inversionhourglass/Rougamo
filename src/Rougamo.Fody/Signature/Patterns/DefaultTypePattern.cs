@@ -7,7 +7,7 @@ namespace Rougamo.Fody.Signature.Patterns
 {
     public class DefaultTypePattern : IIntermediateTypePattern
     {
-        private CompiledTypePattern? _compiledPattern;
+        private ITypePattern? _compiledPattern;
 
         public DefaultTypePattern(TokenSource tokens)
         {
@@ -23,101 +23,53 @@ namespace Rougamo.Fody.Signature.Patterns
             return _compiledPattern!.IsMatch(signature);
         }
 
-        public GenericNamePattern ExtractNamePattern()
+        public GenericNamePattern SeparateOutMethod()
         {
             var index = Tokens.End - 1;
             var pattern = ExtractGenericNamePattern(Tokens, ref index, "TM", Token.DOT, Token.ELLIPSIS);
 
-            var token = Tokens.Tokens[index];
-            if (token.IsDot())
+            if (Tokens.Start > index)
             {
-                Tokens = Tokens.Slice(Tokens.Start, index);
+                Tokens = Tokens.Slice(Tokens.Start, Tokens.Start);
             }
-            else if (token.IsEllipsis())
+            else
             {
-                Tokens = Tokens.Slice(Tokens.Start, index + 1);
+                var token = Tokens.Tokens[index];
+                if (token.IsDot())
+                {
+                    Tokens = Tokens.Slice(Tokens.Start, index);
+                }
+                else if (token.IsEllipsis())
+                {
+                    Tokens = Tokens.Slice(Tokens.Start, index + 1);
+                }
             }
 
             return pattern;
-
-            //var inGeneric = false;
-            //Stack<TypePattern>? genericParameters = null;
-            //var nameTokens = new List<Token>();
-            //for (var i = Tokens.End - 1; i >= Tokens.Start; i--)
-            //{
-            //    var token = Tokens.Tokens[i];
-            //    if (token.IsGT())
-            //    {
-            //        if (inGeneric) throw new ArgumentException($"Cannot extract method name pattern, detected nested method generic parameter from pattern({Tokens.Value})");
-            //        if (genericParameters != null) throw new ArgumentException($"Cannot extract method name pattern, unrecognized method generic parameters from pattern({Tokens.Value})");
-            //        inGeneric = true;
-            //        genericParameters = new();
-            //    }
-            //    else if (token.IsLT())
-            //    {
-            //        if (!inGeneric) throw new ArgumentException($"Cannot extract method name pattern, unrecognized method generic parameters format from pattern({Tokens.Value})");
-            //        if (genericParameters!.Count == 0)
-            //        {
-            //            genericParameters.Push(new AnyTypePattern());
-            //        }
-            //        inGeneric = false;
-            //    }
-            //    else if (inGeneric)
-            //    {
-            //        if (token.IsComma())
-            //        {
-            //            genericParameters!.Push(new AnyTypePattern());
-            //        }
-            //        else if (token.IsEllipsis())
-            //        {
-            //            if (genericParameters!.Count != 0) throw new ArgumentException($"Cannot extract method name pattern, method generic parameter list cannot contains other element if there is an ellipsis in generic parameter list, pattern({Tokens.Value})");
-            //            token = Tokens.Tokens[--i];
-            //            if (!token.IsLT()) throw new ArgumentException($"Cannot extract method name pattern, method generic parameter list cannot contains other element if there is an ellipsis in generic parameter list, pattern({Tokens.Value})");
-            //        }
-            //        else
-            //        {
-            //            genericParameters!.Push(new GenericParameterTypePattern(token.Value.ToString()));
-            //            token = Tokens.Tokens[i - 1];
-            //            if (token.IsComma()) i--;
-            //            else if (token.IsLT()) continue;
-            //            else throw new ArgumentException($"Cannot extract method name pattern, unrecognized method generic parameters format from pattern({Tokens.Value})");
-            //        }
-            //    }
-            //    else if (token.IsDot())
-            //    {
-            //        Tokens = Tokens.Slice(Tokens.Start, i);
-            //        var name = nameTokens.Count == 1 ? nameTokens[0].Value.ToString() : string.Concat(nameTokens.Select(x => x.Value.ToString()));
-            //        return new GenericNamePattern(name, GenericPatternFactory.New(genericParameters, "TM"));
-            //    }
-            //    else if (token.IsEllipsis())
-            //    {
-            //        Tokens = Tokens.Slice(Tokens.Start, i + 1);
-            //        var name = nameTokens.Count == 1 ? nameTokens[0].Value.ToString() : string.Concat(nameTokens.Select(x => x.Value.ToString()));
-            //        return new GenericNamePattern(name, GenericPatternFactory.New(genericParameters, "TM"));
-            //    }
-            //    else
-            //    {
-            //        nameTokens.Add(token);
-            //    }
-            //}
-
-            //throw new ArgumentException($"Cannot extract method name pattern, cannot resolve name part from pattern({Tokens.Value})");
         }
 
         public void Compile(List<GenericParameterTypePattern> genericParameters, bool genericIn)
         {
-            var index = Tokens.End - 1;
-            _compiledPattern = genericIn ? CompileGenericIn(genericParameters, Tokens, ref index) : CompileGenericOut(genericParameters, Tokens);
+            if (Tokens.Start == Tokens.End)
+            {
+                _compiledPattern = CompiledTypePattern.NewAny();
+            }
+            else
+            {
+                var index = Tokens.End - 1;
+                _compiledPattern = genericIn ? CompileGenericIn(genericParameters, Tokens, ref index) : CompileGenericOut(genericParameters, Tokens);
+            }
         }
 
         private GenericNamePattern ExtractGenericNamePattern(TokenSource tokens, ref int index, string genericPrefix, params StringOrChar[] stopTokens)
         {
             var inGeneric = false;
+            ITypePatterns? genericPatterns = null;
             Stack<IIntermediateTypePattern>? genericParameters = null;
-            var nameTokens = new List<Token>();
-            for (var i = index; i >= tokens.Start; i--)
+            var nameTokens = new Stack<Token>();
+            for (; index >= tokens.Start; index--)
             {
-                var token = tokens.Tokens[i];
+                var token = tokens.Tokens[index];
                 if (token.IsGT())
                 {
                     if (inGeneric) throw new ArgumentException($"Cannot extract method name pattern, detected nested method generic parameter from pattern({tokens.Value})");
@@ -127,11 +79,9 @@ namespace Rougamo.Fody.Signature.Patterns
                 }
                 else if (token.IsLT())
                 {
-                    if (!inGeneric) throw new ArgumentException($"Cannot extract method name pattern, unrecognized method generic parameters format from pattern({tokens.Value})");
-                    if (genericParameters!.Count == 0)
-                    {
-                        genericParameters.Push(new AnyTypePattern());
-                    }
+                    if (!inGeneric || genericPatterns != null) throw new ArgumentException($"Cannot extract method name pattern, unrecognized method generic parameters format from pattern({tokens.Value})");
+                    genericParameters!.Push(new AnyTypePattern());
+                    genericPatterns = new TypePatterns(genericParameters.ToArray());
                     inGeneric = false;
                 }
                 else if (inGeneric)
@@ -142,36 +92,61 @@ namespace Rougamo.Fody.Signature.Patterns
                     }
                     else if (token.IsEllipsis())
                     {
-                        if (genericParameters!.Count != 0) throw new ArgumentException($"Cannot extract method name pattern, method generic parameter list cannot contains other element if there is an ellipsis in generic parameter list, pattern({tokens.Value})");
-                        token = tokens.Tokens[--i];
-                        if (!token.IsLT()) throw new ArgumentException($"Cannot extract method name pattern, method generic parameter list cannot contains other element if there is an ellipsis in generic parameter list, pattern({tokens.Value})");
+                        if (genericParameters!.Count != 0) throw new ArgumentException($"Cannot extract method name pattern, method generic parameter list cannot contains other element if there is a '..' in generic parameter list, pattern({tokens.Value})");
+                        token = tokens.Tokens[--index];
+                        if (!token.IsLT()) throw new ArgumentException($"Cannot extract method name pattern, method generic parameter list cannot contains other element if there is a '..' in generic parameter list, pattern({tokens.Value})");
+                        genericPatterns = new OnePlusTypePatterns();
+                        inGeneric = false;
+                    }
+                    else if (token.IsNot())
+                    {
+                        if (genericParameters!.Count != 0) throw new ArgumentException($"Cannot extract method name pattern, method generic parameter list cannot contains other element if there is a '!' in generic parameter list, pattern({tokens.Value})");
+                        token = tokens.Tokens[--index];
+                        if (!token.IsLT()) throw new ArgumentException($"Cannot extract method name pattern, method generic parameter list cannot contains other element if there is a '!' in generic parameter list, pattern({tokens.Value})");
+                        genericPatterns = new NoneTypePatterns();
+                        inGeneric = false;
                     }
                     else
                     {
                         genericParameters!.Push(new GenericParameterTypePattern(token.Value.ToString()));
-                        token = tokens.Tokens[i - 1];
-                        if (token.IsComma()) i--;
-                        else if (token.IsLT()) continue;
-                        else throw new ArgumentException($"Cannot extract method name pattern, unrecognized method generic parameters format from pattern({tokens.Value})");
+                        token = tokens.Tokens[--index];
+                        if (token.IsLT())
+                        {
+                            genericPatterns = new TypePatterns(genericParameters.ToArray());
+                            inGeneric = false;
+                        }
+                        else if (!token.IsComma())
+                        {
+                            throw new ArgumentException($"Cannot extract method name pattern, unrecognized method generic parameters format from pattern({tokens.Value})");
+                        }
                     }
                 }
                 else if (stopTokens.Any(x => x.Equals(token.Value)))
                 {
-                    var name = nameTokens.Count == 1 ? nameTokens[0].Value.ToString() : string.Concat(nameTokens.Select(x => x.Value.ToString()));
-                    return new GenericNamePattern(name, GenericPatternFactory.New(genericParameters, genericPrefix));
+                    return NewGenericNamePattern(nameTokens, genericPatterns, genericPrefix);
                 }
                 else
                 {
-                    nameTokens.Add(token);
+                    nameTokens.Push(token);
                 }
             }
 
-            throw new ArgumentException($"Cannot extract method name pattern, cannot resolve name part from pattern({Tokens.Value})");
+            if (nameTokens.Count == 0) throw new ArgumentException($"Cannot extract method name pattern, cannot resolve name part from pattern({Tokens.Value})");
+
+            return NewGenericNamePattern(nameTokens, genericPatterns, genericPrefix);
+
+            static GenericNamePattern NewGenericNamePattern(IReadOnlyCollection<Token> nameTokens, ITypePatterns? genericPatterns, string genericPrefix)
+            {
+                var name = nameTokens.Count == 1 ? nameTokens.First().Value.ToString() : string.Concat(nameTokens.Select(x => x.Value.ToString()));
+                genericPatterns ??= new AnyTypePatterns();
+                GenericPatternFactory.FormatVirtualName(genericPatterns, genericPrefix);
+                return new GenericNamePattern(name, genericPatterns);
+            }
         }
 
-        private CompiledTypePattern CompileGenericOut(List<GenericParameterTypePattern> genericParameters, TokenSource tokens)
+        private ITypePattern CompileGenericOut(List<GenericParameterTypePattern> genericParameters, TokenSource tokens)
         {
-            if (tokens.Count == 1 && tokens.Peek().IsStar() || tokens.Count == 3 && tokens.Peek().IsStar() && tokens.Peek(1).IsEllipsis() && tokens.Peek(2).IsStar()) return CompiledTypePattern.NewAny();
+            if (tokens.Peek().IsStar() && (tokens.Count == 1 || tokens.Peek(1).IsEllipsis() && (tokens.Count == 2 || tokens.Count == 3 && tokens.Peek(2).IsStar()))) return CompiledTypePattern.NewAny();
 
             var nestedTypePatterns = new Stack<GenericNamePattern>();
             var nestedDeep = 1;
@@ -187,16 +162,26 @@ namespace Rougamo.Fody.Signature.Patterns
                 var pattern = ExtractGenericNamePattern(tokens, ref index, $"T{nestedDeep}", TypeSignature.NESTED_SEPARATOR, Token.DOT, Token.ELLIPSIS);
                 nestedTypePatterns.Push(pattern);
                 nestedDeep++;
-            } while (tokens.Tokens[index--].Value == TypeSignature.NESTED_SEPARATOR);
+            } while (index >= tokens.Start && tokens.Tokens[index--].Value == TypeSignature.NESTED_SEPARATOR);
 
-            var ns = new NamespacePattern(tokens.Slice(tokens.Start, tokens.Index));
+            INamespacePattern ns = new AnyNamespacePattern();
+            if (index >= tokens.Start)
+            {
+                index = tokens.Tokens[index + 1].IsEllipsis() ? index + 2 : index + 1;
+                if (tokens.Start + 2 != index || !tokens.Tokens[tokens.Start].IsStar() && !tokens.Tokens[tokens.Start + 1].IsEllipsis())
+                {
+                    ns = new NamespacePattern(tokens.Slice(tokens.Start, index));
+                }
+            }
             var patterns = new GenericNamePatterns(nestedTypePatterns.ToArray());
             patterns.ExtractGenerics(genericParameters);
             return new CompiledTypePattern(ns, patterns, assignableMatch);
         }
 
-        private CompiledTypePattern CompileGenericIn(List<GenericParameterTypePattern> genericParameters, TokenSource tokens, ref int index)
+        private ITypePattern CompileGenericIn(List<GenericParameterTypePattern> genericParameters, TokenSource tokens, ref int index)
         {
+            if (tokens.Count == 1 && tokens.Peek().IsStar()) return CompiledTypePattern.NewAny();
+
             var inGeneric = false;
             var assignableMatch = false;
             if (tokens.Tokens[index].IsPlus())
@@ -207,6 +192,7 @@ namespace Rougamo.Fody.Signature.Patterns
             var nameTokens = new List<Token>();
             var patterns = new Stack<GenericNamePattern>();
             Stack<ITypePattern>? generics = null;
+            ITypePatterns? genericPatterns = null;
             for (; index >= tokens.Start; index--)
             {
                 var token = tokens.Tokens[index];
@@ -230,6 +216,7 @@ namespace Rougamo.Fody.Signature.Patterns
                     {
                         generics!.Push(new AnyTypePattern());
                     }
+                    genericPatterns = new TypePatterns(generics.ToArray());
                     inGeneric = false;
                 }
                 else if (inGeneric)
@@ -243,6 +230,16 @@ namespace Rougamo.Fody.Signature.Patterns
                         if (generics!.Count != 0) throw new ArgumentException($"Cannot extract method name pattern, method generic parameter list cannot contains other element if there is an ellipsis in generic parameter list, pattern({tokens.Value})");
                         token = tokens.Tokens[--index];
                         if (!token.IsLT()) throw new ArgumentException($"Cannot extract method name pattern, method generic parameter list cannot contains other element if there is an ellipsis in generic parameter list, pattern({tokens.Value})");
+                        genericPatterns = new OnePlusTypePatterns();
+                        inGeneric = false;
+                    }
+                    else if (token.IsNot())
+                    {
+                        if (generics!.Count != 0) throw new ArgumentException($"Cannot extract method name pattern, method generic parameter list cannot contains other element if there is an ellipsis in generic parameter list, pattern({tokens.Value})");
+                        token = tokens.Tokens[--index];
+                        if (!token.IsLT()) throw new ArgumentException($"Cannot extract method name pattern, method generic parameter list cannot contains other element if there is an ellipsis in generic parameter list, pattern({tokens.Value})");
+                        genericPatterns = new NoneTypePatterns();
+                        inGeneric = false;
                     }
                     else if (token.IsPlus())
                     {
@@ -252,14 +249,22 @@ namespace Rougamo.Fody.Signature.Patterns
                     {
                         var preToken = tokens.Tokens[index - 1];
                         var generic = genericParameters.SingleOrDefault(x => x.Name == token.Value);
-                        if (preToken.IsComma() && generic != null)
+                        if (preToken.IsLT() || preToken.IsComma())
                         {
-                            generics!.Push(generic);
+                            if (generic != null)
+                            {
+                                generics!.Push(generic);
+                            }
+                            else
+                            {
+                                generics!.Push(CompiledTypePattern.NewPrimitiveOrAnyNs(token.Value.ToString(), assignableMatch));
+                            }
                             index--;
-                        }
-                        else if (preToken.IsLT() || preToken.IsComma())
-                        {
-                            generics!.Push(CompiledTypePattern.NewPrimitiveOrAnyNs(token.Value.ToString(), assignableMatch));
+                            if (preToken.IsLT())
+                            {
+                                genericPatterns = new TypePatterns(generics.ToArray());
+                                inGeneric = false;
+                            }
                         }
                         else
                         {
@@ -269,17 +274,18 @@ namespace Rougamo.Fody.Signature.Patterns
                 }
                 else if (token.Value == TypeSignature.NESTED_SEPARATOR)
                 {
-                    var name = nameTokens.Count == 1 ? nameTokens[0].Value.ToString() : string.Concat(nameTokens.Select(x => x.Value.ToString()));
-                    patterns.Push(new GenericNamePattern(name, GenericPatternFactory.New(generics, null)));
+                    patterns.Push(CreateGenericNamePattern(nameTokens, genericPatterns));
                 }
                 else if (token.IsDot())
                 {
                     tokens = tokens.Slice(tokens.Start, index);
+                    patterns.Push(CreateGenericNamePattern(nameTokens, genericPatterns));
                     break;
                 }
                 else if (token.IsEllipsis())
                 {
                     tokens = tokens.Slice(tokens.Start, index + 1);
+                    patterns.Push(CreateGenericNamePattern(nameTokens, genericPatterns));
                     break;
                 }
                 else
@@ -288,8 +294,25 @@ namespace Rougamo.Fody.Signature.Patterns
                 }
             }
 
-            INamespacePattern namespacePattern = tokens.Count == 0 ? new AnyNamespacePattern() : new NamespacePattern(tokens);
-            return new CompiledTypePattern(namespacePattern, new GenericNamePatterns(patterns.ToArray()), assignableMatch);
+            if (index + 1 == tokens.Start)
+            {
+                var pattern = CreateGenericNamePattern(nameTokens, genericPatterns);
+                patterns.Push(pattern);
+                if (patterns.Count == 1 && pattern.GenericPatterns is AnyTypePatterns)
+                {
+                    var generic = genericParameters.SingleOrDefault(x => x.Name == pattern.Name);
+                    return generic ?? CompiledTypePattern.NewPrimitiveOrAnyNs(pattern.Name, assignableMatch);
+                }
+                return new CompiledTypePattern(new AnyNamespacePattern(), new GenericNamePatterns(patterns.ToArray()), assignableMatch);
+            }
+            return new CompiledTypePattern(new NamespacePattern(tokens), new GenericNamePatterns(patterns.ToArray()), assignableMatch);
+
+            static GenericNamePattern CreateGenericNamePattern(List<Token> nameTokens, ITypePatterns? genericPatterns)
+            {
+                var name = nameTokens.Count == 1 ? nameTokens[0].Value.ToString() : string.Concat(nameTokens.Select(x => x.Value.ToString()));
+                genericPatterns ??= new AnyTypePatterns();
+                return new GenericNamePattern(name, genericPatterns);
+            }
         }
     }
 }

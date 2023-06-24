@@ -18,10 +18,19 @@ namespace Rougamo.Fody.Signature.Patterns
             {
                 if (token.IsDot())
                 {
-                    if (!string.IsNullOrEmpty(pattern)) patterns.Add(pattern);
+                    if (pattern.Length != 0)
+                    {
+                        patterns.Add(pattern);
+                        pattern = string.Empty;
+                    }
                 }
                 else if (token.IsEllipsis())
                 {
+                    if (pattern.Length != 0)
+                    {
+                        patterns.Add(pattern);
+                        pattern = string.Empty;
+                    }
                     _ellipsisCount++;
                     patterns.Add(Token.ELLIPSIS);
                 }
@@ -30,6 +39,7 @@ namespace Rougamo.Fody.Signature.Patterns
                     pattern += token.ToString();
                 }
             }
+            if (pattern.Length != 0) patterns.Add(pattern);
             _patterns = patterns.ToArray();
         }
 

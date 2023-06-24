@@ -7,7 +7,7 @@ using Xunit;
 
 namespace Rougamo.Fody.Tests
 {
-    [Collection(nameof(SignatureBasicTests))]
+    [Collection("SignatureUsage")]
     public class SignatureBasicTests
     {
         private readonly ModuleDefinition _moduleDef;
@@ -594,22 +594,93 @@ namespace Rougamo.Fody.Tests
 
             var publicSignature = SignatureParser.ParseMethod(methods.Public);
             Assert.Equal("public System.Collections.Generic.List<System.Collections.Generic.List<T2>> SignatureUsage.GenericCls<T1>.Public<T2,T3>(T1,System.Nullable<T3>)", publicSignature.ToString());
+            var nestedType = Assert.Single(publicSignature.ReturnType.NestedTypes);
+            var generic = Assert.Single(nestedType.Generics);
+            nestedType = Assert.Single(generic.NestedTypes);
+            generic = Assert.Single(nestedType.Generics);
+            var t2 = Assert.IsType<GenericParameterTypeSignature>(generic);
+            Assert.Equal("T2", t2.SortName);
+            Assert.Equal("TM1", t2.VirtualName);
+            nestedType = Assert.Single(publicSignature.DeclareType.NestedTypes);
+            generic = Assert.Single(nestedType.Generics);
+            var t1 = Assert.IsType<GenericParameterTypeSignature>(generic);
+            Assert.Equal("T1", t1.SortName);
+            Assert.Equal("T11", t1.VirtualName);
+            Assert.Equal(2, publicSignature.Method.Generics.Length);
+            t2 = Assert.IsType<GenericParameterTypeSignature>(publicSignature.Method.Generics[0]);
+            var t3 = Assert.IsType<GenericParameterTypeSignature>(publicSignature.Method.Generics[1]);
+            Assert.Equal("T2", t2.SortName);
+            Assert.Equal("TM1", t2.VirtualName);
+            Assert.Equal("T3", t3.SortName);
+            Assert.Equal("TM2", t3.VirtualName);
 
             var internalSignature = SignatureParser.ParseMethod(methods.Internal);
             Assert.Equal("internal static System.Collections.Generic.List<T1> SignatureUsage.GenericCls<T1>.Internal<T2,T3>(T2,T3)", internalSignature.ToString());
 
             var privateSignature = SignatureParser.ParseMethod(methods.Private);
             Assert.Equal("private T SignatureUsage.GenericCls<T>.Private(T)", privateSignature.ToString());
+            var t = Assert.IsType<GenericParameterTypeSignature>(privateSignature.ReturnType);
+            Assert.Equal("T", t.SortName);
+            Assert.Equal("T11", t.VirtualName);
 
             typeDef = _moduleDef.GetType("SignatureUsage.GenericCls`1/ProtectedICls`2");
             methods = ResolveMethods(typeDef);
             publicSignature = SignatureParser.ParseMethod(methods.Public);
             Assert.Equal("protected T1 SignatureUsage.GenericCls<T1>/ProtectedICls<T2,T3>.Public<T4>(T2,T3,T4)", publicSignature.ToString());
+            t1 = Assert.IsType<GenericParameterTypeSignature>(publicSignature.ReturnType);
+            Assert.Equal("T1", t1.SortName);
+            Assert.Equal("T21", t1.VirtualName);
+            Assert.Equal(2, publicSignature.DeclareType.NestedTypes.Length);
+            generic = Assert.Single(publicSignature.DeclareType.NestedTypes[0].Generics);
+            t1 = Assert.IsType<GenericParameterTypeSignature>(generic);
+            Assert.Equal("T1", t1.SortName);
+            Assert.Equal("T21", t1.VirtualName);
+            Assert.Equal(2, publicSignature.DeclareType.NestedTypes[1].Generics.Length);
+            t2 = Assert.IsType<GenericParameterTypeSignature>(publicSignature.DeclareType.NestedTypes[1].Generics[0]);
+            Assert.Equal("T2", t2.SortName);
+            Assert.Equal("T11", t2.VirtualName);
+            t3 = Assert.IsType<GenericParameterTypeSignature>(publicSignature.DeclareType.NestedTypes[1].Generics[1]);
+            Assert.Equal("T3", t3.SortName);
+            Assert.Equal("T12", t3.VirtualName);
+            generic = Assert.Single(publicSignature.Method.Generics);
+            var t4 = Assert.IsType<GenericParameterTypeSignature>(generic);
+            Assert.Equal("T4", t4.SortName);
+            Assert.Equal("TM1", t4.VirtualName);
 
             typeDef = _moduleDef.GetType("SignatureUsage.GenericCls`1/ProtectedICls`2/PrivateICls`2");
             methods = ResolveMethods(typeDef);
             internalSignature = SignatureParser.ParseMethod(methods.Internal);
             Assert.Equal("private System.ValueTuple<T5,T4,T1> SignatureUsage.GenericCls<T1>/ProtectedICls<T2,T3>/PrivateICls<T4,T5>.Internal<T6,T7>(T2,T3,T6,T7)", internalSignature.ToString());
+            nestedType = Assert.Single(internalSignature.ReturnType.NestedTypes);
+            Assert.Equal(3, nestedType.Generics.Length);
+            var t5 = Assert.IsType<GenericParameterTypeSignature>(nestedType.Generics[0]);
+            Assert.Equal("T5", t5.SortName);
+            Assert.Equal("T12", t5.VirtualName);
+            t4 = Assert.IsType<GenericParameterTypeSignature>(nestedType.Generics[1]);
+            Assert.Equal("T4", t4.SortName);
+            Assert.Equal("T11", t4.VirtualName);
+            t1 = Assert.IsType<GenericParameterTypeSignature>(nestedType.Generics[2]);
+            Assert.Equal("T1", t1.SortName);
+            Assert.Equal("T31", t1.VirtualName);
+            Assert.Equal(3, internalSignature.DeclareType.NestedTypes.Length);
+            generic = Assert.Single(internalSignature.DeclareType.NestedTypes[0].Generics);
+            t1 = Assert.IsType<GenericParameterTypeSignature>(generic);
+            Assert.Equal("T1", t1.SortName);
+            Assert.Equal("T31", t1.VirtualName);
+            Assert.Equal(2, internalSignature.DeclareType.NestedTypes[1].Generics.Length);
+            t2 = Assert.IsType<GenericParameterTypeSignature>(internalSignature.DeclareType.NestedTypes[1].Generics[0]);
+            Assert.Equal("T2", t2.SortName);
+            Assert.Equal("T21", t2.VirtualName);
+            t3 = Assert.IsType<GenericParameterTypeSignature>(internalSignature.DeclareType.NestedTypes[1].Generics[1]);
+            Assert.Equal("T3", t3.SortName);
+            Assert.Equal("T22", t3.VirtualName);
+            Assert.Equal(2, internalSignature.DeclareType.NestedTypes[2].Generics.Length);
+            t4 = Assert.IsType<GenericParameterTypeSignature>(internalSignature.DeclareType.NestedTypes[2].Generics[0]);
+            Assert.Equal("T4", t4.SortName);
+            Assert.Equal("T11", t4.VirtualName);
+            t5 = Assert.IsType<GenericParameterTypeSignature>(internalSignature.DeclareType.NestedTypes[2].Generics[1]);
+            Assert.Equal("T5", t5.SortName);
+            Assert.Equal("T12", t5.VirtualName);
         }
 
         private Methods ResolveMethods(TypeDefinition typeDef)

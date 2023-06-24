@@ -2,6 +2,18 @@
 {
     internal class InternalCls
     {
+        public int PublicProp { get; set; }
+
+        protected string ProtectedProp { get; set; }
+
+        internal double InternalProp { get; }
+
+        private decimal _privatePropValue;
+        private decimal PrivateProp
+        {
+            set => _privatePropValue = value;
+        }
+
         public string Public()
         {
             return nameof(Public);

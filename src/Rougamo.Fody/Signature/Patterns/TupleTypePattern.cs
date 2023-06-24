@@ -14,9 +14,9 @@ namespace Rougamo.Fody.Signature.Patterns
 
         public bool AssignableMatch => Items.Any(x => x.AssignableMatch);
 
-        public GenericNamePattern ExtractNamePattern()
+        public GenericNamePattern SeparateOutMethod()
         {
-            return Items.Last().ExtractNamePattern();
+            return Items.Last().SeparateOutMethod();
         }
 
         public void Compile(List<GenericParameterTypePattern> genericParameters, bool genericIn)

@@ -19,6 +19,13 @@ namespace Rougamo.Fody.Signature
         Protected = WithinClass | DerivedClassSameAssembly | DerivedClassDifferentAssembly,
         ProtectedInternal = WithinClass | DerivedClassSameAssembly | NonDerivedClassSameAssembly | DerivedClassDifferentAssembly,
         Public = WithinClass | DerivedClassSameAssembly | NonDerivedClassSameAssembly | DerivedClassDifferentAssembly | NonDerivedClassDifferentAssembly,
+
+        PrivateStatic = Private | Static,
+        PrivateProtectedStatic = PrivateProtected | Static,
+        InternalStatic = Internal | Static,
+        ProtectedStatic = Protected | Static,
+        ProtectedInternalStatic = ProtectedInternal | Static,
+        PublicStatic = Public | Static,
     }
 
     public static class ModifierExtensions

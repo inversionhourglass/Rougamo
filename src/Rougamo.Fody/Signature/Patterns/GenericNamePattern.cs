@@ -27,7 +27,7 @@ namespace Rougamo.Fody.Signature.Patterns
 
         public bool IsMatch(GenericSignature method)
         {
-            return Name == method.Name && GenericPatterns.IsMatch(method.Generics);
+            return WildcardMatcher.IsMatch(Name, method.Name) && GenericPatterns.IsMatch(method.Generics);
         }
     }
 }

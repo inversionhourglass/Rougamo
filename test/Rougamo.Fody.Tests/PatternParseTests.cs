@@ -70,7 +70,7 @@ namespace Rougamo.Fody.Tests
         {
             var pattern = ExtractModifier("public static *");
             Assert.Equal(ModifierPattern.Flags.Public | ModifierPattern.Flags.Static, pattern.Required);
-            Assert.Equal(ModifierPattern.Flags.Default, pattern.Forbidden);
+            Assert.Equal(ModifierPattern.Flags.None, pattern.Forbidden);
             Assert.True(pattern.IsMatch(Modifier.Public | Modifier.Static));
             Assert.False(pattern.IsMatch(Modifier.Public));
             Assert.False(pattern.IsMatch(Modifier.Static));
@@ -84,13 +84,13 @@ namespace Rougamo.Fody.Tests
 
             pattern = ExtractModifier("privateprotected *");
             Assert.Equal(ModifierPattern.Flags.PrivateProtected, pattern.Required);
-            Assert.Equal(ModifierPattern.Flags.Default, pattern.Forbidden);
+            Assert.Equal(ModifierPattern.Flags.None, pattern.Forbidden);
             Assert.True(pattern.IsMatch(Modifier.PrivateProtected));
             Assert.True(pattern.IsMatch(Modifier.PrivateProtected | Modifier.Static));
             Assert.False(pattern.IsMatch(Modifier.ProtectedInternal));
 
             pattern = ExtractModifier("!static *");
-            Assert.Equal(ModifierPattern.Flags.Default, pattern.Required);
+            Assert.Equal(ModifierPattern.Flags.Any, pattern.Required);
             Assert.Equal(ModifierPattern.Flags.Static, pattern.Forbidden);
             Assert.True(pattern.IsMatch(Modifier.Private));
             Assert.True(pattern.IsMatch(Modifier.Internal));
@@ -98,14 +98,14 @@ namespace Rougamo.Fody.Tests
 
             pattern = ExtractModifier("protectedinternal *");
             Assert.Equal(ModifierPattern.Flags.ProtectedInternal, pattern.Required);
-            Assert.Equal(ModifierPattern.Flags.Default, pattern.Forbidden);
+            Assert.Equal(ModifierPattern.Flags.None, pattern.Forbidden);
             Assert.True(pattern.IsMatch(Modifier.ProtectedInternal));
             Assert.True(pattern.IsMatch(Modifier.ProtectedInternal | Modifier.Static));
             Assert.False(pattern.IsMatch(Modifier.Protected));
 
             pattern = ExtractModifier("*");
-            Assert.Equal(ModifierPattern.Flags.Default, pattern.Required);
-            Assert.Equal(ModifierPattern.Flags.Default, pattern.Forbidden);
+            Assert.Equal(ModifierPattern.Flags.Any, pattern.Required);
+            Assert.Equal(ModifierPattern.Flags.None, pattern.Forbidden);
             Assert.True(pattern.IsMatch(Modifier.Public));
             Assert.True(pattern.IsMatch(Modifier.Private));
             Assert.True(pattern.IsMatch(Modifier.PrivateProtected | Modifier.Static));

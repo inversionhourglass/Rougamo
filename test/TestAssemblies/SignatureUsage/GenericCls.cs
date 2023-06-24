@@ -14,6 +14,8 @@ namespace SignatureUsage
             return new List<TX>();
         }
 
+        internal static List<TX> Internal1<TY, TZ>(TY a, TZ? b) where TZ : struct => default;
+
         private TX Private(TX a)
         {
             return a;

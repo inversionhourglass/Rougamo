@@ -16,9 +16,9 @@ namespace Rougamo.Fody.Signature.Patterns
 
         public bool AssignableMatch => Left.AssignableMatch || Right.AssignableMatch;
 
-        public GenericNamePattern ExtractNamePattern()
+        public GenericNamePattern SeparateOutMethod()
         {
-            return Right.ExtractNamePattern();
+            return Right.SeparateOutMethod();
         }
 
         public void Compile(List<GenericParameterTypePattern> genericParameters, bool genericIn)

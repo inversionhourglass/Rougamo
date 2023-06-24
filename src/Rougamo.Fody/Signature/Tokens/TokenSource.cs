@@ -1,6 +1,4 @@
-﻿using System.Linq;
-
-namespace Rougamo.Fody.Signature.Tokens
+﻿namespace Rougamo.Fody.Signature.Tokens
 {
     public class TokenSource
     {
@@ -52,6 +50,8 @@ namespace Rougamo.Fody.Signature.Tokens
 
         public override string ToString()
         {
+            if (_start == _end) return string.Empty;
+
             var start = Tokens[_start].Start;
             var end = Tokens[_end - 1].End;
             return Value.Substring(start, end - start);

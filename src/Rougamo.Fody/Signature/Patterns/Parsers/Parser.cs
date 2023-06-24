@@ -11,8 +11,8 @@ namespace Rougamo.Fody.Signature.Patterns.Parsers
 
         public static ModifierPattern ParseModifier(TokenSource tokens)
         {
-            var required = ModifierPattern.Flags.Default;
-            var forbidden = ModifierPattern.Flags.Default;
+            var required = ModifierPattern.Flags.None;
+            var forbidden = ModifierPattern.Flags.None;
             Token? token;
             while ((token = tokens.Peek()) != null)
             {
@@ -54,7 +54,7 @@ namespace Rougamo.Fody.Signature.Patterns.Parsers
             {
                 typePatterns.Add(ParseType(tokens));
             } while (!tokens.Read().IsRBracket());
-            return new TypePatterns(typePatterns.ToArray());
+            return new IntermediateTypePatterns(typePatterns.ToArray());
         }
 
         public static IIntermediateTypePattern ParseType(TokenSource tokens)
