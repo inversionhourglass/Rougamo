@@ -5,6 +5,7 @@ using Rougamo.Fody.Signature;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using Xunit;
 
 namespace Rougamo.Fody.Tests
@@ -317,6 +318,70 @@ namespace Rougamo.Fody.Tests
             Assert.Equal(expectedNotSpecial, actualNotSpecial);
         }
 
+        [Fact]
+        public void OrMatchTest()
+        {
+            var returnStringOrVoidMatcher = PatternParser.Parse("execution(string||void *(..))");
+            var returnIntDoubleOrDecimalMatcher = PatternParser.Parse("execution(int||double||decimal *(..))");
+            var declaringDefaultOrPublicMatcher = PatternParser.Parse("execution(* SignatureUsage.DefaultCls||SignatureUsage.PublicCls.*(..))");
+            var declaringAssignableInterfaceOrAbstractClassMatcher = PatternParser.Parse("execution(* SignatureUsage.Assignables.Interface+||SignatureUsage.Assignables.AbstractClass+.*(..))");
+
+            var expectedReturnStringOrVoids = _methodDefs.Where(x => new[] { typeof(string).FullName, typeof(void).FullName }.Contains(x.ReturnType.FullName)).ToArray();
+            var expectedReturnIntDoubleOrDecimals = _methodDefs.Where(x => new[] { typeof(int).FullName, typeof(double).FullName, typeof(decimal).FullName }.Contains(x.ReturnType.FullName)).ToArray();
+            var expectedDeclaringDefaultOrPublics = _methodDefs.Where(x => new[] { "SignatureUsage.DefaultCls", "SignatureUsage.PublicCls" }.Contains(x.DeclaringType.FullName)).ToArray();
+            var expectedDeclaringAssignableInterfaceOrAbstractClasses = _methodDefs.Where(x => GetInterfaceBaseTypes(x.DeclaringType).Any(x => x == "SignatureUsage.Assignables.Interface" || x == "SignatureUsage.Assignables.AbstractClass")).ToArray();
+
+            var actualReturnStringOrVoids = new List<MethodDefinition>();
+            var actualReturnIntDoubleOrDecimals = new List<MethodDefinition>();
+            var actualDeclaringDefaultOrPublics = new List<MethodDefinition>();
+            var actualDeclaringAssignableInterfaceOrAbstractClasses = new List<MethodDefinition>();
+            foreach (var methodDef in _methodDefs)
+            {
+                var signature = SignatureParser.ParseMethod(methodDef);
+                if (returnStringOrVoidMatcher.IsMatch(signature)) actualReturnStringOrVoids.Add(methodDef);
+                if (returnIntDoubleOrDecimalMatcher.IsMatch(signature)) actualReturnIntDoubleOrDecimals.Add(methodDef);
+                if (declaringDefaultOrPublicMatcher.IsMatch(signature)) actualDeclaringDefaultOrPublics.Add(methodDef);
+                if (declaringAssignableInterfaceOrAbstractClassMatcher.IsMatch(signature)) actualDeclaringAssignableInterfaceOrAbstractClasses.Add(methodDef);
+            }
+
+            Assert.Equal(expectedReturnStringOrVoids, actualReturnStringOrVoids);
+            Assert.Equal(expectedReturnIntDoubleOrDecimals, actualReturnIntDoubleOrDecimals);
+            Assert.Equal(expectedDeclaringDefaultOrPublics, actualDeclaringDefaultOrPublics);
+            Assert.Equal(expectedDeclaringAssignableInterfaceOrAbstractClasses, actualDeclaringAssignableInterfaceOrAbstractClasses);
+        }
+
+        [Fact]
+        public void TupleMatchTest()
+        {
+            var returnMatcher1 = PatternParser.Parse("execution((int, string) *(..))");
+            var returnMatcher2 = PatternParser.Parse("execution((*,decimal) *(..))");
+            var argumentMatcher1 = PatternParser.Parse("execution(* *((*, *)))");
+            var argumentMatcher2 = PatternParser.Parse("execution(* *((System.Numerics.BigInteger,*)))");
+
+            var expectedReturns1 = _methodDefs.Where(x => GetTupleFullNames(typeof(int).FullName, typeof(string).FullName).Contains(x.ReturnType.FullName)).ToArray();
+            var expectedReturns2 = _methodDefs.Where(x => x.ReturnType.Namespace == "System" && GetTupleNames(2).Contains(x.ReturnType.Name) && ((GenericInstanceType)x.ReturnType).GenericArguments[1].FullName == typeof(decimal).FullName).ToArray();
+            var expectedArguments1 = _methodDefs.Where(x => x.Parameters.Count == 1 && x.Parameters[0].ParameterType.Namespace == "System" && GetTupleNames(2).Contains(x.Parameters[0].ParameterType.Name)).ToArray();
+            var expectedArguments2 = expectedArguments1.Where(x => ((GenericInstanceType)x.Parameters[0].ParameterType).GenericArguments[0].FullName == typeof(BigInteger).FullName).ToArray();
+
+            var actualReturns1 = new List<MethodDefinition>();
+            var actualReturns2 = new List<MethodDefinition>();
+            var actualArguments1 = new List<MethodDefinition>();
+            var actualArguments2 = new List<MethodDefinition>();
+            foreach (var methodDef in _methodDefs)
+            {
+                var signature = SignatureParser.ParseMethod(methodDef);
+                if (returnMatcher1.IsMatch(signature)) actualReturns1.Add(methodDef);
+                if (returnMatcher2.IsMatch(signature)) actualReturns2.Add(methodDef);
+                if (argumentMatcher1.IsMatch(signature)) actualArguments1.Add(methodDef);
+                if (argumentMatcher2.IsMatch(signature)) actualArguments2.Add(methodDef);
+            }
+
+            Assert.Equal(expectedReturns1, actualReturns1);
+            Assert.Equal(expectedReturns2, actualReturns2);
+            Assert.Equal(expectedArguments1, actualArguments1);
+            Assert.Equal(expectedArguments2, actualArguments2);
+        }
+
         private string[] GetInterfaceBaseTypes(TypeReference typeRef)
         {
             var typeDef = typeRef.Resolve();
@@ -339,5 +404,9 @@ namespace Rougamo.Fody.Tests
         }
 
         private bool StartEndWith(string str, string starts, string ends) => str.StartsWith(starts) && str.EndsWith(ends);
+
+        private string[] GetTupleNames(int count) => new[] { $"Tuple`{count}", $"ValueTuple`{count}" };
+
+        private string[] GetTupleFullNames(params string[] items) => new[] { $"System.Tuple`{items.Length}<{string.Join(",", items)}>", $"System.ValueTuple`{items.Length}<{string.Join(",", items)}>" };
     }
 }

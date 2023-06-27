@@ -68,6 +68,7 @@ namespace Rougamo.Fody.Signature.Patterns.Parsers
             }
             if (token.IsOr())
             {
+                tokens.Read();
                 typePattern = new OrTypePattern(typePattern, ParseType(tokens));
             }
 
@@ -102,7 +103,7 @@ namespace Rougamo.Fody.Signature.Patterns.Parsers
             do
             {
                 token = tokens.Peek();
-                if (token == null || insideGeneric == 0 && (token.IsLBracket() || token.IsRBracket() || token.IsComma() || pre.End != token.Start)) return new DefaultTypePattern(tokens.Slice(start, tokens.Index));
+                if (token == null || insideGeneric == 0 && (token.IsLBracket() || token.IsRBracket() || token.IsComma() || token.IsAnd() || token.IsOr() || pre.End != token.Start)) return new DefaultTypePattern(tokens.Slice(start, tokens.Index));
                 if (token.IsLT()) insideGeneric++;
                 else if (token.IsGT()) insideGeneric--;
                 tokens.Read();
@@ -114,15 +115,24 @@ namespace Rougamo.Fody.Signature.Patterns.Parsers
         {
             var tupleItems = new List<IIntermediateTypePattern>();
             Token? token;
-            while ((token = tokens.Read()) != null)
+            while ((token = tokens.Peek()) != null)
             {
                 if (token.IsLBracket())
                 {
+                    tokens.Read();
                     tupleItems.Add(ParseTupleTypePattern(tokens));
                     continue;
                 }
-                if (token.IsRBracket()) return new TupleTypePattern(tupleItems.ToArray());
-                if (token.IsComma()) continue;
+                if (token.IsRBracket())
+                {
+                    tokens.Read();
+                    return new TupleTypePattern(tupleItems.ToArray());
+                }
+                if (token.IsComma())
+                {
+                    tokens.Read();
+                    continue;
+                }
                 tupleItems.Add(ParseType(tokens));
             }
             throw new ArgumentException($"Unexpectedly ended while parsing a tuple type, pattern value is '{tokens.Value}'");
