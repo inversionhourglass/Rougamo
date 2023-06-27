@@ -13,7 +13,7 @@
   - [ ] 支持setter()
   - [ ] 支持property()
   - [ ] 考虑在对声明类型用否时，declaring type和method的否定关系
-  - [ ] 考虑method与type的访问修饰符问题
+  - [x] 考虑method与type的访问修饰符问题
   - [ ] 支持考虑使用`async`简化Task/ValueTask返回值
   - [ ] 考虑使用`?`简化Nullable
   - [ ] 考虑还有什么能简化的

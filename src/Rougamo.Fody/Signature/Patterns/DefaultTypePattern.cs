@@ -16,6 +16,8 @@ namespace Rougamo.Fody.Signature.Patterns
 
         public TokenSource Tokens { get; private set; }
 
+        public bool IsAny => _compiledPattern!.IsAny;
+
         public bool AssignableMatch => _compiledPattern!.AssignableMatch;
 
         public bool IsMatch(TypeSignature signature)
@@ -46,6 +48,12 @@ namespace Rougamo.Fody.Signature.Patterns
             }
 
             return pattern;
+        }
+
+        public DeclaringTypeMethodPattern ToDeclaringTypeMethod()
+        {
+            var method = SeparateOutMethod();
+            return new DeclaringTypeMethodPattern(this, method);
         }
 
         public void Compile(List<GenericParameterTypePattern> genericParameters, bool genericIn)
@@ -301,7 +309,7 @@ namespace Rougamo.Fody.Signature.Patterns
                 if (patterns.Count == 1 && pattern.GenericPatterns is AnyTypePatterns)
                 {
                     var generic = genericParameters.SingleOrDefault(x => x.Name == pattern.Name);
-                    return generic ?? CompiledTypePattern.NewPrimitiveOrAnyNs(pattern.Name, assignableMatch);
+                    return generic ?? (ITypePattern)CompiledTypePattern.NewPrimitiveOrAnyNs(pattern.Name, assignableMatch);
                 }
                 return new CompiledTypePattern(new AnyNamespacePattern(), new GenericNamePatterns(patterns.ToArray()), assignableMatch);
             }

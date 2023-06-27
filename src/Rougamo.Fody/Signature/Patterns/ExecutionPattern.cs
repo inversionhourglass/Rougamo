@@ -2,12 +2,13 @@
 {
     public class ExecutionPattern
     {
-        public ExecutionPattern(ModifierPattern modifier, ITypePattern returnType, ITypePattern declareType, GenericNamePattern method, ITypePatterns methodParameters)
+        public ExecutionPattern(ModifierPattern modifier, ITypePattern returnType, DeclaringTypeMethodPattern declaringTypeMethod, ITypePatterns methodParameters)
         {
             Modifier = modifier;
             ReturnType = returnType;
-            DeclareType = declareType;
-            Method = method;
+            //DeclareType = declareType;
+            //Method = method;
+            DeclaringTypeMethod = declaringTypeMethod;
             MethodParameters = methodParameters;
         }
 
@@ -15,9 +16,11 @@
 
         public ITypePattern ReturnType { get; }
 
-        public ITypePattern DeclareType { get; }
+        //public ITypePattern DeclareType { get; }
 
-        public GenericNamePattern Method { get; }
+        //public GenericNamePattern Method { get; }
+
+        public DeclaringTypeMethodPattern DeclaringTypeMethod { get; }
 
         public ITypePatterns MethodParameters { get; }
 
@@ -27,18 +30,29 @@
 
             if (!Modifier.IsMatch(signature.Modifiers)) return false;
 
-            if (!Method.IsMatch(signature.Method)) return false;
-
             if (ReturnType.AssignableMatch)
             {
-                if (!DeclareType.IsMatch(signature.DeclareType)) return false;
+                if (!DeclaringTypeMethod.IsMatch(signature.DeclareType, signature.Method)) return false;
                 if (!ReturnType.IsMatch(signature.ReturnType)) return false;
             }
             else
             {
                 if (!ReturnType.IsMatch(signature.ReturnType)) return false;
-                if (!DeclareType.IsMatch(signature.DeclareType)) return false;
+                if (!DeclaringTypeMethod.IsMatch(signature.DeclareType, signature.Method)) return false;
             }
+
+            //if (!Method.IsMatch(signature.Method)) return false;
+
+            //if (ReturnType.AssignableMatch)
+            //{
+            //    if (!DeclareType.IsMatch(signature.DeclareType)) return false;
+            //    if (!ReturnType.IsMatch(signature.ReturnType)) return false;
+            //}
+            //else
+            //{
+            //    if (!ReturnType.IsMatch(signature.ReturnType)) return false;
+            //    if (!DeclareType.IsMatch(signature.DeclareType)) return false;
+            //}
 
             return MethodParameters.IsMatch(signature.MethodParameters);
         }

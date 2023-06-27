@@ -4,6 +4,8 @@ namespace Rougamo.Fody.Signature.Patterns
 {
     public class AnyTypePattern : ITypePattern, IIntermediateTypePattern
     {
+        public bool IsAny => true;
+
         public bool AssignableMatch => false;
 
         public void Compile(List<GenericParameterTypePattern> genericParameters, bool genericIn)
@@ -12,6 +14,11 @@ namespace Rougamo.Fody.Signature.Patterns
         }
 
         public GenericNamePattern SeparateOutMethod()
+        {
+            throw new System.NotImplementedException();
+        }
+
+        public DeclaringTypeMethodPattern ToDeclaringTypeMethod()
         {
             throw new System.NotImplementedException();
         }

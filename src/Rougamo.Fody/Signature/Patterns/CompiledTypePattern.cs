@@ -17,6 +17,8 @@ namespace Rougamo.Fody.Signature.Patterns
 
         public IGenericNamePatterns NestedTypePatterns { get; }
 
+        public bool IsAny => Namespace is AnyNamespacePattern && NestedTypePatterns is AnyGenericNamePatterns;
+
         public bool AssignableMatch { get; }
 
         public virtual bool IsMatch(TypeSignature signature)

@@ -14,11 +14,19 @@ namespace Rougamo.Fody.Signature.Patterns
 
         public IIntermediateTypePattern Right { get; }
 
+        public bool IsAny => Left.IsAny && Right.IsAny;
+
         public bool AssignableMatch => Left.AssignableMatch || Right.AssignableMatch;
 
         public GenericNamePattern SeparateOutMethod()
         {
             return Right.SeparateOutMethod();
+        }
+
+        public DeclaringTypeMethodPattern ToDeclaringTypeMethod()
+        {
+            var method = SeparateOutMethod();
+            return new DeclaringTypeMethodPattern(this, method);
         }
 
         public void Compile(List<GenericParameterTypePattern> genericParameters, bool genericIn)

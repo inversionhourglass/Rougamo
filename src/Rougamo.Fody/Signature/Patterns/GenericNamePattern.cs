@@ -14,6 +14,8 @@ namespace Rougamo.Fody.Signature.Patterns
 
         public ITypePatterns GenericPatterns { get; }
 
+        public bool IsAny => Name == "*" && GenericPatterns.Count == CollectionCount.ANY;
+
         public void ExtractGenerics(List<GenericParameterTypePattern> list)
         {
             if (GenericPatterns is TypePatterns patterns)
@@ -25,7 +27,7 @@ namespace Rougamo.Fody.Signature.Patterns
             }
         }
 
-        public bool IsMatch(GenericSignature method)
+        public virtual bool IsMatch(GenericSignature method)
         {
             return WildcardMatcher.IsMatch(Name, method.Name) && GenericPatterns.IsMatch(method.Generics);
         }

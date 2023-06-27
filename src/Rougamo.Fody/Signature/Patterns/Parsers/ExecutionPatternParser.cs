@@ -11,13 +11,13 @@ namespace Rougamo.Fody.Signature.Patterns.Parsers
 
             var modifier = ParseModifier(tokens);
             var returnType = ParseType(tokens);
-            var declareType = ParseType(tokens);
-            var method = declareType.SeparateOutMethod();
+            var declaringTypeMethod = ParseType(tokens).ToDeclaringTypeMethod(); ;
+            //var method = declareType.SeparateOutMethod();
             var parameters = ParseParameters(tokens);
             
             var genericParameters = new List<GenericParameterTypePattern>();
-            declareType.Compile(genericParameters, false);
-            if (method.GenericPatterns is TypePatterns tps)
+            declaringTypeMethod.DeclaringType.Compile(genericParameters, false);
+            if (declaringTypeMethod.Method.GenericPatterns is TypePatterns tps)
             {
                 foreach (var p in tps.Patterns)
                 {
@@ -39,7 +39,7 @@ namespace Rougamo.Fody.Signature.Patterns.Parsers
                 }
             }
 
-            return new ExecutionPattern(modifier, returnType, declareType, method, parameters);
+            return new ExecutionPattern(modifier, returnType, declaringTypeMethod, parameters);
         }
     }
 }

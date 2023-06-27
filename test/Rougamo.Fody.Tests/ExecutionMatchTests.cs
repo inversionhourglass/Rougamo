@@ -265,6 +265,58 @@ namespace Rougamo.Fody.Tests
             Assert.Equal(expectedNotNameSpecialDeclarings, actualNotNameSpecialDeclarings);
         }
 
+        [Fact]
+        public void NotDeclaringMethodTest()
+        {
+            var notAnyMatcher1 = PatternParser.Parse("execution(* !*(..))");
+            var notAnyMatcher2 = PatternParser.Parse("execution(* !*.*(..))");
+            var notAnyMatcher3 = PatternParser.Parse("execution(* !*..*.*(..))");
+            var notDeclaringMatcher1 = PatternParser.Parse("execution(* !SignatureUsage.DefaultCls.*(..))");
+            var notDeclaringMatcher2 = PatternParser.Parse("execution(* !SignatureUsage.Assignables.Interface+.*(..))");
+            var notMethodMatcher1 = PatternParser.Parse("execution(* !*.Public(..))");
+            var notMethodMatcher2 = PatternParser.Parse("execution(* !*..*.Protected(..))");
+            var notSpecialMatcher = PatternParser.Parse("execution(* !SignatureUsage.Assignables.ImplInterfaceAbstractClass.GetInterface(..))");
+
+            var expectedNotAny1 = _methodDefs;
+            var expectedNotAny2 = _methodDefs;
+            var expectedNotAny3 = _methodDefs;
+            var expectedNotDeclaring1 = _methodDefs.Where(x => x.DeclaringType.FullName != "SignatureUsage.DefaultCls").ToArray();
+            var expectedNotDeclaring2 = _methodDefs.Where(x => !GetInterfaceBaseTypes(x.DeclaringType).Any(y => y == "SignatureUsage.Assignables.Interface")).ToArray();
+            var expectedNotMethod1 = _methodDefs.Where(x => x.Name != "Public").ToArray();
+            var expectedNotMethod2 = _methodDefs.Where(x => x.Name != "Protected").ToArray();
+            var expectedNotSpecial = _methodDefs.Where(x => x.DeclaringType.FullName != "SignatureUsage.Assignables.ImplInterfaceAbstractClass" || x.Name != "GetInterface").ToArray();
+
+            var actualNotAny1 = new List<MethodDefinition>();
+            var actualNotAny2 = new List<MethodDefinition>();
+            var actualNotAny3 = new List<MethodDefinition>();
+            var actualNotDeclaring1 = new List<MethodDefinition>();
+            var actualNotDeclaring2 = new List<MethodDefinition>();
+            var actualNotMethod1 = new List<MethodDefinition>();
+            var actualNotMethod2 = new List<MethodDefinition>();
+            var actualNotSpecial = new List<MethodDefinition>();
+            foreach (var methodDef in _methodDefs)
+            {
+                var signature = SignatureParser.ParseMethod(methodDef);
+                if (notAnyMatcher1.IsMatch(signature)) actualNotAny1.Add(methodDef);
+                if (notAnyMatcher2.IsMatch(signature)) actualNotAny2.Add(methodDef);
+                if (notAnyMatcher3.IsMatch(signature)) actualNotAny3.Add(methodDef);
+                if (notDeclaringMatcher1.IsMatch(signature)) actualNotDeclaring1.Add(methodDef);
+                if (notDeclaringMatcher2.IsMatch(signature)) actualNotDeclaring2.Add(methodDef);
+                if (notMethodMatcher1.IsMatch(signature)) actualNotMethod1.Add(methodDef);
+                if (notMethodMatcher2.IsMatch(signature)) actualNotMethod2.Add(methodDef);
+                if (notSpecialMatcher.IsMatch(signature)) actualNotSpecial.Add(methodDef);
+            }
+
+            Assert.Equal(expectedNotAny1, actualNotAny1);
+            Assert.Equal(expectedNotAny2, actualNotAny2);
+            Assert.Equal(expectedNotAny3, actualNotAny3);
+            Assert.Equal(expectedNotDeclaring1, actualNotDeclaring1);
+            Assert.Equal(expectedNotDeclaring2, actualNotDeclaring2);
+            Assert.Equal(expectedNotMethod1, actualNotMethod1);
+            Assert.Equal(expectedNotMethod2, actualNotMethod2);
+            Assert.Equal(expectedNotSpecial, actualNotSpecial);
+        }
+
         private string[] GetInterfaceBaseTypes(TypeReference typeRef)
         {
             var typeDef = typeRef.Resolve();

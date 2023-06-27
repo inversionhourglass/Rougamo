@@ -11,11 +11,19 @@ namespace Rougamo.Fody.Signature.Patterns
 
         public IIntermediateTypePattern InnerPattern { get; }
 
+        public bool IsAny => InnerPattern.IsAny;
+
         public bool AssignableMatch => InnerPattern.AssignableMatch;
 
         public GenericNamePattern SeparateOutMethod()
         {
             return InnerPattern.SeparateOutMethod();
+        }
+
+        public DeclaringTypeMethodPattern ToDeclaringTypeMethod()
+        {
+            var method = SeparateOutMethod();
+            return new NotDeclaringTypeMethodPattern(InnerPattern, method);
         }
 
         public void Compile(List<GenericParameterTypePattern> genericParameters, bool genericIn)
@@ -25,7 +33,7 @@ namespace Rougamo.Fody.Signature.Patterns
 
         public bool IsMatch(TypeSignature signature)
         {
-            return !InnerPattern.IsMatch(signature);
+            return InnerPattern.IsAny || !InnerPattern.IsMatch(signature);
         }
     }
 }
