@@ -382,6 +382,33 @@ namespace Rougamo.Fody.Tests
             Assert.Equal(expectedArguments2, actualArguments2);
         }
 
+        [Fact]
+        public void NullableMatchTest()
+        {
+            var returnMatcher1 = PatternParser.Parse("execution(int? *(..))");
+            var parameterMatcher1 = PatternParser.Parse("execution(* *(Xyz?,*))");
+            var parameterMatcher2 = PatternParser.Parse("execution(* *((double?,*)))");
+
+            var expectedReturns1 = _methodDefs.Where(x => x.ReturnType.FullName == "System.Nullable`1<System.Int32>").ToArray();
+            var expectedParameters1 = _methodDefs.Where(x => x.Parameters.Count == 2 && IsMatch(x.Parameters[0].ParameterType, y => y.Namespace == "System" && y.Name == "Nullable`1" && ((GenericInstanceType)y).GenericArguments[0].Name == "Xyz")).ToArray();
+            var expectedParameters2 = _methodDefs.Where(x => x.Parameters.Count == 1 && IsMatch(x.Parameters[0].ParameterType, y => y.Namespace == "System" && GetTupleNames(2).Contains(y.Name) && IsMatch(((GenericInstanceType)y).GenericArguments[0], z => z.FullName == "System.Nullable`1<System.Double>"))).ToArray();
+
+            var actualReturns1 = new List<MethodDefinition>();
+            var actualParameters1 = new List<MethodDefinition>();
+            var actualParameters2 = new List<MethodDefinition>();
+            foreach (var methodDef in _methodDefs)
+            {
+                var signature = SignatureParser.ParseMethod(methodDef);
+                if (returnMatcher1.IsMatch(signature)) actualReturns1.Add(methodDef);
+                if (parameterMatcher1.IsMatch(signature)) actualParameters1.Add(methodDef);
+                if (parameterMatcher2.IsMatch(signature)) actualParameters2.Add(methodDef);
+            }
+
+            Assert.Equal(expectedReturns1, actualReturns1);
+            Assert.Equal(expectedParameters1, actualParameters1);
+            Assert.Equal(expectedParameters2, actualParameters2);
+        }
+
         private string[] GetInterfaceBaseTypes(TypeReference typeRef)
         {
             var typeDef = typeRef.Resolve();
@@ -404,6 +431,8 @@ namespace Rougamo.Fody.Tests
         }
 
         private bool StartEndWith(string str, string starts, string ends) => str.StartsWith(starts) && str.EndsWith(ends);
+
+        private bool IsMatch(TypeReference typeRef, Func<TypeReference, bool> predicate) => predicate(typeRef);
 
         private string[] GetTupleNames(int count) => new[] { $"Tuple`{count}", $"ValueTuple`{count}" };
 

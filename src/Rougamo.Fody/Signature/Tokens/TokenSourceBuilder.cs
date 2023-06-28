@@ -46,6 +46,7 @@ namespace Rougamo.Fody.Signature.Tokens
                     case '>':
                     case '[':
                     case ']':
+                    case '?':
                     case TypeSignature.NESTED_SEPARATOR:
                         return new Token(ch, start, index);
                     case '.':

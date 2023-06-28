@@ -12,7 +12,7 @@ namespace Rougamo.Fody.Signature.Patterns
 
         public IIntermediateTypePattern[] Items { get; }
 
-        public bool IsAny => Items.All(x => x.IsAny);
+        public bool IsAny => false;
 
         public bool AssignableMatch => Items.Any(x => x.AssignableMatch);
 

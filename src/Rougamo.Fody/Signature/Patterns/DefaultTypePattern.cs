@@ -160,9 +160,16 @@ namespace Rougamo.Fody.Signature.Patterns
             var nestedDeep = 1;
             var index = tokens.End - 1;
             var assignableMatch = false;
-            if (tokens.Tokens[index].IsPlus())
+            var nullable = false;
+            var token = tokens.Tokens[index];
+            if (token.IsPlus())
             {
                 assignableMatch = true;
+                index--;
+            }
+            else if (token.IsDoubt())
+            {
+                nullable = true;
                 index--;
             }
             do
@@ -183,7 +190,8 @@ namespace Rougamo.Fody.Signature.Patterns
             }
             var patterns = new GenericNamePatterns(nestedTypePatterns.ToArray());
             patterns.ExtractGenerics(genericParameters);
-            return new CompiledTypePattern(ns, patterns, assignableMatch);
+            var compiledTypePattern = new CompiledTypePattern(ns, patterns, assignableMatch);
+            return nullable ? new NullableTypePattern(compiledTypePattern) : compiledTypePattern;
         }
 
         private ITypePattern CompileGenericIn(List<GenericParameterTypePattern> genericParameters, TokenSource tokens, ref int index)
@@ -192,9 +200,16 @@ namespace Rougamo.Fody.Signature.Patterns
 
             var inGeneric = false;
             var assignableMatch = false;
-            if (tokens.Tokens[index].IsPlus())
+            var nullable = false;
+            var token = tokens.Tokens[index];
+            if (token.IsPlus())
             {
                 assignableMatch = true;
+                index--;
+            }
+            else if (token.IsDoubt())
+            {
+                nullable = true;
                 index--;
             }
             var nameTokens = new List<Token>();
@@ -203,7 +218,7 @@ namespace Rougamo.Fody.Signature.Patterns
             ITypePatterns? genericPatterns = null;
             for (; index >= tokens.Start; index--)
             {
-                var token = tokens.Tokens[index];
+                token = tokens.Tokens[index];
                 if (token.IsGT())
                 {
                     if (inGeneric)
@@ -302,6 +317,7 @@ namespace Rougamo.Fody.Signature.Patterns
                 }
             }
 
+            ITypePattern compiledTypePattern;
             if (index + 1 == tokens.Start)
             {
                 var pattern = CreateGenericNamePattern(nameTokens, genericPatterns);
@@ -309,11 +325,19 @@ namespace Rougamo.Fody.Signature.Patterns
                 if (patterns.Count == 1 && pattern.GenericPatterns is AnyTypePatterns)
                 {
                     var generic = genericParameters.SingleOrDefault(x => x.Name == pattern.Name);
-                    return generic ?? (ITypePattern)CompiledTypePattern.NewPrimitiveOrAnyNs(pattern.Name, assignableMatch);
+                    compiledTypePattern = generic ?? (ITypePattern)CompiledTypePattern.NewPrimitiveOrAnyNs(pattern.Name, assignableMatch);
                 }
-                return new CompiledTypePattern(new AnyNamespacePattern(), new GenericNamePatterns(patterns.ToArray()), assignableMatch);
+                else
+                {
+                    compiledTypePattern = new CompiledTypePattern(new AnyNamespacePattern(), new GenericNamePatterns(patterns.ToArray()), assignableMatch);
+                }
             }
-            return new CompiledTypePattern(new NamespacePattern(tokens), new GenericNamePatterns(patterns.ToArray()), assignableMatch);
+            else
+            {
+                compiledTypePattern = new CompiledTypePattern(new NamespacePattern(tokens), new GenericNamePatterns(patterns.ToArray()), assignableMatch);
+            }
+
+            return nullable ? new NullableTypePattern(compiledTypePattern) : compiledTypePattern;
 
             static GenericNamePattern CreateGenericNamePattern(List<Token> nameTokens, ITypePatterns? genericPatterns)
             {

@@ -14,6 +14,7 @@ namespace Rougamo.Fody.Signature.Tokens
         public const string AND = "&&";
         public const string OR = "||";
         public const char NOT = '!';
+        public const char DOUBT = '?';
         public const char STAR = '*';
         public const char PLUS = '+';
         public const char DOT = '.';
@@ -76,6 +77,8 @@ namespace Rougamo.Fody.Signature.Tokens
         public static bool IsOr(this Token? token) => token != null && token.Value == Token.OR;
 
         public static bool IsNot(this Token? token) => token != null && token.Value == Token.NOT;
+
+        public static bool IsDoubt(this Token? token) => token != null && token.Value == Token.DOUBT;
 
         public static bool IsStar(this Token? token) => token != null && token.Value == Token.STAR;
 

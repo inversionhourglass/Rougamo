@@ -12,7 +12,6 @@ namespace Rougamo.Fody.Signature.Patterns.Parsers
             var modifier = ParseModifier(tokens);
             var returnType = ParseType(tokens);
             var declaringTypeMethod = ParseType(tokens).ToDeclaringTypeMethod(); ;
-            //var method = declareType.SeparateOutMethod();
             var parameters = ParseParameters(tokens);
             
             var genericParameters = new List<GenericParameterTypePattern>();
