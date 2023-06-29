@@ -7,14 +7,14 @@
 - [x] 优化nop anchors
 - [ ] 支持更灵活的方法扫描，discoverer的思路行不通，直接尝试pattern吧
   - [x] 支持regex()
-  - [ ] 支持execution()
+  - [x] 支持execution()
   - [ ] 支持method()
   - [ ] 支持getter()
   - [ ] 支持setter()
   - [ ] 支持property()
   - [x] 考虑在对声明类型用否时，declaring type和method的否定关系
   - [ ] 考虑method与type的访问修饰符问题
-  - [ ] 支持考虑使用`async`简化Task/ValueTask返回值
+  - [x] 支持考虑使用`async`简化Task/ValueTask返回值
   - [x] 考虑使用`?`简化Nullable
   - [ ] 考虑还有什么能简化的
 - [ ] 方法/类型扫描会扫到编译时生成方法/类型，比如StateMachine系列，需要排除

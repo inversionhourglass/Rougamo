@@ -11,6 +11,8 @@
 
         public bool IsAny => false;
 
+        public bool IsVoid => false;
+
         public bool AssignableMatch => ValuePattern.AssignableMatch;
 
         public bool IsMatch(TypeSignature signature)

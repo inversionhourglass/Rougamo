@@ -16,6 +16,8 @@ namespace Rougamo.Fody.Signature.Patterns
 
         public bool IsAny => false;
 
+        public bool IsVoid => false;
+
         public bool AssignableMatch => throw new NotImplementedException();
 
         public bool IsMatch(TypeSignature signature)

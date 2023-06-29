@@ -16,6 +16,8 @@ namespace Rougamo.Fody.Signature.Patterns
 
         public bool IsAny => Left.IsAny && Right.IsAny;
 
+        public bool IsVoid => Left.IsVoid && Right.IsVoid;
+
         public bool AssignableMatch => Left.AssignableMatch || Right.AssignableMatch;
 
         public GenericNamePattern SeparateOutMethod()

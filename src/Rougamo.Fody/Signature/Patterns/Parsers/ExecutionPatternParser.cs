@@ -10,6 +10,7 @@ namespace Rougamo.Fody.Signature.Patterns.Parsers
             var tokens = TokenSourceBuilder.Build(pattern);
 
             var modifier = ParseModifier(tokens);
+            var async = ParseAsync(tokens);
             var returnType = ParseType(tokens);
             var declaringTypeMethod = ParseType(tokens).ToDeclaringTypeMethod(); ;
             var parameters = ParseParameters(tokens);
@@ -38,7 +39,8 @@ namespace Rougamo.Fody.Signature.Patterns.Parsers
                 }
             }
 
-            return new ExecutionPattern(modifier, returnType, declaringTypeMethod, parameters);
+            var returnTypeX = async ? new AsyncTypePattern(returnType) : (ITypePattern)returnType;
+            return new ExecutionPattern(modifier, returnTypeX, declaringTypeMethod, parameters);
         }
     }
 }

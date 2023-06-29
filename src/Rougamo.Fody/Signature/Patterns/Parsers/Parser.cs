@@ -39,6 +39,17 @@ namespace Rougamo.Fody.Signature.Patterns.Parsers
             return new ModifierPattern(required, forbidden);
         }
 
+        public static bool ParseAsync(TokenSource tokens)
+        {
+            var token = tokens.Peek();
+            if (token != null && token.Value == "async")
+            {
+                tokens.Read();
+                return true;
+            }
+            return false;
+        }
+
         public static ITypePatterns ParseParameters(TokenSource tokens)
         {
             var token = tokens.Read();

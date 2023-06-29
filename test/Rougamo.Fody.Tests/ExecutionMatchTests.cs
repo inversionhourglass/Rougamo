@@ -409,6 +409,33 @@ namespace Rougamo.Fody.Tests
             Assert.Equal(expectedParameters2, actualParameters2);
         }
 
+        [Fact]
+        public void AsyncMatchTest()
+        {
+            var asyncStringMatcher = PatternParser.Parse("execution(async string *(..))");
+            var asyncAnyMatcher = PatternParser.Parse("execution(async * *(..))");
+            var asyncVoidMatcher = PatternParser.Parse("execution(async void *(..))");
+
+            var expectedStrings = _methodDefs.Where(x => new[] { "System.Threading.Tasks.Task`1<System.String>", "System.Threading.Tasks.ValueTask`1<System.String>" }.Contains(x.ReturnType.FullName)).ToArray();
+            var expectedAnys = _methodDefs.Where(x => x.ReturnType.Namespace == "System.Threading.Tasks" && new[] { "Task`1", "ValueTask`1" }.Contains(x.ReturnType.Name)).ToArray();
+            var expectedVoids = _methodDefs.Where(x => new[] { "System.Threading.Tasks.Task", "System.Threading.Tasks.ValueTask" }.Contains(x.ReturnType.FullName)).ToArray();
+
+            var actualStrings = new List<MethodDefinition>();
+            var actualAnys = new List<MethodDefinition>();
+            var actualVoids = new List<MethodDefinition>();
+            foreach (var methodDef in _methodDefs)
+            {
+                var signature = SignatureParser.ParseMethod(methodDef);
+                if (asyncStringMatcher.IsMatch(signature)) actualStrings.Add(methodDef);
+                if (asyncAnyMatcher.IsMatch(signature)) actualAnys.Add(methodDef);
+                if (asyncVoidMatcher.IsMatch(signature)) actualVoids.Add(methodDef);
+            }
+
+            Assert.Equal(expectedStrings, actualStrings);
+            Assert.Equal(expectedAnys, actualAnys);
+            Assert.Equal(expectedVoids, actualVoids);
+        }
+
         private string[] GetInterfaceBaseTypes(TypeReference typeRef)
         {
             var typeDef = typeRef.Resolve();

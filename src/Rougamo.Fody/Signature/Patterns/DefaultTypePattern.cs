@@ -18,6 +18,8 @@ namespace Rougamo.Fody.Signature.Patterns
 
         public bool IsAny => _compiledPattern!.IsAny;
 
+        public bool IsVoid => _compiledPattern!.IsVoid;
+
         public bool AssignableMatch => _compiledPattern!.AssignableMatch;
 
         public bool IsMatch(TypeSignature signature)

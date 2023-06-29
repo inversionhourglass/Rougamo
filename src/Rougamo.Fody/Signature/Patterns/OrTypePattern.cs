@@ -14,7 +14,9 @@ namespace Rougamo.Fody.Signature.Patterns
 
         public IIntermediateTypePattern Right { get; }
 
-        public bool IsAny => Left.IsAny && Right.IsAny;
+        public bool IsAny => Left.IsAny || Right.IsAny;
+
+        public bool IsVoid => Left.IsVoid || Right.IsVoid;
 
         public bool AssignableMatch => Left.AssignableMatch || Right.AssignableMatch;
 

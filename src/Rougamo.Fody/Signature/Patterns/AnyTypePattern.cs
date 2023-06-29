@@ -6,6 +6,8 @@ namespace Rougamo.Fody.Signature.Patterns
     {
         public bool IsAny => true;
 
+        public bool IsVoid => false;
+
         public bool AssignableMatch => false;
 
         public void Compile(List<GenericParameterTypePattern> genericParameters, bool genericIn)
