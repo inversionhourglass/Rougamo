@@ -1,11 +1,13 @@
-﻿using System.Linq;
+﻿using Mono.Cecil;
+using System.Linq;
 
 namespace Rougamo.Fody.Signature
 {
     public class MethodSignature
     {
-        public MethodSignature(Modifier modifiers, TypeSignature returnType, TypeSignature declareType, GenericSignature method, TypeSignature[] methodParameters)
+        public MethodSignature(MethodDefinition definition, Modifier modifiers, TypeSignature returnType, TypeSignature declareType, GenericSignature method, TypeSignature[] methodParameters)
         {
+            Definition = definition;
             Modifiers = modifiers;
             ReturnType = returnType;
             DeclareType = declareType;
@@ -13,15 +15,17 @@ namespace Rougamo.Fody.Signature
             MethodParameters = methodParameters;
         }
 
-        public Modifier Modifiers { get; set; }
+        public MethodDefinition Definition { get; }
 
-        public TypeSignature ReturnType { get; set; }
+        public Modifier Modifiers { get; }
 
-        public TypeSignature DeclareType { get; set; }
+        public TypeSignature ReturnType { get; }
 
-        public GenericSignature Method { get; set; }
+        public TypeSignature DeclareType { get; }
 
-        public TypeSignature[] MethodParameters { get; set; }
+        public GenericSignature Method { get; }
+
+        public TypeSignature[] MethodParameters { get; }
 
         public override string ToString()
         {

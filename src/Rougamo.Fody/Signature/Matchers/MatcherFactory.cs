@@ -14,6 +14,7 @@ namespace Rougamo.Fody.Signature.Matchers
         {
             "regex" => new RegexMatcher(pattern),
             "execution" => new ExecutionMatcher(pattern),
+            "method" => new MethodMatcher(pattern),
             "getter" => new GetterMatcher(pattern),
             "setter" => new SetterMatcher(pattern),
             "property" => new PropertyMatcher(pattern),

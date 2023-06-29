@@ -19,7 +19,7 @@ namespace Rougamo.Fody.Signature
             var genericMap = SortGenericParameter(typeGenericCount, genericParameters);
             var returnType = ParseType(methodDef.ReturnType, null, genericMap);
             var parameters = ParseMethodParameters(methodDef, genericMap);
-            return new MethodSignature(modifier, returnType, declareType, method, parameters);
+            return new MethodSignature(methodDef, modifier, returnType, declareType, method, parameters);
         }
 
         private static Modifier ParseModifier(MethodDefinition methodDef)

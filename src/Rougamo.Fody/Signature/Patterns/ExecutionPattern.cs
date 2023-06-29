@@ -18,7 +18,7 @@
 
         public ITypePatterns MethodParameters { get; }
 
-        public bool IsMatch(MethodSignature signature)
+        public virtual bool IsMatch(MethodSignature signature)
         {
             if (MethodParameters.Count != signature.MethodParameters.Length) return false;
 

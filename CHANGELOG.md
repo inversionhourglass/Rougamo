@@ -8,7 +8,7 @@
 - [ ] 支持更灵活的方法扫描，discoverer的思路行不通，直接尝试pattern吧
   - [x] 支持regex()
   - [x] 支持execution()
-  - [ ] 支持method()
+  - [x] 支持method()
   - [ ] 支持getter()
   - [ ] 支持setter()
   - [ ] 支持property()
