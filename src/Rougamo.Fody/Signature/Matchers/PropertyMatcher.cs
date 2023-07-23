@@ -1,13 +1,25 @@
-﻿namespace Rougamo.Fody.Signature.Matchers
+﻿using Rougamo.Fody.Signature.Patterns;
+using Rougamo.Fody.Signature.Patterns.Parsers;
+
+namespace Rougamo.Fody.Signature.Matchers
 {
-    public class PropertyMatcher : OrMatcher
+    public class PropertyMatcher : IMatcher
     {
-        public PropertyMatcher(string pattern) : base(new GetterMatcher(pattern), new SetterMatcher(pattern))
+        private readonly string _pattern;
+        private readonly PropertyPattern _propertyPattern;
+
+        public PropertyMatcher(string pattern)
         {
-            Pattern = pattern;
+            _pattern = pattern;
+            _propertyPattern = PropertyPatternParser.Parse(pattern);
         }
 
-        public string Pattern { get; }
+        public string Pattern => _pattern;
+
+        public bool IsMatch(MethodSignature signature)
+        {
+            return _propertyPattern.IsMatch(signature);
+        }
 
         public override string ToString()
         {

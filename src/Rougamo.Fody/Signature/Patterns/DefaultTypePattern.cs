@@ -52,9 +52,10 @@ namespace Rougamo.Fody.Signature.Patterns
             return pattern;
         }
 
-        public DeclaringTypeMethodPattern ToDeclaringTypeMethod()
+        public DeclaringTypeMethodPattern ToDeclaringTypeMethod(params string[] methodImplicitPrefixes)
         {
             var method = SeparateOutMethod();
+            method.ImplicitPrefixes = methodImplicitPrefixes;
             return new DeclaringTypeMethodPattern(this, method);
         }
 
@@ -214,7 +215,7 @@ namespace Rougamo.Fody.Signature.Patterns
                 nullable = true;
                 index--;
             }
-            var nameTokens = new List<Token>();
+            var nameTokens = new Stack<Token>();
             var patterns = new Stack<GenericNamePattern>();
             Stack<ITypePattern>? generics = null;
             ITypePatterns? genericPatterns = null;
@@ -299,30 +300,30 @@ namespace Rougamo.Fody.Signature.Patterns
                 }
                 else if (token.Value == TypeSignature.NESTED_SEPARATOR)
                 {
-                    patterns.Push(CreateGenericNamePattern(nameTokens, genericPatterns));
+                    patterns.Push(CreateGenericNamePattern(nameTokens.ToArray(), genericPatterns));
                 }
                 else if (token.IsDot())
                 {
                     tokens = tokens.Slice(tokens.Start, index);
-                    patterns.Push(CreateGenericNamePattern(nameTokens, genericPatterns));
+                    patterns.Push(CreateGenericNamePattern(nameTokens.ToArray(), genericPatterns));
                     break;
                 }
                 else if (token.IsEllipsis())
                 {
                     tokens = tokens.Slice(tokens.Start, index + 1);
-                    patterns.Push(CreateGenericNamePattern(nameTokens, genericPatterns));
+                    patterns.Push(CreateGenericNamePattern(nameTokens.ToArray(), genericPatterns));
                     break;
                 }
                 else
                 {
-                    nameTokens.Add(token);
+                    nameTokens.Push(token);
                 }
             }
 
             ITypePattern compiledTypePattern;
             if (index + 1 == tokens.Start)
             {
-                var pattern = CreateGenericNamePattern(nameTokens, genericPatterns);
+                var pattern = CreateGenericNamePattern(nameTokens.ToArray(), genericPatterns);
                 patterns.Push(pattern);
                 if (patterns.Count == 1 && pattern.GenericPatterns is AnyTypePatterns)
                 {
@@ -341,9 +342,9 @@ namespace Rougamo.Fody.Signature.Patterns
 
             return nullable ? new NullableTypePattern(compiledTypePattern) : compiledTypePattern;
 
-            static GenericNamePattern CreateGenericNamePattern(List<Token> nameTokens, ITypePatterns? genericPatterns)
+            static GenericNamePattern CreateGenericNamePattern(Token[] nameTokens, ITypePatterns? genericPatterns)
             {
-                var name = nameTokens.Count == 1 ? nameTokens[0].Value.ToString() : string.Concat(nameTokens.Select(x => x.Value.ToString()));
+                var name = nameTokens.Length == 1 ? nameTokens[0].Value.ToString() : string.Concat(nameTokens.Select(x => x.Value.ToString()));
                 genericPatterns ??= new AnyTypePatterns();
                 return new GenericNamePattern(name, genericPatterns);
             }

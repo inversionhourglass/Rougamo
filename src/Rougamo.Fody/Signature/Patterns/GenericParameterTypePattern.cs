@@ -35,7 +35,7 @@ namespace Rougamo.Fody.Signature.Patterns
             throw new NotImplementedException();
         }
 
-        public DeclaringTypeMethodPattern ToDeclaringTypeMethod()
+        public DeclaringTypeMethodPattern ToDeclaringTypeMethod(params string[] methodImplicitPrefixes)
         {
             throw new NotImplementedException();
         }

@@ -20,7 +20,7 @@ namespace Rougamo.Fody.Signature.Patterns
             throw new System.NotImplementedException();
         }
 
-        public DeclaringTypeMethodPattern ToDeclaringTypeMethod()
+        public DeclaringTypeMethodPattern ToDeclaringTypeMethod(params string[] methodImplicitPrefixes)
         {
             throw new System.NotImplementedException();
         }

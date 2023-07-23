@@ -16,6 +16,8 @@ namespace Rougamo.Fody.Signature.Patterns
 
         public bool IsAny => Name == "*" && GenericPatterns.Count == CollectionCount.ANY;
 
+        public string[]? ImplicitPrefixes { get; set; }
+
         public void ExtractGenerics(List<GenericParameterTypePattern> list)
         {
             if (GenericPatterns is TypePatterns patterns)
@@ -29,7 +31,18 @@ namespace Rougamo.Fody.Signature.Patterns
 
         public virtual bool IsMatch(GenericSignature method)
         {
-            return WildcardMatcher.IsMatch(Name, method.Name) && GenericPatterns.IsMatch(method.Generics);
+            var name = method.Name;
+            if (ImplicitPrefixes != null)
+            {
+                foreach (var implicitPrefix in ImplicitPrefixes)
+                {
+                    if (!method.Name.StartsWith(implicitPrefix)) continue;
+
+                    name = name.Substring(implicitPrefix.Length);
+                    break;
+                }
+            }
+            return WildcardMatcher.IsMatch(Name, name) && GenericPatterns.IsMatch(method.Generics);
         }
     }
 }

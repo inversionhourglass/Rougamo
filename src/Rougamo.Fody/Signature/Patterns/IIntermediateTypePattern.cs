@@ -6,7 +6,7 @@ namespace Rougamo.Fody.Signature.Patterns
     {
         GenericNamePattern SeparateOutMethod();
 
-        DeclaringTypeMethodPattern ToDeclaringTypeMethod();
+        DeclaringTypeMethodPattern ToDeclaringTypeMethod(params string[] methodImplicitPrefixes);
 
         void Compile(List<GenericParameterTypePattern> genericParameters, bool genericIn);
     }

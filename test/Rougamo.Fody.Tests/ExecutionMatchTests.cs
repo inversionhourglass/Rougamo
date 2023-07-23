@@ -206,12 +206,12 @@ namespace Rougamo.Fody.Tests
             var declaringAbstractMatcher = PatternParser.Parse($"{PatternType}(* AbstractCl*+.*(..))");
             var declaringBaseMatcher = PatternParser.Parse($"{PatternType}(* *seClass+.*(..))");
 
-            var expectedReturnInterfaces = _methodDefs.Where(x => !x.IsAbstract && GetInterfaceBaseTypes(x.ReturnType).Any(y => y == "SignatureUsage.Assignables.Interface")).Where(Filter).ToArray();
-            var expectedReturnAbstracts = _methodDefs.Where(x => !x.IsAbstract && GetInterfaceBaseTypes(x.ReturnType).Any(y => y.EndsWith("Assignables.AbstractClass"))).Where(Filter).ToArray();
-            var expectedReturnBases = _methodDefs.Where(x => !x.IsAbstract && GetInterfaceBaseTypes(x.ReturnType).Any(y => y.EndsWith("BaseClass"))).Where(Filter).ToArray();
-            var expectedDeclaringInterfaces = _methodDefs.Where(x => !x.IsAbstract && GetInterfaceBaseTypes(x.DeclaringType).Any(y => StartEndWith(y.Split(new[] { '.' }).Last(), "Int", "ace"))).Where(Filter).ToArray();
-            var expectedDeclaringAbstracts = _methodDefs.Where(x => !x.IsAbstract && GetInterfaceBaseTypes(x.DeclaringType).Any(y => y.Split(new[] { '.' }).Last().StartsWith("AbstractCl"))).Where(Filter).ToArray();
-            var expectedDeclaringBases = _methodDefs.Where(x => !x.IsAbstract && GetInterfaceBaseTypes(x.DeclaringType).Any(y => y.Split(new[] { '.' }).Last().EndsWith("seClass"))).Where(Filter).ToArray();
+            var expectedReturnInterfaces = _methodDefs.Where(x => !x.IsAbstract && x.ReturnType.GetInterfaceBaseTypes().Any(y => y == "SignatureUsage.Assignables.Interface")).Where(Filter).ToArray();
+            var expectedReturnAbstracts = _methodDefs.Where(x => !x.IsAbstract && x.ReturnType.GetInterfaceBaseTypes().Any(y => y.EndsWith("Assignables.AbstractClass"))).Where(Filter).ToArray();
+            var expectedReturnBases = _methodDefs.Where(x => !x.IsAbstract && x.ReturnType.GetInterfaceBaseTypes().Any(y => y.EndsWith("BaseClass"))).Where(Filter).ToArray();
+            var expectedDeclaringInterfaces = _methodDefs.Where(x => !x.IsAbstract && x.DeclaringType.GetInterfaceBaseTypes().Any(y => StartEndWith(y.Split(new[] { '.' }).Last(), "Int", "ace"))).Where(Filter).ToArray();
+            var expectedDeclaringAbstracts = _methodDefs.Where(x => !x.IsAbstract && x.DeclaringType.GetInterfaceBaseTypes().Any(y => y.Split(new[] { '.' }).Last().StartsWith("AbstractCl"))).Where(Filter).ToArray();
+            var expectedDeclaringBases = _methodDefs.Where(x => !x.IsAbstract && x.DeclaringType.GetInterfaceBaseTypes().Any(y => y.Split(new[] { '.' }).Last().EndsWith("seClass"))).Where(Filter).ToArray();
 
             var actualReturnInterfaces = new List<MethodDefinition>();
             var actualReturnAbstracts = new List<MethodDefinition>();
@@ -286,7 +286,7 @@ namespace Rougamo.Fody.Tests
             var expectedNotAny2 = _methodDefs.Where(Filter).ToArray();
             var expectedNotAny3 = _methodDefs.Where(Filter).ToArray();
             var expectedNotDeclaring1 = _methodDefs.Where(x => x.DeclaringType.FullName != "SignatureUsage.DefaultCls").Where(Filter).ToArray();
-            var expectedNotDeclaring2 = _methodDefs.Where(x => !GetInterfaceBaseTypes(x.DeclaringType).Any(y => y == "SignatureUsage.Assignables.Interface")).Where(Filter).ToArray();
+            var expectedNotDeclaring2 = _methodDefs.Where(x => !x.DeclaringType.GetInterfaceBaseTypes().Any(y => y == "SignatureUsage.Assignables.Interface")).Where(Filter).ToArray();
             var expectedNotMethod1 = _methodDefs.Where(x => x.Name != "Public").Where(Filter).ToArray();
             var expectedNotMethod2 = _methodDefs.Where(x => x.Name != "Protected").Where(Filter).ToArray();
             var expectedNotSpecial = _methodDefs.Where(x => x.DeclaringType.FullName != "SignatureUsage.Assignables.ImplInterfaceAbstractClass" || x.Name != "GetInterface").Where(Filter).ToArray();
@@ -333,7 +333,7 @@ namespace Rougamo.Fody.Tests
             var expectedReturnStringOrVoids = _methodDefs.Where(x => new[] { typeof(string).FullName, typeof(void).FullName }.Contains(x.ReturnType.FullName)).Where(Filter).ToArray();
             var expectedReturnIntDoubleOrDecimals = _methodDefs.Where(x => new[] { typeof(int).FullName, typeof(double).FullName, typeof(decimal).FullName }.Contains(x.ReturnType.FullName)).Where(Filter).ToArray();
             var expectedDeclaringDefaultOrPublics = _methodDefs.Where(x => new[] { "SignatureUsage.DefaultCls", "SignatureUsage.PublicCls" }.Contains(x.DeclaringType.FullName)).Where(Filter).ToArray();
-            var expectedDeclaringAssignableInterfaceOrAbstractClasses = _methodDefs.Where(x => GetInterfaceBaseTypes(x.DeclaringType).Any(x => x == "SignatureUsage.Assignables.Interface" || x == "SignatureUsage.Assignables.AbstractClass")).Where(Filter).ToArray();
+            var expectedDeclaringAssignableInterfaceOrAbstractClasses = _methodDefs.Where(x => x.DeclaringType.GetInterfaceBaseTypes().Any(x => x == "SignatureUsage.Assignables.Interface" || x == "SignatureUsage.Assignables.AbstractClass")).Where(Filter).ToArray();
 
             var actualReturnStringOrVoids = new List<MethodDefinition>();
             var actualReturnIntDoubleOrDecimals = new List<MethodDefinition>();
@@ -438,27 +438,6 @@ namespace Rougamo.Fody.Tests
             Assert.Equal(expectedStrings, actualStrings);
             Assert.Equal(expectedAnys, actualAnys);
             Assert.Equal(expectedVoids, actualVoids);
-        }
-
-        private string[] GetInterfaceBaseTypes(TypeReference typeRef)
-        {
-            var typeDef = typeRef.Resolve();
-            if (typeDef == null) return Array.Empty<string>();
-
-            var list = new List<string>();
-
-            foreach (var item in typeDef.Interfaces)
-            {
-                list.Add(item.InterfaceType.FullName);
-            }
-
-            do
-            {
-                typeDef = typeRef.Resolve();
-                list.Add(typeDef.FullName);
-            } while ((typeRef = typeDef.BaseType) != null);
-
-            return list.ToArray();
         }
 
         private bool StartEndWith(string str, string starts, string ends) => str.StartsWith(starts) && str.EndsWith(ends);

@@ -22,9 +22,10 @@ namespace Rougamo.Fody.Signature.Patterns
             return InnerPattern.SeparateOutMethod();
         }
 
-        public DeclaringTypeMethodPattern ToDeclaringTypeMethod()
+        public DeclaringTypeMethodPattern ToDeclaringTypeMethod(params string[] methodImplicitPrefixes)
         {
             var method = SeparateOutMethod();
+            method.ImplicitPrefixes = methodImplicitPrefixes;
             return new NotDeclaringTypeMethodPattern(InnerPattern, method);
         }
 

@@ -4,6 +4,10 @@ namespace SignatureUsage.Assignables
 {
     public class ImplInterfaceBaseClass : BaseClass, Interface
     {
+        internal ImplInterfaceClass DefaultImplInterfaceClass => default;
+
+        protected BaseClass DefaultBaseClass => default;
+
         public (string, int) ImplInterfaceBase() => default;
 
         public override Interface GetInterface() => default;

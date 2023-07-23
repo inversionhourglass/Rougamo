@@ -4,6 +4,8 @@ namespace SignatureUsage.Assignables
 {
     public class ImplBaseClass : BaseClass
     {
+        public AbstractClass DefaultAbstractClass => default;
+
         public decimal ImplBase() => default;
 
         public AbstractClass GetAbstract() => default;

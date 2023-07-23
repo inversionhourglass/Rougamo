@@ -4,6 +4,12 @@ namespace SignatureUsage.Assignables
 {
     public class ImplAbstractClass : AbstractClass
     {
+        public Interface DefaultInterface => default;
+
+        public BaseClass DefaultBaseClass => default;
+
+        public ImplInterfaceAbstractClass DefaultImplInterfaceAbstractClass => default;
+
         public BigInteger ImplAbstract() => default;
 
         public static BaseClass GetBase() => default;
