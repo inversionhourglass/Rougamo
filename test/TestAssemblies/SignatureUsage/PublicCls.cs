@@ -8,7 +8,7 @@ namespace SignatureUsage
 
         protected string ProtectedProp { get; set; }
 
-        internal double InternalProp { get; }
+        internal double InternalProp { get; set; }
 
         private decimal _privatePropValue;
         private decimal PrivateProp

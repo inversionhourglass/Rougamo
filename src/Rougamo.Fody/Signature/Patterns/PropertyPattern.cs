@@ -2,33 +2,45 @@
 {
     public class PropertyPattern
     {
-        public PropertyPattern(ModifierPattern modifier, ITypePattern returnType, DeclaringTypeMethodPattern declaringTypeProperty)
+        public PropertyPattern(ModifierPattern modifier, ITypePattern propertyType, DeclaringTypeMethodPattern declaringTypeProperty)
         {
             Modifier = modifier;
-            ReturnType = returnType;
+            PropertyType = propertyType;
             DeclaringTypeProperty = declaringTypeProperty;
         }
 
         public ModifierPattern Modifier { get; }
 
-        public ITypePattern ReturnType { get; }
+        public ITypePattern PropertyType { get; }
 
         public DeclaringTypeMethodPattern DeclaringTypeProperty { get; }
 
         public virtual bool IsMatch(MethodSignature signature)
         {
-            if (!signature.Definition.IsGetter && !signature.Definition.IsSetter) return false;
+            if (!IsPropertyMethod(signature, out var isGetter)) return false;
 
             if (!Modifier.IsMatch(signature.Modifiers)) return false;
 
-            if (ReturnType.AssignableMatch)
+            var propertyTypeSignature = isGetter ? signature.ReturnType : signature.MethodParameters[0];
+            if (PropertyType.AssignableMatch)
             {
-                return DeclaringTypeProperty.IsMatch(signature.DeclareType, signature.Method) && ReturnType.IsMatch(signature.ReturnType);
+                return DeclaringTypeProperty.IsMatch(signature.DeclareType, signature.Method) && PropertyType.IsMatch(propertyTypeSignature);
             }
             else
             {
-                return ReturnType.IsMatch(signature.ReturnType) && DeclaringTypeProperty.IsMatch(signature.DeclareType, signature.Method);
+                return PropertyType.IsMatch(propertyTypeSignature) && DeclaringTypeProperty.IsMatch(signature.DeclareType, signature.Method);
             }
+        }
+
+        protected virtual bool IsPropertyMethod(MethodSignature signature, out bool isGetter)
+        {
+            if (signature.Definition.IsGetter)
+            {
+                isGetter = true;
+                return true;
+            }
+            isGetter = false;
+            return signature.Definition.IsSetter;
         }
     }
 }

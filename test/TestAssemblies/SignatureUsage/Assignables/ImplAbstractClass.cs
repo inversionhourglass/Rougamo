@@ -6,7 +6,7 @@ namespace SignatureUsage.Assignables
     {
         public Interface DefaultInterface => default;
 
-        public BaseClass DefaultBaseClass => default;
+        public BaseClass DefaultBaseClass { get; set; }
 
         public ImplInterfaceAbstractClass DefaultImplInterfaceAbstractClass => default;
 

@@ -6,7 +6,7 @@ namespace SignatureUsage.Assignables
     {
         internal ImplInterfaceClass DefaultImplInterfaceClass => default;
 
-        protected BaseClass DefaultBaseClass => default;
+        protected BaseClass DefaultBaseClass { get; set; }
 
         public (string, int) ImplInterfaceBase() => default;
 

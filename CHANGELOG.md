@@ -9,9 +9,9 @@
   - [x] 支持regex()
   - [x] 支持execution()
   - [x] 支持method()
-  - [ ] 支持getter()
-  - [ ] 支持setter()
-  - [ ] 支持property()
+  - [x] 支持getter()
+  - [x] 支持setter()
+  - [x] 支持property()
   - [x] 考虑在对声明类型用否时，declaring type和method的否定关系
   - [ ] 考虑method与type的访问修饰符问题
   - [x] 支持考虑使用`async`简化Task/ValueTask返回值
