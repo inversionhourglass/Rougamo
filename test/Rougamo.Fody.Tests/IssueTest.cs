@@ -122,5 +122,18 @@ namespace Rougamo.Fody.Tests
 
             instance.PopulateData();
         }
+
+        [Fact]
+        public void Issue40Test()
+        {
+            var instance = GetInstance(nameof(Issue40), false);
+            var sInstance = GetStaticInstance(nameof(Issue40), false);
+
+            var instanceValue = (int)instance.Instance();
+            var staticValue = (int)sInstance.Static();
+
+            Assert.Equal(_40_Attribute.ReplacedValue, instanceValue);
+            Assert.Equal(Issue40.Static(), staticValue);
+        }
     }
 }
