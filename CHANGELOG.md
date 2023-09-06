@@ -5,7 +5,7 @@
 - [x] 空方法织入优化。【直接删除空方法织入的独立逻辑，如果希望空方法织入精简的代码，通过按需织入的方式实现】
 - [x] Attribute属性值获取支持在构造方法对属性进行初始化的方式，这种方式是调用属性Set方法赋值的
 - [x] 优化nop anchors
-- [ ] 支持更灵活的方法扫描，discoverer的思路行不通，直接尝试pattern吧
+- [x] 支持更灵活的方法扫描，discoverer的思路行不通，直接尝试pattern吧
   - [x] 支持regex()
   - [x] 支持execution()
   - [x] 支持method()
@@ -13,7 +13,7 @@
   - [x] 支持setter()
   - [x] 支持property()
   - [x] 考虑在对声明类型用否时，declaring type和method的否定关系
-  - [ ] 考虑method与type的访问修饰符问题
+  - [x] 考虑method与type的访问修饰符问题（配置中通过composite-accessibility控制，默认false，仅使用method的访问修饰符，设置为true后将使用type+method复合访问修饰符）
   - [x] 支持考虑使用`async`简化Task/ValueTask返回值
   - [x] 考虑使用`?`简化Nullable
   - [x] 考虑还有什么能简化的
@@ -22,3 +22,4 @@
 - [ ] 解决debug断点问题([#36](https://github.com/inversionhourglass/Rougamo/issues/36))
 - [ ] 解决VS运行时编辑问题([#37](https://github.com/inversionhourglass/Rougamo/issues/37))
 - [x] 解决MoAttribute应用于高于方法级别时，应用时定义的Flags无法生效的问题([#40](https://github.com/inversionhourglass/Rougamo/issues/37))
+- [ ] 启用pattern

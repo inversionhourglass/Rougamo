@@ -43,7 +43,7 @@ namespace Rougamo.Fody.Tests.Patterns
             var actual3 = new List<MethodDefinition>();
             foreach (var methodDef in _methodDefs)
             {
-                var signature = SignatureParser.ParseMethod(methodDef);
+                var signature = SignatureParser.ParseMethod(methodDef, true);
                 if (matcher1.IsMatch(signature)) actual1.Add(methodDef);
                 if (matcher2.IsMatch(signature)) actual2.Add(methodDef);
                 if (matcher3.IsMatch(signature)) actual3.Add(methodDef);
@@ -70,7 +70,7 @@ namespace Rougamo.Fody.Tests.Patterns
             var nonStaticMatcher = PatternParser.Parse($"{PatternType}(!static * *(..))");
 
             // Modifier signature parser had been pass the tests in SignatureBasicTests, so we can use SignatureParser to get modifier here
-            var methods = _methodDefs.Select<MethodDefinition, (MethodDefinition def, Modifier modifier)>(x => (x, SignatureParser.ParseMethod(x).Modifiers)).ToArray();
+            var methods = _methodDefs.Select<MethodDefinition, (MethodDefinition def, Modifier modifier)>(x => (x, SignatureParser.ParseMethod(x, true).Modifiers)).ToArray();
             var expectedPublics = methods.Where(x => x.modifier == Modifier.Public || x.modifier == Modifier.PublicStatic).Select(x => x.def).Where(Filter).ToArray();
             var expectedProtecteds = methods.Where(x => x.modifier == Modifier.Protected || x.modifier == Modifier.ProtectedStatic).Select(x => x.def).Where(Filter).ToArray();
             var expectedInternals = methods.Where(x => x.modifier == Modifier.Internal || x.modifier == Modifier.InternalStatic).Select(x => x.def).Where(Filter).ToArray();
@@ -96,7 +96,7 @@ namespace Rougamo.Fody.Tests.Patterns
             var actualNonStatics = new List<MethodDefinition>();
             foreach (var methodDef in _methodDefs)
             {
-                var signature = SignatureParser.ParseMethod(methodDef);
+                var signature = SignatureParser.ParseMethod(methodDef, true);
                 if (publicMatcher.IsMatch(signature)) actualPublics.Add(methodDef);
                 if (protectedMatcher.IsMatch(signature)) actualProtecteds.Add(methodDef);
                 if (internalMatcher.IsMatch(signature)) actualInternals.Add(methodDef);
@@ -148,7 +148,7 @@ namespace Rougamo.Fody.Tests.Patterns
             var actualAllSpecifiedGenerics = new List<MethodDefinition>();
             foreach (var methodDef in _methodDefs)
             {
-                var signature = SignatureParser.ParseMethod(methodDef);
+                var signature = SignatureParser.ParseMethod(methodDef, true);
                 if (anyMatcher.IsMatch(signature)) actualAnyGenerics.Add(methodDef);
                 if (withGenericMatcher.IsMatch(signature)) actualWithGenerics.Add(methodDef);
                 if (withoutGenericMatcher.IsMatch(signature)) actualWithoutGenerics.Add(methodDef);
@@ -184,7 +184,7 @@ namespace Rougamo.Fody.Tests.Patterns
             var actual32 = new List<MethodDefinition>();
             foreach (var methodDef in _methodDefs)
             {
-                var signature = SignatureParser.ParseMethod(methodDef);
+                var signature = SignatureParser.ParseMethod(methodDef, true);
                 if (deep1Matcher.IsMatch(signature)) actual1.Add(methodDef);
                 if (deep2Matcher.IsMatch(signature)) actual2.Add(methodDef);
                 if (deep31Matcher.IsMatch(signature)) actual31.Add(methodDef);
@@ -222,7 +222,7 @@ namespace Rougamo.Fody.Tests.Patterns
             var actualDeclaringBases = new List<MethodDefinition>();
             foreach (var methodDef in _methodDefs)
             {
-                var signature = SignatureParser.ParseMethod(methodDef);
+                var signature = SignatureParser.ParseMethod(methodDef, true);
                 if (returnInterfaceMatcher.IsMatch(signature)) actualReturnInterfaces.Add(methodDef);
                 if (returnAbstractMatcher.IsMatch(signature)) actualReturnAbstracts.Add(methodDef);
                 if (returnBaseMatcher.IsMatch(signature)) actualReturnBases.Add(methodDef);
@@ -258,7 +258,7 @@ namespace Rougamo.Fody.Tests.Patterns
             var actualNotNameSpecialDeclarings = new List<MethodDefinition>();
             foreach (var methodDef in _methodDefs)
             {
-                var signature = SignatureParser.ParseMethod(methodDef);
+                var signature = SignatureParser.ParseMethod(methodDef, true);
                 if (notReturnNsMatcher.IsMatch(signature)) actualNotReturnNses.Add(methodDef);
                 if (notDeclaringNsMatcher.IsMatch(signature)) actualNotDeclaringNses.Add(methodDef);
                 if (notSpecialReturnMatcher.IsMatch(signature)) actualNotSpecialReturns.Add(methodDef);
@@ -302,7 +302,7 @@ namespace Rougamo.Fody.Tests.Patterns
             var actualNotSpecial = new List<MethodDefinition>();
             foreach (var methodDef in _methodDefs)
             {
-                var signature = SignatureParser.ParseMethod(methodDef);
+                var signature = SignatureParser.ParseMethod(methodDef, true);
                 if (notAnyMatcher1.IsMatch(signature)) actualNotAny1.Add(methodDef);
                 if (notAnyMatcher2.IsMatch(signature)) actualNotAny2.Add(methodDef);
                 if (notAnyMatcher3.IsMatch(signature)) actualNotAny3.Add(methodDef);
@@ -342,7 +342,7 @@ namespace Rougamo.Fody.Tests.Patterns
             var actualDeclaringAssignableInterfaceOrAbstractClasses = new List<MethodDefinition>();
             foreach (var methodDef in _methodDefs)
             {
-                var signature = SignatureParser.ParseMethod(methodDef);
+                var signature = SignatureParser.ParseMethod(methodDef, true);
                 if (returnStringOrVoidMatcher.IsMatch(signature)) actualReturnStringOrVoids.Add(methodDef);
                 if (returnIntDoubleOrDecimalMatcher.IsMatch(signature)) actualReturnIntDoubleOrDecimals.Add(methodDef);
                 if (declaringDefaultOrPublicMatcher.IsMatch(signature)) actualDeclaringDefaultOrPublics.Add(methodDef);
@@ -374,7 +374,7 @@ namespace Rougamo.Fody.Tests.Patterns
             var actualArguments2 = new List<MethodDefinition>();
             foreach (var methodDef in _methodDefs)
             {
-                var signature = SignatureParser.ParseMethod(methodDef);
+                var signature = SignatureParser.ParseMethod(methodDef, true);
                 if (returnMatcher1.IsMatch(signature)) actualReturns1.Add(methodDef);
                 if (returnMatcher2.IsMatch(signature)) actualReturns2.Add(methodDef);
                 if (argumentMatcher1.IsMatch(signature)) actualArguments1.Add(methodDef);
@@ -403,7 +403,7 @@ namespace Rougamo.Fody.Tests.Patterns
             var actualParameters2 = new List<MethodDefinition>();
             foreach (var methodDef in _methodDefs)
             {
-                var signature = SignatureParser.ParseMethod(methodDef);
+                var signature = SignatureParser.ParseMethod(methodDef, true);
                 if (returnMatcher1.IsMatch(signature)) actualReturns1.Add(methodDef);
                 if (parameterMatcher1.IsMatch(signature)) actualParameters1.Add(methodDef);
                 if (parameterMatcher2.IsMatch(signature)) actualParameters2.Add(methodDef);
@@ -430,7 +430,7 @@ namespace Rougamo.Fody.Tests.Patterns
             var actualVoids = new List<MethodDefinition>();
             foreach (var methodDef in _methodDefs)
             {
-                var signature = SignatureParser.ParseMethod(methodDef);
+                var signature = SignatureParser.ParseMethod(methodDef, true);
                 if (asyncStringMatcher.IsMatch(signature)) actualStrings.Add(methodDef);
                 if (asyncAnyMatcher.IsMatch(signature)) actualAnys.Add(methodDef);
                 if (asyncVoidMatcher.IsMatch(signature)) actualVoids.Add(methodDef);

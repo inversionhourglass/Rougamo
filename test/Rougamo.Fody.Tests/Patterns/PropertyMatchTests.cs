@@ -50,7 +50,7 @@ namespace Rougamo.Fody.Tests
             var actual3 = new List<MethodDefinition>();
             foreach (var def in _defs)
             {
-                var signature = SignatureParser.ParseMethod(def.method);
+                var signature = SignatureParser.ParseMethod(def.method, true);
                 if (matcher1.IsMatch(signature)) actual1.Add(def.method);
                 if (matcher2.IsMatch(signature)) actual2.Add(def.method);
                 if (matcher3.IsMatch(signature)) actual3.Add(def.method);
@@ -70,7 +70,7 @@ namespace Rougamo.Fody.Tests
             var privateProtectedMatcher = PatternParser.Parse($"{PatternType}(privateprotected * *..*.*)");
             var nonInternalMatcher = PatternParser.Parse($"{PatternType}(!internal * *.*)");
 
-            var methods = _defs.Where(Filter).Select(x => x.method).Select<MethodDefinition, (MethodDefinition def, Modifier modifier)>(x => (x, SignatureParser.ParseMethod(x).Modifiers)).ToArray();
+            var methods = _defs.Where(Filter).Select(x => x.method).Select<MethodDefinition, (MethodDefinition def, Modifier modifier)>(x => (x, SignatureParser.ParseMethod(x, true).Modifiers)).ToArray();
             var expectedPublics = methods.Where(x => x.modifier == Modifier.Public || x.modifier == Modifier.PublicStatic).Select(x => x.def).ToArray();
             var expectedPrivateStatics = methods.Where(x => x.modifier == Modifier.PrivateStatic).Select(x => x.def).ToArray();
             var expectedStatics = methods.Where(x => (x.modifier & Modifier.Static) != 0).Select(x => x.def).ToArray();
@@ -85,7 +85,7 @@ namespace Rougamo.Fody.Tests
             foreach (var def in _defs)
             {
                 var methodDef = def.method;
-                var signature = SignatureParser.ParseMethod(methodDef);
+                var signature = SignatureParser.ParseMethod(methodDef, true);
                 if (publicMatcher.IsMatch(signature)) actualPublics.Add(methodDef);
                 if (privateStaticMatcher.IsMatch(signature)) actualPrivateStatics.Add(methodDef);
                 if (staticMatcher.IsMatch(signature)) actualStatics.Add(methodDef);
@@ -121,7 +121,7 @@ namespace Rougamo.Fody.Tests
             foreach (var def in _defs)
             {
                 var methodDef = def.method;
-                var signature = SignatureParser.ParseMethod(methodDef);
+                var signature = SignatureParser.ParseMethod(methodDef, true);
                 if (matcher1.IsMatch(signature)) actual1.Add(methodDef);
                 if (matcher2.IsMatch(signature)) actual2.Add(methodDef);
                 if (matcher3.IsMatch(signature)) actual3.Add(methodDef);
@@ -155,7 +155,7 @@ namespace Rougamo.Fody.Tests
             foreach (var def in _defs)
             {
                 var methodDef = def.method;
-                var signature = SignatureParser.ParseMethod(methodDef);
+                var signature = SignatureParser.ParseMethod(methodDef, true);
                 if (matcher1.IsMatch(signature)) actual1.Add(methodDef);
                 if (matcher2.IsMatch(signature)) actual2.Add(methodDef);
                 if (matcher3.IsMatch(signature)) actual3.Add(methodDef);

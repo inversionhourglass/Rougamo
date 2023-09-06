@@ -7,10 +7,10 @@ namespace Rougamo.Fody.Signature
 {
     public class SignatureParser
     {
-        public static MethodSignature ParseMethod(MethodDefinition methodDef)
+        public static MethodSignature ParseMethod(MethodDefinition methodDef, bool compositeAccessibility)
         {
             var genericParameters = new List<GenericParameterTypeSignature>();
-            var modifier = ParseModifier(methodDef);
+            var modifier = ParseModifier(methodDef, compositeAccessibility);
             var declareType = ParseType(methodDef.DeclaringType, genericParameters, null);
             var typeGenericCount = genericParameters.Count;
             var method = new GenericSignature(methodDef.Name, ParseMethodGenericParameters(methodDef, genericParameters));
@@ -22,12 +22,12 @@ namespace Rougamo.Fody.Signature
             return new MethodSignature(methodDef, modifier, returnType, declareType, method, parameters);
         }
 
-        private static Modifier ParseModifier(MethodDefinition methodDef)
+        private static Modifier ParseModifier(MethodDefinition methodDef, bool compositeAccessibility)
         {
             var modifier = ParseMethodModifier(methodDef.Attributes);
             var isStatic = modifier & Modifier.Static;
             var declaringType = methodDef.DeclaringType;
-            while (declaringType != null)
+            while (declaringType != null && compositeAccessibility)
             {
                 modifier &= ParseTypeModifier(declaringType.Attributes);
                 declaringType = declaringType.DeclaringType;

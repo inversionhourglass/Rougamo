@@ -73,16 +73,17 @@ namespace Rougamo.Fody
         private void ReadConfig()
         {
             var enabled = "true".Equals(GetConfigValue("true", "enabled"), StringComparison.OrdinalIgnoreCase);
+            var compositeAccessibility = "true".Equals(GetConfigValue("false", "composite-accessibility"), StringComparison.OrdinalIgnoreCase);
             var moArrayThreshold = int.Parse(GetConfigValue("4", "moarray-threshold"));
 #if DEBUG
             var recordingIteratorReturns = true;
 #else
-            var recordingIteratorReturns = "true".Equals(GetConfigValue("true", "iterator-returns", "enumerable-returns"), StringComparison.OrdinalIgnoreCase);
+            var recordingIteratorReturns = "true".Equals(GetConfigValue("false", "iterator-returns", "enumerable-returns"), StringComparison.OrdinalIgnoreCase);
 #endif
             var reverseCallNonEntry = "true".Equals(GetConfigValue("true", "reverse-call-nonentry", "reverse-call-ending"), StringComparison.OrdinalIgnoreCase);
             var exceptTypePatterns = GetConfigValue(string.Empty, "except-type-patterns").Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
 
-            _config = new Config(enabled, moArrayThreshold, recordingIteratorReturns, reverseCallNonEntry, exceptTypePatterns);
+            _config = new Config(enabled, compositeAccessibility, moArrayThreshold, recordingIteratorReturns, reverseCallNonEntry, exceptTypePatterns);
         }
 
         private string GetConfigValue(string defaultValue, params string[] configKeys)
