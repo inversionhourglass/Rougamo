@@ -21,7 +21,7 @@ namespace Rougamo.Fody
             {
                 if (mo.Attribute.Properties.TryGet(Constants.PROP_Flags, out var property))
                 {
-                    return (AccessFlags)(sbyte)property!.Value.Argument.Value;
+                    return (AccessFlags)(int)property!.Value.Argument.Value;
                 }
                 typeDef = mo.Attribute.AttributeType.Resolve();
             }
@@ -254,10 +254,13 @@ namespace Rougamo.Fody
             if (from == MoFrom.Method) return true;
 
             var methodFlags = method.Flags(from);
-            var accessable = methodFlags & AccessFlags.All;
-            var category = methodFlags & (AccessFlags.Method | AccessFlags.Property);
-            var categoryMatch = category == 0 || category == (AccessFlags.Method | AccessFlags.Property) || (mo.Flags & category) != 0;
-            return categoryMatch && (mo.Flags & accessable) != 0;
+            var targetAccessable = methodFlags & AccessFlags.All;
+            var targetCategory = methodFlags & (AccessFlags.Method | AccessFlags.Property);
+            var declaredAccessable = mo.Flags & AccessFlags.All;
+            var declaredCategories = mo.Flags & (AccessFlags.Method | AccessFlags.Property);
+            var categoryMatch = declaredCategories == 0 || (declaredCategories & targetCategory) != 0;
+            var accessableMatch = (declaredAccessable & targetAccessable) != 0;
+            return categoryMatch && accessableMatch;
         }
 
         public static bool Any(this RouMethod method, TypeDefinition typeDef)

@@ -21,4 +21,4 @@
 - [ ] 增加CLI，结合CICD解决间接依赖的问题
 - [ ] 解决debug断点问题([#36](https://github.com/inversionhourglass/Rougamo/issues/36))
 - [ ] 解决VS运行时编辑问题([#37](https://github.com/inversionhourglass/Rougamo/issues/37))
-- [ ] 解决MoAttribute应用于高于方法级别时，应用时定义的Flags无法生效的问题([#40](https://github.com/inversionhourglass/Rougamo/issues/37))
+- [x] 解决MoAttribute应用于高于方法级别时，应用时定义的Flags无法生效的问题([#40](https://github.com/inversionhourglass/Rougamo/issues/37))
