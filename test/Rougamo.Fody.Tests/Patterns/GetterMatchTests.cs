@@ -1,7 +1,7 @@
 ﻿using Mono.Cecil;
 using Xunit;
 
-namespace Rougamo.Fody.Tests
+namespace Rougamo.Fody.Tests.Patterns
 {
     [Collection("SignatureUsage")]
     public class GetterMatchTests : PropertyMatchTests

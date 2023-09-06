@@ -1,6 +1,7 @@
 ﻿using Fody;
 using Mono.Cecil;
 using Mono.Cecil.Rocks;
+using Rougamo.Fody;
 using Rougamo.Fody.Signature;
 using System;
 using System.Collections.Generic;
@@ -8,7 +9,7 @@ using System.Linq;
 using System.Numerics;
 using Xunit;
 
-namespace Rougamo.Fody.Tests
+namespace Rougamo.Fody.Tests.Patterns
 {
     [Collection("SignatureUsage")]
     public class ExecutionMatchTests

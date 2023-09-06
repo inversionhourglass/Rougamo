@@ -5,7 +5,7 @@ using Rougamo.Fody.Signature;
 using System.Linq;
 using Xunit;
 
-namespace Rougamo.Fody.Tests
+namespace Rougamo.Fody.Tests.Patterns
 {
     [Collection("SignatureUsage")]
     public class SignatureBasicTests
@@ -686,9 +686,9 @@ namespace Rougamo.Fody.Tests
         private Methods ResolveMethods(TypeDefinition typeDef)
         {
             var methods = new Methods();
-            foreach(var methodDef in typeDef.GetMethods())
+            foreach (var methodDef in typeDef.GetMethods())
             {
-                switch(methodDef.Name)
+                switch (methodDef.Name)
                 {
                     case nameof(Methods.Public):
                         methods.Public = methodDef;
@@ -706,7 +706,7 @@ namespace Rougamo.Fody.Tests
                         methods.ProtectedInternal = methodDef;
                         break;
                     case nameof(Methods.PrivateProtected):
-                      methods.PrivateProtected = methodDef;
+                        methods.PrivateProtected = methodDef;
                         break;
                     case nameof(Methods.Default):
                         methods.Default = methodDef;

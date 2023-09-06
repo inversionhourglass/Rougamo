@@ -3,7 +3,7 @@ using Rougamo.Fody.Signature.Tokens;
 using System;
 using Xunit;
 
-namespace Rougamo.Fody.Tests
+namespace Rougamo.Fody.Tests.Patterns
 {
     public class WildcardMatchTests
     {

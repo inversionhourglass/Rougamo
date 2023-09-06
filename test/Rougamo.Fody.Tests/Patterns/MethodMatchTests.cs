@@ -1,8 +1,9 @@
 ﻿using Mono.Cecil;
+using Rougamo.Fody;
 using System.Linq;
 using Xunit;
 
-namespace Rougamo.Fody.Tests
+namespace Rougamo.Fody.Tests.Patterns
 {
     [Collection("SignatureUsage")]
     public class MethodMatchTests : ExecutionMatchTests

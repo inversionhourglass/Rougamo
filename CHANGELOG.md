@@ -16,8 +16,8 @@
   - [ ] 考虑method与type的访问修饰符问题
   - [x] 支持考虑使用`async`简化Task/ValueTask返回值
   - [x] 考虑使用`?`简化Nullable
-  - [ ] 考虑还有什么能简化的
-- [ ] 方法/类型扫描会扫到编译时生成方法/类型，比如StateMachine系列，需要排除
+  - [x] 考虑还有什么能简化的
+- [x] 方法/类型扫描会扫到编译时生成方法/类型，比如StateMachine系列，需要排除
 - [ ] 增加CLI，结合CICD解决间接依赖的问题
 - [ ] 解决debug断点问题([#36](https://github.com/inversionhourglass/Rougamo/issues/36))
 - [ ] 解决VS运行时编辑问题([#37](https://github.com/inversionhourglass/Rougamo/issues/37))
