@@ -209,10 +209,6 @@ namespace Rougamo.Fody.Signature
                 ParseGenericVirtualNames(signature.NestedTypes[i], $"T{j}");
                 j++;
             }
-            //for (int i = 0; i < signature.NestedTypes.Length; i++)
-            //{
-            //    ParseGenericVirtualNames(signature.NestedTypes[i], $"T{i + 1}");
-            //}
         }
 
         private static void ParseGenericVirtualNames(GenericSignature signature, string prefix)
