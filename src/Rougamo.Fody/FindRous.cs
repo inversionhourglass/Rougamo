@@ -38,6 +38,7 @@ namespace Rougamo.Fody
 
                 foreach (var methodDef in typeDef.Methods)
                 {
+                    // #41 这里排除了构造方法
                     if (methodDef.IsConstructor || (methodDef.Attributes & MethodAttributes.Abstract) != 0) continue;
 
                     var attributes = new Collection<CustomAttribute>();
@@ -189,11 +190,11 @@ namespace Rougamo.Fody
                     var proxy = arg2 is TypeDefinition ? (TypeDefinition)arg2 : ((TypeReference)arg2).Resolve();
                     if (!proxy.DerivesFrom(Constants.TYPE_MoAttribute))
                     {
-                        WriteError($"Mo proxy type must inherit from Rougamo.MoAttribute");
+                        WriteError($"Mo proxy type({proxy.FullName}) must inherit from Rougamo.MoAttribute");
                     }
                     else if (!proxy.GetConstructors().Any(ctor => !ctor.HasParameters))
                     {
-                        WriteError($"Mo proxy type must contains non-parameters constructor");
+                        WriteError($"Mo proxy type({proxy.FullName}) must contains non-parameters constructor");
                     }
                     else
                     {

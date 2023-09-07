@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
+using static Rougamo.Fody.Signature.Patterns.ModifierPattern;
 
 namespace Rougamo.Fody
 {
@@ -16,6 +17,10 @@ namespace Rougamo.Fody
         private readonly HashSet<Mo> _mos;
         private readonly RouType _rouType;
         private Mo[]? _sortedMos;
+
+        private AccessFlags _methodLevelAccessibility;
+        private AccessFlags _typeLevelAccessibility;
+        private AccessFlags? _methodCategory;
 
         public RouMethod(RouType rouType, MethodDefinition methodDef)
         {
@@ -62,39 +67,33 @@ namespace Rougamo.Fody
 
         public AccessFlags Flags(MoFrom from)
         {
-            var flags = AccessFlags.All;
-            bool? isPublic = null;
-            if(from > MoFrom.Method)
-            {
-                isPublic = MethodDef.IsPublic;
-                flags = MethodDef.HasThis ? AccessFlags.Instance : AccessFlags.Static;
-            }
-            if(from > MoFrom.Class)
-            {
-                isPublic &= MethodDef.DeclaringType.IsPublic;
-            }
-            if (isPublic.HasValue)
-            {
-                flags &= isPublic.Value ? AccessFlags.Public : AccessFlags.NonPublic;
-            }
+            InitFlags();
+
+            return (from == MoFrom.Class ? _methodLevelAccessibility : _typeLevelAccessibility) | _methodCategory!.Value;
+        }
+
+        private void InitFlags()
+        {
+            if (_methodCategory != null) return;
+
+            var methodTarget = MethodDef.HasThis ? AccessFlags.Instance : AccessFlags.Static;
+            _methodLevelAccessibility = (MethodDef.IsPublic ? AccessFlags.Public : AccessFlags.NonPublic) & methodTarget;
+            _typeLevelAccessibility = (MethodDef.IsPublic && _rouType.TypeDef.IsPublic ? AccessFlags.Public : AccessFlags.NonPublic) & methodTarget;
+
             foreach (var propertyDef in _rouType.TypeDef.Properties)
             {
                 if (propertyDef.GetMethod == MethodDef)
                 {
-                    flags |= AccessFlags.PropertyGetter;
+                    _methodCategory = AccessFlags.PropertyGetter;
                     break;
                 }
-                else if (propertyDef.SetMethod == MethodDef)
+                if (propertyDef.SetMethod == MethodDef)
                 {
-                    flags |= AccessFlags.PropertySetter;
+                    _methodCategory = AccessFlags.PropertySetter;
                     break;
                 }
             }
-            if ((flags & AccessFlags.Property) == 0)
-            {
-                flags |= AccessFlags.Method;
-            }
-            return flags;
+            _methodCategory ??= AccessFlags.Method;
         }
 
         public int Features => Mos.Aggregate(0, (v, m) => v | m.Features);
