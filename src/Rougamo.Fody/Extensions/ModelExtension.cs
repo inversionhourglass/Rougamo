@@ -1,10 +1,10 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
+using Rougamo.Fody.Signature;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 namespace Rougamo.Fody
 {
@@ -39,6 +39,29 @@ namespace Rougamo.Fody
         }
 
         #endregion Extract-Mo-Flags
+
+        #region Extract-Mo-Pattern
+
+        public static string? ExtractPattern(this Mo mo)
+        {
+            var typeDef = mo.TypeDef;
+            if (mo.Attribute != null)
+            {
+                if (mo.Attribute.Properties.TryGet(Constants.PROP_Pattern, out var property))
+                {
+                    return (string)property!.Value.Argument.Value;
+                }
+                typeDef = mo.Attribute.AttributeType.Resolve();
+            }
+            return ExtractFromIl(typeDef!, Constants.PROP_Pattern, Constants.TYPE_String, ParsePattern);
+        }
+
+        private static string? ParsePattern(Instruction instruction)
+        {
+            return instruction.OpCode.Code == Code.Ldstr ? (string)instruction.Operand : null;
+        }
+
+        #endregion Extract-Mo-Pattern
 
         #region Extract-Mo-Features
 
@@ -205,7 +228,7 @@ namespace Rougamo.Fody
         public static void Initialize(this RouType rouType, MethodDefinition methdDef, CustomAttribute[] assemblyAttributes,
             RepulsionMo[] typeImplements, CustomAttribute[] typeAttributes, TypeDefinition[] typeProxies,
             CustomAttribute[] methodAttributes, TypeDefinition[] methodProxies,
-            string[] assemblyIgnores, string[] typeIgnores, string[] methodIgnores)
+            string[] assemblyIgnores, string[] typeIgnores, string[] methodIgnores, bool compositeAccessibility)
         {
             var ignores = new HashSet<string>(assemblyIgnores);
             ignores.AddRange(typeIgnores);
@@ -213,21 +236,21 @@ namespace Rougamo.Fody
 
             var rouMethod = new RouMethod(rouType, methdDef);
 
-            rouMethod.AddMo(methodAttributes.Where(x => !ignores.Contains(x.AttributeType.FullName)), MoFrom.Method);
-            rouMethod.AddMo(methodProxies.Where(x => !ignores.Contains(x.FullName)), MoFrom.Method);
+            rouMethod.AddMo(methodAttributes.Where(x => !ignores.Contains(x.AttributeType.FullName)), MoFrom.Method, compositeAccessibility);
+            rouMethod.AddMo(methodProxies.Where(x => !ignores.Contains(x.FullName)), MoFrom.Method, compositeAccessibility);
 
-            rouMethod.AddMo(typeAttributes.Where(x => !ignores.Contains(x.AttributeType.FullName)), MoFrom.Class);
-            rouMethod.AddMo(typeProxies.Where(x => !ignores.Contains(x.FullName)), MoFrom.Class);
+            rouMethod.AddMo(typeAttributes.Where(x => !ignores.Contains(x.AttributeType.FullName)), MoFrom.Class, compositeAccessibility);
+            rouMethod.AddMo(typeProxies.Where(x => !ignores.Contains(x.FullName)), MoFrom.Class, compositeAccessibility);
             foreach (var implement in typeImplements.Where(x => !ignores.Contains(x.Mo.FullName)))
             {
                 if (!rouMethod.Any(implement.Repulsions))
                 {
-                    rouMethod.AddMo(implement.Mo, MoFrom.Class);
+                    rouMethod.AddMo(implement.Mo, MoFrom.Class, compositeAccessibility);
                     ignores.AddRange(implement.Repulsions.Select(x => x.FullName));
                 }
             }
 
-            rouMethod.AddMo(assemblyAttributes.Where(x => !ignores.Contains(x.AttributeType.FullName)), MoFrom.Assembly);
+            rouMethod.AddMo(assemblyAttributes.Where(x => !ignores.Contains(x.AttributeType.FullName)), MoFrom.Assembly, compositeAccessibility);
 
             if (rouMethod.MosAny())
             {
@@ -235,24 +258,29 @@ namespace Rougamo.Fody
             }
         }
 
-        public static void AddMo(this RouMethod method, TypeDefinition typeDef, MoFrom from) => AddMo(method, new[] { typeDef }, from);
+        public static void AddMo(this RouMethod method, TypeDefinition typeDef, MoFrom from, bool compositeAccessibility) => AddMo(method, new[] { typeDef }, from, compositeAccessibility);
 
-        public static void AddMo(this RouMethod method, IEnumerable<CustomAttribute> attributes, MoFrom from)
+        public static void AddMo(this RouMethod method, IEnumerable<CustomAttribute> attributes, MoFrom from, bool compositeAccessibility)
         {
-            var mos = attributes.Select(x => new Mo(x, from)).Where(x => MatchMo(method, x, from));
+            var mos = attributes.Select(x => new Mo(x, from)).Where(x => MatchMo(method, x, from, compositeAccessibility));
             method.AddMo(mos);
         }
 
-        public static void AddMo(this RouMethod method, IEnumerable<TypeDefinition> typeDefs, MoFrom from)
+        public static void AddMo(this RouMethod method, IEnumerable<TypeDefinition> typeDefs, MoFrom from, bool compositeAccessibility)
         {
-            var mos = typeDefs.Select(x => new Mo(x, from)).Where(x => MatchMo(method, x, from));
+            var mos = typeDefs.Select(x => new Mo(x, from)).Where(x => MatchMo(method, x, from, compositeAccessibility));
             method.AddMo(mos);
         }
 
-        private static bool MatchMo(RouMethod method, Mo mo, MoFrom from)
+        private static bool MatchMo(RouMethod method, Mo mo, MoFrom from, bool compositeAccessibility)
         {
             if (from == MoFrom.Method) return true;
 
+            return mo.Pattern == null ? MatchMoFlags(method, mo, from) : MatchMoPattern(method, mo, from, compositeAccessibility);
+        }
+
+        private static bool MatchMoFlags(RouMethod method, Mo mo, MoFrom from)
+        {
             var methodFlags = method.Flags(from);
             var targetAccessable = methodFlags & AccessFlags.All;
             var targetCategory = methodFlags & (AccessFlags.Method | AccessFlags.Property);
@@ -261,6 +289,14 @@ namespace Rougamo.Fody
             var categoryMatch = declaredCategories == 0 || (declaredCategories & targetCategory) != 0;
             var accessableMatch = (declaredAccessable & targetAccessable) != 0;
             return categoryMatch && accessableMatch;
+        }
+
+        private static bool MatchMoPattern(RouMethod method, Mo mo, MoFrom from, bool compositeAccessibility)
+        {
+            compositeAccessibility = from == MoFrom.Assembly && compositeAccessibility;
+            var signature = SignatureParser.ParseMethod(method.MethodDef, compositeAccessibility);
+            var pattern = PatternParser.Parse(mo.Pattern!);
+            return pattern.IsMatch(signature);
         }
 
         public static bool Any(this RouMethod method, TypeDefinition typeDef)

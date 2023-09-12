@@ -7,6 +7,8 @@ namespace Rougamo.Fody
     internal sealed class Mo
     {
         private AccessFlags? _flags;
+        private string? _pattern;
+        private bool _patternSet;
         private int? _features;
         private double? _order;
 
@@ -39,6 +41,19 @@ namespace Rougamo.Fody
                     _flags = this.ExtractFlags();
                 }
                 return _flags.Value;
+            }
+        }
+
+        public string? Pattern
+        {
+            get
+            {
+                if (!_patternSet)
+                {
+                    _pattern = this.ExtractPattern();
+                    _patternSet = true;
+                }
+                return _pattern;
             }
         }
 

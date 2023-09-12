@@ -53,7 +53,7 @@ namespace Rougamo.Fody
                     if (methodIgnores == null) continue;
 
                     var methodExtracts = ExtractAttributes(attributes, globalMos.Proxies!, $"method[{methodDef.FullName}]");
-                    rouType.Initialize(methodDef, globalMos.Directs!, implementations, classExtracts.Mos, classExtracts.Proxied, methodExtracts.Mos, methodExtracts.Proxied, globalMos.Ignores!, typeIgnores, methodIgnores);
+                    rouType.Initialize(methodDef, globalMos.Directs!, implementations, classExtracts.Mos, classExtracts.Proxied, methodExtracts.Mos, methodExtracts.Proxied, globalMos.Ignores!, typeIgnores, methodIgnores, _config.CompositeAccessibility);
                 }
                 if (rouType.HasMo)
                 {
