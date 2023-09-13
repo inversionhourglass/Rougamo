@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Xunit;
 
-namespace Rougamo.Fody.Tests
+namespace Rougamo.Fody.Tests.Signatures
 {
     [Collection("SignatureUsage")]
     public class PropertyMatchTests

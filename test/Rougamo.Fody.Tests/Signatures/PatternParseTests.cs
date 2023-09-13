@@ -5,7 +5,7 @@ using Rougamo.Fody.Signature.Patterns.Parsers;
 using Rougamo.Fody.Signature.Tokens;
 using Xunit;
 
-namespace Rougamo.Fody.Tests.Patterns
+namespace Rougamo.Fody.Tests.Signatures
 {
     public class PatternParseTests
     {

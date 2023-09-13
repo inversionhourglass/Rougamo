@@ -3,7 +3,7 @@ using Rougamo.Fody;
 using System.Linq;
 using Xunit;
 
-namespace Rougamo.Fody.Tests.Patterns
+namespace Rougamo.Fody.Tests.Signatures
 {
     [Collection("SignatureUsage")]
     public class MethodMatchTests : ExecutionMatchTests

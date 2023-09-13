@@ -9,7 +9,7 @@ using System.Linq;
 using System.Numerics;
 using Xunit;
 
-namespace Rougamo.Fody.Tests.Patterns
+namespace Rougamo.Fody.Tests.Signatures
 {
     [Collection("SignatureUsage")]
     public class ExecutionMatchTests
