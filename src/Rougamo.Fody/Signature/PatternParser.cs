@@ -111,7 +111,7 @@ namespace Rougamo.Fody.Signature
                 }
             }
 
-            if (start == index) throw new ArgumentException($"Unknow method ({pattern[index]}) at index {index} of {pattern}");
+            if (start == index) throw new ArgumentException($"Unknow pattern method ({pattern[index]}) at index {index} of {pattern}");
             return pattern.Substring(start, index - start);
         }
 
