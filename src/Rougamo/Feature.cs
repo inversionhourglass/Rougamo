@@ -8,9 +8,9 @@ namespace Rougamo
     /// </summary>
     [Flags]
 #if FODY
-    internal enum Feature
+    internal enum Feature : int
 #else
-    public enum Feature
+    public enum Feature : int
 #endif
     {
         /// <summary>

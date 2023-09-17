@@ -21,7 +21,7 @@ namespace Rougamo.Fody
             {
                 if (mo.Attribute.Properties.TryGet(Constants.PROP_Flags, out var property))
                 {
-                    return (AccessFlags)(int)property!.Value.Argument.Value;
+                    return (AccessFlags)Convert.ToInt32(property!.Value.Argument.Value);
                 }
                 typeDef = mo.Attribute.AttributeType.Resolve();
             }
@@ -72,7 +72,7 @@ namespace Rougamo.Fody
             {
                 if (mo.Attribute.Properties.TryGet(Constants.PROP_Features, out var property))
                 {
-                    return (int)property!.Value.Argument.Value;
+                    return Convert.ToInt32(property!.Value.Argument.Value);
                 }
                 typeDef = mo.Attribute.AttributeType.Resolve();
             }

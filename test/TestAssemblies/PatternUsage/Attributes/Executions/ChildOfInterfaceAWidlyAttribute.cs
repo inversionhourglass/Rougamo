@@ -2,6 +2,6 @@
 {
     public class ChildOfInterfaceAWidlyAttribute : SetOnEntryAttribute
     {
-        public override string? Pattern => "execution(* InterfaceA.*(..))";
+        public override string? Pattern => "execution(* InterfaceA+.*(..))";
     }
 }

@@ -11,9 +11,9 @@ namespace Rougamo
     /// </summary>
     [Flags]
 #if FODY
-    internal enum AccessFlags
+    internal enum AccessFlags : int
 #else
-    public enum AccessFlags
+    public enum AccessFlags : int
 #endif
     {
         /// <summary>

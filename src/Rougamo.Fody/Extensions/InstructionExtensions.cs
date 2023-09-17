@@ -173,7 +173,7 @@ namespace Rougamo.Fody
                     return 8;
                 case Code.Ldc_I4_S:
                 case Code.Ldc_I4:
-                    return (int)instruction.Operand;
+                    return Convert.ToInt32(instruction.Operand);
             }
             return null;
         }

@@ -2,6 +2,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
@@ -64,6 +65,7 @@ namespace Rougamo.Context
         /// user defined state data
         /// </summary>
         [Obsolete("The Dictionary type is more suitable for multi-developer scenarios, use Datas property instead")]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public object? Data { get; set; }
 
         /// <summary>
