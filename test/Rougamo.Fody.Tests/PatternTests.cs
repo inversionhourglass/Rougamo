@@ -7,10 +7,10 @@ using PatternUsage.Attributes.Getters;
 using PatternUsage.Attributes.Properties;
 using PatternUsage.Attributes.Setters;
 using System.Collections;
+using System;
 
 namespace Rougamo.Fody.Tests
 {
-    [Collection("PatternUsage")]
     public class PatternTests : TestBase
     {
         public PatternTests() : base("PatternUsage.dll")
@@ -149,12 +149,12 @@ namespace Rougamo.Fody.Tests
             List<string> returnValue;
             var executedMos = new List<string>();
 
-            returnValue = clsA.Call("get_PublicProp");
+            returnValue = clsA.Call("get_PublicProp", null);
             Assert.DoesNotContain(nameof(ChildOfInterfaceABAttribute), returnValue);
             executedMos.Clear();
             clsA.Call("set_PublicProp", executedMos);
             Assert.DoesNotContain(nameof(ChildOfInterfaceABAttribute), executedMos);
-            returnValue = clsA.Call("get_StaticPrivateProp");
+            returnValue = clsA.Call("get_StaticPrivateProp", null);
             Assert.DoesNotContain(nameof(ChildOfInterfaceABAttribute), returnValue);
             executedMos.Clear();
             clsA.Call("set_StaticPrivateProp", executedMos);
@@ -166,12 +166,12 @@ namespace Rougamo.Fody.Tests
             await (Task)clsA.Call("StaticInternalAsync", executedMos);
             Assert.DoesNotContain(nameof(ChildOfInterfaceABAttribute), executedMos);
 
-            returnValue = clsAB.Call("get_PublicProp");
+            returnValue = clsAB.Call("get_PublicProp", null);
             Assert.Contains(nameof(ChildOfInterfaceABAttribute), returnValue);
             executedMos.Clear();
             clsAB.Call("set_PublicProp", executedMos);
             Assert.Contains(nameof(ChildOfInterfaceABAttribute), executedMos);
-            returnValue = clsAB.Call("get_StaticPrivateProp");
+            returnValue = clsAB.Call("get_StaticPrivateProp", null);
             Assert.Contains(nameof(ChildOfInterfaceABAttribute), returnValue);
             executedMos.Clear();
             clsAB.Call("set_StaticPrivateProp", executedMos);
@@ -183,12 +183,12 @@ namespace Rougamo.Fody.Tests
             await (Task)clsAB.Call("StaticInternalAsync", executedMos);
             Assert.Contains(nameof(ChildOfInterfaceABAttribute), executedMos);
 
-            returnValue = xClsA.Call("get_PublicProp");
+            returnValue = xClsA.Call("get_PublicProp", null);
             Assert.DoesNotContain(nameof(ChildOfInterfaceABAttribute), returnValue);
             executedMos.Clear();
             xClsA.Call("set_PublicProp", executedMos);
             Assert.DoesNotContain(nameof(ChildOfInterfaceABAttribute), executedMos);
-            returnValue = xClsA.Call("get_StaticPrivateProp");
+            returnValue = xClsA.Call("get_StaticPrivateProp", null);
             Assert.DoesNotContain(nameof(ChildOfInterfaceABAttribute), returnValue);
             executedMos.Clear();
             xClsA.Call("set_StaticPrivateProp", executedMos);
@@ -200,12 +200,12 @@ namespace Rougamo.Fody.Tests
             await (Task)xClsA.Call("StaticInternalAsync", executedMos);
             Assert.DoesNotContain(nameof(ChildOfInterfaceABAttribute), executedMos);
 
-            returnValue = xClsAB.Call("get_PublicProp");
+            returnValue = xClsAB.Call("get_PublicProp", null);
             Assert.DoesNotContain(nameof(ChildOfInterfaceABAttribute), returnValue);
             executedMos.Clear();
             xClsAB.Call("set_PublicProp", executedMos);
             Assert.DoesNotContain(nameof(ChildOfInterfaceABAttribute), executedMos);
-            returnValue = xClsAB.Call("get_StaticPrivateProp");
+            returnValue = xClsAB.Call("get_StaticPrivateProp", null);
             Assert.DoesNotContain(nameof(ChildOfInterfaceABAttribute), returnValue);
             executedMos.Clear();
             xClsAB.Call("set_StaticPrivateProp", executedMos);
@@ -217,12 +217,12 @@ namespace Rougamo.Fody.Tests
             await (Task)xClsAB.Call("StaticInternalAsync", executedMos);
             Assert.DoesNotContain(nameof(ChildOfInterfaceABAttribute), executedMos);
 
-            returnValue = innerClsAB.Call("get_PublicProp");
+            returnValue = innerClsAB.Call("get_PublicProp", null);
             Assert.Contains(nameof(ChildOfInterfaceABAttribute), returnValue);
             executedMos.Clear();
             innerClsAB.Call("set_PublicProp", executedMos);
             Assert.Contains(nameof(ChildOfInterfaceABAttribute), executedMos);
-            returnValue = innerClsAB.Call("get_StaticPrivateProp");
+            returnValue = innerClsAB.Call("get_StaticPrivateProp", null);
             Assert.Contains(nameof(ChildOfInterfaceABAttribute), returnValue);
             executedMos.Clear();
             innerClsAB.Call("set_StaticPrivateProp", executedMos);
@@ -273,12 +273,12 @@ namespace Rougamo.Fody.Tests
             List<string> returnValue;
             var executedMos = new List<string>();
 
-            returnValue = clsA.Call("get_PublicProp");
+            returnValue = clsA.Call("get_PublicProp", null);
             Assert.Contains(nameof(ChildOfInterfaceAWidlyAttribute), returnValue);
             executedMos.Clear();
             clsA.Call("set_PublicProp", executedMos);
             Assert.Contains(nameof(ChildOfInterfaceAWidlyAttribute), executedMos);
-            returnValue = clsA.Call("get_StaticPrivateProp");
+            returnValue = clsA.Call("get_StaticPrivateProp", null);
             Assert.Contains(nameof(ChildOfInterfaceAWidlyAttribute), returnValue);
             executedMos.Clear();
             clsA.Call("set_StaticPrivateProp", executedMos);
@@ -290,12 +290,12 @@ namespace Rougamo.Fody.Tests
             await (Task)clsA.Call("StaticInternalAsync", executedMos);
             Assert.Contains(nameof(ChildOfInterfaceAWidlyAttribute), executedMos);
 
-            returnValue = clsAB.Call("get_PublicProp");
+            returnValue = clsAB.Call("get_PublicProp", null);
             Assert.Contains(nameof(ChildOfInterfaceAWidlyAttribute), returnValue);
             executedMos.Clear();
             clsAB.Call("set_PublicProp", executedMos);
             Assert.Contains(nameof(ChildOfInterfaceAWidlyAttribute), executedMos);
-            returnValue = clsAB.Call("get_StaticPrivateProp");
+            returnValue = clsAB.Call("get_StaticPrivateProp", null);
             Assert.Contains(nameof(ChildOfInterfaceAWidlyAttribute), returnValue);
             executedMos.Clear();
             clsAB.Call("set_StaticPrivateProp", executedMos);
@@ -307,12 +307,12 @@ namespace Rougamo.Fody.Tests
             await (Task)clsAB.Call("StaticInternalAsync", executedMos);
             Assert.Contains(nameof(ChildOfInterfaceAWidlyAttribute), executedMos);
 
-            returnValue = xClsA.Call("get_PublicProp");
+            returnValue = xClsA.Call("get_PublicProp", null);
             Assert.Contains(nameof(ChildOfInterfaceAWidlyAttribute), returnValue);
             executedMos.Clear();
             xClsA.Call("set_PublicProp", executedMos);
             Assert.Contains(nameof(ChildOfInterfaceAWidlyAttribute), executedMos);
-            returnValue = xClsA.Call("get_StaticPrivateProp");
+            returnValue = xClsA.Call("get_StaticPrivateProp", null);
             Assert.Contains(nameof(ChildOfInterfaceAWidlyAttribute), returnValue);
             executedMos.Clear();
             xClsA.Call("set_StaticPrivateProp", executedMos);
@@ -324,12 +324,12 @@ namespace Rougamo.Fody.Tests
             await (Task)xClsA.Call("StaticInternalAsync", executedMos);
             Assert.Contains(nameof(ChildOfInterfaceAWidlyAttribute), executedMos);
 
-            returnValue = xClsAB.Call("get_PublicProp");
+            returnValue = xClsAB.Call("get_PublicProp", null);
             Assert.Contains(nameof(ChildOfInterfaceAWidlyAttribute), returnValue);
             executedMos.Clear();
             xClsAB.Call("set_PublicProp", executedMos);
             Assert.Contains(nameof(ChildOfInterfaceAWidlyAttribute), executedMos);
-            returnValue = xClsAB.Call("get_StaticPrivateProp");
+            returnValue = xClsAB.Call("get_StaticPrivateProp", null);
             Assert.Contains(nameof(ChildOfInterfaceAWidlyAttribute), returnValue);
             executedMos.Clear();
             xClsAB.Call("set_StaticPrivateProp", executedMos);
@@ -341,12 +341,12 @@ namespace Rougamo.Fody.Tests
             await (Task)xClsAB.Call("StaticInternalAsync", executedMos);
             Assert.Contains(nameof(ChildOfInterfaceAWidlyAttribute), executedMos);
 
-            returnValue = innerClsAB.Call("get_PublicProp");
+            returnValue = innerClsAB.Call("get_PublicProp", null);
             Assert.Contains(nameof(ChildOfInterfaceAWidlyAttribute), returnValue);
             executedMos.Clear();
             innerClsAB.Call("set_PublicProp", executedMos);
             Assert.Contains(nameof(ChildOfInterfaceAWidlyAttribute), executedMos);
-            returnValue = innerClsAB.Call("get_StaticPrivateProp");
+            returnValue = innerClsAB.Call("get_StaticPrivateProp", null);
             Assert.Contains(nameof(ChildOfInterfaceAWidlyAttribute), returnValue);
             executedMos.Clear();
             innerClsAB.Call("set_StaticPrivateProp", executedMos);
@@ -396,22 +396,22 @@ namespace Rougamo.Fody.Tests
             var mapArg = new Dictionary<string, string>();
             var sortedMapArg = new SortedList<string, string>();
 
-            listReturn = clsA.Call("get_PublicProp");
+            listReturn = clsA.Call("get_PublicProp", null);
             Assert.DoesNotContain(nameof(ReturnsDictionaryGenericAttribute), listReturn);
             listArg.Clear();
             clsA.Call("set_PublicProp", listArg);
             Assert.DoesNotContain(nameof(ReturnsDictionaryGenericAttribute), listArg);
-            listReturn = clsA.Call("get_StaticPrivateProp");
+            listReturn = clsA.Call("get_StaticPrivateProp", null);
             Assert.DoesNotContain(nameof(ReturnsDictionaryGenericAttribute), listReturn);
             listArg.Clear();
             clsA.Call("set_StaticPrivateProp", listArg);
             Assert.DoesNotContain(nameof(ReturnsDictionaryGenericAttribute), listArg);
-            imapReturn = clsA.Call("get_ProtectedInternalProp");
+            imapReturn = clsA.Call("get_ProtectedInternalProp", null);
             Assert.True(imapReturn.Contains(nameof(ReturnsDictionaryGenericAttribute)));
             mapArg.Clear();
             clsA.Call("set_ProtectedInternalProp", mapArg);
             Assert.False(mapArg.ContainsKey(nameof(ReturnsDictionaryGenericAttribute)));
-            imapReturn = clsA.Call("get_DefaultProp");
+            imapReturn = clsA.Call("get_DefaultProp", null);
             Assert.False(imapReturn.Contains(nameof(ReturnsDictionaryGenericAttribute)));
             sortedMapArg.Clear();
             clsA.Call("set_DefaultProp", sortedMapArg);
@@ -422,25 +422,25 @@ namespace Rougamo.Fody.Tests
             listArg.Clear();
             await (Task)clsA.Call("StaticInternalAsync", listArg);
             Assert.DoesNotContain(nameof(ReturnsDictionaryGenericAttribute), listArg);
-            listReturn = clsA.Call("PrivateProtected");
+            listReturn = clsA.Call("PrivateProtected", null);
             Assert.DoesNotContain(nameof(ReturnsDictionaryGenericAttribute), listReturn);
 
-            listReturn = xClsAB.Call("get_PublicProp");
+            listReturn = xClsAB.Call("get_PublicProp", null);
             Assert.DoesNotContain(nameof(ReturnsDictionaryGenericAttribute), listReturn);
             listArg.Clear();
             xClsAB.Call("set_PublicProp", listArg);
             Assert.DoesNotContain(nameof(ReturnsDictionaryGenericAttribute), listArg);
-            listReturn = xClsAB.Call("get_StaticPrivateProp");
+            listReturn = xClsAB.Call("get_StaticPrivateProp", null);
             Assert.DoesNotContain(nameof(ReturnsDictionaryGenericAttribute), listReturn);
             listArg.Clear();
             xClsAB.Call("set_StaticPrivateProp", listArg);
             Assert.DoesNotContain(nameof(ReturnsDictionaryGenericAttribute), listArg);
-            imapReturn = xClsAB.Call("get_ProtectedInternalProp");
+            imapReturn = xClsAB.Call("get_ProtectedInternalProp", null);
             Assert.True(imapReturn.Contains(nameof(ReturnsDictionaryGenericAttribute)));
             mapArg.Clear();
             xClsAB.Call("set_ProtectedInternalProp", mapArg);
             Assert.False(mapArg.ContainsKey(nameof(ReturnsDictionaryGenericAttribute)));
-            imapReturn = xClsAB.Call("get_DefaultProp");
+            imapReturn = xClsAB.Call("get_DefaultProp", null);
             Assert.False(imapReturn.Contains(nameof(ReturnsDictionaryGenericAttribute)));
             sortedMapArg.Clear();
             xClsAB.Call("set_DefaultProp", sortedMapArg);
@@ -451,7 +451,7 @@ namespace Rougamo.Fody.Tests
             listArg.Clear();
             await (Task)xClsAB.Call("StaticInternalAsync", listArg);
             Assert.DoesNotContain(nameof(ReturnsDictionaryGenericAttribute), listArg);
-            listReturn = xClsAB.Call("PrivateProtected");
+            listReturn = xClsAB.Call("PrivateProtected", null);
             Assert.DoesNotContain(nameof(ReturnsDictionaryGenericAttribute), listReturn);
         }
 
@@ -467,22 +467,22 @@ namespace Rougamo.Fody.Tests
             var mapArg = new Dictionary<string, string>();
             var sortedMapArg = new SortedList<string, string>();
 
-            listReturn = clsA.Call("get_PublicProp");
+            listReturn = clsA.Call("get_PublicProp", null);
             Assert.DoesNotContain(nameof(ReturnsChildOfIDictionaryAttribute), listReturn);
             listArg.Clear();
             clsA.Call("set_PublicProp", listArg);
             Assert.DoesNotContain(nameof(ReturnsChildOfIDictionaryAttribute), listArg);
-            listReturn = clsA.Call("get_StaticPrivateProp");
+            listReturn = clsA.Call("get_StaticPrivateProp", null);
             Assert.DoesNotContain(nameof(ReturnsChildOfIDictionaryAttribute), listReturn);
             listArg.Clear();
             clsA.Call("set_StaticPrivateProp", listArg);
             Assert.DoesNotContain(nameof(ReturnsChildOfIDictionaryAttribute), listArg);
-            imapReturn = clsA.Call("get_ProtectedInternalProp");
+            imapReturn = clsA.Call("get_ProtectedInternalProp", null);
             Assert.False(imapReturn.Contains(nameof(ReturnsChildOfIDictionaryAttribute)));
             mapArg.Clear();
             clsA.Call("set_ProtectedInternalProp", mapArg);
             Assert.True(mapArg.ContainsKey(nameof(ReturnsChildOfIDictionaryAttribute)));
-            imapReturn = clsA.Call("get_DefaultProp");
+            imapReturn = clsA.Call("get_DefaultProp", null);
             Assert.False(imapReturn.Contains(nameof(ReturnsChildOfIDictionaryAttribute)));
             sortedMapArg.Clear();
             clsA.Call("set_DefaultProp", sortedMapArg);
@@ -493,25 +493,25 @@ namespace Rougamo.Fody.Tests
             listArg.Clear();
             await (Task)clsA.Call("StaticInternalAsync", listArg);
             Assert.DoesNotContain(nameof(ReturnsChildOfIDictionaryAttribute), listArg);
-            listReturn = clsA.Call("PrivateProtected");
+            listReturn = clsA.Call("PrivateProtected", null);
             Assert.DoesNotContain(nameof(ReturnsChildOfIDictionaryAttribute), listReturn);
 
-            listReturn = xClsAB.Call("get_PublicProp");
+            listReturn = xClsAB.Call("get_PublicProp", null);
             Assert.DoesNotContain(nameof(ReturnsChildOfIDictionaryAttribute), listReturn);
             listArg.Clear();
             xClsAB.Call("set_PublicProp", listArg);
             Assert.DoesNotContain(nameof(ReturnsChildOfIDictionaryAttribute), listArg);
-            listReturn = xClsAB.Call("get_StaticPrivateProp");
+            listReturn = xClsAB.Call("get_StaticPrivateProp", null);
             Assert.DoesNotContain(nameof(ReturnsChildOfIDictionaryAttribute), listReturn);
             listArg.Clear();
             xClsAB.Call("set_StaticPrivateProp", listArg);
             Assert.DoesNotContain(nameof(ReturnsChildOfIDictionaryAttribute), listArg);
-            imapReturn = xClsAB.Call("get_ProtectedInternalProp");
+            imapReturn = xClsAB.Call("get_ProtectedInternalProp", null);
             Assert.False(imapReturn.Contains(nameof(ReturnsChildOfIDictionaryAttribute)));
             mapArg.Clear();
             xClsAB.Call("set_ProtectedInternalProp", mapArg);
             Assert.True(mapArg.ContainsKey(nameof(ReturnsChildOfIDictionaryAttribute)));
-            imapReturn = xClsAB.Call("get_DefaultProp");
+            imapReturn = xClsAB.Call("get_DefaultProp", null);
             Assert.False(imapReturn.Contains(nameof(ReturnsChildOfIDictionaryAttribute)));
             sortedMapArg.Clear();
             xClsAB.Call("set_DefaultProp", sortedMapArg);
@@ -522,7 +522,7 @@ namespace Rougamo.Fody.Tests
             listArg.Clear();
             await (Task)xClsAB.Call("StaticInternalAsync", listArg);
             Assert.DoesNotContain(nameof(ReturnsChildOfIDictionaryAttribute), listArg);
-            listReturn = xClsAB.Call("PrivateProtected");
+            listReturn = xClsAB.Call("PrivateProtected", null);
             Assert.DoesNotContain(nameof(ReturnsChildOfIDictionaryAttribute), listReturn);
         }
 
@@ -538,22 +538,22 @@ namespace Rougamo.Fody.Tests
             var mapArg = new Dictionary<string, string>();
             var sortedMapArg = new SortedList<string, string>();
 
-            listReturn = clsA.Call("get_PublicProp");
+            listReturn = clsA.Call("get_PublicProp", null);
             Assert.Contains(nameof(ReturnsChildOfDicOrListAttribute), listReturn);
             listArg.Clear();
             clsA.Call("set_PublicProp", listArg);
             Assert.Contains(nameof(ReturnsChildOfDicOrListAttribute), listArg);
-            listReturn = clsA.Call("get_StaticPrivateProp");
+            listReturn = clsA.Call("get_StaticPrivateProp", null);
             Assert.Contains(nameof(ReturnsChildOfDicOrListAttribute), listReturn);
             listArg.Clear();
             clsA.Call("set_StaticPrivateProp", listArg);
             Assert.Contains(nameof(ReturnsChildOfDicOrListAttribute), listArg);
-            imapReturn = clsA.Call("get_ProtectedInternalProp");
+            imapReturn = clsA.Call("get_ProtectedInternalProp", null);
             Assert.True(imapReturn.Contains(nameof(ReturnsChildOfDicOrListAttribute)));
             mapArg.Clear();
             clsA.Call("set_ProtectedInternalProp", mapArg);
             Assert.True(mapArg.ContainsKey(nameof(ReturnsChildOfDicOrListAttribute)));
-            imapReturn = clsA.Call("get_DefaultProp");
+            imapReturn = clsA.Call("get_DefaultProp", null);
             Assert.True(imapReturn.Contains(nameof(ReturnsChildOfDicOrListAttribute)));
             sortedMapArg.Clear();
             clsA.Call("set_DefaultProp", sortedMapArg);
@@ -564,25 +564,25 @@ namespace Rougamo.Fody.Tests
             listArg.Clear();
             await (Task)clsA.Call("StaticInternalAsync", listArg);
             Assert.DoesNotContain(nameof(ReturnsChildOfDicOrListAttribute), listArg);
-            listReturn = clsA.Call("PrivateProtected");
+            listReturn = clsA.Call("PrivateProtected", null);
             Assert.DoesNotContain(nameof(ReturnsChildOfDicOrListAttribute), listReturn);
 
-            listReturn = xClsAB.Call("get_PublicProp");
+            listReturn = xClsAB.Call("get_PublicProp", null);
             Assert.Contains(nameof(ReturnsChildOfDicOrListAttribute), listReturn);
             listArg.Clear();
             xClsAB.Call("set_PublicProp", listArg);
             Assert.Contains(nameof(ReturnsChildOfDicOrListAttribute), listArg);
-            listReturn = xClsAB.Call("get_StaticPrivateProp");
+            listReturn = xClsAB.Call("get_StaticPrivateProp", null);
             Assert.Contains(nameof(ReturnsChildOfDicOrListAttribute), listReturn);
             listArg.Clear();
             xClsAB.Call("set_StaticPrivateProp", listArg);
             Assert.Contains(nameof(ReturnsChildOfDicOrListAttribute), listArg);
-            imapReturn = xClsAB.Call("get_ProtectedInternalProp");
+            imapReturn = xClsAB.Call("get_ProtectedInternalProp", null);
             Assert.True(imapReturn.Contains(nameof(ReturnsChildOfDicOrListAttribute)));
             mapArg.Clear();
             xClsAB.Call("set_ProtectedInternalProp", mapArg);
             Assert.True(mapArg.ContainsKey(nameof(ReturnsChildOfDicOrListAttribute)));
-            imapReturn = xClsAB.Call("get_DefaultProp");
+            imapReturn = xClsAB.Call("get_DefaultProp", null);
             Assert.True(imapReturn.Contains(nameof(ReturnsChildOfDicOrListAttribute)));
             sortedMapArg.Clear();
             xClsAB.Call("set_DefaultProp", sortedMapArg);
@@ -593,8 +593,218 @@ namespace Rougamo.Fody.Tests
             listArg.Clear();
             await (Task)xClsAB.Call("StaticInternalAsync", listArg);
             Assert.DoesNotContain(nameof(ReturnsChildOfDicOrListAttribute), listArg);
-            listReturn = xClsAB.Call("PrivateProtected");
+            listReturn = xClsAB.Call("PrivateProtected", null);
             Assert.DoesNotContain(nameof(ReturnsChildOfDicOrListAttribute), listReturn);
+        }
+
+        [Fact]
+        public async Task MethodAnyMethodGenericTest()
+        {
+            var clsAB = GetInstance("PatternUsage.ClsAB", true);
+            var xClsA = GetInstance("PatternUsage.X.XClsA", true);
+
+            List<string> listReturn;
+            var listArg = new List<string>();
+
+            listReturn = clsAB.Call("get_PublicProp", null);
+            Assert.DoesNotContain(nameof(AnyMethodGenericAttribute), listReturn);
+            listArg.Clear();
+            clsAB.Call("set_PublicProp", listArg);
+            Assert.DoesNotContain(nameof(AnyMethodGenericAttribute), listArg);
+            listReturn = clsAB.Call("get_StaticPrivateProp", null);
+            Assert.DoesNotContain(nameof(AnyMethodGenericAttribute), listReturn);
+            listArg.Clear();
+            clsAB.Call("set_StaticPrivateProp", listArg);
+            Assert.DoesNotContain(nameof(AnyMethodGenericAttribute), listArg);
+            listArg.Clear();
+            clsAB.Call("Protected", listArg);
+            Assert.DoesNotContain(nameof(AnyMethodGenericAttribute), listArg);
+            listArg.Clear();
+            await (Task)clsAB.Call("StaticInternalAsync", listArg);
+            Assert.DoesNotContain(nameof(AnyMethodGenericAttribute), listArg);
+            listArg.Clear();
+            await (Task)clsAB.Call("PublicSingleGenericAsync", listArg, typeof(int));
+            Assert.Contains(nameof(AnyMethodGenericAttribute), listArg);
+            listArg.Clear();
+            clsAB.Call("ProtectedStaticDoubleGeneric", listArg, typeof(DateTime), typeof(Guid));
+            Assert.Contains(nameof(AnyMethodGenericAttribute), listArg);
+
+            listReturn = xClsA.Call("get_PublicProp", null);
+            Assert.DoesNotContain(nameof(AnyMethodGenericAttribute), listReturn);
+            listArg.Clear();
+            xClsA.Call("set_PublicProp", listArg);
+            Assert.DoesNotContain(nameof(AnyMethodGenericAttribute), listArg);
+            listReturn = xClsA.Call("get_StaticPrivateProp", null);
+            Assert.DoesNotContain(nameof(AnyMethodGenericAttribute), listReturn);
+            listArg.Clear();
+            xClsA.Call("set_StaticPrivateProp", listArg);
+            Assert.DoesNotContain(nameof(AnyMethodGenericAttribute), listArg);
+            listArg.Clear();
+            xClsA.Call("Protected", listArg);
+            Assert.DoesNotContain(nameof(AnyMethodGenericAttribute), listArg);
+            listArg.Clear();
+            await (Task)xClsA.Call("StaticInternalAsync", listArg);
+            Assert.DoesNotContain(nameof(AnyMethodGenericAttribute), listArg);
+            listArg.Clear();
+            await (Task)xClsA.Call("PublicSingleGenericAsync", listArg, typeof(int));
+            Assert.Contains(nameof(AnyMethodGenericAttribute), listArg);
+            listArg.Clear();
+            xClsA.Call("ProtectedStaticDoubleGeneric", listArg, typeof(DateTime), typeof(Guid));
+            Assert.Contains(nameof(AnyMethodGenericAttribute), listArg);
+        }
+
+        [Fact]
+        public async Task ExecutionSingleMethodGenericTest()
+        {
+            var clsAB = GetInstance("PatternUsage.ClsAB", true);
+            var xClsA = GetInstance("PatternUsage.X.XClsA", true);
+
+            List<string> listReturn;
+            var listArg = new List<string>();
+
+            listReturn = clsAB.Call("get_PublicProp", null);
+            Assert.DoesNotContain(nameof(SingleMethodGenericAttribute), listReturn);
+            listArg.Clear();
+            clsAB.Call("set_PublicProp", listArg);
+            Assert.DoesNotContain(nameof(SingleMethodGenericAttribute), listArg);
+            listReturn = clsAB.Call("get_StaticPrivateProp", null);
+            Assert.DoesNotContain(nameof(SingleMethodGenericAttribute), listReturn);
+            listArg.Clear();
+            clsAB.Call("set_StaticPrivateProp", listArg);
+            Assert.DoesNotContain(nameof(SingleMethodGenericAttribute), listArg);
+            listArg.Clear();
+            clsAB.Call("Protected", listArg);
+            Assert.DoesNotContain(nameof(SingleMethodGenericAttribute), listArg);
+            listArg.Clear();
+            await (Task)clsAB.Call("StaticInternalAsync", listArg);
+            Assert.DoesNotContain(nameof(SingleMethodGenericAttribute), listArg);
+            listArg.Clear();
+            await (Task)clsAB.Call("PublicSingleGenericAsync", listArg, typeof(int));
+            Assert.Contains(nameof(SingleMethodGenericAttribute), listArg);
+            listArg.Clear();
+            clsAB.Call("ProtectedStaticDoubleGeneric", listArg, typeof(DateTime), typeof(Guid));
+            Assert.DoesNotContain(nameof(SingleMethodGenericAttribute), listArg);
+
+            listReturn = xClsA.Call("get_PublicProp", null);
+            Assert.DoesNotContain(nameof(SingleMethodGenericAttribute), listReturn);
+            listArg.Clear();
+            xClsA.Call("set_PublicProp", listArg);
+            Assert.DoesNotContain(nameof(SingleMethodGenericAttribute), listArg);
+            listReturn = xClsA.Call("get_StaticPrivateProp", null);
+            Assert.DoesNotContain(nameof(SingleMethodGenericAttribute), listReturn);
+            listArg.Clear();
+            xClsA.Call("set_StaticPrivateProp", listArg);
+            Assert.DoesNotContain(nameof(SingleMethodGenericAttribute), listArg);
+            listArg.Clear();
+            xClsA.Call("Protected", listArg);
+            Assert.DoesNotContain(nameof(SingleMethodGenericAttribute), listArg);
+            listArg.Clear();
+            await (Task)xClsA.Call("StaticInternalAsync", listArg);
+            Assert.DoesNotContain(nameof(SingleMethodGenericAttribute), listArg);
+            listArg.Clear();
+            await (Task)xClsA.Call("PublicSingleGenericAsync", listArg, typeof(int));
+            Assert.Contains(nameof(SingleMethodGenericAttribute), listArg);
+            listArg.Clear();
+            xClsA.Call("ProtectedStaticDoubleGeneric", listArg, typeof(DateTime), typeof(Guid));
+            Assert.DoesNotContain(nameof(SingleMethodGenericAttribute), listArg);
+        }
+
+        [Fact]
+        public async Task ExecutionDoubleMethodGenericTest()
+        {
+            var clsAB = GetInstance("PatternUsage.ClsAB", true);
+            var xClsA = GetInstance("PatternUsage.X.XClsA", true);
+
+            List<string> listReturn;
+            var listArg = new List<string>();
+
+            listReturn = clsAB.Call("get_PublicProp", null);
+            Assert.DoesNotContain(nameof(DoubleMethodGenericAttribute), listReturn);
+            listArg.Clear();
+            clsAB.Call("set_PublicProp", listArg);
+            Assert.DoesNotContain(nameof(DoubleMethodGenericAttribute), listArg);
+            listReturn = clsAB.Call("get_StaticPrivateProp", null);
+            Assert.DoesNotContain(nameof(DoubleMethodGenericAttribute), listReturn);
+            listArg.Clear();
+            clsAB.Call("set_StaticPrivateProp", listArg);
+            Assert.DoesNotContain(nameof(DoubleMethodGenericAttribute), listArg);
+            listArg.Clear();
+            clsAB.Call("Protected", listArg);
+            Assert.DoesNotContain(nameof(DoubleMethodGenericAttribute), listArg);
+            listArg.Clear();
+            await (Task)clsAB.Call("StaticInternalAsync", listArg);
+            Assert.DoesNotContain(nameof(DoubleMethodGenericAttribute), listArg);
+            listArg.Clear();
+            await (Task)clsAB.Call("PublicSingleGenericAsync", listArg, typeof(int));
+            Assert.DoesNotContain(nameof(DoubleMethodGenericAttribute), listArg);
+            listArg.Clear();
+            clsAB.Call("ProtectedStaticDoubleGeneric", listArg, typeof(DateTime), typeof(Guid));
+            Assert.Contains(nameof(DoubleMethodGenericAttribute), listArg);
+
+            listReturn = xClsA.Call("get_PublicProp", null);
+            Assert.DoesNotContain(nameof(DoubleMethodGenericAttribute), listReturn);
+            listArg.Clear();
+            xClsA.Call("set_PublicProp", listArg);
+            Assert.DoesNotContain(nameof(DoubleMethodGenericAttribute), listArg);
+            listReturn = xClsA.Call("get_StaticPrivateProp", null);
+            Assert.DoesNotContain(nameof(DoubleMethodGenericAttribute), listReturn);
+            listArg.Clear();
+            xClsA.Call("set_StaticPrivateProp", listArg);
+            Assert.DoesNotContain(nameof(DoubleMethodGenericAttribute), listArg);
+            listArg.Clear();
+            xClsA.Call("Protected", listArg);
+            Assert.DoesNotContain(nameof(DoubleMethodGenericAttribute), listArg);
+            listArg.Clear();
+            await (Task)xClsA.Call("StaticInternalAsync", listArg);
+            Assert.DoesNotContain(nameof(DoubleMethodGenericAttribute), listArg);
+            listArg.Clear();
+            await (Task)xClsA.Call("PublicSingleGenericAsync", listArg, typeof(int));
+            Assert.DoesNotContain(nameof(DoubleMethodGenericAttribute), listArg);
+            listArg.Clear();
+            xClsA.Call("ProtectedStaticDoubleGeneric", listArg, typeof(DateTime), typeof(Guid));
+            Assert.Contains(nameof(DoubleMethodGenericAttribute), listArg);
+        }
+
+        [Fact]
+        public async Task ExecutionSingleTypeGenericTest()
+        {
+
+        }
+
+        [Fact]
+        public async Task ExecutionDoubleTypeGenericTest()
+        {
+
+        }
+
+        [Fact]
+        public async Task MethodNestedTypeTest()
+        {
+
+        }
+
+        [Fact]
+        public async Task MethodAsyncSyntaxTest()
+        {
+
+        }
+
+        [Fact]
+        public async Task ExecutionTupleSyntaxTest()
+        {
+
+        }
+
+        [Fact]
+        public async Task ExecutionNullableSyntaxTest()
+        {
+
+        }
+
+        [Fact]
+        public async Task RegexTest()
+        {
+
         }
     }
 }

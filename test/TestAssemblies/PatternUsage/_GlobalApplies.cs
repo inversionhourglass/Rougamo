@@ -10,3 +10,6 @@ using PatternUsage.Attributes.Setters;
 [module:ReturnsDictionaryGeneric]
 [module:ReturnsChildOfIDictionary]
 [assembly: ReturnsChildOfDicOrList]
+[assembly:AnyMethodGeneric]
+[assembly:SingleMethodGeneric]
+[assembly:DoubleMethodGeneric]
