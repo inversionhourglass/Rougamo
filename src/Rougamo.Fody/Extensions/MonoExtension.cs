@@ -258,7 +258,9 @@ namespace Rougamo.Fody
             {
                 throw new RougamoException($"Cannot resolve {typeDef.FullName}, scope type is {typeDef.Scope.GetType()}");
             }
-            var fullName = $"{typeDef.FullName}, {assemblyName}";
+            var fullName = typeDef.FullName;
+            if (typeDef.IsNested) fullName = fullName.Replace("/", "+");
+            fullName = $"{fullName}, {assemblyName}";
             return Type.GetType(fullName);
         }
 

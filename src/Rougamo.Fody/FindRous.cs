@@ -17,15 +17,26 @@ namespace Rougamo.Fody
             ExtractTypeReferences();
         }
 
+        private void ExpandTypes(Collection<TypeDefinition> topLevelTypes, List<TypeDefinition> expandedTypes)
+        {
+            foreach (var type in topLevelTypes)
+            {
+                expandedTypes.Add(type);
+                ExpandTypes(type.NestedTypes, expandedTypes);
+            }
+        }
+
         private void FullScan()
         {
             var globalMos = FindGlobalAttributes();
 
             if (globalMos.GlobalIgnore) return;
 
-            foreach (var typeDef in ModuleDefinition.Types)
+            var types = new List<TypeDefinition>();
+            ExpandTypes(ModuleDefinition.Types, types);
+            foreach (var typeDef in types)
             {
-                if (!typeDef.IsClass || typeDef.IsValueType || typeDef.IsDelegate() || !typeDef.HasMethods || typeDef.CustomAttributes.Any(x => x.AttributeType.Is(Constants.TYPE_CompilerGeneratedAttribute))) continue;
+                if (!typeDef.IsClass || typeDef.IsValueType || typeDef.IsDelegate() || !typeDef.HasMethods || typeDef.CustomAttributes.Any(x => x.AttributeType.Is(Constants.TYPE_CompilerGeneratedAttribute) || x.AttributeType.Is(Constants.TYPE_Runtime_CompilerGeneratedAttribute))) continue;
                 if (typeDef.Implement(Constants.TYPE_IMo) || typeDef.DerivesFromAny(Constants.TYPE_MoRepulsion, Constants.TYPE_IgnoreMoAttribute, Constants.TYPE_MoProxyAttribute)) continue;
                 if (_config.ExceptTypePatterns.Any(x => x.IsMatch(typeDef.FullName))) continue;
 
