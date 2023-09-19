@@ -768,17 +768,285 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task ExecutionSingleTypeGenericTest()
         {
+            var singleGeneric = GetInstance("PatternUsage.SingleGeneric`1", true, x => x.MakeGenericType(typeof(int)));
+            var doubleGeneric = GetInstance("PatternUsage.X.DoubleGeneric`2", true, x => x.MakeGenericType(typeof(string), typeof(double)));
+            var clsAB = GetInstance("PatternUsage.ClsAB", true);
 
+            List<string> returnValue;
+            var executedMos = new List<string>();
+
+            returnValue = singleGeneric.Call("get_PublicProp", null);
+            Assert.Contains(nameof(SingleTypeGenericAttribute), returnValue);
+            executedMos.Clear();
+            singleGeneric.Call("set_PublicProp", executedMos);
+            Assert.Contains(nameof(SingleTypeGenericAttribute), executedMos);
+            executedMos.Clear();
+            await (Task)singleGeneric.Call("StaticInternalAsync", executedMos);
+            Assert.Contains(nameof(SingleTypeGenericAttribute), executedMos);
+            executedMos.Clear();
+            singleGeneric.Call("ProtectedGeneric", executedMos, typeof(DateTime));
+            Assert.Contains(nameof(SingleTypeGenericAttribute), executedMos);
+
+            returnValue = doubleGeneric.Call("get_PublicProp", null);
+            Assert.DoesNotContain(nameof(SingleTypeGenericAttribute), returnValue);
+            executedMos.Clear();
+            doubleGeneric.Call("set_PublicProp", executedMos);
+            Assert.DoesNotContain(nameof(SingleTypeGenericAttribute), executedMos);
+            executedMos.Clear();
+            await (Task)doubleGeneric.Call("StaticInternalAsync", executedMos);
+            Assert.DoesNotContain(nameof(SingleTypeGenericAttribute), executedMos);
+            executedMos.Clear();
+            doubleGeneric.Call("ProtectedGeneric", executedMos, typeof(DateTime));
+            Assert.DoesNotContain(nameof(SingleTypeGenericAttribute), executedMos);
+
+            returnValue = clsAB.Call("get_PublicProp", null);
+            Assert.DoesNotContain(nameof(SingleTypeGenericAttribute), returnValue);
+            executedMos.Clear();
+            clsAB.Call("set_PublicProp", executedMos);
+            Assert.DoesNotContain(nameof(SingleTypeGenericAttribute), executedMos);
+            executedMos.Clear();
+            await (Task)clsAB.Call("StaticInternalAsync", executedMos);
+            Assert.DoesNotContain(nameof(SingleTypeGenericAttribute), executedMos);
+            executedMos.Clear();
+            await (Task)clsAB.Call("PublicSingleGenericAsync", executedMos, typeof(string));
+            Assert.DoesNotContain(nameof(SingleTypeGenericAttribute), executedMos);
+            executedMos.Clear();
+            clsAB.Call("ProtectedStaticDoubleGeneric", executedMos, typeof(Guid), typeof(decimal));
+            Assert.DoesNotContain(nameof(SingleTypeGenericAttribute), executedMos);
         }
 
         [Fact]
         public async Task ExecutionDoubleTypeGenericTest()
         {
+            var singleGeneric = GetInstance("PatternUsage.SingleGeneric`1", true, x => x.MakeGenericType(typeof(int)));
+            var doubleGeneric = GetInstance("PatternUsage.X.DoubleGeneric`2", true, x => x.MakeGenericType(typeof(string), typeof(double)));
+            var clsAB = GetInstance("PatternUsage.ClsAB", true);
 
+            List<string> returnValue;
+            var executedMos = new List<string>();
+
+            returnValue = singleGeneric.Call("get_PublicProp", null);
+            Assert.DoesNotContain(nameof(DoubleTypeGenericAttribute), returnValue);
+            executedMos.Clear();
+            singleGeneric.Call("set_PublicProp", executedMos);
+            Assert.DoesNotContain(nameof(DoubleTypeGenericAttribute), executedMos);
+            executedMos.Clear();
+            await (Task)singleGeneric.Call("StaticInternalAsync", executedMos);
+            Assert.DoesNotContain(nameof(DoubleTypeGenericAttribute), executedMos);
+            executedMos.Clear();
+            singleGeneric.Call("ProtectedGeneric", executedMos, typeof(DateTime));
+            Assert.DoesNotContain(nameof(DoubleTypeGenericAttribute), executedMos);
+
+            returnValue = doubleGeneric.Call("get_PublicProp", null);
+            Assert.Contains(nameof(DoubleTypeGenericAttribute), returnValue);
+            executedMos.Clear();
+            doubleGeneric.Call("set_PublicProp", executedMos);
+            Assert.Contains(nameof(DoubleTypeGenericAttribute), executedMos);
+            executedMos.Clear();
+            await (Task)doubleGeneric.Call("StaticInternalAsync", executedMos);
+            Assert.Contains(nameof(DoubleTypeGenericAttribute), executedMos);
+            executedMos.Clear();
+            doubleGeneric.Call("ProtectedGeneric", executedMos, typeof(DateTime));
+            Assert.Contains(nameof(DoubleTypeGenericAttribute), executedMos);
+
+            returnValue = clsAB.Call("get_PublicProp", null);
+            Assert.DoesNotContain(nameof(DoubleTypeGenericAttribute), returnValue);
+            executedMos.Clear();
+            clsAB.Call("set_PublicProp", executedMos);
+            Assert.DoesNotContain(nameof(DoubleTypeGenericAttribute), executedMos);
+            executedMos.Clear();
+            await (Task)clsAB.Call("StaticInternalAsync", executedMos);
+            Assert.DoesNotContain(nameof(DoubleTypeGenericAttribute), executedMos);
+            executedMos.Clear();
+            await (Task)clsAB.Call("PublicSingleGenericAsync", executedMos, typeof(string));
+            Assert.DoesNotContain(nameof(DoubleTypeGenericAttribute), executedMos);
+            executedMos.Clear();
+            clsAB.Call("ProtectedStaticDoubleGeneric", executedMos, typeof(Guid), typeof(decimal));
+            Assert.DoesNotContain(nameof(DoubleTypeGenericAttribute), executedMos);
+        }
+
+        [Fact]
+        public async Task ExecutionAnyTypeGenericTest()
+        {
+            var singleGeneric = GetInstance("PatternUsage.SingleGeneric`1", true, x => x.MakeGenericType(typeof(int)));
+            var doubleGeneric = GetInstance("PatternUsage.X.DoubleGeneric`2", true, x => x.MakeGenericType(typeof(string), typeof(double)));
+            var clsAB = GetInstance("PatternUsage.ClsAB", true);
+
+            List<string> returnValue;
+            var executedMos = new List<string>();
+
+            returnValue = singleGeneric.Call("get_PublicProp", null);
+            Assert.Contains(nameof(AnyTypeGenericAttribute), returnValue);
+            executedMos.Clear();
+            singleGeneric.Call("set_PublicProp", executedMos);
+            Assert.Contains(nameof(AnyTypeGenericAttribute), executedMos);
+            executedMos.Clear();
+            await (Task)singleGeneric.Call("StaticInternalAsync", executedMos);
+            Assert.Contains(nameof(AnyTypeGenericAttribute), executedMos);
+            executedMos.Clear();
+            singleGeneric.Call("ProtectedGeneric", executedMos, typeof(DateTime));
+            Assert.Contains(nameof(AnyTypeGenericAttribute), executedMos);
+
+            returnValue = doubleGeneric.Call("get_PublicProp", null);
+            Assert.Contains(nameof(AnyTypeGenericAttribute), returnValue);
+            executedMos.Clear();
+            doubleGeneric.Call("set_PublicProp", executedMos);
+            Assert.Contains(nameof(AnyTypeGenericAttribute), executedMos);
+            executedMos.Clear();
+            await (Task)doubleGeneric.Call("StaticInternalAsync", executedMos);
+            Assert.Contains(nameof(AnyTypeGenericAttribute), executedMos);
+            executedMos.Clear();
+            doubleGeneric.Call("ProtectedGeneric", executedMos, typeof(DateTime));
+            Assert.Contains(nameof(AnyTypeGenericAttribute), executedMos);
+
+            returnValue = clsAB.Call("get_PublicProp", null);
+            Assert.DoesNotContain(nameof(AnyTypeGenericAttribute), returnValue);
+            executedMos.Clear();
+            clsAB.Call("set_PublicProp", executedMos);
+            Assert.DoesNotContain(nameof(AnyTypeGenericAttribute), executedMos);
+            executedMos.Clear();
+            await (Task)clsAB.Call("StaticInternalAsync", executedMos);
+            Assert.DoesNotContain(nameof(AnyTypeGenericAttribute), executedMos);
+            executedMos.Clear();
+            await (Task)clsAB.Call("PublicSingleGenericAsync", executedMos, typeof(string));
+            Assert.DoesNotContain(nameof(AnyTypeGenericAttribute), executedMos);
+            executedMos.Clear();
+            clsAB.Call("ProtectedStaticDoubleGeneric", executedMos, typeof(Guid), typeof(decimal));
+            Assert.DoesNotContain(nameof(AnyTypeGenericAttribute), executedMos);
+        }
+
+        [Fact]
+        public async Task ExecutionAnyTypeGenericNoneMethodGenericTest()
+        {
+            var singleGeneric = GetInstance("PatternUsage.SingleGeneric`1", true, x => x.MakeGenericType(typeof(int)));
+            var doubleGeneric = GetInstance("PatternUsage.X.DoubleGeneric`2", true, x => x.MakeGenericType(typeof(string), typeof(double)));
+            var clsAB = GetInstance("PatternUsage.ClsAB", true);
+
+            List<string> returnValue;
+            var executedMos = new List<string>();
+
+            returnValue = singleGeneric.Call("get_PublicProp", null);
+            Assert.Contains(nameof(AnyTypeGenericNoneMethodGenericAttribute), returnValue);
+            executedMos.Clear();
+            singleGeneric.Call("set_PublicProp", executedMos);
+            Assert.Contains(nameof(AnyTypeGenericNoneMethodGenericAttribute), executedMos);
+            executedMos.Clear();
+            await (Task)singleGeneric.Call("StaticInternalAsync", executedMos);
+            Assert.Contains(nameof(AnyTypeGenericNoneMethodGenericAttribute), executedMos);
+            executedMos.Clear();
+            singleGeneric.Call("ProtectedGeneric", executedMos, typeof(DateTime));
+            Assert.DoesNotContain(nameof(AnyTypeGenericNoneMethodGenericAttribute), executedMos);
+
+            returnValue = doubleGeneric.Call("get_PublicProp", null);
+            Assert.Contains(nameof(AnyTypeGenericNoneMethodGenericAttribute), returnValue);
+            executedMos.Clear();
+            doubleGeneric.Call("set_PublicProp", executedMos);
+            Assert.Contains(nameof(AnyTypeGenericNoneMethodGenericAttribute), executedMos);
+            executedMos.Clear();
+            await (Task)doubleGeneric.Call("StaticInternalAsync", executedMos);
+            Assert.Contains(nameof(AnyTypeGenericNoneMethodGenericAttribute), executedMos);
+            executedMos.Clear();
+            doubleGeneric.Call("ProtectedGeneric", executedMos, typeof(DateTime));
+            Assert.DoesNotContain(nameof(AnyTypeGenericNoneMethodGenericAttribute), executedMos);
+
+            returnValue = clsAB.Call("get_PublicProp", null);
+            Assert.DoesNotContain(nameof(AnyTypeGenericNoneMethodGenericAttribute), returnValue);
+            executedMos.Clear();
+            clsAB.Call("set_PublicProp", executedMos);
+            Assert.DoesNotContain(nameof(AnyTypeGenericNoneMethodGenericAttribute), executedMos);
+            executedMos.Clear();
+            await (Task)clsAB.Call("StaticInternalAsync", executedMos);
+            Assert.DoesNotContain(nameof(AnyTypeGenericNoneMethodGenericAttribute), executedMos);
+            executedMos.Clear();
+            await (Task)clsAB.Call("PublicSingleGenericAsync", executedMos, typeof(string));
+            Assert.DoesNotContain(nameof(AnyTypeGenericNoneMethodGenericAttribute), executedMos);
+            executedMos.Clear();
+            clsAB.Call("ProtectedStaticDoubleGeneric", executedMos, typeof(Guid), typeof(decimal));
+            Assert.DoesNotContain(nameof(AnyTypeGenericNoneMethodGenericAttribute), executedMos);
+        }
+
+        [Fact]
+        public async Task ExecutionNoneTypeGenericAnyMethodGenericTest()
+        {
+            var singleGeneric = GetInstance("PatternUsage.SingleGeneric`1", true, x => x.MakeGenericType(typeof(int)));
+            var doubleGeneric = GetInstance("PatternUsage.X.DoubleGeneric`2", true, x => x.MakeGenericType(typeof(string), typeof(double)));
+            var clsAB = GetInstance("PatternUsage.ClsAB", true);
+
+            List<string> returnValue;
+            var executedMos = new List<string>();
+
+            returnValue = singleGeneric.Call("get_PublicProp", null);
+            Assert.DoesNotContain(nameof(NoneTypeGenericAnyMethodGenericAttribute), returnValue);
+            executedMos.Clear();
+            singleGeneric.Call("set_PublicProp", executedMos);
+            Assert.DoesNotContain(nameof(NoneTypeGenericAnyMethodGenericAttribute), executedMos);
+            executedMos.Clear();
+            await (Task)singleGeneric.Call("StaticInternalAsync", executedMos);
+            Assert.DoesNotContain(nameof(NoneTypeGenericAnyMethodGenericAttribute), executedMos);
+            executedMos.Clear();
+            singleGeneric.Call("ProtectedGeneric", executedMos, typeof(DateTime));
+            Assert.DoesNotContain(nameof(NoneTypeGenericAnyMethodGenericAttribute), executedMos);
+
+            returnValue = doubleGeneric.Call("get_PublicProp", null);
+            Assert.DoesNotContain(nameof(NoneTypeGenericAnyMethodGenericAttribute), returnValue);
+            executedMos.Clear();
+            doubleGeneric.Call("set_PublicProp", executedMos);
+            Assert.DoesNotContain(nameof(NoneTypeGenericAnyMethodGenericAttribute), executedMos);
+            executedMos.Clear();
+            await (Task)doubleGeneric.Call("StaticInternalAsync", executedMos);
+            Assert.DoesNotContain(nameof(NoneTypeGenericAnyMethodGenericAttribute), executedMos);
+            executedMos.Clear();
+            doubleGeneric.Call("ProtectedGeneric", executedMos, typeof(DateTime));
+            Assert.DoesNotContain(nameof(NoneTypeGenericAnyMethodGenericAttribute), executedMos);
+
+            returnValue = clsAB.Call("get_PublicProp", null);
+            Assert.DoesNotContain(nameof(NoneTypeGenericAnyMethodGenericAttribute), returnValue);
+            executedMos.Clear();
+            clsAB.Call("set_PublicProp", executedMos);
+            Assert.DoesNotContain(nameof(NoneTypeGenericAnyMethodGenericAttribute), executedMos);
+            executedMos.Clear();
+            await (Task)clsAB.Call("StaticInternalAsync", executedMos);
+            Assert.DoesNotContain(nameof(NoneTypeGenericAnyMethodGenericAttribute), executedMos);
+            executedMos.Clear();
+            await (Task)clsAB.Call("PublicSingleGenericAsync", executedMos, typeof(string));
+            Assert.Contains(nameof(NoneTypeGenericAnyMethodGenericAttribute), executedMos);
+            executedMos.Clear();
+            clsAB.Call("ProtectedStaticDoubleGeneric", executedMos, typeof(Guid), typeof(decimal));
+            Assert.Contains(nameof(NoneTypeGenericAnyMethodGenericAttribute), executedMos);
         }
 
         [Fact]
         public async Task MethodNestedTypeTest()
+        {
+            var nestedType = GetInstance("PatternUsage.X.NestedType", true);
+            var nestedTypeInner = GetInstance("PatternUsage.X.NestedType+Inner", true);
+            var nestedTypeInnerDeeply = GetInstance("PatternUsage.X.NestedType+Inner+Deeply", true);
+
+            var executedMos = new List<string>();
+
+            executedMos.Clear();
+            nestedType.Call("M1", executedMos);
+            Assert.DoesNotContain(nameof(SpecificNestedTypeAttribute), executedMos);
+            Assert.DoesNotContain(nameof(AnyDoubleDepthNestedTypeAttribute), executedMos);
+
+            executedMos.Clear();
+            nestedTypeInner.Call("M2", executedMos);
+            Assert.Contains(nameof(SpecificNestedTypeAttribute), executedMos);
+            Assert.Contains(nameof(AnyDoubleDepthNestedTypeAttribute), executedMos);
+
+            executedMos.Clear();
+            await (Task)nestedTypeInner.Call("M3", executedMos);
+            Assert.Contains(nameof(SpecificNestedTypeAttribute), executedMos);
+            Assert.Contains(nameof(AnyDoubleDepthNestedTypeAttribute), executedMos);
+
+            executedMos.Clear();
+            await (ValueTask)nestedTypeInnerDeeply.Call("M4", executedMos);
+            Assert.DoesNotContain(nameof(SpecificNestedTypeAttribute), executedMos);
+            Assert.DoesNotContain(nameof(AnyDoubleDepthNestedTypeAttribute), executedMos);
+        }
+
+        [Fact]
+        public async Task ParameterTest()
         {
 
         }
@@ -803,6 +1071,12 @@ namespace Rougamo.Fody.Tests
 
         [Fact]
         public async Task RegexTest()
+        {
+
+        }
+
+        [Fact]
+        public async Task IntegrativeTest()
         {
 
         }

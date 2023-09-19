@@ -2,9 +2,9 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
-namespace PatternUsage
+namespace PatternUsage.X
 {
-    public class SingleGeneric<T> : NonPublicCaller
+    public class DoubleGeneric<T1, T2> : NonPublicCaller
     {
         public List<string>? PublicProp { get; set; }
 
@@ -12,8 +12,9 @@ namespace PatternUsage
 
         protected void ProtectedGeneric<TP>(List<string> executedMos)
         {
-            executedMos.Add(Convert.ToString(typeof(T)));
+            executedMos.Add(Convert.ToString(typeof(T1)));
             executedMos.Add(Convert.ToString(default(TP)));
+            executedMos.Add(Convert.ToString(typeof(T2)));
         }
     }
 }
