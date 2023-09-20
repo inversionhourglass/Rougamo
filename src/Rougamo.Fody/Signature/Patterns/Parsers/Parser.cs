@@ -63,7 +63,15 @@ namespace Rougamo.Fody.Signature.Patterns.Parsers
             var typePatterns = new List<IIntermediateTypePattern>();
             do
             {
-                typePatterns.Add(ParseType(tokens));
+                token = tokens.Peek();
+                if (token.IsComma() || token.IsRBracket())
+                {
+                    typePatterns.Add(new AnyTypePattern());
+                }
+                else
+                {
+                    typePatterns.Add(ParseType(tokens));
+                }
             } while (!tokens.Read().IsRBracket());
             return new IntermediateTypePatterns(typePatterns.ToArray());
         }
