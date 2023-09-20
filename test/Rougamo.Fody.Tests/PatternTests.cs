@@ -1046,19 +1046,75 @@ namespace Rougamo.Fody.Tests
         }
 
         [Fact]
-        public async Task ParameterTest()
+        public void ParameterTest()
         {
+            var instance = GetInstance("Public");
 
+            var executedMos = new List<string>();
+
+            executedMos.Clear();
+            instance.P1_1(executedMos);
+            Assert.DoesNotContain(nameof(DoubleAnyParameterAttribute), executedMos);
+            Assert.DoesNotContain(nameof(IntAtTheLastOfThreeParameterAttribute), executedMos);
+            Assert.DoesNotContain(nameof(DoubleAtTheSecondOfThreeParameterAttribute), executedMos);
+
+            executedMos.Clear();
+            instance.P2_1(executedMos, 1);
+            Assert.Contains(nameof(DoubleAnyParameterAttribute), executedMos);
+            Assert.DoesNotContain(nameof(IntAtTheLastOfThreeParameterAttribute), executedMos);
+            Assert.DoesNotContain(nameof(DoubleAtTheSecondOfThreeParameterAttribute), executedMos);
+
+            executedMos.Clear();
+            instance.P2_2(executedMos, 1.1D);
+            Assert.Contains(nameof(DoubleAnyParameterAttribute), executedMos);
+            Assert.DoesNotContain(nameof(IntAtTheLastOfThreeParameterAttribute), executedMos);
+            Assert.DoesNotContain(nameof(DoubleAtTheSecondOfThreeParameterAttribute), executedMos);
+
+            executedMos.Clear();
+            instance.P3_1(executedMos, 1, 2);
+            Assert.DoesNotContain(nameof(DoubleAnyParameterAttribute), executedMos);
+            Assert.Contains(nameof(IntAtTheLastOfThreeParameterAttribute), executedMos);
+            Assert.DoesNotContain(nameof(DoubleAtTheSecondOfThreeParameterAttribute), executedMos);
+
+            executedMos.Clear();
+            instance.P3_2(executedMos, 1D, 2D);
+            Assert.DoesNotContain(nameof(DoubleAnyParameterAttribute), executedMos);
+            Assert.DoesNotContain(nameof(IntAtTheLastOfThreeParameterAttribute), executedMos);
+            Assert.Contains(nameof(DoubleAtTheSecondOfThreeParameterAttribute), executedMos);
+
+            executedMos.Clear();
+            instance.P3_3(executedMos, 3D, 2);
+            Assert.DoesNotContain(nameof(DoubleAnyParameterAttribute), executedMos);
+            Assert.Contains(nameof(IntAtTheLastOfThreeParameterAttribute), executedMos);
+            Assert.Contains(nameof(DoubleAtTheSecondOfThreeParameterAttribute), executedMos);
+        }
+
+        [Fact]
+        public void ExecutionTupleSyntaxTest()
+        {
+            var instance = GetInstance("Public");
+
+            var executedMos = new List<string>();
+            List<string> returnValue;
+
+            executedMos.Clear();
+            instance.Call("ProtectedInstance", executedMos);
+            Assert.DoesNotContain(nameof(AnyTwoItemTupleParameterAttribute), executedMos);
+            Assert.DoesNotContain(nameof(SpecificTupleReturnAttribute), executedMos);
+
+            executedMos.Clear();
+            instance.Call("TupleOut", executedMos);
+            Assert.DoesNotContain(nameof(AnyTwoItemTupleParameterAttribute), executedMos);
+            Assert.Contains(nameof(SpecificTupleReturnAttribute), executedMos);
+
+            executedMos.Clear();
+            returnValue = instance.Call("TupleIn", new Tuple<DateTime, DateTimeOffset>(default, default));
+            Assert.Contains(nameof(AnyTwoItemTupleParameterAttribute), returnValue);
+            Assert.DoesNotContain(nameof(SpecificTupleReturnAttribute), returnValue);
         }
 
         [Fact]
         public async Task MethodAsyncSyntaxTest()
-        {
-
-        }
-
-        [Fact]
-        public async Task ExecutionTupleSyntaxTest()
         {
 
         }
@@ -1071,6 +1127,12 @@ namespace Rougamo.Fody.Tests
 
         [Fact]
         public async Task RegexTest()
+        {
+
+        }
+
+        [Fact]
+        public async Task InlineTest()
         {
 
         }

@@ -18,19 +18,21 @@ namespace PatternUsage.Attributes
 
         public override void OnEntry(MethodContext context)
         {
-            if (context.Arguments.Length == 1)
+            if (context.Arguments.Length >= 1)
             {
                 var arg = context.Arguments[0];
                 if (arg is List<string> executedMos)
                 {
                     executedMos.Add(Name);
+                    return;
                 }
-                else if (arg is IDictionary map)
+                if (arg is IDictionary map)
                 {
                     map[Name] = Name;
+                    return;
                 }
             }
-            else if (context.Arguments.Length == 0 && context.Method is MethodInfo mi)
+            if (context.Method is MethodInfo mi)
             {
                 if (mi.ReturnType == typeof(List<string>))
                 {

@@ -1,11 +1,18 @@
-﻿using PatternUsage.Attributes.Methods;
+﻿using PatternUsage.Attributes.Executions;
+using PatternUsage.Attributes.Methods;
+using Rougamo;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace PatternUsage
 {
     [InstaceSuffix]
-    public class Public : NonPublicCaller, Interface
+    [DoubleAnyParameter]
+    [IntAtTheLastOfThreeParameter]
+    [AnyTwoItemTupleParameter]
+    [SpecificTupleReturn]
+    public class Public : NonPublicCaller, Interface, IRougamo<DoubleAtTheSecondOfThreeParameterAttribute>
     {
         public void Instance(List<string> executedMos)
         {
@@ -34,5 +41,21 @@ namespace PatternUsage
         {
             await Task.Yield();
         }
+
+        public void P1_1(List<string> executedMos) { }
+
+        public void P2_1(List<string> executedMos, int x) { }
+
+        public void P2_2(List<string> executedMos, double y) { }
+
+        public void P3_1(List<string> executedMos, int x, int y) { }
+
+        public void P3_2(List<string> executedMos, double x, double y) { }
+
+        public void P3_3(List<string> executedMos, double a, int b) { }
+
+        public (int, string) TupleOut(List<string> executedMos) => (1, "2");
+
+        public List<string>? TupleIn(Tuple<DateTime, DateTimeOffset> tuple) => default;
     }
 }
