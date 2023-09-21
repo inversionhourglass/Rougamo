@@ -1116,7 +1116,87 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task MethodAsyncSyntaxTest()
         {
+            var instance = GetInstance("Async");
 
+            var executedMos = new List<string>();
+
+            executedMos.Clear();
+            instance.Call("Sync", executedMos);
+            Assert.DoesNotContain(nameof(GenericVoTaskReturnAttribute), executedMos);
+            Assert.DoesNotContain(nameof(NoGenericVoTaskReturnAttribute), executedMos);
+            Assert.DoesNotContain(nameof(DoubleOrIntVoTaskReturnAttribute), executedMos);
+
+            executedMos.Clear();
+            instance.Call("AsyncVoid", executedMos);
+            Assert.DoesNotContain(nameof(GenericVoTaskReturnAttribute), executedMos);
+            Assert.DoesNotContain(nameof(NoGenericVoTaskReturnAttribute), executedMos);
+            Assert.DoesNotContain(nameof(DoubleOrIntVoTaskReturnAttribute), executedMos);
+
+            executedMos.Clear();
+            await (Task)instance.Call("Task1", executedMos);
+            Assert.DoesNotContain(nameof(GenericVoTaskReturnAttribute), executedMos);
+            Assert.Contains(nameof(NoGenericVoTaskReturnAttribute), executedMos);
+            Assert.DoesNotContain(nameof(DoubleOrIntVoTaskReturnAttribute), executedMos);
+
+            executedMos.Clear();
+            await (ValueTask)instance.Call("ValueTask1", executedMos);
+            Assert.DoesNotContain(nameof(GenericVoTaskReturnAttribute), executedMos);
+            Assert.Contains(nameof(NoGenericVoTaskReturnAttribute), executedMos);
+            Assert.DoesNotContain(nameof(DoubleOrIntVoTaskReturnAttribute), executedMos);
+
+            executedMos.Clear();
+            await (Task)instance.Call("TaskAsync", executedMos);
+            Assert.DoesNotContain(nameof(GenericVoTaskReturnAttribute), executedMos);
+            Assert.Contains(nameof(NoGenericVoTaskReturnAttribute), executedMos);
+            Assert.DoesNotContain(nameof(DoubleOrIntVoTaskReturnAttribute), executedMos);
+
+            executedMos.Clear();
+            await (ValueTask)instance.Call("ValueTaskAsync", executedMos);
+            Assert.DoesNotContain(nameof(GenericVoTaskReturnAttribute), executedMos);
+            Assert.Contains(nameof(NoGenericVoTaskReturnAttribute), executedMos);
+            Assert.DoesNotContain(nameof(DoubleOrIntVoTaskReturnAttribute), executedMos);
+
+            executedMos.Clear();
+            await (Task<int>)instance.Call("TaskInt", executedMos);
+            Assert.Contains(nameof(GenericVoTaskReturnAttribute), executedMos);
+            Assert.DoesNotContain(nameof(NoGenericVoTaskReturnAttribute), executedMos);
+            Assert.Contains(nameof(DoubleOrIntVoTaskReturnAttribute), executedMos);
+
+            executedMos.Clear();
+            await (Task<string>)instance.Call("TaskString", executedMos);
+            Assert.Contains(nameof(GenericVoTaskReturnAttribute), executedMos);
+            Assert.DoesNotContain(nameof(NoGenericVoTaskReturnAttribute), executedMos);
+            Assert.DoesNotContain(nameof(DoubleOrIntVoTaskReturnAttribute), executedMos);
+
+            executedMos.Clear();
+            await (ValueTask<int>)instance.Call("ValueTaskInt", executedMos);
+            Assert.Contains(nameof(GenericVoTaskReturnAttribute), executedMos);
+            Assert.DoesNotContain(nameof(NoGenericVoTaskReturnAttribute), executedMos);
+            Assert.Contains(nameof(DoubleOrIntVoTaskReturnAttribute), executedMos);
+
+            executedMos.Clear();
+            await (ValueTask<string>)instance.Call("ValueTaskString", executedMos);
+            Assert.Contains(nameof(GenericVoTaskReturnAttribute), executedMos);
+            Assert.DoesNotContain(nameof(NoGenericVoTaskReturnAttribute), executedMos);
+            Assert.DoesNotContain(nameof(DoubleOrIntVoTaskReturnAttribute), executedMos);
+
+            executedMos.Clear();
+            await (Task<int>)instance.Call("TaskIntAsync", executedMos);
+            Assert.Contains(nameof(GenericVoTaskReturnAttribute), executedMos);
+            Assert.DoesNotContain(nameof(NoGenericVoTaskReturnAttribute), executedMos);
+            Assert.Contains(nameof(DoubleOrIntVoTaskReturnAttribute), executedMos);
+
+            executedMos.Clear();
+            await (ValueTask<string>)instance.Call("ValueTaskStringAsync", executedMos);
+            Assert.Contains(nameof(GenericVoTaskReturnAttribute), executedMos);
+            Assert.DoesNotContain(nameof(NoGenericVoTaskReturnAttribute), executedMos);
+            Assert.DoesNotContain(nameof(DoubleOrIntVoTaskReturnAttribute), executedMos);
+
+            executedMos.Clear();
+            await (Task<double>)instance.Call("TaskDoubleAsync", executedMos);
+            Assert.Contains(nameof(GenericVoTaskReturnAttribute), executedMos);
+            Assert.DoesNotContain(nameof(NoGenericVoTaskReturnAttribute), executedMos);
+            Assert.Contains(nameof(DoubleOrIntVoTaskReturnAttribute), executedMos);
         }
 
         [Fact]

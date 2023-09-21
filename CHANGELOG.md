@@ -26,3 +26,4 @@
 - [ ] 启用pattern
 - [ ] 优化pattern缓存？
 - [ ] README 2.0
+- [x] 将匹配`Task/ValueTask`的`async void`改成`async null`，`async void`目前功能与`void`相同，后续可能做调整，同时注意`async *`匹配的是`Task<>/ValueTask`但是不匹配`Task/ValueTask`

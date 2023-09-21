@@ -419,7 +419,7 @@ namespace Rougamo.Fody.Tests.Signatures
         {
             var asyncStringMatcher = PatternParser.Parse($"{PatternType}(async string *(..))");
             var asyncAnyMatcher = PatternParser.Parse($"{PatternType}(async * *(..))");
-            var asyncVoidMatcher = PatternParser.Parse($"{PatternType}(async void *(..))");
+            var asyncVoidMatcher = PatternParser.Parse($"{PatternType}(async null *(..))");
 
             var expectedStrings = _methodDefs.Where(x => new[] { "System.Threading.Tasks.Task`1<System.String>", "System.Threading.Tasks.ValueTask`1<System.String>" }.Contains(x.ReturnType.FullName)).Where(Filter).ToArray();
             var expectedAnys = _methodDefs.Where(x => x.ReturnType.Namespace == "System.Threading.Tasks" && new[] { "Task`1", "ValueTask`1" }.Contains(x.ReturnType.Name)).Where(Filter).ToArray();
