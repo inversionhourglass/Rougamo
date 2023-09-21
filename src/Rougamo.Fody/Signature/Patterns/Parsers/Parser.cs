@@ -117,6 +117,8 @@ namespace Rougamo.Fody.Signature.Patterns.Parsers
 
             if (token.IsLBracket()) return ParseTupleTypePattern(tokens);
 
+            if (token.IsNull()) return new NullTypePattern();
+
             var insideGeneric = 0;
             var pre = token;
             do

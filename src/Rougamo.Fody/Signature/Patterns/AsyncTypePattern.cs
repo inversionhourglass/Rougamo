@@ -1,4 +1,6 @@
-﻿namespace Rougamo.Fody.Signature.Patterns
+﻿using System.Runtime.CompilerServices;
+
+namespace Rougamo.Fody.Signature.Patterns
 {
     public class AsyncTypePattern : ITypePattern
     {
@@ -22,12 +24,12 @@
             var typeSignature = signature.NestedTypes[0];
             if (ElementPattern.IsVoid)
             {
-                return typeSignature.Generics.Length == 0 && IsTask(signature, typeSignature);
+                return typeSignature.Generics.Length == 0 && signature.Namespace == "System" && typeSignature.Name == "Void";
             }
-            else
-            {
-                return typeSignature.Generics.Length == 1 && IsTask(signature, typeSignature) && ElementPattern.IsMatch(typeSignature.Generics[0]);
-            }
+
+            if (ElementPattern is NullTypePattern) return typeSignature.Generics.Length == 0 && IsTask(signature, typeSignature);
+
+            return typeSignature.Generics.Length == 1 && IsTask(signature, typeSignature) && ElementPattern.IsMatch(typeSignature.Generics[0]);
         }
 
         private bool IsTask(TypeSignature signature, GenericSignature typeSignature) => signature.Namespace == "System.Threading.Tasks" && (typeSignature.Name == "Task" || typeSignature.Name == "ValueTask");

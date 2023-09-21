@@ -10,6 +10,7 @@ namespace Rougamo.Fody.Signature.Tokens
         public const string GETTER = "getter";
         public const string SETTER = "setter";
         public const string PROPERTY = "property";
+        public const string NULL = "null";
         public const string ELLIPSIS = "..";
         public const string AND = "&&";
         public const string OR = "||";
@@ -95,5 +96,7 @@ namespace Rougamo.Fody.Signature.Tokens
         public static bool IsLT(this Token? token) => token != null && token.Value == Token.LT;
 
         public static bool IsGT(this Token? token) => token != null && token.Value == Token.GT;
+
+        public static bool IsNull(this Token? token) => token != null && token.Value == Token.NULL;
     }
 }
