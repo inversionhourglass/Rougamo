@@ -1,5 +1,6 @@
 ﻿using PatternUsage.Attributes.Executions;
 using PatternUsage.Attributes.Methods;
+using PatternUsage.Attributes.Properties;
 using Rougamo;
 using System;
 using System.Collections.Generic;
@@ -14,6 +15,8 @@ namespace PatternUsage
     [SpecificTupleReturn]
     public class Public : NonPublicCaller, Interface, IRougamo<DoubleAtTheSecondOfThreeParameterAttribute>
     {
+        public List<string> Prop1 { get; set; }
+
         public void Instance(List<string> executedMos)
         {
         }
@@ -42,12 +45,15 @@ namespace PatternUsage
             await Task.Yield();
         }
 
+        [InlineDeclare]
         public void P1_1(List<string> executedMos) { }
-
+        
+        [InlineDeclare]
         public void P2_1(List<string> executedMos, int x) { }
 
         public void P2_2(List<string> executedMos, double y) { }
 
+        [InlineDeclare]
         public void P3_1(List<string> executedMos, int x, int y) { }
 
         public void P3_2(List<string> executedMos, double x, double y) { }
@@ -57,5 +63,13 @@ namespace PatternUsage
         public (int, string) TupleOut(List<string> executedMos) => (1, "2");
 
         public List<string>? TupleIn(Tuple<DateTime, DateTimeOffset> tuple) => default;
+
+        protected int? IntNullable(List<string> executedMos) => default;
+
+        private static async ValueTask<int?> StaticNullableAsync(List<string> executedMos)
+        {
+            await Task.Yield();
+            return default;
+        }
     }
 }

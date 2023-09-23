@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
+using PatternUsage.Attributes;
 using PatternUsage.Attributes.Methods;
 using PatternUsage.Attributes.Executions;
 using PatternUsage.Attributes.Getters;
@@ -8,6 +9,7 @@ using PatternUsage.Attributes.Properties;
 using PatternUsage.Attributes.Setters;
 using System.Collections;
 using System;
+using PatternUsage.Attributes.Regexes;
 
 namespace Rougamo.Fody.Tests
 {
@@ -1202,25 +1204,231 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task ExecutionNullableSyntaxTest()
         {
+            var instance = GetInstance("Public");
 
+            var executedMos = new List<string>();
+
+            executedMos.Clear();
+            instance.Call("ProtectedInstance", executedMos);
+            Assert.DoesNotContain(nameof(NullableIntReturnAttribute), executedMos);
+            Assert.DoesNotContain(nameof(AsyncNullableIntReturnAttribute), executedMos);
+
+            executedMos.Clear();
+            instance.Call("IntNullable", executedMos);
+            Assert.Contains(nameof(NullableIntReturnAttribute), executedMos);
+            Assert.DoesNotContain(nameof(AsyncNullableIntReturnAttribute), executedMos);
+
+            executedMos.Clear();
+            await (ValueTask<int?>)instance.Call("StaticNullableAsync", executedMos);
+            Assert.DoesNotContain(nameof(NullableIntReturnAttribute), executedMos);
+            Assert.Contains(nameof(AsyncNullableIntReturnAttribute), executedMos);
         }
 
         [Fact]
         public async Task RegexTest()
         {
+            var pub = GetInstance("Public");
+            var nested = GetInstance("PatternUsage.X.NestedType", true);
+            var nestedInner = GetInstance("PatternUsage.X.NestedType+Inner", true);
+            var nestedInnerDeeply = GetInstance("PatternUsage.X.NestedType+Inner+Deeply", true);
 
+            var executedMos = new List<string>();
+            var returnValue = new List<string>();
+
+            returnValue = pub.Call("get_Prop1", null);
+            Assert.Contains(nameof(NumberSuffixAttribute), returnValue);
+
+            executedMos.Clear();
+            pub.Call("set_Prop1", executedMos);
+            Assert.Contains(nameof(NumberSuffixAttribute), executedMos);
+
+            executedMos.Clear();
+            pub.Call("Instance", executedMos);
+            Assert.DoesNotContain(nameof(NumberSuffixAttribute), executedMos);
+
+            executedMos.Clear();
+            await (Task)pub.Call("P2InstanceAsync", executedMos);
+            Assert.DoesNotContain(nameof(NumberSuffixAttribute), executedMos);
+
+            executedMos.Clear();
+            pub.P1_1(executedMos);
+            Assert.Contains(nameof(NumberSuffixAttribute), executedMos);
+
+            executedMos.Clear();
+            pub.P2_1(executedMos, 1);
+            Assert.Contains(nameof(NumberSuffixAttribute), executedMos);
+
+            executedMos.Clear();
+            pub.P2_2(executedMos, 2D);
+            Assert.Contains(nameof(NumberSuffixAttribute), executedMos);
+
+            executedMos.Clear();
+            pub.P3_1(executedMos, 1, 2);
+            Assert.Contains(nameof(NumberSuffixAttribute), executedMos);
+
+            executedMos.Clear();
+            pub.P3_2(executedMos, 3D, 5D);
+            Assert.Contains(nameof(NumberSuffixAttribute), executedMos);
+
+            executedMos.Clear();
+            pub.P3_3(executedMos, 2D, -1);
+            Assert.Contains(nameof(NumberSuffixAttribute), executedMos);
+
+            executedMos.Clear();
+            nested.Call("M1", executedMos);
+            Assert.Contains(nameof(NumberSuffixAttribute), executedMos);
+
+            executedMos.Clear();
+            nestedInner.Call("M2", executedMos);
+            Assert.Contains(nameof(NumberSuffixAttribute), executedMos);
+
+            executedMos.Clear();
+            await (Task)nestedInner.Call("M3", executedMos);
+            Assert.Contains(nameof(NumberSuffixAttribute), executedMos);
+
+            executedMos.Clear();
+            await (ValueTask)nestedInnerDeeply.Call("M4", executedMos);
+            Assert.Contains(nameof(NumberSuffixAttribute), executedMos);
         }
 
         [Fact]
         public async Task InlineTest()
         {
+            var clsA = GetInstance("ClsA");
 
+            List<string> listReturn;
+            IDictionary imapReturn;
+            var listArg = new List<string>();
+            var mapArg = new Dictionary<string, string>();
+            var sortedMapArg = new SortedList<string, string>();
+
+            listReturn = clsA.Call("get_PublicProp", null);
+            Assert.DoesNotContain(nameof(InlineDeclareAttribute), listReturn);
+            listArg.Clear();
+            clsA.Call("set_PublicProp", listArg);
+            Assert.DoesNotContain(nameof(InlineDeclareAttribute), listArg);
+            listReturn = clsA.Call("get_StaticPrivateProp", null);
+            Assert.DoesNotContain(nameof(InlineDeclareAttribute), listReturn);
+            listArg.Clear();
+            clsA.Call("set_StaticPrivateProp", listArg);
+            Assert.DoesNotContain(nameof(InlineDeclareAttribute), listArg);
+            imapReturn = clsA.Call("get_ProtectedInternalProp", null);
+            Assert.False(imapReturn.Contains(nameof(InlineDeclareAttribute)));
+            mapArg.Clear();
+            clsA.Call("set_ProtectedInternalProp", mapArg);
+            Assert.False(mapArg.ContainsKey(nameof(InlineDeclareAttribute)));
+            imapReturn = clsA.Call("get_DefaultProp", null);
+            Assert.False(imapReturn.Contains(nameof(InlineDeclareAttribute)));
+            sortedMapArg.Clear();
+            clsA.Call("set_DefaultProp", sortedMapArg);
+            Assert.False(sortedMapArg.ContainsKey(nameof(InlineDeclareAttribute)));
+            listArg.Clear();
+            clsA.Call("Protected", listArg);
+            Assert.Contains(nameof(InlineDeclareAttribute), listArg);
+            listArg.Clear();
+            await (Task)clsA.Call("StaticInternalAsync", listArg);
+            Assert.Contains(nameof(InlineDeclareAttribute), listArg);
+            listReturn = clsA.Call("PrivateProtected", null);
+            Assert.Contains(nameof(InlineDeclareAttribute), listReturn);
+        }
+
+        [Fact]
+        public void ApllyToMethodDirectlyTest()
+        {
+            var instance = GetInstance("Public");
+
+            var executedMos = new List<string>();
+
+            executedMos.Clear();
+            instance.P1_1(executedMos);
+            Assert.Contains(nameof(InlineDeclareAttribute), executedMos);
+
+            executedMos.Clear();
+            instance.P2_1(executedMos, 1);
+            Assert.Contains(nameof(InlineDeclareAttribute), executedMos);
+
+            executedMos.Clear();
+            instance.P2_2(executedMos, 2D);
+            Assert.DoesNotContain(nameof(InlineDeclareAttribute), executedMos);
+
+            executedMos.Clear();
+            instance.P3_1(executedMos, 1, 2);
+            Assert.Contains(nameof(InlineDeclareAttribute), executedMos);
+
+            executedMos.Clear();
+            instance.P3_2(executedMos, 3D, 5D);
+            Assert.DoesNotContain(nameof(InlineDeclareAttribute), executedMos);
+
+            executedMos.Clear();
+            instance.P3_3(executedMos, 2D, -1);
+            Assert.DoesNotContain(nameof(InlineDeclareAttribute), executedMos);
         }
 
         [Fact]
         public async Task IntegrativeTest()
         {
+            var pub = GetInstance("Public");
+            var nested = GetInstance("PatternUsage.X.NestedType", true);
+            var nestedInner = GetInstance("PatternUsage.X.NestedType+Inner", true);
+            var nestedInnerDeeply = GetInstance("PatternUsage.X.NestedType+Inner+Deeply", true);
 
+            var executedMos = new List<string>();
+            var returnValue = new List<string>();
+
+            returnValue = pub.Call("get_Prop1", null);
+            Assert.DoesNotContain(nameof(IntegrativeAttribute), returnValue);
+
+            executedMos.Clear();
+            pub.Call("set_Prop1", executedMos);
+            Assert.DoesNotContain(nameof(IntegrativeAttribute), executedMos);
+
+            executedMos.Clear();
+            pub.Call("Instance", executedMos);
+            Assert.DoesNotContain(nameof(IntegrativeAttribute), executedMos);
+
+            executedMos.Clear();
+            await (Task)pub.Call("P2InstanceAsync", executedMos);
+            Assert.DoesNotContain(nameof(IntegrativeAttribute), executedMos);
+
+            executedMos.Clear();
+            pub.P1_1(executedMos);
+            Assert.DoesNotContain(nameof(IntegrativeAttribute), executedMos);
+
+            executedMos.Clear();
+            pub.P2_1(executedMos, 1);
+            Assert.Contains(nameof(IntegrativeAttribute), executedMos);
+
+            executedMos.Clear();
+            pub.P2_2(executedMos, 2D);
+            Assert.Contains(nameof(IntegrativeAttribute), executedMos);
+
+            executedMos.Clear();
+            pub.P3_1(executedMos, 1, 2);
+            Assert.DoesNotContain(nameof(IntegrativeAttribute), executedMos);
+
+            executedMos.Clear();
+            pub.P3_2(executedMos, 3D, 5D);
+            Assert.DoesNotContain(nameof(IntegrativeAttribute), executedMos);
+
+            executedMos.Clear();
+            pub.P3_3(executedMos, 2D, -1);
+            Assert.DoesNotContain(nameof(IntegrativeAttribute), executedMos);
+
+            executedMos.Clear();
+            nested.Call("M1", executedMos);
+            Assert.DoesNotContain(nameof(IntegrativeAttribute), executedMos);
+
+            executedMos.Clear();
+            nestedInner.Call("M2", executedMos);
+            Assert.DoesNotContain(nameof(IntegrativeAttribute), executedMos);
+
+            executedMos.Clear();
+            await (Task)nestedInner.Call("M3", executedMos);
+            Assert.DoesNotContain(nameof(IntegrativeAttribute), executedMos);
+
+            executedMos.Clear();
+            await (ValueTask)nestedInnerDeeply.Call("M4", executedMos);
+            Assert.DoesNotContain(nameof(IntegrativeAttribute), executedMos);
         }
     }
 }

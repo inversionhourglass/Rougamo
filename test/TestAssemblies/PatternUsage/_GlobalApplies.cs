@@ -1,22 +1,28 @@
-﻿using PatternUsage.Attributes.Executions;
+﻿using PatternUsage.Attributes;
+using PatternUsage.Attributes.Executions;
 using PatternUsage.Attributes.Getters;
 using PatternUsage.Attributes.Methods;
 using PatternUsage.Attributes.Properties;
+using PatternUsage.Attributes.Regexes;
 using PatternUsage.Attributes.Setters;
 
-[assembly:PublicStatic]
-[assembly:ChildOfInterfaceAB]
-[module:ChildOfInterfaceAWidly]
-[module:ReturnsDictionaryGeneric]
-[module:ReturnsChildOfIDictionary]
+[assembly: PublicStatic]
+[assembly: ChildOfInterfaceAB]
+[module: ChildOfInterfaceAWidly]
+[module: ReturnsDictionaryGeneric]
+[module: ReturnsChildOfIDictionary]
 [assembly: ReturnsChildOfDicOrList]
-[assembly:AnyMethodGeneric]
-[assembly:SingleMethodGeneric]
-[assembly:DoubleMethodGeneric]
-[module:AnyTypeGeneric]
-[module:SingleTypeGeneric]
-[module:DoubleTypeGeneric]
-[module:AnyTypeGenericNoneMethodGeneric]
-[module:NoneTypeGenericAnyMethodGeneric]
-[assembly:SpecificNestedType]
-[assembly:AnyDoubleDepthNestedType]
+[assembly: AnyMethodGeneric]
+[assembly: SingleMethodGeneric]
+[assembly: DoubleMethodGeneric]
+[module: AnyTypeGeneric]
+[module: SingleTypeGeneric]
+[module: DoubleTypeGeneric]
+[module: AnyTypeGenericNoneMethodGeneric]
+[module: NoneTypeGenericAnyMethodGeneric]
+[assembly: SpecificNestedType]
+[assembly: AnyDoubleDepthNestedType]
+[assembly: NullableIntReturn]
+[assembly: AsyncNullableIntReturn]
+[assembly: NumberSuffix]
+[assembly: Integrative]

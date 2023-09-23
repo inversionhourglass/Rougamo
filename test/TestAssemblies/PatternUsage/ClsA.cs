@@ -1,8 +1,10 @@
-﻿using System.Collections.Generic;
+﻿using PatternUsage.Attributes.Properties;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace PatternUsage
 {
+    [InlineDeclare(Pattern = "method(* *(..))")]
     public class ClsA : NonPublicCaller, InterfaceA
     {
         public List<string>? PublicProp { get; set; }
