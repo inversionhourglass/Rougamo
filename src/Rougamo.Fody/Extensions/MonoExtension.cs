@@ -159,17 +159,20 @@ namespace Rougamo.Fody
             return zeroCtor;
         }
 
-        public static MethodReference RecursionImportPropertySet(this CustomAttribute attribute,
+        public static MethodReference? RecursionImportPropertySet(this CustomAttribute attribute,
             ModuleDefinition moduleDef, string propertyName)
         {
             return RecursionImportPropertySet(attribute.AttributeType.Resolve(), moduleDef, propertyName);
         }
 
-        public static MethodReference RecursionImportPropertySet(this TypeDefinition typeDef,
+        public static MethodReference? RecursionImportPropertySet(this TypeDefinition typeDef,
             ModuleDefinition moduleDef, string propertyName)
         {
             var propertyDef = typeDef.Properties.FirstOrDefault(pd => pd.Name == propertyName);
-            if (propertyDef != null) return moduleDef.ImportReference(propertyDef.SetMethod);
+            if (propertyDef != null)
+            {
+                return propertyDef.SetMethod == null ? null : moduleDef.ImportReference(propertyDef.SetMethod);
+            }
 
             var baseTypeDef = typeDef.BaseType.Resolve();
             if (baseTypeDef.FullName == typeof(object).FullName)

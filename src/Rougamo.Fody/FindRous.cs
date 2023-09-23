@@ -102,8 +102,8 @@ namespace Rougamo.Fody
                 _typeIMoArrayRef = new ArrayType(_typeIMoRef);
                 var typeMethodContextDef = _typeMethodContextRef.Resolve();
                 _methodMethodContextCtorRef = typeMethodContextDef.GetConstructors().First(x => !x.CustomAttributes.Any(y => y.AttributeType.Is(Constants.TYPE_ObsoleteAttribute))).ImportInto(ModuleDefinition);
-                _methodMethodContextSetExceptionRef = typeMethodContextDef.RecursionImportPropertySet(ModuleDefinition, Constants.PROP_Exception);
-                _methodMethodContextSetReturnValueRef = typeMethodContextDef.RecursionImportPropertySet(ModuleDefinition, Constants.PROP_ReturnValue);
+                _methodMethodContextSetExceptionRef = typeMethodContextDef.RecursionImportPropertySet(ModuleDefinition, Constants.PROP_Exception)!;
+                _methodMethodContextSetReturnValueRef = typeMethodContextDef.RecursionImportPropertySet(ModuleDefinition, Constants.PROP_ReturnValue)!;
                 _methodMethodContextGetReturnValueRef = typeMethodContextDef.RecursionImportPropertyGet(ModuleDefinition, Constants.PROP_ReturnValue);
                 _methodMethodContextGetExceptionHandledRef = typeMethodContextDef.RecursionImportPropertyGet(ModuleDefinition, Constants.PROP_ExceptionHandled);
                 _methodMethodContextGetReturnValueReplacedRef = typeMethodContextDef.RecursionImportPropertyGet(ModuleDefinition, Constants.PROP_ReturnValueReplaced);

@@ -126,15 +126,23 @@ namespace Rougamo.Fody
 
         private Collection<Instruction> LoadAttributePropertyDup(TypeDefinition attrTypeDef, Collection<CustomAttributeNamedArgument> properties)
         {
-            var ins = new Collection<Instruction>();
+            var instructions = new Collection<Instruction>();
             for (var i = 0; i < properties.Count; i++)
             {
+                var ins = new Collection<Instruction>();
+
                 ins.Add(Create(OpCodes.Dup));
                 ins.Add(LoadValueOnStack(properties[i].Argument.Type, properties[i].Argument.Value));
-                ins.Add(Create(OpCodes.Callvirt, attrTypeDef.RecursionImportPropertySet(ModuleDefinition, properties[i].Name)));
+                // todo: 由于Attribute的特性，即使属性仅仅声明了getter，在应用Attribute时也可以给这个属性赋值，这种情况这里是无法获取setter进行设置的，现在做跳过处理
+                var setter = attrTypeDef.RecursionImportPropertySet(ModuleDefinition, properties[i].Name);
+                if (setter == null) continue;
+
+                ins.Add(Create(OpCodes.Callvirt, setter));
+
+                instructions.Add(ins);
             }
 
-            return ins;
+            return instructions;
         }
 
         #endregion LoadMosOnStack
