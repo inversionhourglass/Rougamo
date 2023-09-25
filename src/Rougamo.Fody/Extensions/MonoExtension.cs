@@ -246,27 +246,6 @@ namespace Rougamo.Fody
             return null;
         }
 
-        public static Type ResolveType(this TypeDefinition typeDef)
-        {
-            string assemblyName;
-            if (typeDef.Scope is AssemblyNameReference anRef)
-            {
-                assemblyName = anRef.FullName;
-            }
-            else if (typeDef.Scope is ModuleDefinition moduleDef)
-            {
-                assemblyName = moduleDef.Assembly.FullName;
-            }
-            else
-            {
-                throw new RougamoException($"Cannot resolve {typeDef.FullName}, scope type is {typeDef.Scope.GetType()}");
-            }
-            var fullName = typeDef.FullName;
-            if (typeDef.IsNested) fullName = fullName.Replace("/", "+");
-            fullName = $"{fullName}, {assemblyName}";
-            return Type.GetType(fullName);
-        }
-
         #region Import
 
         public static TypeReference ImportInto(this TypeReference typeRef, ModuleDefinition moduleDef) =>
