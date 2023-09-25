@@ -49,7 +49,7 @@ namespace Rougamo.Fody
 
                 foreach (var methodDef in typeDef.Methods)
                 {
-                    // #41 这里排除了构造方法
+                    // todo: #41 这里排除了构造方法
                     if (methodDef.IsConstructor || (methodDef.Attributes & MethodAttributes.Abstract) != 0) continue;
 
                     var attributes = new Collection<CustomAttribute>();

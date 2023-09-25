@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
-using static Rougamo.Fody.Signature.Patterns.ModifierPattern;
 
 namespace Rougamo.Fody
 {
@@ -27,12 +26,9 @@ namespace Rougamo.Fody
             _mos = new HashSet<Mo>(Mo.Comparer);
             _rouType = rouType;
             MethodDef = methodDef;
-            Method = rouType.Type.GetMethod(methodDef.Name, _BindingFlags) ?? throw new RougamoException($"Cannot find method {MethodDef.Name} from {rouType.TypeDef.FullName}");
         }
 
         public MethodDefinition MethodDef { get; set; }
-
-        public MethodInfo Method { get; set; }
 
         public Mo[] Mos
         {

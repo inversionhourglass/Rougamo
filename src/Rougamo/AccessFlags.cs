@@ -49,7 +49,7 @@ namespace Rougamo
         /// </summary>
         InstanceNonPublic = Instance & NonPublic,
         /// <summary>
-        /// All
+        /// Any method and property
         /// </summary>
         All = Static | Instance,
         /// <summary>

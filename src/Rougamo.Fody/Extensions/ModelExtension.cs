@@ -34,7 +34,7 @@ namespace Rougamo.Fody
             if (instruction.OpCode == OpCodes.Ldc_I4_3) return AccessFlags.Public;
             if (instruction.OpCode == OpCodes.Ldc_I4_6) return AccessFlags.Instance;
             if (instruction.OpCode == OpCodes.Ldc_I4_7) return AccessFlags.Instance | AccessFlags.Public;
-            if (instruction.OpCode == OpCodes.Ldc_I4_S) return (AccessFlags)(sbyte)instruction.Operand;
+            if (instruction.OpCode == OpCodes.Ldc_I4_S) return (AccessFlags)Convert.ToInt32(instruction.Operand);
             return null;
         }
 
