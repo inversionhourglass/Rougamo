@@ -50,7 +50,7 @@ namespace Rougamo.Fody
                 foreach (var methodDef in typeDef.Methods)
                 {
                     // todo: #41 这里排除了构造方法
-                    if (methodDef.IsConstructor || (methodDef.Attributes & MethodAttributes.Abstract) != 0) continue;
+                    if ((methodDef.Attributes & MethodAttributes.Abstract) != 0) continue;
 
                     var attributes = new Collection<CustomAttribute>();
                     var property = typeDef.Properties.SingleOrDefault(x => x.SetMethod == methodDef || x.GetMethod == methodDef);

@@ -31,10 +31,11 @@ namespace Rougamo.Fody
 
         private static AccessFlags? ParseFlags(Instruction instruction)
         {
-            if (instruction.OpCode == OpCodes.Ldc_I4_3) return AccessFlags.Public;
-            if (instruction.OpCode == OpCodes.Ldc_I4_6) return AccessFlags.Instance;
-            if (instruction.OpCode == OpCodes.Ldc_I4_7) return AccessFlags.Instance | AccessFlags.Public;
-            if (instruction.OpCode == OpCodes.Ldc_I4_S) return (AccessFlags)Convert.ToInt32(instruction.Operand);
+            var opCode = instruction.OpCode;
+            if (opCode == OpCodes.Ldc_I4_3) return AccessFlags.Public;
+            if (opCode == OpCodes.Ldc_I4_6) return AccessFlags.Instance;
+            if (opCode == OpCodes.Ldc_I4_7) return AccessFlags.Instance | AccessFlags.Public;
+            if (opCode == OpCodes.Ldc_I4_S || opCode == OpCodes.Ldc_I4) return (AccessFlags)Convert.ToInt32(instruction.Operand);
             return null;
         }
 
@@ -283,10 +284,11 @@ namespace Rougamo.Fody
         {
             var methodFlags = method.Flags(from);
             var targetAccessable = methodFlags & AccessFlags.All;
-            var targetCategory = methodFlags & (AccessFlags.Method | AccessFlags.Property);
+            var targetCategory = methodFlags & (AccessFlags.Method | AccessFlags.Property | AccessFlags.Constructor);
             var declaredAccessable = mo.Flags & AccessFlags.All;
-            var declaredCategories = mo.Flags & (AccessFlags.Method | AccessFlags.Property);
-            var categoryMatch = declaredCategories == 0 || (declaredCategories & targetCategory) != 0;
+            var declaredCategories = mo.Flags & (AccessFlags.Method | AccessFlags.Property | AccessFlags.Constructor);
+            if (declaredCategories == 0) declaredCategories = AccessFlags.Method | AccessFlags.Property;
+            var categoryMatch = (declaredCategories & targetCategory) != 0;
             var accessableMatch = (declaredAccessable & targetAccessable) != 0;
             return categoryMatch && accessableMatch;
         }

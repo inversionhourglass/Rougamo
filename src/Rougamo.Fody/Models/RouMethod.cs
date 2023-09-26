@@ -76,20 +76,22 @@ namespace Rougamo.Fody
             _methodLevelAccessibility = (MethodDef.IsPublic ? AccessFlags.Public : AccessFlags.NonPublic) & methodTarget;
             _typeLevelAccessibility = (MethodDef.IsPublic && _rouType.TypeDef.IsPublic ? AccessFlags.Public : AccessFlags.NonPublic) & methodTarget;
 
-            foreach (var propertyDef in _rouType.TypeDef.Properties)
+            if (MethodDef.IsGetter)
             {
-                if (propertyDef.GetMethod == MethodDef)
-                {
-                    _methodCategory = AccessFlags.PropertyGetter;
-                    break;
-                }
-                if (propertyDef.SetMethod == MethodDef)
-                {
-                    _methodCategory = AccessFlags.PropertySetter;
-                    break;
-                }
+                _methodCategory = AccessFlags.PropertyGetter;
             }
-            _methodCategory ??= AccessFlags.Method;
+            else if (MethodDef.IsSetter)
+            {
+                _methodCategory = AccessFlags.PropertySetter;
+            }
+            else if (MethodDef.IsConstructor)
+            {
+                _methodCategory = AccessFlags.Constructor;
+            }
+            else
+            {
+                _methodCategory = AccessFlags.Method;
+            }
         }
 
         public int Features => Mos.Aggregate(0, (v, m) => v | m.Features);

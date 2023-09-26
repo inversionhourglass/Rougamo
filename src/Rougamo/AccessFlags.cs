@@ -68,5 +68,9 @@ namespace Rougamo
         /// Property getter and setter
         /// </summary>
         Property = PropertyGetter | PropertySetter,
+        /// <summary>
+        /// instance constructor
+        /// </summary>
+        Constructor = 0b1000_0000,
     }
 }
