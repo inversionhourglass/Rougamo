@@ -283,6 +283,16 @@ namespace Rougamo.Fody.Tests
         {
             var instance = GetInstance("SyncExecution");
 
+            string flag;
+            flag = instance.Call("get_InstanceProp1", null);
+            Assert.Equal(CtorInitAttribute.FLAG, flag);
+            flag = instance.Call("get_InstanceProp2", null);
+            Assert.Equal(CcctorInitAttribute.FLAG, flag);
+            flag = instance.Call("get_StaticProp1", null);
+            Assert.Equal(CctorInitAttribute.FLAG, flag);
+            flag = instance.Call("get_StaticProp2", null);
+            Assert.Equal(CcctorInitAttribute.FLAG, flag);
+
             var input = new List<string>();
             instance.Void(input);
             Assert.Equal(new[] { nameof(IMo.OnEntry), nameof(SyncExecution.Void), nameof(IMo.OnSuccess), nameof(IMo.OnExit) }, input);
