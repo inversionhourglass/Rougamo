@@ -4,7 +4,7 @@ using System;
 namespace Rougamo
 {
     /// <inheritdoc/>
-    [AttributeUsage(AttributeTargets.Assembly|AttributeTargets.Module|AttributeTargets.Class|AttributeTargets.Method|AttributeTargets.Property)]
+    [AttributeUsage(AttributeTargets.Assembly|AttributeTargets.Module|AttributeTargets.Class|AttributeTargets.Method|AttributeTargets.Property|AttributeTargets.Constructor)]
     public abstract class MoAttribute : Attribute, IMo
     {
         /// <inheritdoc/>
