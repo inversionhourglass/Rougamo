@@ -1225,6 +1225,93 @@ namespace Rougamo.Fody.Tests
         }
 
         [Fact]
+        public async Task MethodNotSyntaxTest()
+        {
+            var instance = GetInstance("Public");
+
+            var executedMos = new List<string>();
+            List<string> returnValue;
+
+            returnValue = instance.Call("get_Prop1", null);
+            Assert.DoesNotContain(nameof(InstanceAttribute), returnValue);
+
+            executedMos.Clear();
+            instance.Call("set_Prop1", executedMos);
+            Assert.DoesNotContain(nameof(InstanceAttribute), executedMos);
+
+            executedMos.Clear();
+            instance.Call("Instance", executedMos);
+            Assert.Contains(nameof(InstanceAttribute), executedMos);
+
+            executedMos.Clear();
+            instance.Call("PrivateInstance", executedMos);
+            Assert.Contains(nameof(InstanceAttribute), executedMos);
+
+            executedMos.Clear();
+            instance.Call("ProtectedInstance", executedMos);
+            Assert.Contains(nameof(InstanceAttribute), executedMos);
+
+            executedMos.Clear();
+            instance.Call("InternalInstanceXyz", executedMos);
+            Assert.Contains(nameof(InstanceAttribute), executedMos);
+
+            executedMos.Clear();
+            await (Task)instance.Call("P2InstanceAsync", executedMos);
+            Assert.Contains(nameof(InstanceAttribute), executedMos);
+
+            executedMos.Clear();
+            await (ValueTask<int>)instance.Call("PiInstanceAsync", executedMos);
+            Assert.Contains(nameof(InstanceAttribute), executedMos);
+
+            executedMos.Clear();
+            await (Task)instance.Call("StaticAsync", executedMos);
+            Assert.DoesNotContain(nameof(InstanceAttribute), executedMos);
+
+            executedMos.Clear();
+            await (ValueTask)instance.Call("PrivateStaticAsync", executedMos);
+            Assert.DoesNotContain(nameof(InstanceAttribute), executedMos);
+
+            executedMos.Clear();
+            instance.P1_1(executedMos);
+            Assert.Contains(nameof(InstanceAttribute), executedMos);
+
+            executedMos.Clear();
+            instance.P2_1(executedMos, 1);
+            Assert.Contains(nameof(InstanceAttribute), executedMos);
+
+            executedMos.Clear();
+            instance.P2_2(executedMos, 1D);
+            Assert.Contains(nameof(InstanceAttribute), executedMos);
+
+            executedMos.Clear();
+            instance.P3_1(executedMos, 1, 2);
+            Assert.Contains(nameof(InstanceAttribute), executedMos);
+
+            executedMos.Clear();
+            instance.P3_2(executedMos, 1D, 2D);
+            Assert.Contains(nameof(InstanceAttribute), executedMos);
+
+            executedMos.Clear();
+            instance.P3_3(executedMos, 1D, 2);
+            Assert.Contains(nameof(InstanceAttribute), executedMos);
+
+            executedMos.Clear();
+            instance.Call("TupleOut", executedMos);
+            Assert.Contains(nameof(InstanceAttribute), executedMos);
+
+            returnValue = instance.TupleIn(new Tuple<DateTime, DateTimeOffset>(default, default));
+            Assert.Contains(nameof(InstanceAttribute), returnValue);
+
+            executedMos.Clear();
+            instance.Call("IntNullable", executedMos);
+            Assert.Contains(nameof(InstanceAttribute), executedMos);
+
+            executedMos.Clear();
+            await (ValueTask<int?>)instance.Call("StaticNullableAsync", executedMos);
+            Assert.DoesNotContain(nameof(InstanceAttribute), executedMos);
+        }
+
+        [Fact]
         public async Task RegexTest()
         {
             var pub = GetInstance("Public");

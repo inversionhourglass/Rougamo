@@ -13,7 +13,7 @@ namespace PatternUsage
     [IntAtTheLastOfThreeParameter]
     [AnyTwoItemTupleParameter]
     [SpecificTupleReturn]
-    public class Public : NonPublicCaller, Interface, IRougamo<DoubleAtTheSecondOfThreeParameterAttribute>
+    public class Public : NonPublicCaller, Interface, IRougamo<DoubleAtTheSecondOfThreeParameterAttribute>, IRougamo<InstanceAttribute>
     {
         public List<string> Prop1 { get; set; }
 
