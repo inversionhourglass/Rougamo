@@ -49,7 +49,7 @@ namespace Rougamo
         /// </summary>
         InstanceNonPublic = Instance & NonPublic,
         /// <summary>
-        /// Any method and property
+        /// Static and instance, public and nonpublic
         /// </summary>
         All = Static | Instance,
         /// <summary>
@@ -69,7 +69,7 @@ namespace Rougamo
         /// </summary>
         Property = PropertyGetter | PropertySetter,
         /// <summary>
-        /// instance constructor
+        /// constructor
         /// </summary>
         Constructor = 0b1000_0000,
     }
