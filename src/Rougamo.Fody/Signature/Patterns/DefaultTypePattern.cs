@@ -168,12 +168,41 @@ namespace Rougamo.Fody.Signature.Patterns
             if (token.IsPlus())
             {
                 assignableMatch = true;
-                index--;
+                token = tokens.Tokens[--index];
             }
             else if (token.IsDoubt())
             {
                 nullable = true;
-                index--;
+                token = tokens.Tokens[--index];
+            }
+            var ranks = new Stack<int>();
+            var rank = 0;
+            while (true)
+            {
+                if (token.IsRSBracket())
+                {
+                    if (rank > 0) throw new ArgumentException($"Nested array is not allowed, wrong character at {token.Start}");
+                    rank++;
+                }
+                else if (token.IsLSBracket())
+                {
+                    if (rank == 0) throw new ArgumentException($"Cannot find array bracket in pair, wrong character at {token.Start}");
+                    ranks.Push(rank);
+                    rank = 0;
+                }
+                else if (rank > 0 && token.IsComma())
+                {
+                    rank++;
+                }
+                else if (rank > 0)
+                {
+                    throw new ArgumentException($"Cannot find array bracket in pair, wrong character at {token.Start}");
+                }
+                else
+                {
+                    break;
+                }
+                token = tokens.Tokens[--index];
             }
             do
             {
@@ -193,8 +222,10 @@ namespace Rougamo.Fody.Signature.Patterns
             }
             var patterns = new GenericNamePatterns(nestedTypePatterns.ToArray());
             patterns.ExtractGenerics(genericParameters);
-            var compiledTypePattern = new CompiledTypePattern(ns, patterns, assignableMatch);
-            return nullable ? new NullableTypePattern(compiledTypePattern) : compiledTypePattern;
+            ITypePattern compiledTypePattern = new CompiledTypePattern(ns, patterns, assignableMatch);
+            if (ranks.Count > 0) compiledTypePattern = new ArrayTypePattern(compiledTypePattern, ranks);
+            if (nullable) compiledTypePattern = new NullableTypePattern(compiledTypePattern);
+            return compiledTypePattern;
         }
 
         private ITypePattern CompileGenericIn(List<GenericParameterTypePattern> genericParameters, TokenSource tokens, ref int index)
@@ -217,6 +248,8 @@ namespace Rougamo.Fody.Signature.Patterns
             }
             var nameTokens = new Stack<Token>();
             var patterns = new Stack<GenericNamePattern>();
+            var ranks = new Stack<int>();
+            var rank = 0;
             Stack<ITypePattern>? generics = null;
             ITypePatterns? genericPatterns = null;
             for (; index >= tokens.Start; index--)
@@ -244,6 +277,21 @@ namespace Rougamo.Fody.Signature.Patterns
                     }
                     genericPatterns = new TypePatterns(generics.ToArray());
                     inGeneric = false;
+                }
+                else if (token.IsRSBracket())
+                {
+                    if (rank > 0) throw new ArgumentException($"Nested array is not allowed, wrong character at {token.Start}");
+                    rank++;
+                }
+                else if (token.IsLSBracket())
+                {
+                    if (rank == 0) throw new ArgumentException($"Cannot find array bracket in pair, wrong character at {token.Start}");
+                    ranks.Push(rank);
+                    rank = 0;
+                }
+                else if (rank > 0 && token.IsComma())
+                {
+                    rank++;
                 }
                 else if (inGeneric)
                 {
@@ -339,6 +387,8 @@ namespace Rougamo.Fody.Signature.Patterns
             {
                 compiledTypePattern = new CompiledTypePattern(new NamespacePattern(tokens), new GenericNamePatterns(patterns.ToArray()), assignableMatch);
             }
+
+            if (ranks.Count > 0) compiledTypePattern = new ArrayTypePattern(compiledTypePattern, ranks);
 
             return nullable ? new NullableTypePattern(compiledTypePattern) : compiledTypePattern;
 

@@ -109,17 +109,25 @@ namespace Rougamo.Fody.Signature
                 return signature;
             }
 
+            var pinnedTypeRef = typeRef;
+            var ranks = new List<int>();
+
+            while (typeRef is ArrayType at)
+            {
+                ranks.Add(at.Rank);
+                typeRef = at.ElementType;
+            }
+
             if (typeRef is GenericInstanceType git)
             {
-                var typeReference = typeRef;
                 var i = git.GenericArguments.Count - 1;
                 var boundary = git.GenericArguments.Count;
                 var nestedTypes = new Stack<GenericSignature>();
                 string gitNs;
                 do
                 {
-                    gitNs = typeReference.Namespace;
-                    var name = ShortGenericName(typeReference.Name, out var genericCount);
+                    gitNs = typeRef.Namespace;
+                    var name = ShortGenericName(typeRef.Name, out var genericCount);
                     var argumentSignatures = new Stack<TypeSignature>();
                     boundary -= genericCount;
                     for (; i >= boundary; i--)
@@ -128,8 +136,8 @@ namespace Rougamo.Fody.Signature
                         argumentSignatures.Push(argumentSignature!);
                     }
                     nestedTypes.Push(new GenericSignature(name, argumentSignatures));
-                } while ((typeReference = typeReference.DeclaringType) != null);
-                return new TypeSignature(gitNs, nestedTypes, typeRef);
+                } while ((typeRef = typeRef.DeclaringType) != null);
+                return new TypeSignature(gitNs, nestedTypes, ranks, pinnedTypeRef);
             }
 
             if (typeRef.HasGenericParameters)
@@ -141,29 +149,28 @@ namespace Rougamo.Fody.Signature
                 string gptNs;
                 do
                 {
-                    gptNs = typeReference.Namespace;
-                    var name = ShortGenericName(typeReference.Name, out var genericCount);
+                    gptNs = typeRef.Namespace;
+                    var name = ShortGenericName(typeRef.Name, out var genericCount);
                     var argumentSignatures = new Stack<TypeSignature>();
                     boundary -= genericCount;
                     for (; i >= boundary; i--)
                     {
-                        var argumentSignature = ParseType(typeRef.GenericParameters[i], genericParameters, genericMap);
+                        var argumentSignature = ParseType(typeReference.GenericParameters[i], genericParameters, genericMap);
                         argumentSignatures.Push(argumentSignature!);
                     }
                     nestedTypes.Push(new GenericSignature(name, argumentSignatures));
-                } while ((typeReference = typeReference.DeclaringType) != null);
-                return new TypeSignature(gptNs, nestedTypes, typeRef);
+                } while ((typeRef = typeRef.DeclaringType) != null);
+                return new TypeSignature(gptNs, nestedTypes, ranks, pinnedTypeRef);
             }
 
-            var reference = typeRef;
             var nesteds = new Stack<GenericSignature>();
             string @namespace;
             do
             {
-                @namespace = reference.Namespace;
-                nesteds.Push(new GenericSignature(reference.Name, TypeSignature.EmptyArray));
-            } while ((reference = reference.DeclaringType) != null);
-            return new TypeSignature(@namespace, nesteds, typeRef);
+                @namespace = typeRef.Namespace;
+                nesteds.Push(new GenericSignature(typeRef.Name, TypeSignature.EmptyArray));
+            } while ((typeRef = typeRef.DeclaringType) != null);
+            return new TypeSignature(@namespace, nesteds, ranks, pinnedTypeRef);
         }
 
         private static TypeSignature[] ParseMethodGenericParameters(MethodDefinition methodDef, List<GenericParameterTypeSignature> genericParameters)

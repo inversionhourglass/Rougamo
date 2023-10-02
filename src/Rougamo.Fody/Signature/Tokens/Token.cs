@@ -24,6 +24,8 @@ namespace Rougamo.Fody.Signature.Tokens
         public const char R_BRACKET = ')';
         public const char LT = '<';
         public const char GT = '>';
+        public const char L_SQUARE_BRACKET = '[';
+        public const char R_SQUARE_BRACKET = ']';
 
         public Token(StringOrChar value, int start, int end)
         {
@@ -96,6 +98,10 @@ namespace Rougamo.Fody.Signature.Tokens
         public static bool IsLT(this Token? token) => token != null && token.Value == Token.LT;
 
         public static bool IsGT(this Token? token) => token != null && token.Value == Token.GT;
+
+        public static bool IsLSBracket(this Token? token) => token != null && token.Value == Token.L_SQUARE_BRACKET;
+
+        public static bool IsRSBracket(this Token? token) => token != null && token.Value == Token.R_SQUARE_BRACKET;
 
         public static bool IsNull(this Token? token) => token != null && token.Value == Token.NULL;
     }

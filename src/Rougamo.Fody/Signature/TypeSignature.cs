@@ -14,10 +14,11 @@ namespace Rougamo.Fody.Signature
         public static readonly TypeSignature[] EmptyArray = new TypeSignature[0];
 
         /// <summary/>
-        public TypeSignature(string @namespace, IReadOnlyCollection<GenericSignature> nestedTypes, TypeReference reference)
+        public TypeSignature(string @namespace, IReadOnlyCollection<GenericSignature> nestedTypes, IReadOnlyCollection<int> arrayRanks, TypeReference reference)
         {
             Namespace = @namespace;
             NestedTypes = nestedTypes.ToArray();
+            ArrayRanks = arrayRanks.ToArray();
             Reference = reference;
         }
 
@@ -27,9 +28,12 @@ namespace Rougamo.Fody.Signature
 
         public TypeReference Reference { get; }
 
+        public int[] ArrayRanks { get; set; }
+
         public override string ToString()
         {
-            return $"{Namespace}.{string.Join(NESTED_SEPARATOR.ToString(), NestedTypes.AsEnumerable())}";
+            var arraySuffix = ArrayRanks.Length == 0 ? string.Empty : string.Concat(ArrayRanks.Select(x => $"[{new string(',', x - 1)}]"));
+            return $"{Namespace}.{string.Join(NESTED_SEPARATOR.ToString(), NestedTypes.AsEnumerable())}{arraySuffix}";
         }
     }
 }

@@ -1,10 +1,11 @@
 ﻿using Mono.Cecil;
+using System;
 
 namespace Rougamo.Fody.Signature
 {
     public class GenericParameterTypeSignature : TypeSignature
     {
-        public GenericParameterTypeSignature(string name, TypeReference reference) : base(string.Empty, GenericSignature.EmptyArray, reference)
+        public GenericParameterTypeSignature(string name, TypeReference reference) : base(string.Empty, GenericSignature.EmptyArray, Array.Empty<int>(), reference)
         {
             Name = name;
         }

@@ -120,13 +120,16 @@ namespace Rougamo.Fody.Signature.Patterns.Parsers
             if (token.IsNull()) return new NullTypePattern();
 
             var insideGeneric = 0;
+            var inArray = false;
             var pre = token;
             do
             {
                 token = tokens.Peek();
-                if (token == null || insideGeneric == 0 && (token.IsLBracket() || token.IsRBracket() || token.IsComma() || token.IsAnd() || token.IsOr() || pre.End != token.Start)) return new DefaultTypePattern(tokens.Slice(start, tokens.Index));
+                if (token == null || insideGeneric == 0 && !inArray && (token.IsLBracket() || token.IsRBracket() || token.IsComma() || token.IsAnd() || token.IsOr() || pre.End != token.Start)) return new DefaultTypePattern(tokens.Slice(start, tokens.Index));
                 if (token.IsLT()) insideGeneric++;
                 else if (token.IsGT()) insideGeneric--;
+                else if (token.IsLSBracket()) inArray = true;
+                else if (token.IsRSBracket()) inArray = false;
                 tokens.Read();
                 pre = token;
             } while (true);
