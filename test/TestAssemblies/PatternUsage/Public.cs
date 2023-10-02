@@ -13,6 +13,7 @@ namespace PatternUsage
     [IntAtTheLastOfThreeParameter]
     [AnyTwoItemTupleParameter]
     [SpecificTupleReturn]
+    [IntArrayReturn]
     public class Public : NonPublicCaller, Interface, IRougamo<DoubleAtTheSecondOfThreeParameterAttribute>, IRougamo<InstanceAttribute>
     {
         public List<string> Prop1 { get; set; }
@@ -71,5 +72,7 @@ namespace PatternUsage
             await Task.Yield();
             return default;
         }
+
+        public int[,][][,,]? PublicArray(List<string> executedMos) => default;
     }
 }

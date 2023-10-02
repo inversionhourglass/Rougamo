@@ -1048,6 +1048,18 @@ namespace Rougamo.Fody.Tests
         }
 
         [Fact]
+        public void MethodArrayTest()
+        {
+            var instance = GetInstance("Public");
+
+            var executedMos = new List<string>();
+
+            executedMos.Clear();
+            instance.PublicArray(executedMos);
+            Assert.Contains(nameof(IntArrayReturnAttribute), executedMos);
+        }
+
+        [Fact]
         public void ParameterTest()
         {
             var instance = GetInstance("Public");
