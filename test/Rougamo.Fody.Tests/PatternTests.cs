@@ -1092,6 +1092,22 @@ namespace Rougamo.Fody.Tests
         }
 
         [Fact]
+        public void GenericParameterMatchTest()
+        {
+            var instance = GetInstance("TheGeneric`2", false, t => t.MakeGenericType(typeof(char), typeof(string)));
+
+            List<string> returnValue;
+
+            returnValue = instance.Call("M1", new object[] { ' ', " ", 1, 2L }, typeof(int), typeof(long));
+            Assert.Contains(nameof(GenericParameterMatch1Attribute), returnValue);
+            Assert.DoesNotContain(nameof(GenericParameterMatch2Attribute), returnValue);
+
+            returnValue = instance.Call("M2", new object[] { " ", ' ', 2L, 1 }, typeof(int), typeof(long));
+            Assert.DoesNotContain(nameof(GenericParameterMatch1Attribute), returnValue);
+            Assert.Contains(nameof(GenericParameterMatch2Attribute), returnValue);
+        }
+
+        [Fact]
         public void ExecutionTupleSyntaxTest()
         {
             var instance = GetInstance("Public");
