@@ -19,13 +19,17 @@
   - [x] 考虑还有什么能简化的
 - [x] 方法/类型扫描会扫到编译时生成方法/类型，比如StateMachine系列，需要排除
 - [ ] 增加CLI，结合CICD解决间接依赖的问题
+  - 后续支持吧，2.0不做
 - [ ] 解决debug断点问题([#36](https://github.com/inversionhourglass/Rougamo/issues/36))
+  - 比较麻烦，2.0不做支持，详见issue回复
 - [ ] 解决VS运行时编辑问题([#37](https://github.com/inversionhourglass/Rougamo/issues/37))
+  - 比较麻烦，2.0不做支持，详见issue回复
 - [x] 解决MoAttribute应用于高于方法级别时，应用时定义的Flags无法生效的问题([#40](https://github.com/inversionhourglass/Rougamo/issues/37))
-- [ ] 要在2.0版本支持构造方法吗([#41](https://github.com/inversionhourglass/Rougamo/issues/41))
-- [ ] 启用pattern
+- [x] 要在2.0版本支持构造方法吗([#41](https://github.com/inversionhourglass/Rougamo/issues/41))
+- [x] 启用pattern
 - [ ] 优化pattern缓存？
-- [ ] README 2.0
+  - 这个版本优化了，下个版本做什么，下次一定
+- [x] README 2.0
 - [x] 将匹配`Task/ValueTask`的`async void`改成`async null`，`async void`目前功能与`void`相同，后续可能做调整，同时注意`async *`匹配的是`Task<>/ValueTask`但是不匹配`Task/ValueTask`
 - [ ] 构造方法织入存在的问题（批量的问题）
   - [ ] 实例类型在没有定义任何实例构造方法时，编译器会自动生成一个无参构造方法，这个方法与手动编写构造方法没有任何可以用来区分的标识，那么此时进行批量的构造方法织入时，这种自动生成的构造方法是否真的是你希望织入的呢
