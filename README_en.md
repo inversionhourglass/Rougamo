@@ -416,6 +416,7 @@ Please note the following points when using the retry function:
 
 ## Partially Weaving
 Rougamo will weave all functions into the code by default, but generally not all functions are used. And with the iteration of the version, more and more functions are supported and more and more code is woven into it, which will increase the final assembly size. By specifying partial weaving, you can weave in only the functionality you need. Partial weaving is set up by overriding `MoAttribute.Features`.
+
 |      Value      |                                      functions                                           |
 |:---------------:|:-----------------------------------------------------------------------------------------|
 |       All       | Contains all functions, default value                                                    |

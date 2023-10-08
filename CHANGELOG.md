@@ -1,37 +1,25 @@
-## todo
-- [x] 需要织入的Mo不足X个时不使用数组保存
-- [x] 支持排序
-- [x] 支持按需织入
-- [x] 空方法织入优化。【直接删除空方法织入的独立逻辑，如果希望空方法织入精简的代码，通过按需织入的方式实现】
-- [x] Attribute属性值获取支持在构造方法对属性进行初始化的方式，这种方式是调用属性Set方法赋值的
-- [x] 优化nop anchors
-- [x] 支持更灵活的方法扫描，discoverer的思路行不通，直接尝试pattern吧
-  - [x] 支持regex()
-  - [x] 支持execution()
-  - [x] 支持method()
-  - [x] 支持getter()
-  - [x] 支持setter()
-  - [x] 支持property()
-  - [x] 考虑在对声明类型用否时，declaring type和method的否定关系
-  - [x] 考虑method与type的访问修饰符问题（配置中通过composite-accessibility控制，默认false，仅使用method的访问修饰符，设置为true后将使用type+method复合访问修饰符）
-  - [x] 支持考虑使用`async`简化Task/ValueTask返回值
-  - [x] 考虑使用`?`简化Nullable
-  - [x] 考虑还有什么能简化的
-- [x] 方法/类型扫描会扫到编译时生成方法/类型，比如StateMachine系列，需要排除
-- [ ] 增加CLI，结合CICD解决间接依赖的问题
-  - 后续支持吧，2.0不做
-- [ ] 解决debug断点问题([#36](https://github.com/inversionhourglass/Rougamo/issues/36))
-  - 比较麻烦，2.0不做支持，详见issue回复
-- [ ] 解决VS运行时编辑问题([#37](https://github.com/inversionhourglass/Rougamo/issues/37))
-  - 比较麻烦，2.0不做支持，详见issue回复
-- [x] 解决MoAttribute应用于高于方法级别时，应用时定义的Flags无法生效的问题([#40](https://github.com/inversionhourglass/Rougamo/issues/37))
-- [x] 要在2.0版本支持构造方法吗([#41](https://github.com/inversionhourglass/Rougamo/issues/41))
-- [x] 启用pattern
-- [ ] 优化pattern缓存？
-  - 这个版本优化了，下个版本做什么，下次一定
-- [x] README 2.0
-- [x] 将匹配`Task/ValueTask`的`async void`改成`async null`，`async void`目前功能与`void`相同，后续可能做调整，同时注意`async *`匹配的是`Task<>/ValueTask`但是不匹配`Task/ValueTask`
-- [ ] 构造方法织入存在的问题（批量的问题）
-  - [ ] 实例类型在没有定义任何实例构造方法时，编译器会自动生成一个无参构造方法，这个方法与手动编写构造方法没有任何可以用来区分的标识，那么此时进行批量的构造方法织入时，这种自动生成的构造方法是否真的是你希望织入的呢
-  - [ ] 我们在为类型编写构造方法时，有时候多个构造方法的重载可能最后都是调用某一个构造方法，那么在批量应用的场景下，你是否真的希望那些重载的构造方法都进行一次织入呢
-  - [ ] 从我的观点来看，构造方法织入一般应该是精确织入，也就是将`Attribute`直接应用于构造方法上，理论没有pattern的需求，所以目前不创建构造方法的特有pattern，在需求不明确的时候不定死pattern格式也是为以后留下更大的操作空间
+- 功能及优化
+	- 支持Pattern匹配，详见[表达式匹配](https://github.com/inversionhourglass/Rougamo/blob/ce9d5c26f63bc12988a2482032041f791241079f/README.md#%E8%A1%A8%E8%BE%BE%E5%BC%8F%E5%8C%B9%E9%85%8D)
+	- 支持[部分织入](https://github.com/inversionhourglass/Rougamo/blob/ce9d5c26f63bc12988a2482032041f791241079f/README.md#%E9%83%A8%E5%88%86%E7%BB%87%E5%85%A5)
+	- 支持将`MoAttribute`直接应用于属性上([#17](https://github.com/inversionhourglass/Rougamo/issues/17))
+	- 支持构造方法织入([#41](https://github.com/inversionhourglass/Rougamo/issues/41))
+	- 需要织入的Mo不足[moarray-threshold](https://github.com/inversionhourglass/Rougamo/blob/ce9d5c26f63bc12988a2482032041f791241079f/README.md#%E9%85%8D%E7%BD%AE%E9%A1%B9)个时不使用数组保存
+	- 支持排序
+	- 空方法织入优化
+	- 优化nop anchors
+- 修复BUG
+	- [#40](https://github.com/inversionhourglass/Rougamo/issues/40)
+
+---
+
+- features
+	- Support pattern matching, for detail see [Pattern Matching](https://github.com/inversionhourglass/Rougamo/blob/ce9d5c26f63bc12988a2482032041f791241079f/README_en.md#pattern-matching).
+	- [Partially Weaving](https://github.com/inversionhourglass/Rougamo/blob/ce9d5c26f63bc12988a2482032041f791241079f/README_en.md#partially-weaving).
+	- Support applying `MoAttribute` directly to properties.([#17](https://github.com/inversionhourglass/Rougamo/issues/17))
+	- Support constructor weaving.([#41](https://github.com/inversionhourglass/Rougamo/issues/41))
+	- Do not use an array to save when the number of Mo less than [moarray-threshold](https://github.com/inversionhourglass/Rougamo/blob/ce9d5c26f63bc12988a2482032041f791241079f/README_en.md#configuration).
+	- Support sort.
+	- Empty method weaving optimization.
+	- nop anchors optimization.
+- fixes
+	- [#40](https://github.com/inversionhourglass/Rougamo/issues/40)
