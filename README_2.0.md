@@ -94,25 +94,25 @@ public class Service
 public class LoggingMo : IMo
 {
     // 1.1.特征过滤
-    public override AccessFlags Flags => AccessFlags.All | AccessFlags.Method;
+    public AccessFlags Flags => AccessFlags.All | AccessFlags.Method;
 
-    public override void OnEntry(MethodContext context)
+    public void OnEntry(MethodContext context)
     {
         // 从context对象中能取到包括入参、类实例、方法描述等信息
         Log.Info("方法执行前");
     }
 
-    public override void OnException(MethodContext context)
+    public void OnException(MethodContext context)
     {
         Log.Error("方法执行异常", context.Exception);
     }
 
-    public override void OnExit(MethodContext context)
+    public void OnExit(MethodContext context)
     {
         Log.Info("方法退出时，不论方法执行成功还是异常，都会执行");
     }
 
-    public override void OnSuccess(MethodContext context)
+    public void OnSuccess(MethodContext context)
     {
         Log.Info("方法执行成功后");
     }
@@ -272,7 +272,7 @@ public class PatternAttribute : MoAttribute
 ### 特殊语法
 
 #### 基础类型简写
-对于常用基础类型，Rougamo支持类型简写，让表达式看起来更简洁清晰。目前之前简写的类型有`bool`, `byte`, `short`, `int`, `long`, `sbyte`, `ushort`, `uint`, `ulong`, `char`, `string`, `float`, `double`, `decimal`, `object`, `void`。
+对于常用基础类型，Rougamo支持类型简写，让表达式看起来更简洁清晰。目前支持简写的类型有`bool`, `byte`, `short`, `int`, `long`, `sbyte`, `ushort`, `uint`, `ulong`, `char`, `string`, `float`, `double`, `decimal`, `object`, `void`。
 
 #### Nullable简写
 正如我们平时编程一样，我们可以使用`?`表示`Nullable`类型，比如`int?`即为`Nullable<int>`。需要注意的是，不要将引用类型的Nullable语法也当做`Nullable`类型，比如`string?`其实就是`string`，在Rougamo里面直接写`string`，而不要写成`string?`。
@@ -311,7 +311,7 @@ public class Xyz
         // 签名：internal System.Threading.Tasks.Task<System.DateTime> a.b.c.Xyz/Lmn<T1,T2>.M3<T3,T4>(T1,T2,T3,T4)
         internal Task<DateTime> M3<TO, TP>(TU u, TV v, TO o, TP p) => Task.FromResult(DateTime.Now);
 
-        //签名：private static System.Threading.Tasks.ValueTask a.b.c.Xyz/Lmn<T1,T2>.M4()
+        // 签名：private static System.Threading.Tasks.ValueTask a.b.c.Xyz/Lmn<T1,T2>.M4()
         private static async ValueTask M4() => await Task.Yeild();
     }
 }
