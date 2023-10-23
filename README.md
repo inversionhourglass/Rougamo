@@ -4,7 +4,7 @@
 中文 | [English](README_en.md)
 
 ## Rougamo是什么
-Rougamo是一个静态代码织入的AOP组件，同为APO组件较为常用的有Castle、Autofac、AspectCore等，与这些组件不同的是，这些组件基本都是通过动态代理+IoC的方式实现AOP，是运行时完成的，而Rougamo是编译时直接修改目标方法织入IL代码的。如果你还知道一个AOP组件"PostSharp"，那么Rougamo就是类似Postsharp的一个组件，Postsharp是一个成熟稳定的静态代码织入组件，但PostSharp是一款商业软件，一些常用的功能在免费版本中并不提供。
+Rougamo是一个静态代码织入的AOP组件，同为AOP组件较为常用的有Castle、Autofac、AspectCore等，与这些组件不同的是，这些组件基本都是通过动态代理+IoC的方式实现AOP，是运行时完成的，而Rougamo是编译时直接修改目标方法织入IL代码的。如果你还知道一个AOP组件"PostSharp"，那么Rougamo就是类似Postsharp的一个组件，Postsharp是一个成熟稳定的静态代码织入组件，但PostSharp是一款商业软件，一些常用的功能在免费版本中并不提供。
 
 # 织入方式
 
