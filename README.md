@@ -728,7 +728,7 @@ public class Class2 : IRepulsionsRougamo<Mo1Attribute, TestRepulsion>
 
 ## FAQ
 **Q: 首次接触Rougamo，但发现不生效**  
-A: 首次接触时需要注意，项目必须直接以来`Rougamo.Fody`才能生效，间接依赖是无效的。比如项目A依赖B，B引用了`Rougamo.Fody`，此时项目A中的织入是无法生效的，需要项目A直接引用`Rougamo.Fody`。
+A: 首次接触时需要注意，项目必须直接依赖`Rougamo.Fody`才能生效，间接依赖是无效的。比如项目A依赖B，B引用了`Rougamo.Fody`，此时项目A中的织入是无法生效的，需要项目A直接引用`Rougamo.Fody`。
 
 **Q: 使用Rougamo开发组件后，其他项目引用我的组件还必须引用`Rougamo.Fody`吗**  
 A: 组件在引用`Rougamo.Fody`后可以手动修改项目文件里的引用节点，添加` PrivateAssets="contentfiles;analyzers"`，修改后如下（复制记得修改版本号），之后其他人使用你打包的组件时就可以不用直接依赖`Rougamo.Fody`，但需要直接依赖你打包的组件。
