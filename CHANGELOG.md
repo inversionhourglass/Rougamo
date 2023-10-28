@@ -1,25 +1,5 @@
-- 功能及优化
-	- 支持Pattern匹配，详见[表达式匹配](https://github.com/inversionhourglass/Rougamo/blob/ce9d5c26f63bc12988a2482032041f791241079f/README.md#%E8%A1%A8%E8%BE%BE%E5%BC%8F%E5%8C%B9%E9%85%8D)
-	- 支持[部分织入](https://github.com/inversionhourglass/Rougamo/blob/ce9d5c26f63bc12988a2482032041f791241079f/README.md#%E9%83%A8%E5%88%86%E7%BB%87%E5%85%A5)
-	- 支持将`MoAttribute`直接应用于属性上([#17](https://github.com/inversionhourglass/Rougamo/issues/17))
-	- 支持构造方法织入([#41](https://github.com/inversionhourglass/Rougamo/issues/41))
-	- 需要织入的Mo不足[moarray-threshold](https://github.com/inversionhourglass/Rougamo/blob/ce9d5c26f63bc12988a2482032041f791241079f/README.md#%E9%85%8D%E7%BD%AE%E9%A1%B9)个时不使用数组保存
-	- 支持排序
-	- 空方法织入优化
-	- 优化nop anchors
-- 修复BUG
-	- [#40](https://github.com/inversionhourglass/Rougamo/issues/40)
+- [#46](https://github.com/inversionhourglass/Rougamo/issues/46) Unity接入及优化
+- [#48](https://github.com/inversionhourglass/Rougamo/issues/48) Pattern支持Attribute匹配
 
 ---
 
-- features
-	- Support pattern matching, for detail see [Pattern Matching](https://github.com/inversionhourglass/Rougamo/blob/ce9d5c26f63bc12988a2482032041f791241079f/README_en.md#pattern-matching).
-	- [Partially Weaving](https://github.com/inversionhourglass/Rougamo/blob/ce9d5c26f63bc12988a2482032041f791241079f/README_en.md#partially-weaving).
-	- Support applying `MoAttribute` directly to properties.([#17](https://github.com/inversionhourglass/Rougamo/issues/17))
-	- Support constructor weaving.([#41](https://github.com/inversionhourglass/Rougamo/issues/41))
-	- Do not use an array to save when the number of Mo less than [moarray-threshold](https://github.com/inversionhourglass/Rougamo/blob/ce9d5c26f63bc12988a2482032041f791241079f/README_en.md#configuration).
-	- Support sort.
-	- Empty method weaving optimization.
-	- nop anchors optimization.
-- fixes
-	- [#40](https://github.com/inversionhourglass/Rougamo/issues/40)
