@@ -135,5 +135,13 @@ namespace Rougamo.Fody.Tests
             Assert.Equal(_40_Attribute.ReplacedValue, instanceValue);
             Assert.Equal(Issue40.Static(), staticValue);
         }
+
+        [Fact]
+        public async Task Issue51Test()
+        {
+            var sInstance = GetStaticInstance(nameof(Issue51), false);
+
+            await (Task)sInstance.TestAsync();
+        }
     }
 }
