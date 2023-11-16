@@ -391,22 +391,36 @@ namespace Rougamo.Fody
 
         private static void OptimizeUselessBr(this MethodBody body)
         {
+            var cannotRemoves = new List<Instruction>();
             var canRemoves = new List<Instruction>();
             foreach (var instruction in body.Instructions)
             {
-                if (instruction.OpCode.Code == Code.Br && instruction.Operand is Instruction br2)
+                if (instruction.Operand is Instruction br2)
                 {
-                    var current = instruction.Next;
-                    while (current != br2)
+                    cannotRemoves.Add(br2);
+                    if (instruction.OpCode.Code == Code.Br)
                     {
-                        if (current.OpCode.Code != Code.Nop) break;
-                        current = current.Next;
+                        var current = instruction.Next;
+                        while (current != br2)
+                        {
+                            if (current.OpCode.Code != Code.Nop) break;
+                            current = current.Next;
+                        }
+                        if (current == br2) canRemoves.Add(instruction);
                     }
-                    if (current == br2) canRemoves.Add(instruction);
                 }
+            }
+            foreach (var handler in body.ExceptionHandlers)
+            {
+                cannotRemoves.Add(handler.TryStart);
+                cannotRemoves.Add(handler.TryEnd);
+                cannotRemoves.Add(handler.HandlerStart);
+                cannotRemoves.Add(handler.HandlerEnd);
             }
             foreach (var item in canRemoves)
             {
+                if (cannotRemoves.Contains(item)) continue;
+
                 body.Instructions.Remove(item);
             }
         }
