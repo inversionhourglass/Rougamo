@@ -37,7 +37,7 @@ namespace Rougamo.Fody
             foreach (var typeDef in types)
             {
                 if (!typeDef.IsClass || typeDef.IsValueType || typeDef.IsDelegate() || !typeDef.HasMethods || typeDef.CustomAttributes.Any(x => x.AttributeType.Is(Constants.TYPE_CompilerGeneratedAttribute) || x.AttributeType.Is(Constants.TYPE_Runtime_CompilerGeneratedAttribute))) continue;
-                if (typeDef.Implement(Constants.TYPE_IMo) || typeDef.DerivesFromAny(Constants.TYPE_MoRepulsion, Constants.TYPE_IgnoreMoAttribute, Constants.TYPE_MoProxyAttribute)) continue;
+                if (typeDef.ImplementAny(Constants.TYPE_IMo, Constants.TYPE_IValueMo) || typeDef.DerivesFromAny(Constants.TYPE_MoRepulsion, Constants.TYPE_IgnoreMoAttribute, Constants.TYPE_MoProxyAttribute)) continue;
                 if (_config.ExceptTypePatterns.Any(x => x.IsMatch(typeDef.FullName))) continue;
 
                 var typeIgnores = ExtractIgnores(typeDef.CustomAttributes);
@@ -189,7 +189,7 @@ namespace Rougamo.Fody
             foreach (var attribute in attributes)
             {
                 var attrType = attribute.AttributeType;
-                if (attrType.DerivesFrom(Constants.TYPE_MoAttribute))
+                if (attrType.DerivesFromAny(Constants.TYPE_MoAttribute, Constants.))
                 {
                     ExtractMoAttributeUniq(directs, attribute);
                 }
