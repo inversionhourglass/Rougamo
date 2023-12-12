@@ -38,6 +38,8 @@ namespace Rougamo.Fody.Enhances.Iterator
 
         public Instruction CatchStart { get; }
 
+        public Instruction OnExceptionRefreshArgs { get; set; } = Nop();
+
         public Instruction OnException { get; } = Nop();
 
         public Instruction OnExitAfterException { get; } = Nop();
@@ -51,6 +53,8 @@ namespace Rougamo.Fody.Enhances.Iterator
         public Instruction IfHasException { get; } = Nop();
 
         public Instruction SaveReturnValue { get; } = Nop();
+
+        public Instruction OnSuccessRefreshArgs { get; set; } = Nop();
 
         public Instruction OnSuccess { get; } = Nop();
 

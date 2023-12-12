@@ -42,6 +42,8 @@ namespace Rougamo.Fody.Enhances.Async
 
         public Instruction SaveException { get; } = Nop();
 
+        public Instruction OnExceptionRefreshArgs { get; set; } = Nop();
+
         public Instruction OnException { get; } = Nop();
 
         public Instruction IfExceptionRetry { get; } = Nop();
@@ -57,6 +59,8 @@ namespace Rougamo.Fody.Enhances.Async
         public Instruction HostsLeaveCatch { get; }
 
         public Instruction SaveReturnValue { get; } = Nop();
+
+        public Instruction OnSuccessRefreshArgs { get; set; } = Nop();
 
         public Instruction OnSuccess { get; } = Nop();
 

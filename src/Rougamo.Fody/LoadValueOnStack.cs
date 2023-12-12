@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Rougamo.Fody.Enhances;
 
 namespace Rougamo.Fody
 {
@@ -137,32 +138,96 @@ namespace Rougamo.Fody
             instructions.Add(Instruction.Create(OpCodes.Newarr, _typeObjectRef));
             for (int i = 0; i < methodDef.Parameters.Count; i++)
             {
-                var parameter = methodDef.Parameters[i];
                 instructions.Add(Instruction.Create(OpCodes.Dup));
-                instructions.Add(Instruction.Create(OpCodes.Ldc_I4, i));
-                LoadMethodArgumentsOnStack(parameter, instructions);
-                var parameterType = parameter.ParameterType;
-                if (parameterType is ByReferenceType byRefType)
-                {
-                    parameterType = byRefType.ElementType;
-                }
-                if (parameterType.IsValueType || parameterType.IsGenericParameter)
-                {
-                    instructions.Add(Instruction.Create(OpCodes.Box, parameterType));
-                }
-                instructions.Add(Instruction.Create(OpCodes.Stelem_Ref));
+                StArgument(i, methodDef.Parameters[i], instructions);
             }
 
             return instructions;
         }
 
-        private void LoadMethodArgumentsOnStack(ParameterDefinition parameter, IList<Instruction> instructions)
+        private IList<Instruction> UpdateMethodArguments(MethodDefinition methodDef, VariableDefinition contextVariable)
         {
-            instructions.Add(Instruction.Create(OpCodes.Ldarg, parameter));
-            if (parameter.ParameterType.IsByReference)
+            var instructions = new List<Instruction>();
+
+            for (int i = 0; i < methodDef.Parameters.Count; i++)
             {
-                if (parameter.ParameterType is not ByReferenceType parameterType) throw new RougamoException($"LoadMethodArgumentsOnStack({parameter.Name} {parameter.ParameterType}) is byReference but cannot convert to ByReferenceType");
+                instructions.Add(Instruction.Create(OpCodes.Ldloc, contextVariable));
+                instructions.Add(Instruction.Create(OpCodes.Callvirt, _methodMethodContextGetArgumentsRef));
+                StArgument(i, methodDef.Parameters[i], instructions);
+            }
+
+            return instructions;
+        }
+
+        private void StArgument(int index, ParameterDefinition parameterDef, IList<Instruction> instructions)
+        {
+            instructions.Add(Instruction.Create(OpCodes.Ldc_I4, index));
+            LoadMethodArgumentsOnStack(parameterDef, instructions);
+            var parameterType = parameterDef.ParameterType;
+            if (parameterType is ByReferenceType byRefType)
+            {
+                parameterType = byRefType.ElementType;
+            }
+            if (parameterType.IsValueType || parameterType.IsGenericParameter)
+            {
+                instructions.Add(Instruction.Create(OpCodes.Box, parameterType));
+            }
+            instructions.Add(Instruction.Create(OpCodes.Stelem_Ref));
+        }
+
+        private void LoadMethodArgumentsOnStack(ParameterDefinition parameterDef, IList<Instruction> instructions)
+        {
+            instructions.Add(Instruction.Create(OpCodes.Ldarg, parameterDef));
+            if (parameterDef.ParameterType.IsByReference)
+            {
+                if (parameterDef.ParameterType is not ByReferenceType parameterType) throw new RougamoException($"LoadMethodArgumentsOnStack({parameterDef.Name} {parameterDef.ParameterType}) is byReference but cannot convert to ByReferenceType");
                 var ldind = parameterType.ElementType.ImportInto(ModuleDefinition).Ldind();
+                if (ldind != null) instructions.Add(ldind);
+            }
+        }
+
+        private IList<Instruction> StateMachineUpdateMethodArguments(IStateMachineFields fields)
+        {
+            var instructions = new List<Instruction>();
+
+            for (int i = 0; i < fields.Parameters.Length; i++)
+            {
+                var fieldRef = fields.Parameters[i];
+                if (fieldRef == null) continue;
+
+                instructions.Add(Instruction.Create(OpCodes.Ldarg_0));
+                instructions.Add(Instruction.Create(OpCodes.Ldfld, fields.MethodContext));
+                instructions.Add(Instruction.Create(OpCodes.Callvirt, _methodMethodContextGetArgumentsRef));
+                StArgument(i, fieldRef, instructions);
+            }
+
+            return instructions;
+        }
+
+        private void StArgument(int index, FieldReference fieldRef, IList<Instruction> instructions)
+        {
+            instructions.Add(Instruction.Create(OpCodes.Ldc_I4, index));
+            LoadMethodArgumentsOnStack(fieldRef, instructions);
+            var parameterType = fieldRef.FieldType;
+            if (parameterType is ByReferenceType byRefType)
+            {
+                parameterType = byRefType.ElementType;
+            }
+            if (parameterType.IsValueType || parameterType.IsGenericParameter)
+            {
+                instructions.Add(Instruction.Create(OpCodes.Box, parameterType));
+            }
+            instructions.Add(Instruction.Create(OpCodes.Stelem_Ref));
+        }
+
+        private void LoadMethodArgumentsOnStack(FieldReference fieldRef, IList<Instruction> instructions)
+        {
+            instructions.Add(Instruction.Create(OpCodes.Ldarg_0));
+            instructions.Add(Instruction.Create(OpCodes.Ldfld, fieldRef));
+            if (fieldRef.FieldType.IsByReference)
+            {
+                if (fieldRef.FieldType is not ByReferenceType fieldType) throw new RougamoException($"LoadMethodArgumentsOnStack({fieldRef.Name} {fieldRef.FieldType}) is byReference but cannot convert to ByReferenceType");
+                var ldind = fieldType.ElementType.ImportInto(ModuleDefinition).Ldind();
                 if (ldind != null) instructions.Add(ldind);
             }
         }

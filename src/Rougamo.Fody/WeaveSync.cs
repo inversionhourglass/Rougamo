@@ -29,12 +29,14 @@ namespace Rougamo.Fody
             instructions.InsertAfter(anchors.TryStart, SyncResetRetryVariable(rouMethod, variables));
 
             instructions.InsertAfter(anchors.CatchStart, SyncSaveException(rouMethod, variables));
+            instructions.InsertAfter(anchors.OnExceptionRefreshArgs, SyncOnExceptionRefreshArgs(rouMethod, variables));
             instructions.InsertAfter(anchors.OnException, SyncOnException(rouMethod, anchors.IfExceptionRetry, variables));
             instructions.InsertAfter(anchors.IfExceptionRetry, SyncIfExceptionRetry(rouMethod, anchors.TryStart, anchors.IfExceptionHandled, variables));
             instructions.InsertAfter(anchors.IfExceptionHandled, SyncIfExceptionHandled(rouMethod, returnBoxTypeRef, anchors.FinallyEnd, anchors.Rethrow, variables));
 
             instructions.InsertAfter(anchors.FinallyStart, SyncHasExceptionCheck(rouMethod, anchors.OnExit, variables));
             instructions.InsertAfter(anchors.SaveReturnValue, SyncSaveReturnValue(rouMethod, returnBoxTypeRef, variables));
+            instructions.InsertAfter(anchors.OnSuccessRefreshArgs, SyncOnSuccessRefreshArgs(rouMethod, variables));
             instructions.InsertAfter(anchors.OnSuccess, SyncOnSuccess(rouMethod, anchors.IfSuccessRetry, variables));
             instructions.InsertAfter(anchors.IfSuccessRetry, SyncIfOnSuccessRetry(rouMethod, anchors.IfSuccessReplaced, anchors.EndFinally, variables));
             instructions.InsertAfter(anchors.IfSuccessReplaced, SyncIfOnSuccessReplacedReturn(rouMethod, returnBoxTypeRef, anchors.OnExit, variables));
@@ -93,6 +95,7 @@ namespace Rougamo.Fody
                 instructions.Add(new[]
                 {
                     anchors.CatchStart,
+                    anchors.OnExceptionRefreshArgs,
                     anchors.OnException,
                     anchors.IfExceptionRetry,
                     anchors.IfExceptionHandled,
@@ -106,6 +109,7 @@ namespace Rougamo.Fody
                 instructions.Add(new[]
                 {
                     anchors.SaveReturnValue,
+                    anchors.OnSuccessRefreshArgs,
                     anchors.OnSuccess,
                     anchors.IfSuccessRetry,
                     anchors.IfSuccessReplaced,
@@ -357,6 +361,13 @@ namespace Rougamo.Fody
             };
         }
 
+        private IList<Instruction> SyncOnExceptionRefreshArgs(RouMethod rouMethod, SyncVariables variable)
+        {
+            if ((rouMethod.Features & (int)(Feature.OnException | Feature.OnExit)) == 0 || (rouMethod.Features & (int)Feature.FreshArgs) == 0) return EmptyInstructions;
+
+            return UpdateMethodArguments(rouMethod.MethodDef, variable.MethodContext);
+        }
+
         private IList<Instruction> SyncOnException(RouMethod rouMethod, Instruction endAnchor, SyncVariables variables)
         {
             if (rouMethod.Mos.All(x => !Feature.OnException.IsMatch(x.Features))) return EmptyInstructions;
@@ -441,6 +452,13 @@ namespace Rougamo.Fody
             instructions.Add(Create(OpCodes.Callvirt, _methodMethodContextSetReturnValueRef));
 
             return instructions;
+        }
+
+        private IList<Instruction> SyncOnSuccessRefreshArgs(RouMethod rouMethod, SyncVariables variable)
+        {
+            if ((rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) == 0 || (rouMethod.Features & (int)Feature.FreshArgs) == 0) return EmptyInstructions;
+
+            return UpdateMethodArguments(rouMethod.MethodDef, variable.MethodContext);
         }
 
         private IList<Instruction> SyncOnSuccess(RouMethod rouMethod, Instruction endAnchor, SyncVariables variables)

@@ -30,10 +30,12 @@ namespace Rougamo.Fody
             instructions.InsertAfter(anchors.RewriteArg, StateMachineRewriteArguments(rouMethod, anchors.HostsStart, fields));
 
             instructions.InsertAfter(anchors.SaveException, StateMachineSaveException(rouMethod, moveNextMethodName, anchors.HostsCatchStart, fields));
+            instructions.InsertAfter(anchors.OnExceptionRefreshArgs, StateMachineOnExceptionRefreshArgs(rouMethod, fields));
             instructions.InsertAfter(anchors.OnException, StateMachineOnException(rouMethod, moveNextMethodDef, anchors.OnExitAfterException, fields));
             instructions.InsertAfter(anchors.OnExitAfterException, StateMachineOnExit(rouMethod, moveNextMethodDef, anchors.HostsSetException, fields));
 
             instructions.InsertAfter(anchors.SaveReturnValue, IteratorSaveReturnValue(rouMethod, fields));
+            instructions.InsertAfter(anchors.OnSuccessRefreshArgs, StateMachineOnSuccessRefreshArgs(rouMethod, fields));
             instructions.InsertAfter(anchors.OnSuccess, StateMachineOnSuccess(rouMethod, moveNextMethodDef, anchors.OnExitAfterSuccess, fields));
             instructions.InsertAfter(anchors.OnExitAfterSuccess, StateMachineOnExit(rouMethod, moveNextMethodDef, anchors.FinishSetResultLdarg0, fields));
 
@@ -145,6 +147,7 @@ namespace Rougamo.Fody
             instructions.InsertBefore(anchors.HostsSetException, new[]
             {
                 anchors.SaveException,
+                anchors.OnExceptionRefreshArgs,
                 anchors.OnException,
                 anchors.OnExitAfterException
             });
@@ -152,6 +155,7 @@ namespace Rougamo.Fody
             instructions.InsertAfter(anchors.FinishReturn, new[]
             {
                 anchors.SaveReturnValue,
+                anchors.OnSuccessRefreshArgs,
                 anchors.OnSuccess,
                 anchors.OnExitAfterSuccess,
                 anchors.FinishSetResultLdarg0

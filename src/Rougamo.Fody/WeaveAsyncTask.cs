@@ -35,6 +35,7 @@ namespace Rougamo.Fody
             instructions.InsertAfter(anchors.RewriteArg, StateMachineRewriteArguments(rouMethod, anchors.Retry, fields));
 
             instructions.InsertAfter(anchors.SaveException, StateMachineSaveException(rouMethod, moveNextMethodName, anchors.CatchStart, fields));
+            instructions.InsertAfter(anchors.OnExceptionRefreshArgs, StateMachineOnExceptionRefreshArgs(rouMethod, fields));
             instructions.InsertAfter(anchors.OnException, StateMachineOnException(rouMethod, moveNextMethodDef, anchors.IfExceptionRetry, fields));
             instructions.InsertAfter(anchors.IfExceptionRetry, AsyncIfExceptionRetry(rouMethod, anchors.Retry, anchors.ExceptionContextStash, fields));
             instructions.InsertAfter(anchors.ExceptionContextStash, AsyncExceptionContextStash(rouMethod, fields, variables));
@@ -45,6 +46,7 @@ namespace Rougamo.Fody
             {
                 var notVoid = anchors.HostsLdlocReturn != null;
                 instructions.InsertAfter(anchors.SaveReturnValue, AsyncSaveReturnValue(rouMethod, returnBoxTypeRef, anchors.HostsLdlocReturn, fields));
+                instructions.InsertAfter(anchors.OnSuccessRefreshArgs, StateMachineOnSuccessRefreshArgs(rouMethod, fields));
                 instructions.InsertAfter(anchors.OnSuccess, StateMachineOnSuccess(rouMethod, moveNextMethodDef, anchors.IfSuccessRetry, fields));
                 instructions.InsertAfter(anchors.IfSuccessRetry, AsyncIfSuccessRetry(rouMethod, anchors.Retry, anchors.IfSuccessReplaced, fields));
                 instructions.InsertAfter(anchors.IfSuccessReplaced, AsyncIfSuccessReplacedReturn(rouMethod, moveNextMethodName, returnBoxTypeRef, anchors.HostsLdlocReturn, anchors.OnExitAfterSuccess, fields));
@@ -206,6 +208,7 @@ namespace Rougamo.Fody
             instructions.InsertBefore(anchors.HostsSetException, new[]
             {
                 anchors.SaveException,
+                anchors.OnExceptionRefreshArgs,
                 anchors.OnException,
                 anchors.IfExceptionRetry,
                 anchors.ExceptionContextStash,
@@ -218,6 +221,7 @@ namespace Rougamo.Fody
                 instructions.InsertBefore(anchors.HostsSetResult, new[]
                 {
                     anchors.SaveReturnValue,
+                    anchors.OnSuccessRefreshArgs,
                     anchors.OnSuccess,
                     anchors.IfSuccessRetry,
                     anchors.IfSuccessReplaced,
@@ -448,6 +452,13 @@ namespace Rougamo.Fody
             };
         }
 
+        private IList<Instruction> StateMachineOnExceptionRefreshArgs(RouMethod rouMethod, IStateMachineFields fields)
+        {
+            if ((rouMethod.Features & (int)(Feature.OnException | Feature.OnExit)) == 0 || (rouMethod.Features & (int)Feature.FreshArgs) == 0) return EmptyInstructions;
+
+            return StateMachineUpdateMethodArguments(fields);
+        }
+
         private IList<Instruction> StateMachineOnException(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction endAnchor, IStateMachineFields fields)
         {
             if (rouMethod.Mos.All(x => !Feature.OnException.IsMatch(x.Features))) return EmptyInstructions;
@@ -556,6 +567,13 @@ namespace Rougamo.Fody
             instructions.Add(Create(OpCodes.Callvirt, _methodMethodContextSetReturnValueRef));
 
             return instructions;
+        }
+
+        private IList<Instruction> StateMachineOnSuccessRefreshArgs(RouMethod rouMethod, IStateMachineFields fields)
+        {
+            if ((rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) == 0 || (rouMethod.Features & (int)Feature.FreshArgs) == 0) return EmptyInstructions;
+
+            return StateMachineUpdateMethodArguments(fields);
         }
 
         private IList<Instruction> StateMachineOnSuccess(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction endAnchor, IStateMachineFields fields)

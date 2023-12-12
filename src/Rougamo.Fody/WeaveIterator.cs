@@ -32,6 +32,7 @@ namespace Rougamo.Fody
             instructions.InsertAfter(anchors.RewriteArg, StateMachineRewriteArguments(rouMethod, anchors.TryStart, fields));
 
             instructions.InsertAfter(anchors.CatchStart, IteratorSaveException(rouMethod, fields, variables));
+            instructions.InsertAfter(anchors.OnExceptionRefreshArgs, StateMachineOnExceptionRefreshArgs(rouMethod, fields));
             instructions.InsertAfter(anchors.OnException, StateMachineOnException(rouMethod, moveNextMethodDef, anchors.OnExitAfterException, fields));
             instructions.InsertAfter(anchors.OnExitAfterException, StateMachineOnExit(rouMethod, moveNextMethodDef, anchors.Rethrow, fields));
 
@@ -39,6 +40,7 @@ namespace Rougamo.Fody
             instructions.InsertAfter(anchors.IfLastYeild, IteratorIfLastYeild(rouMethod, anchors.EndFinally, variables));
             instructions.InsertAfter(anchors.IfHasException, IteratorIfHasException(rouMethod, anchors.EndFinally, fields));
             instructions.InsertAfter(anchors.SaveReturnValue, IteratorSaveReturnValue(rouMethod, fields));
+            instructions.InsertAfter(anchors.OnSuccessRefreshArgs, StateMachineOnSuccessRefreshArgs(rouMethod, fields));
             instructions.InsertAfter(anchors.OnSuccess, StateMachineOnSuccess(rouMethod, moveNextMethodDef, anchors.OnExitAfterSuccess, fields));
             instructions.InsertAfter(anchors.OnExitAfterSuccess, StateMachineOnExit(rouMethod, moveNextMethodDef, anchors.EndFinally, fields));
 
@@ -141,6 +143,7 @@ namespace Rougamo.Fody
                 instructions.Add(new[]
                 {
                     anchors.CatchStart,
+                    anchors.OnExceptionRefreshArgs,
                     anchors.OnException,
                     anchors.OnExitAfterException,
                     anchors.Rethrow
@@ -155,6 +158,7 @@ namespace Rougamo.Fody
                     anchors.IfLastYeild,
                     anchors.IfHasException,
                     anchors.SaveReturnValue,
+                    anchors.OnSuccessRefreshArgs,
                     anchors.OnSuccess,
                     anchors.OnExitAfterSuccess,
                     anchors.EndFinally,
