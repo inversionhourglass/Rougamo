@@ -487,5 +487,22 @@ namespace Rougamo.Fody.Tests
             Assert.Equal(expected, actual);
             instance.Executions.Clear();
         }
+
+        [Fact]
+        public async Task FreshArgsTest()
+        {
+            var instance = GetInstance(nameof(FreshArguments));
+
+            var x = 0;
+            var y = 0;
+            var s = string.Empty;
+            var ls = new List<int>();
+
+            Assert.Throws<ArgumentException>(() => instance.FreshTest(x, out y));
+            await Assert.ThrowsAsync<ArgumentException>(async () => await (Task)instance.FreshTestAsync(s, ls));
+
+            instance.NonFreshTest(x, out y);
+            await (Task)instance.NonFreshTestAsync(s, ls);
+        }
     }
 }
