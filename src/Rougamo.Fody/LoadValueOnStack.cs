@@ -140,17 +140,15 @@ namespace Rougamo.Fody
                 var parameter = methodDef.Parameters[i];
                 instructions.Add(Instruction.Create(OpCodes.Dup));
                 instructions.Add(Instruction.Create(OpCodes.Ldc_I4, i));
-                if (LoadMethodArgumentsOnStack(parameter, instructions))
+                LoadMethodArgumentsOnStack(parameter, instructions);
+                var parameterType = parameter.ParameterType;
+                if (parameterType is ByReferenceType byRefType)
                 {
-                    var parameterType = parameter.ParameterType;
-                    if (parameterType is ByReferenceType byRefType)
-                    {
-                        parameterType = byRefType.ElementType;
-                    }
-                    if (parameterType.IsValueType || parameterType.IsGenericParameter)
-                    {
-                        instructions.Add(Instruction.Create(OpCodes.Box, parameterType));
-                    }
+                    parameterType = byRefType.ElementType;
+                }
+                if (parameterType.IsValueType || parameterType.IsGenericParameter)
+                {
+                    instructions.Add(Instruction.Create(OpCodes.Box, parameterType));
                 }
                 instructions.Add(Instruction.Create(OpCodes.Stelem_Ref));
             }
@@ -158,22 +156,15 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private bool LoadMethodArgumentsOnStack(ParameterDefinition parameter, IList<Instruction> instructions)
+        private void LoadMethodArgumentsOnStack(ParameterDefinition parameter, IList<Instruction> instructions)
         {
-            if (parameter.IsOut)
-            {
-                instructions.Add(Instruction.Create(OpCodes.Ldnull));
-                return false;
-            }
-
             instructions.Add(Instruction.Create(OpCodes.Ldarg, parameter));
             if (parameter.ParameterType.IsByReference)
             {
-                if (!(parameter.ParameterType is ByReferenceType parameterType)) throw new RougamoException($"LoadMethodArgumentsOnStack({parameter.Name} {parameter.ParameterType}) is byReference but cannot convert to ByReferenceType");
+                if (parameter.ParameterType is not ByReferenceType parameterType) throw new RougamoException($"LoadMethodArgumentsOnStack({parameter.Name} {parameter.ParameterType}) is byReference but cannot convert to ByReferenceType");
                 var ldind = parameterType.ElementType.ImportInto(ModuleDefinition).Ldind();
                 if (ldind != null) instructions.Add(ldind);
             }
-            return true;
         }
     }
 }
