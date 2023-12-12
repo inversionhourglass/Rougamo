@@ -68,6 +68,10 @@ namespace Rougamo
         /// </summary>
         Observe = OnEntry | OnException | OnSuccess | OnExit,
         /// <summary>
+        /// Gets latest arguments value before calls OnException, OnSuccess and OnExit
+        /// </summary>
+        FreshArgs = 0x200,
+        /// <summary>
         /// Except Rewrite Arguments
         /// </summary>
         NonRewriteArgs = (All ^ 0x10) & All,
@@ -78,7 +82,7 @@ namespace Rougamo
         /// <summary>
         /// all features(default)
         /// </summary>
-        All = Observe | RewriteArgs | EntryReplace | RetryAny | ExceptionHandle | SuccessReplace
+        All = Observe | RewriteArgs | EntryReplace | RetryAny | ExceptionHandle | SuccessReplace | FreshArgs
     }
 #pragma warning restore CS0618 // Type or member is obsolete
 }
