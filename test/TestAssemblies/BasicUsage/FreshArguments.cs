@@ -1,4 +1,5 @@
 ﻿using BasicUsage.Attributes;
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -7,33 +8,37 @@ namespace BasicUsage
     public class FreshArguments
     {
         [FreshArgs]
-        public void FreshTest(int x, out int y)
+        public Tuple<object[], object[]> FreshTest(int x, out int y)
         {
             x++;
             y = -1;
+            return null;
         }
 
         [FreshArgs]
-        public async Task FreshTestAsync(string s, List<int> ls)
+        public async Task<Tuple<object[], object[]>> FreshTestAsync(string s, List<int> ls)
         {
             s += s;
             await Task.Yield();
             ls = [1, 2, 3];
+            return null;
         }
 
         [NonFreshArgs]
-        public void NonFreshTest(int x, out int y)
+        public Tuple<object[], object[]> NonFreshTest(int x, out int y)
         {
             x++;
             y = -1;
+            return null;
         }
 
         [NonFreshArgs]
-        public async Task NonFreshTestAsync(string s, List<int> ls)
+        public async Task<Tuple<object[], object[]>> NonFreshTestAsync(string s, List<int> ls)
         {
             s += s;
             await Task.Yield();
             ls = [1, 2, 3];
+            return null;
         }
     }
 }

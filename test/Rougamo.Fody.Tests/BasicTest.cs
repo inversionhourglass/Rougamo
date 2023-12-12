@@ -498,11 +498,17 @@ namespace Rougamo.Fody.Tests
             var s = string.Empty;
             var ls = new List<int>();
 
-            Assert.Throws<ArgumentException>(() => instance.FreshTest(x, out y));
-            await Assert.ThrowsAsync<ArgumentException>(async () => await (Task)instance.FreshTestAsync(s, ls));
+            Tuple<object[], object[]> value;
 
-            instance.NonFreshTest(x, out y);
-            await (Task)instance.NonFreshTestAsync(s, ls);
+            value = instance.FreshTest(x, out y);
+            Assert.NotEqual(value.Item1, value.Item2);
+            value = await (Task<Tuple<object[], object[]>>)instance.FreshTestAsync(s, ls);
+            Assert.NotEqual(value.Item1, value.Item2);
+
+            value = instance.NonFreshTest(x, out y);
+            Assert.Equal(value.Item1, value.Item2);
+            value = await (Task<Tuple<object[], object[]>>)instance.NonFreshTestAsync(s, ls);
+            Assert.Equal(value.Item1, value.Item2);
         }
     }
 }

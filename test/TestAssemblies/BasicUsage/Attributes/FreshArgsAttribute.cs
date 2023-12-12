@@ -10,33 +10,21 @@ namespace BasicUsage.Attributes
 
         public override void OnEntry(MethodContext context)
         {
-            _args = context.Arguments;
+            _args = new object[context.Arguments.Length];
+            for (int i = 0; i < context.Arguments.Length; i++)
+            {
+                _args[i] = context.Arguments[i];
+            }
         }
 
         public override void OnException(MethodContext context)
         {
-            ArgsCheck(nameof(OnException), context);
+            context.HandledException(this, new Tuple<object[], object[]>(_args, context.Arguments));
         }
 
         public override void OnSuccess(MethodContext context)
         {
-            ArgsCheck(nameof(OnSuccess), context);
-        }
-
-        public override void OnExit(MethodContext context)
-        {
-            ArgsCheck(nameof(OnExit), context);
-        }
-
-        private void ArgsCheck(string position, MethodContext context)
-        {
-            for (var i = 0; i < context.Arguments.Length; i++)
-            {
-                if (_args[i] != context.Arguments[i])
-                {
-                    throw new ArgumentException($"Argument [{i}] in {position} not equals with OnEntry");
-                }
-            }
+            context.ReplaceReturnValue(this, new Tuple<object[], object[]>(_args, context.Arguments));
         }
     }
 
