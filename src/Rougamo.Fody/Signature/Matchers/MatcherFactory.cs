@@ -18,6 +18,7 @@ namespace Rougamo.Fody.Signature.Matchers
             "getter" => new GetterMatcher(pattern),
             "setter" => new SetterMatcher(pattern),
             "property" => new PropertyMatcher(pattern),
+            "attr" => new AttributeMatcher(pattern),
             _ => throw new ArgumentException($"unknow matcher type({method}) with pattern {pattern}")
         };
     }
