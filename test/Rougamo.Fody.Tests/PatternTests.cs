@@ -1,15 +1,17 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
+using PatternUsage;
 using PatternUsage.Attributes;
+using PatternUsage.Attributes.Attributes;
 using PatternUsage.Attributes.Methods;
 using PatternUsage.Attributes.Executions;
 using PatternUsage.Attributes.Getters;
 using PatternUsage.Attributes.Properties;
+using PatternUsage.Attributes.Regexes;
 using PatternUsage.Attributes.Setters;
 using System.Collections;
 using System;
-using PatternUsage.Attributes.Regexes;
 
 namespace Rougamo.Fody.Tests
 {
@@ -1544,6 +1546,170 @@ namespace Rougamo.Fody.Tests
             executedMos.Clear();
             await (ValueTask)nestedInnerDeeply.Call("M4", executedMos);
             Assert.DoesNotContain(nameof(IntegrativeAttribute), executedMos);
+        }
+
+        [Fact]
+        public async Task AttributeTest()
+        {
+            var instance1 = GetInstance(nameof(AttributeCase1));
+            var sInstance1 = GetStaticInstance(nameof(AttributeCase1));
+            var instance2 = GetInstance(nameof(AttributeCase2));
+            var sInstance2 = GetStaticInstance(nameof(AttributeCase2));
+
+            var executedMos = new List<string>();
+            List<string> returnValue;
+
+            executedMos.Clear();
+            instance1.Prop = executedMos;
+            Assert.Contains(nameof(AnyLabel1Attribute), executedMos);
+            Assert.Contains(nameof(TypeLabel1Attribute), executedMos);
+            Assert.Contains(nameof(ExecutionLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(AnyParameterLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(Parameter0Label1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(Parameter2Label1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(ReturnLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(MethodAttrComposeAttribute), executedMos);
+
+            returnValue = instance1.Prop;
+            Assert.Contains(nameof(AnyLabel1Attribute), returnValue);
+            Assert.Contains(nameof(TypeLabel1Attribute), returnValue);
+            Assert.DoesNotContain(nameof(ExecutionLabel1Attribute), returnValue);
+            Assert.DoesNotContain(nameof(AnyParameterLabel1Attribute), returnValue);
+            Assert.DoesNotContain(nameof(Parameter0Label1Attribute), returnValue);
+            Assert.DoesNotContain(nameof(Parameter2Label1Attribute), returnValue);
+            Assert.DoesNotContain(nameof(ReturnLabel1Attribute), returnValue);
+            Assert.DoesNotContain(nameof(MethodAttrComposeAttribute), returnValue);
+
+            executedMos.Clear();
+            sInstance1.SM(executedMos);
+            Assert.Contains(nameof(AnyLabel1Attribute), executedMos);
+            Assert.Contains(nameof(TypeLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(ExecutionLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(AnyParameterLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(Parameter0Label1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(Parameter2Label1Attribute), executedMos);
+            Assert.Contains(nameof(ReturnLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(MethodAttrComposeAttribute), executedMos);
+
+            executedMos.Clear();
+            await (Task)instance1.MAsync(executedMos);
+            Assert.Contains(nameof(AnyLabel1Attribute), executedMos);
+            Assert.Contains(nameof(TypeLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(ExecutionLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(AnyParameterLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(Parameter0Label1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(Parameter2Label1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(ReturnLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(MethodAttrComposeAttribute), executedMos);
+
+            executedMos.Clear();
+            await (ValueTask<int>)instance1.M1Async(executedMos, 1);
+            Assert.Contains(nameof(AnyLabel1Attribute), executedMos);
+            Assert.Contains(nameof(TypeLabel1Attribute), executedMos);
+            Assert.Contains(nameof(ExecutionLabel1Attribute), executedMos);
+            Assert.Contains(nameof(AnyParameterLabel1Attribute), executedMos);
+            Assert.Contains(nameof(Parameter0Label1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(Parameter2Label1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(ReturnLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(MethodAttrComposeAttribute), executedMos);
+
+            executedMos.Clear();
+            instance1.AttributeCompose1(executedMos, 1, 2);
+            Assert.Contains(nameof(AnyLabel1Attribute), executedMos);
+            Assert.Contains(nameof(TypeLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(ExecutionLabel1Attribute), executedMos);
+            Assert.Contains(nameof(AnyParameterLabel1Attribute), executedMos);
+            Assert.Contains(nameof(Parameter0Label1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(Parameter2Label1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(ReturnLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(MethodAttrComposeAttribute), executedMos);
+
+            executedMos.Clear();
+            instance1.AttributeCompose2(executedMos, 1, 2);
+            Assert.Contains(nameof(AnyLabel1Attribute), executedMos);
+            Assert.Contains(nameof(TypeLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(ExecutionLabel1Attribute), executedMos);
+            Assert.Contains(nameof(AnyParameterLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(Parameter0Label1Attribute), executedMos);
+            Assert.Contains(nameof(Parameter2Label1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(ReturnLabel1Attribute), executedMos);
+            Assert.Contains(nameof(MethodAttrComposeAttribute), executedMos);
+
+            executedMos.Clear();
+            instance2.Prop = executedMos;
+            Assert.Contains(nameof(AnyLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(TypeLabel1Attribute), executedMos);
+            Assert.Contains(nameof(ExecutionLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(AnyParameterLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(Parameter0Label1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(Parameter2Label1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(ReturnLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(MethodAttrComposeAttribute), executedMos);
+
+            returnValue = instance2.Prop;
+            Assert.Contains(nameof(AnyLabel1Attribute), returnValue);
+            Assert.DoesNotContain(nameof(TypeLabel1Attribute), returnValue);
+            Assert.Contains(nameof(ExecutionLabel1Attribute), returnValue);
+            Assert.DoesNotContain(nameof(AnyParameterLabel1Attribute), returnValue);
+            Assert.DoesNotContain(nameof(Parameter0Label1Attribute), returnValue);
+            Assert.DoesNotContain(nameof(Parameter2Label1Attribute), returnValue);
+            Assert.DoesNotContain(nameof(ReturnLabel1Attribute), returnValue);
+            Assert.DoesNotContain(nameof(MethodAttrComposeAttribute), returnValue);
+
+            executedMos.Clear();
+            sInstance2.SM(executedMos);
+            Assert.DoesNotContain(nameof(AnyLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(TypeLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(ExecutionLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(AnyParameterLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(Parameter0Label1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(Parameter2Label1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(ReturnLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(MethodAttrComposeAttribute), executedMos);
+
+            executedMos.Clear();
+            await (Task)instance2.MAsync(executedMos);
+            Assert.Contains(nameof(AnyLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(TypeLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(ExecutionLabel1Attribute), executedMos);
+            Assert.Contains(nameof(AnyParameterLabel1Attribute), executedMos);
+            Assert.Contains(nameof(Parameter0Label1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(Parameter2Label1Attribute), executedMos);
+            Assert.Contains(nameof(ReturnLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(MethodAttrComposeAttribute), executedMos);
+
+            executedMos.Clear();
+            await (ValueTask<int>)instance2.M1Async(executedMos, 1);
+            Assert.Contains(nameof(AnyLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(TypeLabel1Attribute), executedMos);
+            Assert.Contains(nameof(ExecutionLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(AnyParameterLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(Parameter0Label1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(Parameter2Label1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(ReturnLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(MethodAttrComposeAttribute), executedMos);
+
+            executedMos.Clear();
+            sInstance2.StaticAttributeCompose1(executedMos, 1, 2);
+            Assert.Contains(nameof(AnyLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(TypeLabel1Attribute), executedMos);
+            Assert.Contains(nameof(ExecutionLabel1Attribute), executedMos);
+            Assert.Contains(nameof(AnyParameterLabel1Attribute), executedMos);
+            Assert.Contains(nameof(Parameter0Label1Attribute), executedMos);
+            Assert.Contains(nameof(Parameter2Label1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(ReturnLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(MethodAttrComposeAttribute), executedMos);
+
+            executedMos.Clear();
+            sInstance2.StaticAttributeCompose2(executedMos, 1, 2);
+            Assert.Contains(nameof(AnyLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(TypeLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(ExecutionLabel1Attribute), executedMos);
+            Assert.Contains(nameof(AnyParameterLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(Parameter0Label1Attribute), executedMos);
+            Assert.Contains(nameof(Parameter2Label1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(ReturnLabel1Attribute), executedMos);
+            Assert.DoesNotContain(nameof(MethodAttrComposeAttribute), executedMos);
         }
     }
 }
