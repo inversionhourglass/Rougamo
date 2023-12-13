@@ -9,7 +9,7 @@ namespace Rougamo.Fody.Signature.Patterns.Parsers
             var tokens = TokenSourceBuilder.Build(pattern);
 
             var position = ParsePosition(tokens);
-            var index = position == AttributePositioon.Parameter ? ParseIndex(tokens) : -2;
+            var index = position == AttributePositioon.Parameter ? ParseIndex(tokens) : -1;
             var attributeType = ParseType(tokens);
             attributeType.Compile([], false);
 
