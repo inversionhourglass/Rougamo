@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Rougamo.Fody
 {
@@ -26,6 +27,13 @@ namespace Rougamo.Fody
             {
                 hashSet.Add(item);
             }
+        }
+
+        public static IEnumerable<T> UnionIf<T>(this IEnumerable<T> source, bool condition, Func<IEnumerable<T>> func)
+        {
+            if (!condition) return source;
+
+            return source.Union(func());
         }
     }
 }

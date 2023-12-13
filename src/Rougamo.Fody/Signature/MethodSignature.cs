@@ -5,7 +5,7 @@ namespace Rougamo.Fody.Signature
 {
     public class MethodSignature
     {
-        public MethodSignature(MethodDefinition definition, Modifier modifiers, TypeSignature returnType, TypeSignature declareType, GenericSignature method, TypeSignature[] methodParameters)
+        public MethodSignature(MethodDefinition definition, Modifier modifiers, TypeSignature returnType, TypeSignature declareType, GenericSignature method, TypeSignature[] methodParameters, AttributeSignatures attributes)
         {
             Definition = definition;
             Modifiers = modifiers;
@@ -13,6 +13,7 @@ namespace Rougamo.Fody.Signature
             DeclareType = declareType;
             Method = method;
             MethodParameters = methodParameters;
+            Attributes = attributes;
         }
 
         public MethodDefinition Definition { get; }
@@ -26,6 +27,8 @@ namespace Rougamo.Fody.Signature
         public GenericSignature Method { get; }
 
         public TypeSignature[] MethodParameters { get; }
+
+        public AttributeSignatures Attributes { get; set; }
 
         public override string ToString()
         {

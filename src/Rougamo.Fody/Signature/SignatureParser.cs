@@ -19,7 +19,8 @@ namespace Rougamo.Fody.Signature
             var genericMap = SortGenericParameter(typeGenericCount, genericParameters);
             var returnType = ParseType(methodDef.ReturnType, null, genericMap);
             var parameters = ParseMethodParameters(methodDef, genericMap);
-            return new MethodSignature(methodDef, modifier, returnType, declareType, method, parameters);
+            var attributes = ParseAttributeSignatures(methodDef);
+            return new MethodSignature(methodDef, modifier, returnType, declareType, method, parameters, attributes);
         }
 
         private static Modifier ParseModifier(MethodDefinition methodDef, bool compositeAccessibility)
@@ -181,6 +182,24 @@ namespace Rougamo.Fody.Signature
         private static TypeSignature[] ParseMethodParameters(MethodDefinition methodDef, Dictionary<string, TypeSignature>? genericNameMap)
         {
             return methodDef.HasParameters ? methodDef.Parameters.Select(x => ParseType(x.ParameterType, null, genericNameMap)!).ToArray() : TypeSignature.EmptyArray;
+        }
+
+        private static AttributeSignatures ParseAttributeSignatures(MethodDefinition methodDef)
+        {
+            var fromTypes = methodDef.DeclaringType.CustomAttributes.Select(ParseAttribute).ToArray();
+            var fromExecutions = methodDef.CustomAttributes
+                                        .UnionIf(methodDef.IsGetter, () => methodDef.DeclaringType.Properties.Single(x => x.GetMethod == methodDef).CustomAttributes)
+                                        .UnionIf(methodDef.IsSetter, () => methodDef.DeclaringType.Properties.Single(x => x.SetMethod == methodDef).CustomAttributes)
+                                        .Select(ParseAttribute)
+                                        .ToArray();
+            var fromParameters = methodDef.Parameters.Select(x => x.CustomAttributes.Select(ParseAttribute).ToArray()).ToArray();
+            var fromReturns = methodDef.MethodReturnType.CustomAttributes.Select(ParseAttribute).ToArray();
+            return new AttributeSignatures(fromTypes, fromExecutions, fromParameters, fromReturns);
+        }
+
+        private static TypeSignature ParseAttribute(CustomAttribute attribute)
+        {
+            return ParseType(attribute.AttributeType, [], null);
         }
 
         private static Dictionary<string, TypeSignature>? SortGenericParameter(int typeGenericCount, List<GenericParameterTypeSignature> genericParameters)
