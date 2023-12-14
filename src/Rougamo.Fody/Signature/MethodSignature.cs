@@ -28,7 +28,7 @@ namespace Rougamo.Fody.Signature
 
         public TypeSignature[] MethodParameters { get; }
 
-        public AttributeSignatures Attributes { get; set; }
+        public AttributeSignatures Attributes { get; }
 
         public override string ToString()
         {

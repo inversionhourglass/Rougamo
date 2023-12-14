@@ -10,12 +10,12 @@
             Returns = returns;
         }
 
-        public TypeSignature[] Types { get; set; }
+        public TypeSignature[] Types { get; }
 
-        public TypeSignature[] Executions { get; set; }
+        public TypeSignature[] Executions { get; }
 
-        public TypeSignature[][] Parameters { get; set; }
+        public TypeSignature[][] Parameters { get; }
 
-        public TypeSignature[] Returns { get; set; }
+        public TypeSignature[] Returns { get; }
     }
 }

@@ -28,7 +28,7 @@ namespace Rougamo.Fody.Signature
 
         public TypeReference Reference { get; }
 
-        public int[] ArrayRanks { get; set; }
+        public int[] ArrayRanks { get; }
 
         public override string ToString()
         {
