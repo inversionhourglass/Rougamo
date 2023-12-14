@@ -169,12 +169,13 @@ public class PatternAttribute : MoAttribute
 ### Basic Concepts
 Flag matching overrides the `Flags` property, and pattern matching overrides the `Pattern` property. Since both flag matching and pattern matching are used for filtering methods, they cannot be used at the same time. Pattern matching has higher priority, `Pattern` is used when it is not null, otherwise `Flags` is used.
 
-Pattern matching support six matching rules:
+Pattern matching support seven matching rules:
 - `method([modifier] returnType declaringType.methodName([parameters]))`
 - `getter([modifier] propertyType declaringType.propertyName)`
 - `setter([modifier] propertyType declaringType.propertyName)`
 - `property([modifier] propertyType declaringType.propertyName)`
 - `execution([modifier] returnType declaringType.methodName([parameters]))`
+- `attr(position [index] attributeType)`
 - `regex(REGEX)`
 
 `getter`, `setter` and `property` means property getter, property setter, property getter and setter. `method` means all normal methods(except getter, setter, constructor). `execution` means all method(execpt constructor). `regex` is a special case and will be introduced in [Regex Matching](#regex-matching).
@@ -194,6 +195,13 @@ Except for the special format of `regex`, the contents of the other five matchin
 - `[parameters]`，method parameter list, Rougamo's parameter list matching is relatively simple, not as complicated as aspectj, and only supports arbitrary matching and full matching.
     - Use `..` to match any number of parameters of any type.
     - Specify the number and type of parameters for matching. Parameter types are matched according to [Type Matching Format](#type-matching-format). Rougamo cannot perform fuzzy matching on the number of parameters like aspectj. For example, `int,..,double` is not supported.
+- `position` Where the attributes apply to, uses `*` to match anywhere.
+	- `type` Applies to types.
+	- `exec` Applies to methods, properties, properties getter, properties setter.
+	- `para` Applies to parameters. Must be used together with `[index]`.
+	- `ret` Applies to return value.
+    - `*` Match all positions.
+- `[index]` Only needed when `position` is `para`. Usually, `index` is an integer, starts at `0`, which means the first parameter, and uses `*` to match any parameter.
 
 ### Type Matching Format
 
@@ -417,23 +425,24 @@ Please note the following points when using the retry function:
 ## Partially Weaving
 Rougamo will weave all functions into the code by default, but generally not all functions are used. And with the iteration of the version, more and more functions are supported and more and more code is woven into it, which will increase the final assembly size. By specifying partial weaving, you can weave in only the functionality you need. Partial weaving is set up by overriding `MoAttribute.Features`.
 
-|      Value      |                                      functions                                           |
-|:---------------:|:-----------------------------------------------------------------------------------------|
-|       All       | Contains all functions, default value                                                    |
-|     OnEntry     | Only OnEntry, parameter values cannot be modified, and return values cannot be modified  |
-|   OnException   | OnException only, exceptions cannot be handled                                           |
-|    OnSuccess    | OnSuccess only, the return value cannot be modified                                      |
-|     OnExit      | OnExit                                                                                   |
-|   RewriteArgs   | Contains OnEntry, and parameter values can be modified in OnEntry                        |
-|  EntryReplace   | Contains OnEntry, and the return value can be modified in OnEntry                        |
-| ExceptionHandle | Contains OnException, and exceptions can be handled in OnEntry                           |
-|  SuccessReplace | Contains OnSuccess, and the return value can be modified in OnSuccess                    |
-|  ExceptionRetry | Contains OnException, and can retry in OnException                                       |
-|  SuccessRetry   | Contains OnSuccess, and can retry in OnSuccess                                           |
-|     Retry       | Contains OnException and OnSuccess, and can retry in OnException and OnSuccess           |
-|     Observe     | Contains OnEntry, OnException, OnSuccess and OnExit                                      |
-| NonRewriteArgs  | Contains all functions except modifying parameters                                       |
-|    NonRetry     | Contains all functionality except retry                                                  |
+|      Value      |                                                  functions                                                      |
+|:---------------:|:----------------------------------------------------------------------------------------------------------------|
+|       All       | Contains all functions, default value                                                                           |
+|     OnEntry     | Only OnEntry, parameter values cannot be modified, and return values cannot be modified                         |
+|   OnException   | OnException only, exceptions cannot be handled                                                                  |
+|    OnSuccess    | OnSuccess only, the return value cannot be modified                                                             |
+|     OnExit      | OnExit                                                                                                          |
+|   RewriteArgs   | Contains OnEntry, and parameter values can be modified in OnEntry                                               |
+|  EntryReplace   | Contains OnEntry, and the return value can be modified in OnEntry                                               |
+| ExceptionHandle | Contains OnException, and exceptions can be handled in OnEntry                                                  |
+|  SuccessReplace | Contains OnSuccess, and the return value can be modified in OnSuccess                                           |
+|  ExceptionRetry | Contains OnException, and can retry in OnException                                                              |
+|  SuccessRetry   | Contains OnSuccess, and can retry in OnSuccess                                                                  |
+|     Retry       | Contains OnException and OnSuccess, and can retry in OnException and OnSuccess                                  |
+|     Observe     | Contains OnEntry, OnException, OnSuccess and OnExit                                                             |
+| NonRewriteArgs  | Contains all functions except modifying parameters                                                              |
+|    NonRetry     | Contains all functionality except retry                                                                         |
+|    FreshArgs    | Update the newest parameters value into MethodContext.Arguments before calls OnException, OnSuccess and OnExit  |
 
 ## Ignore Weaving
 Rougamo has the ability to weave in batches. Although the current version provides richer matching rules, if the matching pattern is too complicated in order to exclude one or several methods, it will not be worth the gain. When excluding a specific method or methods, you can directly use `IgnoreMoAttribute`. When applied to a method, the method will ignore weaving. When applied to a class, all methods of the class will ignore weaving. When applied to the assembly, all methods in the assembly ignore weaving.

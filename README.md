@@ -180,17 +180,18 @@ public class PatternAttribute : MoAttribute
 ### 基础概念
 特征匹配是重写`Flags`属性，对应的表达式匹配是重写`Pattern`属性，由于表达式匹配和特征匹配都是用于过滤/匹配方法的，所以两个不能同时使用，`Pattern`优先级高于`Flags`，当`Pattern`不为`null`时使用`Pattern`，否则使用`Flags`。
 
-表达式共支持六种匹配规则，表达式必须是六种的其中一种：
+表达式共支持七种匹配规则，表达式必须是七种的其中一种：
 - `method([modifier] returnType declaringType.methodName([parameters]))`
 - `getter([modifier] propertyType declaringType.propertyName)`
 - `setter([modifier] propertyType declaringType.propertyName)`
 - `property([modifier] propertyType declaringType.propertyName)`
 - `execution([modifier] returnType declaringType.methodName([parameters]))`
+- `attr(position [index] attributeType)`
 - `regex(REGEX)`
 
-上面的六种规则中，`getter`, `setter`, `property`分别表示匹配属性的`getter`, `setter`和全部匹配（`getter`+`setter`），`method`表示匹配普通方法（非`getter/setter/constructor`），`execution`表示匹配所有方法，包含`getter/setter`。`regex`是个特例，将在[正则匹配](#正则匹配)中进行单独介绍。在表达式内容格式上，`method`和`execution`比`getter/setter/property`多一个`([parameters])`，这是因为属性的类型即可表示属性`getter`的返回值类型和`setter`的参数类型，所以相对于`method`和`execution`，省略了参数列表。
+上面的七种规则中，`getter`, `setter`, `property`分别表示匹配属性的`getter`, `setter`和全部匹配（`getter`+`setter`），`method`表示匹配普通方法（非`getter/setter/constructor`），`execution`表示匹配所有方法，包含`getter/setter`，`attr`表示根据`Attribute`进行匹配。`regex`是个特例，将在[正则匹配](#正则匹配)中进行单独介绍。在表达式内容格式上，`method`和`execution`比`getter/setter/property`多一个`([parameters])`，这是因为属性的类型即可表示属性`getter`的返回值类型和`setter`的参数类型，所以相对于`method`和`execution`，省略了参数列表。
 
-上面列出的六种匹配规则，除了`regex`的格式特殊，其他的五种匹配规则的内容主要包含以下五个（或以下）部分：
+上面列出的七种匹配规则，除了`regex`的格式特殊，其他的五种匹配规则的内容主要包含以下五个（或以下）部分：
 - `[modifier]`，访问修饰符，可以省略，省略时表示匹配所有，访问修饰符包括以下七个：
     - `private`
     - `internal`
@@ -205,6 +206,13 @@ public class PatternAttribute : MoAttribute
 - `[parameters]`，方法参数列表，Rougamo的参数列表匹配相对简单，没有aspectj那么复杂，仅支持任意匹配和全匹配
     - 使用`..`表示匹配任意参数，这里说的任意是指任意多个任意类型的参数
     - 如果不进行任意匹配，那么就需要指定参数的个数及类型，当然类型是按照[类型匹配格式](#类型匹配格式)进行匹配的。Rougamo不能像aspectj一样进行参数个数模糊匹配，比如`int,..,double`是不支持的
+- `position`，Attribute的位置，可选位置如下：
+    - `type`，Attribute应用于类型上
+    - `exec`，Attribute应用于方法/属性/属性getter/属性setter上
+    - `para`，Attribute应用于参数上，`para`需要与`[index]`配合使用，请看后续的介绍
+    - `ret`，Attribute应用于返回值上
+    - `*`，使用`*`表示匹配任意位置
+- `[index]`，仅`position`为`para`时需要指定，表示参数的位置，一般为整数，从0开始表示第一个参数，如果使用`*`表示任意参数位置
 
 在上面列出的六种匹配规则中不包含构造方法的匹配，主要原因在于构造方法的特殊性。对构造方法进行AOP操作其实是很容易出现问题的，比较常见的就是在AOP时使用了还未初始化的字段/属性，所以我一般认为，对构造方法进行AOP时一般是指定特定构造方法的，一般不会进行批量匹配织入。所以目前对于构造方法的织入，推荐直接在构造方法上应用`Attribute`进行精确织入。另外由于`Flags`对构造方法的支持和表达式匹配都是在`2.0`新增的功能，目前并没有想好构造方法的表达式格式，等大家使用一段时间后，可以综合大家的建议再考虑，也为构造方法的表达式留下更多的操作空间。
 
@@ -460,6 +468,7 @@ Rougamo有四个方法可以重写`OnEntry`、`OnSucess`、`OnException`、`OnEx
 |     Observe     |包含OnEntry、OnException、OnSuccess和OnExit，常用于日志、APM埋点等操作 |
 | NonRewriteArgs  |包含除修改参数外的所有功能                                            |
 |    NonRetry     |包含除重试外的所有功能                                                |
+|    FreshArgs    |在执行OnException、OnSuccess和OnExit前更新MethodContext.Arguments    |
 
 ## 忽略织入
 Rougamo是具有批量织入能力的，虽然目前版本提供了较为丰富的匹配规则，但是如果为了排除某个或某几个方法而让匹配表达式过于复杂，那就得不偿失了。对于排除特定某个或几个方法时，可以直接使用`IgnoreMoAttribute`，将其应用到方法上就是该方法忽略织入，应用到类上就是该类的所有方法忽略织入，应用到程序集上就是整个程序集的所有方法忽略织入。
