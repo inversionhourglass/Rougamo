@@ -1,13 +1,13 @@
-- [#48](https://github.com/inversionhourglass/Rougamo/issues/48) PatternÖ§³ÖAttributeÆ¥Åä
-	- »ù±¾¸ñÊ½`attr(POS TYPE)`
-		- `POS` ÏŞ¶¨AttributeÓ¦ÓÃµÄÎ»ÖÃ£¬Ê¹ÓÃ`*`±íÊ¾Æ¥ÅäÈÎºÎÎ»ÖÃ
-			- `type` Ó¦ÓÃÓÚÀàĞÍÉÏ
-			- `exec` Ó¦ÓÃÓÚ·½·¨/ÊôĞÔ/ÊôĞÔgetter/ÊôĞÔsetter
-			- `para x` Ó¦ÓÃÓÚÄ³¸ö²ÎÊıÉÏ£¬`x`Ò»°ãÎªÕûÊı£¬±íÊ¾²ÎÊıµÄÎ»ÖÃ£¬`0`±íÊ¾µÚÒ»¸ö²ÎÊı£¬`x`Îª`*`Ê±±íÊ¾ÈÎÒâ²ÎÊı
-			- `ret` Ó¦ÓÃÓÚ·µ»ØÖµÉÏ
-		- `TYPE` ÎªAttributeÀàĞÍÃû³Æ£¬Æ¥Åä¹æÔòÓëÆÕÍ¨ÀàĞÍÆ¥Åä¹æÔòÒ»ÖÂ
-- [#53](https://github.com/inversionhourglass/Rougamo/issues/53) ÔÚ`OnException`, `OnSuccess`ºÍ`OnExit`Ö´ĞĞÇ°£¬Ö§³Ö¸üĞÂ·½·¨²ÎÊıÖµµ½`MethodContext.Arguments`ÖĞ
-	-  `MoAttribute.Feature`ĞÂÔöÃ¶¾ÙÏî`FreshArgs`£¬¿ÉÒÔÍ¨¹ıÅÅ³ı¸ÃÖµÀ´½ûÓÃ²ÎÊıÖµ¸üĞÂ¹¦ÄÜ
+- [#48](https://github.com/inversionhourglass/Rougamo/issues/48) Patternæ”¯æŒAttributeåŒ¹é…
+	- åŸºæœ¬æ ¼å¼`attr(POS TYPE)`
+		- `POS` é™å®šAttributeåº”ç”¨çš„ä½ç½®ï¼Œä½¿ç”¨`*`è¡¨ç¤ºåŒ¹é…ä»»ä½•ä½ç½®
+			- `type` åº”ç”¨äºç±»å‹ä¸Š
+			- `exec` åº”ç”¨äºæ–¹æ³•/å±æ€§/å±æ€§getter/å±æ€§setter
+			- `para x` åº”ç”¨äºæŸä¸ªå‚æ•°ä¸Šï¼Œ`x`ä¸€èˆ¬ä¸ºæ•´æ•°ï¼Œè¡¨ç¤ºå‚æ•°çš„ä½ç½®ï¼Œ`0`è¡¨ç¤ºç¬¬ä¸€ä¸ªå‚æ•°ï¼Œ`x`ä¸º`*`æ—¶è¡¨ç¤ºä»»æ„å‚æ•°
+			- `ret` åº”ç”¨äºè¿”å›å€¼ä¸Š
+		- `TYPE` ä¸ºAttributeç±»å‹åç§°ï¼ŒåŒ¹é…è§„åˆ™ä¸æ™®é€šç±»å‹åŒ¹é…è§„åˆ™ä¸€è‡´
+- [#53](https://github.com/inversionhourglass/Rougamo/issues/53) åœ¨`OnException`, `OnSuccess`å’Œ`OnExit`æ‰§è¡Œå‰ï¼Œæ”¯æŒæ›´æ–°æ–¹æ³•å‚æ•°å€¼åˆ°`MethodContext.Arguments`ä¸­
+	-  `MoAttribute.Feature`æ–°å¢æšä¸¾é¡¹`FreshArgs`ï¼Œå¯ä»¥é€šè¿‡æ’é™¤è¯¥å€¼æ¥ç¦ç”¨å‚æ•°å€¼æ›´æ–°åŠŸèƒ½
 
 ---
 
