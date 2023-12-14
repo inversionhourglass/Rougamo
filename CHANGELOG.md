@@ -1,13 +1,23 @@
-- [#46](https://github.com/inversionhourglass/Rougamo/issues/46) Unity接入及优化
 - [#48](https://github.com/inversionhourglass/Rougamo/issues/48) Pattern支持Attribute匹配
-	- 基本格式`attr([pos] TYPE)`
-		- `pos` 限定Attribute应用的位置
+	- 基本格式`attr(POS TYPE)`
+		- `POS` 限定Attribute应用的位置，使用`*`表示匹配任何位置
 			- `type` 应用于类型上
 			- `exec` 应用于方法/属性/属性getter/属性setter
 			- `para x` 应用于某个参数上，`x`一般为整数，表示参数的位置，`0`表示第一个参数，`x`为`*`时表示任意参数
 			- `ret` 应用于返回值上
 		- `TYPE` 为Attribute类型名称，匹配规则与普通类型匹配规则一致
 - [#53](https://github.com/inversionhourglass/Rougamo/issues/53) 在`OnException`, `OnSuccess`和`OnExit`执行前，支持更新方法参数值到`MethodContext.Arguments`中
+	-  `MoAttribute.Feature`新增枚举项`FreshArgs`，可以通过排除该值来禁用参数值更新功能
 
 ---
 
+- [#48](https://github.com/inversionhourglass/Rougamo/issues/48) New pattern format, support Attribute matching.
+	- Basic format `attr(POS TYPE)`
+		- `POS` Where the attributes apply to, uses `*` to match anywhere.
+			- `type` Applies to types.
+			- `exec` Applies to methods, properties, properties getter, properties setter.
+			- `para x` Applies to parameters. Usually, `x` is an integer, starts at `0`, which means the first parameter, and uses `*` to match any parameter.
+			- `ret` Applies to return value.
+		- `TYPE` Type of the Attribute. The matching rules are consistent with the matching rules for regular types.
+- [#53](https://github.com/inversionhourglass/Rougamo/issues/53) Before calls `OnException`, `OnSuccess` and `OnExit`, update the newest parameters value into `MethodContext.Arguments`.
+	-  Add a new Eumn item `FreshArgs` to `MoAttribute.Feature`, you can disable parameter refresh feature by excluding this value.
