@@ -25,6 +25,7 @@ jobs:
             5.0.x
             6.0.x
             7.0.x
+            8.0.x
           
       - name: Restore NuGets
         run: dotnet restore ${{ env.SOLUTION }}
@@ -56,6 +57,7 @@ jobs:
             5.0.x
             6.0.x
             7.0.x
+            8.0.x
           
       - name: Restore NuGets
         run: dotnet restore ${{ env.SOLUTION }}
@@ -69,8 +71,8 @@ jobs:
       - name: Test in DEBUG with net6.0
         run: dotnet test --configuration Debug --no-build --framework net6.0 ${{ env.SOLUTION }}
         
-      - name: Test in DEBUG with net7.0
-        run: dotnet test --configuration Debug --no-build --framework net7.0 ${{ env.SOLUTION }}
+      - name: Test in DEBUG with net8.0
+        run: dotnet test --configuration Debug --no-build --framework net8.0 ${{ env.SOLUTION }}
         
       - name: Build Solution in RELEASE
         run: dotnet build --configuration Release --no-restore ${{ env.SOLUTION }}
@@ -81,5 +83,5 @@ jobs:
       - name: Test in RELEASE with net6.0
         run: dotnet test --configuration Release --no-build --framework net6.0 ${{ env.SOLUTION }}
         
-      - name: Test in RELEASE with net7.0
-        run: dotnet test --configuration Release --no-build --framework net7.0 ${{ env.SOLUTION }}
+      - name: Test in RELEASE with net8.0
+        run: dotnet test --configuration Release --no-build --framework net8.0 ${{ env.SOLUTION }}
