@@ -1,14 +1,22 @@
 ﻿using Rougamo.Fody.Signature.Matchers;
 using System;
+using System.Collections.Concurrent;
 
 namespace Rougamo.Fody.Signature
 {
     public class PatternParser
     {
+        private readonly static ConcurrentDictionary<string, IMatcher> _Cache = new();
+
         public static IMatcher Parse(string pattern)
         {
-            var index = 0;
-            return Parse(pattern, ref index);
+            return _Cache.GetOrAdd(pattern, Impl);
+
+            static IMatcher Impl(string pattern)
+            {
+                var index = 0;
+                return Parse(pattern, ref index);
+            }
         }
 
         private static IMatcher Parse(string pattern, ref int index)

@@ -1,5 +1,6 @@
 ﻿using Mono.Cecil;
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -7,20 +8,30 @@ namespace Rougamo.Fody.Signature
 {
     public class SignatureParser
     {
+        private readonly static ConcurrentDictionary<MethodDefinition, MethodSignature> _Cache = new();
+        private readonly static ConcurrentDictionary<MethodDefinition, MethodSignature> _CompositeCache = new();
+
         public static MethodSignature ParseMethod(MethodDefinition methodDef, bool compositeAccessibility)
         {
-            var genericParameters = new List<GenericParameterTypeSignature>();
-            var modifier = ParseModifier(methodDef, compositeAccessibility);
-            var declareType = ParseType(methodDef.DeclaringType, genericParameters, null);
-            var typeGenericCount = genericParameters.Count;
-            var method = new GenericSignature(methodDef.Name, ParseMethodGenericParameters(methodDef, genericParameters));
-            ParseGenericVirtualNames(declareType);
-            ParseGenericVirtualNames(method, "TM");
-            var genericMap = SortGenericParameter(typeGenericCount, genericParameters);
-            var returnType = ParseType(methodDef.ReturnType, null, genericMap);
-            var parameters = ParseMethodParameters(methodDef, genericMap);
-            var attributes = ParseAttributeSignatures(methodDef);
-            return new MethodSignature(methodDef, modifier, returnType, declareType, method, parameters, attributes);
+            return compositeAccessibility ?
+                        _CompositeCache.GetOrAdd(methodDef, md => Impl(md, true)) :
+                        _Cache.GetOrAdd(methodDef, md => Impl(md, false));
+
+            static MethodSignature Impl(MethodDefinition methodDef, bool compositeAccessibility)
+            {
+                var genericParameters = new List<GenericParameterTypeSignature>();
+                var modifier = ParseModifier(methodDef, compositeAccessibility);
+                var declareType = ParseType(methodDef.DeclaringType, genericParameters, null);
+                var typeGenericCount = genericParameters.Count;
+                var method = new GenericSignature(methodDef.Name, ParseMethodGenericParameters(methodDef, genericParameters));
+                ParseGenericVirtualNames(declareType);
+                ParseGenericVirtualNames(method, "TM");
+                var genericMap = SortGenericParameter(typeGenericCount, genericParameters);
+                var returnType = ParseType(methodDef.ReturnType, null, genericMap);
+                var parameters = ParseMethodParameters(methodDef, genericMap);
+                var attributes = ParseAttributeSignatures(methodDef);
+                return new MethodSignature(methodDef, modifier, returnType, declareType, method, parameters, attributes);
+            }
         }
 
         private static Modifier ParseModifier(MethodDefinition methodDef, bool compositeAccessibility)
