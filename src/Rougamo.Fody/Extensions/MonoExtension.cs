@@ -44,6 +44,16 @@ namespace Rougamo.Fody
             return false;
         }
 
+        public static bool ImplementAny(this TypeDefinition typeDef, params string[] interfaces)
+        {
+            foreach (var @interface in interfaces)
+            {
+                if (typeDef.Implement(@interface)) return true;
+            }
+
+            return false;
+        }
+
         public static bool DerivesFrom(this TypeReference typeRef, string baseClass)
         {
             do
