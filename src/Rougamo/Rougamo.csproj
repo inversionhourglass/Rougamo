@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
-    <VersionPrefix>2.1.1</VersionPrefix>
+    <VersionPrefix>2.2.0</VersionPrefix>
     <Authors>ihourglass</Authors>
     <Description>Weave code before method execution, on sucessful and on exception. You can replace return value, handle exception and rewrite method arguments. It's both support sync and async method</Description>
     <PackageTags>AOP Fody IL</PackageTags>
