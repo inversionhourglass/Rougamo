@@ -526,5 +526,29 @@ namespace Rougamo.Fody.Tests
             await (Task)instance.MAsync(executedMos);
             Assert.Contains(nameof(BasicUsage.Mos.Mo), executedMos);
         }
+
+        [Fact]
+        public async Task GenericMoTest()
+        {
+            var instance = GetInstance(nameof(GenericMoUseCase));
+
+            var executedMos = new List<string>();
+
+            executedMos.Clear();
+            instance.M(executedMos);
+            Assert.Contains(nameof(BasicUsage.Mos.ValueMo), executedMos);
+            Assert.DoesNotContain(nameof(BasicUsage.Mos.ValueMo1), executedMos);
+            Assert.Contains(nameof(BasicUsage.Mos.ValueMo2), executedMos);
+            Assert.Contains(nameof(BasicUsage.Mos.ValueMo3), executedMos);
+            Assert.DoesNotContain(nameof(BasicUsage.Mos.Mo), executedMos);
+
+            executedMos.Clear();
+            await (ValueTask)instance.MAsync(executedMos);
+            Assert.Contains(nameof(BasicUsage.Mos.ValueMo), executedMos);
+            Assert.Contains(nameof(BasicUsage.Mos.ValueMo1), executedMos);
+            Assert.DoesNotContain(nameof(BasicUsage.Mos.ValueMo2), executedMos);
+            Assert.Contains(nameof(BasicUsage.Mos.ValueMo3), executedMos);
+            Assert.Contains(nameof(BasicUsage.Mos.Mo), executedMos);
+        }
     }
 }
