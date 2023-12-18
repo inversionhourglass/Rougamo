@@ -36,7 +36,7 @@ namespace Rougamo.Fody
             ExpandTypes(ModuleDefinition.Types, types);
             foreach (var typeDef in types)
             {
-                if (!typeDef.IsClass || typeDef.IsValueType || typeDef.IsDelegate() || !typeDef.HasMethods || typeDef.CustomAttributes.Any(x => x.AttributeType.Is(Constants.TYPE_CompilerGeneratedAttribute) || x.AttributeType.Is(Constants.TYPE_Runtime_CompilerGeneratedAttribute))) continue;
+                if (typeDef.IsEnum || typeDef.IsInterface || typeDef.IsArray || typeDef.IsDelegate() || !typeDef.HasMethods || typeDef.CustomAttributes.Any(x => x.AttributeType.Is(Constants.TYPE_CompilerGeneratedAttribute) || x.AttributeType.Is(Constants.TYPE_Runtime_CompilerGeneratedAttribute))) continue;
                 if (typeDef.Implement(Constants.TYPE_IMo) || typeDef.DerivesFromAny(Constants.TYPE_MoRepulsion, Constants.TYPE_IgnoreMoAttribute, Constants.TYPE_MoProxyAttribute)) continue;
                 if (_config.ExceptTypePatterns.Any(x => x.IsMatch(typeDef.FullName))) continue;
 
@@ -49,7 +49,6 @@ namespace Rougamo.Fody
 
                 foreach (var methodDef in typeDef.Methods)
                 {
-                    // todo: #41 这里排除了构造方法
                     if ((methodDef.Attributes & MethodAttributes.Abstract) != 0) continue;
 
                     var attributes = new Collection<CustomAttribute>();
@@ -64,7 +63,7 @@ namespace Rougamo.Fody
                     if (methodIgnores == null) continue;
 
                     var methodExtracts = ExtractAttributes(attributes, globalMos.Proxies!, $"method[{methodDef.FullName}]");
-                    rouType.Initialize(methodDef, globalMos.Directs!, implementations, classExtracts.Mos, classExtracts.Proxied, methodExtracts.Mos, methodExtracts.Proxied, globalMos.Ignores!, typeIgnores, methodIgnores, _config.CompositeAccessibility);
+                    rouType.Initialize(methodDef, globalMos.Directs!, globalMos.Generics, implementations, classExtracts.Mos, classExtracts.GenericMos, classExtracts.Proxied, methodExtracts.Mos, methodExtracts.GenericMos, methodExtracts.Proxied, globalMos.Ignores!, typeIgnores, methodIgnores, _config.CompositeAccessibility);
                 }
                 if (rouType.HasMo)
                 {
@@ -142,6 +141,15 @@ namespace Rougamo.Fody
                 assemblyMos.Directs[direct.Key] = direct.Value;
             }
 
+            foreach (var generic in moduleMos.Generics)
+            {
+                if (assemblyMos.Generics.ContainsKey(generic.Key))
+                {
+                    WriteInfo($"module replaces assembly Generic MoAttribute: {generic.Key}]");
+                }
+                assemblyMos.Generics[generic.Key] = generic.Value;
+            }
+
             foreach (var proxy in moduleMos.Proxies)
             {
                 if (assemblyMos.Proxies.ContainsKey(proxy.Key))
@@ -160,6 +168,10 @@ namespace Rougamo.Fody
                 {
                     assemblyMos.Directs.Remove(ignore);
                 }
+                if (assemblyMos.Generics.ContainsKey(ignore))
+                {
+                    assemblyMos.Generics.Remove(ignore);
+                }
                 var keys = assemblyMos.Proxies.Where(x => x.Value.FullName == ignore).Select(x => x.Key);
                 foreach (var key in keys)
                 {
@@ -167,7 +179,7 @@ namespace Rougamo.Fody
                 }
             }
 
-            return new SimplifyGlobalMos(assemblyMos.Directs.Values.SelectMany(x => x).ToArray(), assemblyMos.Proxies, assemblyMos.Ignores.Keys.ToArray());
+            return new SimplifyGlobalMos(assemblyMos.Directs.Values.SelectMany(x => x).ToArray(), assemblyMos.Generics.Values.ToArray(), assemblyMos.Proxies, assemblyMos.Ignores.Keys.ToArray());
         }
 
         /// <summary>
@@ -183,6 +195,7 @@ namespace Rougamo.Fody
         private GlobalMos FindGlobalAttributes(Collection<CustomAttribute> attributes, string locationName)
         {
             var directs = new Dictionary<string, List<CustomAttribute>>();
+            var generics = new Dictionary<string, TypeDefinition>();
             var proxies = new Dictionary<string, ProxyReleation>();
             var ignores = new Dictionary<string, TypeDefinition>();
 
@@ -192,6 +205,11 @@ namespace Rougamo.Fody
                 if (attrType.DerivesFrom(Constants.TYPE_MoAttribute))
                 {
                     ExtractMoAttributeUniq(directs, attribute);
+                }
+                else if (attribute.AttributeType.IsGeneric(Constants.TYPE_MoAttribute_1, out var genericTypeRefs))
+                {
+                    var moTypeDef = genericTypeRefs![0].Resolve();
+                    generics.TryAdd(moTypeDef.FullName, moTypeDef);
                 }
                 else if (attrType.Is(Constants.TYPE_MoProxyAttribute))
                 {
@@ -230,7 +248,7 @@ namespace Rougamo.Fody
                 }
             }
 
-            return new GlobalMos(directs, proxies.Values.ToDictionary(x => x.Origin.FullName, x => x.Proxy), ignores);
+            return new GlobalMos(directs, generics, proxies.Values.ToDictionary(x => x.Origin.FullName, x => x.Proxy), ignores);
         }
 
         /// <summary>
@@ -348,12 +366,18 @@ namespace Rougamo.Fody
         private ExtractMos ExtractAttributes(Collection<CustomAttribute> attributes, Dictionary<string, TypeDefinition> proxies, string locationName, params string[][] ignores)
         {
             var mos = new Dictionary<string, List<CustomAttribute>>();
+            var genericMos = new Dictionary<string, TypeDefinition>();
             var proxied = new Dictionary<string, TypeDefinition>();
             foreach (var attribute in attributes)
             {
                 if (attribute.AttributeType.DerivesFrom(Constants.TYPE_MoAttribute))
                 {
                     ExtractMoAttributeUniq(mos, attribute);
+                }
+                else if (attribute.AttributeType.IsGeneric(Constants.TYPE_MoAttribute_1, out var genericTypeRefs))
+                {
+                    var moTypeDef = genericTypeRefs![0].Resolve();
+                    genericMos.TryAdd(moTypeDef.FullName, moTypeDef);
                 }
                 else if (proxies.TryGetValue(attribute.AttributeType.FullName, out var proxy))
                 {
@@ -362,7 +386,7 @@ namespace Rougamo.Fody
             }
 
             // proxies在FindGlobalAttributes中已经过滤了
-            return new ExtractMos(mos.Values.SelectMany(x => x).ToArray(), proxied.Values.ToArray());
+            return new ExtractMos(mos.Values.SelectMany(x => x).ToArray(), genericMos.Values.ToArray(), proxied.Values.ToArray());
         }
 
         /// <summary>
@@ -375,7 +399,7 @@ namespace Rougamo.Fody
         {
             if (!mos.TryGetValue(attribute.AttributeType.FullName, out var list))
             {
-                list = new List<CustomAttribute>();
+                list = [];
                 mos.Add(attribute.AttributeType.FullName, list);
             }
             list.Add(attribute);

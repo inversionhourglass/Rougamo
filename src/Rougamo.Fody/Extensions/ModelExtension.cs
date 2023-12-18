@@ -226,9 +226,10 @@ namespace Rougamo.Fody
             return ((int)matchWith & value) == (int)matchWith;
         }
 
-        public static void Initialize(this RouType rouType, MethodDefinition methdDef, CustomAttribute[] assemblyAttributes,
-            RepulsionMo[] typeImplements, CustomAttribute[] typeAttributes, TypeDefinition[] typeProxies,
-            CustomAttribute[] methodAttributes, TypeDefinition[] methodProxies,
+        public static void Initialize(this RouType rouType, MethodDefinition methdDef,
+            CustomAttribute[] assemblyAttributes, TypeDefinition[] assemblyGenerics,
+            RepulsionMo[] typeImplements, CustomAttribute[] typeAttributes, TypeDefinition[] typeGenerics, TypeDefinition[] typeProxies,
+            CustomAttribute[] methodAttributes, TypeDefinition[] methodGenerics, TypeDefinition[] methodProxies,
             string[] assemblyIgnores, string[] typeIgnores, string[] methodIgnores, bool compositeAccessibility)
         {
             var ignores = new HashSet<string>(assemblyIgnores);
@@ -238,9 +239,11 @@ namespace Rougamo.Fody
             var rouMethod = new RouMethod(rouType, methdDef);
 
             rouMethod.AddMo(methodAttributes.Where(x => !ignores.Contains(x.AttributeType.FullName)), MoFrom.Method, compositeAccessibility);
+            rouMethod.AddMo(methodGenerics.Where(x => !ignores.Contains(x.FullName)), MoFrom.Method, compositeAccessibility);
             rouMethod.AddMo(methodProxies.Where(x => !ignores.Contains(x.FullName)), MoFrom.Method, compositeAccessibility);
 
             rouMethod.AddMo(typeAttributes.Where(x => !ignores.Contains(x.AttributeType.FullName)), MoFrom.Class, compositeAccessibility);
+            rouMethod.AddMo(typeGenerics.Where(x => !ignores.Contains(x.FullName)), MoFrom.Class, compositeAccessibility);
             rouMethod.AddMo(typeProxies.Where(x => !ignores.Contains(x.FullName)), MoFrom.Class, compositeAccessibility);
             foreach (var implement in typeImplements.Where(x => !ignores.Contains(x.Mo.FullName)))
             {
@@ -252,6 +255,7 @@ namespace Rougamo.Fody
             }
 
             rouMethod.AddMo(assemblyAttributes.Where(x => !ignores.Contains(x.AttributeType.FullName)), MoFrom.Assembly, compositeAccessibility);
+            rouMethod.AddMo(assemblyGenerics.Where(x => !ignores.Contains(x.FullName)), MoFrom.Assembly, compositeAccessibility);
 
             if (rouMethod.MosAny())
             {

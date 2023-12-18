@@ -240,16 +240,16 @@ namespace Rougamo.Fody
                 {
                     variables.StateMachine.LdlocOrA()
                 };
-                instructions.AddRange(InitMoArray(rouMethod.Mos));
+                instructions.AddRange(InitMoArray(rouMethod.MethodDef, rouMethod.Mos));
                 instructions.Add(Create(OpCodes.Stfld, mosFieldRef));
 
                 return instructions;
             }
 
-            return StateMachineInitMoFields(rouMethod.Mos, variables.StateMachine, fields.Mos);
+            return StateMachineInitMoFields(rouMethod.MethodDef, rouMethod.Mos, variables.StateMachine, fields.Mos);
         }
 
-        private IList<Instruction> StateMachineInitMoFields(Mo[] mos, VariableDefinition stateMachineVariable, FieldReference[] moFields)
+        private IList<Instruction> StateMachineInitMoFields(MethodDefinition methodDef, Mo[] mos, VariableDefinition stateMachineVariable, FieldReference[] moFields)
         {
             var instructions = new List<Instruction>();
 
@@ -258,7 +258,7 @@ namespace Rougamo.Fody
             foreach (var mo in mos)
             {
                 instructions.Add(stateMachineVariable.LdlocOrA());
-                instructions.AddRange(InitMo(mo));
+                instructions.AddRange(InitMo(methodDef, mo));
                 instructions.Add(Create(OpCodes.Stfld, moFields[i]));
 
                 i++;

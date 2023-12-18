@@ -24,6 +24,18 @@ namespace Rougamo.Fody
             return methodRef.FullName == fullName;
         }
 
+        public static bool IsGeneric(this TypeReference typeRef, string genericName, out TypeReference[]? genericTypeRefs)
+        {
+            var typeDef = typeRef.Resolve();
+            if (typeRef is GenericInstanceType git && typeDef != null && typeDef.FullName == genericName)
+            {
+                genericTypeRefs = git.GenericArguments.ToArray();
+                return true;
+            }
+            genericTypeRefs = null;
+            return false;
+        }
+
         public static bool IsOrDerivesFrom(this TypeReference typeRef, string className)
         {
             return Is(typeRef, className) || DerivesFrom(typeRef, className);

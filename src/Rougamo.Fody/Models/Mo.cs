@@ -16,12 +16,14 @@ namespace Rougamo.Fody
         {
             Attribute = attribute;
             From = from;
+            IsStruct = false;
         }
 
         public Mo(TypeDefinition typeDef, MoFrom from)
         {
             TypeDef = typeDef;
             From = from;
+            IsStruct = TypeDef.IsValueType;
         }
 
         public static IEqualityComparer<Mo> Comparer { get; } = new EqualityComparer();
@@ -31,6 +33,8 @@ namespace Rougamo.Fody
         public TypeDefinition? TypeDef { get; }
 
         public MoFrom From { get; }
+
+        public bool IsStruct { get; }
 
         public AccessFlags Flags
         {

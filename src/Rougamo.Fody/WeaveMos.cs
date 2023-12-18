@@ -76,7 +76,7 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private List<Instruction> InitMoArray(Mo[] mos)
+        private List<Instruction> InitMoArray(MethodDefinition methodDef, Mo[] mos)
         {
             var instructions = new List<Instruction>
             {
@@ -88,7 +88,7 @@ namespace Rougamo.Fody
             {
                 instructions.Add(Create(OpCodes.Dup));
                 instructions.Add(Create(OpCodes.Ldc_I4, i));
-                instructions.AddRange(InitMo(mo));
+                instructions.AddRange(InitMo(methodDef, mo));
                 instructions.Add(Create(OpCodes.Stelem_Ref));
                 i++;
             }
@@ -96,7 +96,7 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private IList<Instruction> InitMo(Mo mo)
+        private IList<Instruction> InitMo(MethodDefinition methodDef, Mo mo)
         {
             if (mo.Attribute != null)
             {
@@ -110,8 +110,19 @@ namespace Rougamo.Fody
 
                 return instructions;
             }
-            
-            return new Instruction[] { Create(OpCodes.Newobj, Import(mo.TypeDef!.GetZeroArgsCtor())) };
+
+            if (mo.IsStruct)
+            {
+                var typeRef = Import(mo.TypeDef!);
+                var moVariable = methodDef.Body.CreateVariable(typeRef);
+                return [
+                        Create(OpCodes.Ldloca, moVariable),
+                        Create(OpCodes.Initobj, typeRef),
+                        Create(OpCodes.Ldloc, moVariable),
+                        Create(OpCodes.Box, typeRef)
+                    ];
+            }
+            return [Create(OpCodes.Newobj, Import(mo.TypeDef!.GetZeroArgsCtor()))];
         }
 
         private Collection<Instruction> LoadAttributeArgumentIns(Collection<CustomAttributeArgument> arguments)

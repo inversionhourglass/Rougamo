@@ -4,6 +4,7 @@
     {
         public const string TYPE_IMo = "Rougamo.IMo";
         public const string TYPE_MoAttribute = "Rougamo.MoAttribute";
+        public const string TYPE_MoAttribute_1 = "Rougamo.MoAttribute`1";
         public const string TYPE_MoProxyAttribute = "Rougamo.MoProxyAttribute";
         public const string TYPE_IgnoreMoAttribute = "Rougamo.IgnoreMoAttribute";
         public const string TYPE_MoRepulsion = "Rougamo.MoRepulsion";

@@ -21,7 +21,7 @@ namespace Rougamo.Fody
             SyncSetAnchors(rouMethod, anchors, variables);
             SetTryCatchFinally(rouMethod.Features, rouMethod.MethodDef, anchors);
 
-            instructions.InsertAfter(anchors.InitMos, SyncInitMos(rouMethod.Mos, variables));
+            instructions.InsertAfter(anchors.InitMos, SyncInitMos(rouMethod.MethodDef, rouMethod.Mos, variables));
             instructions.InsertAfter(anchors.InitContext, SyncInitMethodContext(rouMethod.MethodDef, variables));
             instructions.InsertAfter(anchors.OnEntry, SyncOnEntry(rouMethod, anchors.IfEntryReplaced, variables));
             instructions.InsertAfter(anchors.IfEntryReplaced, SyncIfOnEntryReplacedReturn(rouMethod, returnBoxTypeRef, anchors.RewriteArg, variables));
@@ -151,27 +151,27 @@ namespace Rougamo.Fody
             }
         }
 
-        private IList<Instruction> SyncInitMos(Mo[] mos, SyncVariables variables)
+        private IList<Instruction> SyncInitMos(MethodDefinition methodDef, Mo[] mos, SyncVariables variables)
         {
             if (variables.MoArray != null)
             {
-                var instructions = InitMoArray(mos);
+                var instructions = InitMoArray(methodDef, mos);
                 instructions.Add(Create(OpCodes.Stloc, variables.MoArray));
 
                 return instructions;
             }
 
-            return SyncInitMoVariables(mos, variables.Mos);
+            return SyncInitMoVariables(methodDef, mos, variables.Mos);
         }
 
-        private IList<Instruction> SyncInitMoVariables(Mo[] mos, VariableDefinition[] moVariables)
+        private IList<Instruction> SyncInitMoVariables(MethodDefinition methodDef, Mo[] mos, VariableDefinition[] moVariables)
         {
             var instructions = new List<Instruction>();
 
             var i = 0;
             foreach (var mo in mos)
             {
-                instructions.AddRange(InitMo(mo));
+                instructions.AddRange(InitMo(methodDef, mo));
                 instructions.Add(Create(OpCodes.Stloc, moVariables[i]));
 
                 i++;
