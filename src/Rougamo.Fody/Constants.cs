@@ -13,9 +13,6 @@
         public const string TYPE_IRepulsionsRougamo = "Rougamo.IRepulsionsRougamo`2";
         public const string TYPE_MethodContext = "Rougamo.Context.MethodContext";
 
-        public const string TYPE_IValueMo = "Rougamo.IValueMo";
-        public const string TYPE_ValueMoAttribute = "Rougamo.ValueMoAttribute";
-
         public const string TYPE_Void = "System.Void";
         public const string TYPE_String = "System.String";
         public const string TYPE_Int32 = "System.Int32";
