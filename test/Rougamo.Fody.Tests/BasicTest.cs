@@ -510,5 +510,21 @@ namespace Rougamo.Fody.Tests
             value = await (Task<Tuple<object[], object[]>>)instance.NonFreshTestAsync(s, ls);
             Assert.Equal(value.Item1, value.Item2);
         }
+
+        [Fact]
+        public async Task RougamoTest()
+        {
+            var instance = GetInstance(nameof(RougamoUsage));
+
+            var executedMos = new List<string>();
+
+            executedMos.Clear();
+            instance.M(executedMos);
+            Assert.Contains(nameof(BasicUsage.Mos.Mo), executedMos);
+
+            executedMos.Clear();
+            await (Task)instance.MAsync(executedMos);
+            Assert.Contains(nameof(BasicUsage.Mos.Mo), executedMos);
+        }
     }
 }
