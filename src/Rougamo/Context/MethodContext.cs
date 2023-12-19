@@ -12,10 +12,11 @@ namespace Rougamo.Context
     /// <summary>
     /// Method execution context
     /// </summary>
-    public sealed class MethodContext
+    public class MethodContext
     {
         private Type? _realReturnType;
         private Type? _exReturnType;
+        private IDictionary? _datas;
 
         /// <summary>
         /// Compatibility with versions prior to 1.2.0
@@ -36,7 +37,6 @@ namespace Rougamo.Context
             MosNonEntryFIFO = mosNonEntryFIFO;
             Mos = mos;
             Arguments = args;
-            Datas = new Dictionary<object, object>();
         }
 
         /// <summary>
@@ -71,7 +71,7 @@ namespace Rougamo.Context
         /// <summary>
         /// user defined state datas
         /// </summary>
-        public IDictionary Datas { get; }
+        public IDictionary Datas => _datas ??= new Dictionary<object, object>();
 
         /// <summary>
         /// Method' declaring type instance, null if method is a static method
