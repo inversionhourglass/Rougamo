@@ -31,13 +31,4 @@ namespace Rougamo
         /// <inheritdoc/>
         public virtual void OnSuccess(MethodContext context) { }
     }
-
-    /// <inheritdoc/>
-    [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Module | AttributeTargets.Class | AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Constructor)]
-    public class MoAttribute<T> : Attribute where T : IMo
-    {
-        /// <summary>
-        /// </summary>
-        public virtual Type MoType => typeof(T);
-    }
 }

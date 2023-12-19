@@ -206,7 +206,7 @@ namespace Rougamo.Fody
                 {
                     ExtractMoAttributeUniq(directs, attribute);
                 }
-                else if (attribute.AttributeType.IsGeneric(Constants.TYPE_MoAttribute_1, out var genericTypeRefs))
+                else if (attribute.AttributeType.IsGeneric(Constants.TYPE_RougamoAttribute_1, out var genericTypeRefs))
                 {
                     var moTypeDef = genericTypeRefs![0].Resolve();
                     generics.TryAdd(moTypeDef.FullName, moTypeDef);
@@ -374,7 +374,7 @@ namespace Rougamo.Fody
                 {
                     ExtractMoAttributeUniq(mos, attribute);
                 }
-                else if (attribute.AttributeType.IsGeneric(Constants.TYPE_MoAttribute_1, out var genericTypeRefs))
+                else if (attribute.AttributeType.IsGeneric(Constants.TYPE_RougamoAttribute_1, out var genericTypeRefs))
                 {
                     var moTypeDef = genericTypeRefs![0].Resolve();
                     genericMos.TryAdd(moTypeDef.FullName, moTypeDef);
