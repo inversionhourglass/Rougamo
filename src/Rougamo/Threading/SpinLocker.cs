@@ -3,16 +3,10 @@ using System.Threading;
 
 namespace Rougamo.Threading
 {
-    internal struct SpinLocker
+    internal struct SpinLocker(int retryTimes)
     {
-        private SpinLock _locker;
-        private readonly int _retryTimes;
-
-        public SpinLocker(int retryTimes = 3)
-        {
-            _locker = new();
-            _retryTimes = retryTimes;
-        }
+        private SpinLock _locker = new();
+        private readonly int _retryTimes = retryTimes;
 
         public void Enter()
         {
