@@ -14,33 +14,23 @@ namespace Rougamo.Threading
             _retryTimes = retryTimes;
         }
 
-        public IDisposable Enter()
+        public void Enter()
         {
             var taken = false;
             var retryTimes = _retryTimes;
             while (retryTimes >= 0)
             {
                 _locker.Enter(ref taken);
-                if (taken) return new AutoExit(_locker);
+                if (taken) return;
                 retryTimes--;
             }
 
             throw new InvalidOperationException("take locker failed");
         }
 
-        struct AutoExit : IDisposable
+        public void Exit()
         {
-            private SpinLock _locker;
-
-            public AutoExit(SpinLock locker)
-            {
-                _locker = locker;
-            }
-
-            public void Dispose()
-            {
-                _locker.Exit();
-            }
+            _locker.Exit();
         }
     }
 }

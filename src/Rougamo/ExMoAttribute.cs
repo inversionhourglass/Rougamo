@@ -120,10 +120,11 @@ namespace Rougamo
             {
                 if (!context.ExContinueOnce)
                 {
-                    using var _ = context.ExLocker.Enter();
+                    context.ExLocker.Enter();
                     var returnValue = func!(context.ReturnValue!, context);
                     context.ReplaceReturnValue(this, returnValue, false);
                     context.ExContinueOnce = true;
+                    context.ExLocker.Exit();
                 }
             }
             else
@@ -229,7 +230,7 @@ namespace Rougamo
             var tcs = new TaskCompletionSource<bool>();
             ((Task)taskObject).ContinueWith(t =>
             {
-                using var _ = context.ExLocker.Enter();
+                context.ExLocker.Enter();
                 if (t.IsFaulted)
                 {
                     var exception = t.Exception.InnerExceptions.Count == 1 ? t.Exception.InnerException : t.Exception;
@@ -276,6 +277,7 @@ namespace Rougamo
                     }
                 });
                 tcs.TrySetResult(true);
+                context.ExLocker.Exit();
             });
 
             return tcs.Task;
@@ -293,7 +295,7 @@ namespace Rougamo
             var tcs = new TaskCompletionSource<T>();
             ((Task<T>)taskObject).ContinueWith(t =>
             {
-                using var _ = context.ExLocker.Enter();
+                context.ExLocker.Enter();
                 if (t.IsFaulted)
                 {
                     var exception = t.Exception.InnerExceptions.Count == 1 ? t.Exception.InnerException : t.Exception;
@@ -351,6 +353,7 @@ namespace Rougamo
                         tcs.TrySetResult(t.Result);
                     }
                 }
+                context.ExLocker.Exit();
             });
 
             return tcs.Task;

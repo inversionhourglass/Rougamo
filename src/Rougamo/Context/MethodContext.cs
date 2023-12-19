@@ -44,7 +44,7 @@ namespace Rougamo.Context
         /// </summary>
         internal bool ExMode { get; set; }
 
-        internal SpinLocker ExLocker { get; } = new SpinLocker();
+        internal SpinLocker ExLocker = new();
 
         /// <summary>
         /// ContinueWith executes only once.
