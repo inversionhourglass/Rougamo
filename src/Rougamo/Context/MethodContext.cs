@@ -14,6 +14,9 @@ namespace Rougamo.Context
     /// </summary>
     public class MethodContext
     {
+        private readonly static IMo[] _EmptyMos = [];
+        private readonly static object[] _EmptyArgs = [];
+        
         private Type? _realReturnType;
         private Type? _exReturnType;
         private IDictionary? _datas;
@@ -23,11 +26,11 @@ namespace Rougamo.Context
         /// </summary>
         [Obsolete]
         public MethodContext(object target, Type targetType, MethodBase method, bool isAsync, bool isIterator, object[] args)
-            : this(target, targetType, method, isAsync, isIterator, false, new IMo[0], args) { }
+            : this(target, targetType, method, isAsync, isIterator, false, null, args) { }
 
         /// <summary>
         /// </summary>
-        public MethodContext(object target, Type targetType, MethodBase method, bool isAsync, bool isIterator, bool mosNonEntryFIFO, IMo[] mos, object[] args)
+        public MethodContext(object target, Type targetType, MethodBase method, bool isAsync, bool isIterator, bool mosNonEntryFIFO, IMo[]? mos, object[]? args)
         {
             Target = target;
             TargetType = targetType;
@@ -35,8 +38,8 @@ namespace Rougamo.Context
             IsAsync = isAsync;
             IsIterator = isIterator;
             MosNonEntryFIFO = mosNonEntryFIFO;
-            Mos = mos;
-            Arguments = args;
+            Mos = mos ?? _EmptyMos;
+            Arguments = args ?? _EmptyArgs;
         }
 
         /// <summary>
