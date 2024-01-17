@@ -13,9 +13,7 @@ namespace BasicUsage.Mos
 
         public double Order => 1;
 
-        public bool OmitMos => false;
-
-        public bool OmitArguments => false;
+        public Omit MethodContextOmits => Omit.None;
 
         public void OnEntry(MethodContext context)
         {

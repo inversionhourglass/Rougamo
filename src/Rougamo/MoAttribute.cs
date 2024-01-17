@@ -20,10 +20,7 @@ namespace Rougamo
         public virtual double Order { get; set; }
 
         /// <inheritdoc/>
-        public virtual bool OmitMos { get; }
-
-        /// <inheritdoc/>
-        public virtual bool OmitArguments { get; }
+        public virtual Omit MethodContextOmits { get; }
 
         /// <inheritdoc/>
         public virtual void OnEntry(MethodContext context) { }

@@ -61,7 +61,10 @@ namespace Rougamo
         }
 
         /// <inheritdoc/>
-        public sealed override bool OmitMos => false;
+        [Obsolete("Notice, do not omit Mos, ExMoAttribute need Mos.")]
+#pragma warning disable CS0809 // Obsolete member overrides non-obsolete member
+        public override Omit MethodContextOmits { get; }
+#pragma warning restore CS0809 // Obsolete member overrides non-obsolete member
 
         /// <summary>
         /// <inheritdoc cref="MoAttribute.OnEntry(MethodContext)"/>
