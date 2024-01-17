@@ -20,6 +20,10 @@ namespace BasicUsage.Mos
 
         public double Order => 1;
 
+        public bool OmitMos => false;
+
+        public bool OmitArguments => false;
+
         public virtual string Name => GetType().Name;
 
         public void OnEntry(MethodContext context)

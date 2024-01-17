@@ -1,6 +1,7 @@
 ﻿using Mono.Cecil;
 using Mono.Collections.Generic;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Rougamo.Fody
 {
@@ -83,6 +84,12 @@ namespace Rougamo.Fody
                 }
                 return _order.Value;
             }
+        }
+
+        public MethodReference On(string methodName, ModuleDefinition moduleDef)
+        {
+            var typeDef = TypeDef ?? Attribute!.AttributeType.Resolve();
+            return typeDef.Methods.FirstOrDefault(x => x.Name == methodName).ImportInto(moduleDef);
         }
 
         public string FullName => Attribute?.AttributeType?.FullName ?? TypeDef!.FullName;

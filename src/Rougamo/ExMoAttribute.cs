@@ -60,6 +60,9 @@ namespace Rougamo
             }
         }
 
+        /// <inheritdoc/>
+        public sealed override bool OmitMos => false;
+
         /// <summary>
         /// <inheritdoc cref="MoAttribute.OnEntry(MethodContext)"/>
         /// </summary>
