@@ -127,8 +127,8 @@ namespace Rougamo.Fody
                 var moVariable = methodDef.Body.CreateVariable(typeRef);
                 Instruction[] ins = [
                         Create(OpCodes.Ldloca, moVariable),
-                        Create(OpCodes.Initobj, typeRef),
-                        Create(OpCodes.Ldloc, moVariable)
+                    Create(OpCodes.Initobj, typeRef),
+                    Create(OpCodes.Ldloc, moVariable)
                     ];
                 return boxing ? [.. ins, Create(OpCodes.Box, typeRef)] : ins;
             }
@@ -314,8 +314,7 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        // todo: originCall参数后续不需要，默认应该为true，后续所有分支改善完毕后删除
-        private List<Instruction> ExecuteMoMethod(string methodName, Mo[] mos, VariableDefinition[]? moVariables, VariableDefinition? contextVariable, FieldReference[]? moFields, FieldReference? contextField, bool reverseCall, bool originCall = false)
+        private List<Instruction> ExecuteMoMethod(string methodName, Mo[] mos, VariableDefinition[]? moVariables, VariableDefinition? contextVariable, FieldReference[]? moFields, FieldReference? contextField, bool reverseCall)
         {
             var instructions = new List<Instruction>();
 
@@ -328,29 +327,20 @@ namespace Rougamo.Fody
 
                 if (moVariables == null)
                 {
-                    MethodReference methodRef;
                     OpCode ldfldoa;
                     OpCode callov;
-                    if (originCall)
+                    var methodRef = mo.On(methodName, ModuleDefinition) ?? _methodIMosRef[methodName];
+                    if (mo.IsStruct)
                     {
-                        methodRef = mo.On(methodName, ModuleDefinition) ?? _methodIMosRef[methodName];
-                        if (mo.IsStruct)
-                        {
-                            ldfldoa = OpCodes.Ldflda;
-                            callov = OpCodes.Call;
-                        }
-                        else
-                        {
-                            ldfldoa = OpCodes.Ldfld;
-                            callov = OpCodes.Callvirt;
-                        }
+                        ldfldoa = OpCodes.Ldflda;
+                        callov = OpCodes.Call;
                     }
                     else
                     {
-                        methodRef = _methodIMosRef[methodName];
                         ldfldoa = OpCodes.Ldfld;
                         callov = OpCodes.Callvirt;
                     }
+
                     instructions.Add(Create(OpCodes.Ldarg_0));
                     instructions.Add(Create(ldfldoa, moFields![j]));
                     instructions.Add(Create(OpCodes.Ldarg_0));
@@ -359,26 +349,16 @@ namespace Rougamo.Fody
                 }
                 else
                 {
-                    MethodReference methodRef;
                     OpCode ldlocoa;
                     OpCode callov;
-                    if (originCall)
+                    var methodRef = mo.On(methodName, ModuleDefinition) ?? _methodIMosRef[methodName];
+                    if (mo.IsStruct)
                     {
-                        methodRef = mo.On(methodName, ModuleDefinition) ?? _methodIMosRef[methodName];
-                        if (mo.IsStruct)
-                        {
-                            ldlocoa = OpCodes.Ldloca;
-                            callov = OpCodes.Call;
-                        }
-                        else
-                        {
-                            ldlocoa = OpCodes.Ldloc;
-                            callov = OpCodes.Callvirt;
-                        }
+                        ldlocoa = OpCodes.Ldloca;
+                        callov = OpCodes.Call;
                     }
                     else
                     {
-                        methodRef = _methodIMosRef[methodName];
                         ldlocoa = OpCodes.Ldloc;
                         callov = OpCodes.Callvirt;
                     }

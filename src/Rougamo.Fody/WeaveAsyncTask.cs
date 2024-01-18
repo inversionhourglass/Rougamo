@@ -316,7 +316,7 @@ namespace Rougamo.Fody
             {
                 return ExecuteMoMethod(Constants.METHOD_OnEntry, moveNextMethodDef, rouMethod.Mos, endAnchor, null, null, fields.MoArray, fields.MethodContext, false);
             }
-            return ExecuteMoMethod(Constants.METHOD_OnEntry, rouMethod.Mos, null, null, fields.Mos, fields.MethodContext, false, true);
+            return ExecuteMoMethod(Constants.METHOD_OnEntry, rouMethod.Mos, null, null, fields.Mos, fields.MethodContext, false);
         }
 
         private IList<Instruction> AsyncIfOnEntryReplacedReturn(RouMethod rouMethod, MethodDefinition moveNextMethodDef, BoxTypeReference returnBoxTypeRef, MethodReference setResultMethodRef, Instruction endAnchor, AsyncFields fields, AsyncVariables variables)
@@ -470,7 +470,7 @@ namespace Rougamo.Fody
             {
                 return ExecuteMoMethod(Constants.METHOD_OnException, moveNextMethodDef, rouMethod.Mos, endAnchor, null, null, fields.MoArray, fields.MethodContext, _config.ReverseCallNonEntry);
             }
-            return ExecuteMoMethod(Constants.METHOD_OnException, rouMethod.Mos, null, null, fields.Mos, fields.MethodContext, _config.ReverseCallNonEntry, true);
+            return ExecuteMoMethod(Constants.METHOD_OnException, rouMethod.Mos, null, null, fields.Mos, fields.MethodContext, _config.ReverseCallNonEntry);
         }
 
         private IList<Instruction> AsyncIfExceptionRetry(RouMethod rouMethod, Instruction retryStart, Instruction endAnchor, AsyncFields fields)
@@ -525,7 +525,7 @@ namespace Rougamo.Fody
             {
                 return ExecuteMoMethod(Constants.METHOD_OnExit, moveNextMethodDef, rouMethod.Mos, endAnchor, null, null, fields.MoArray, fields.MethodContext, _config.ReverseCallNonEntry);
             }
-            return ExecuteMoMethod(Constants.METHOD_OnExit, rouMethod.Mos, null, null, fields.Mos, fields.MethodContext, _config.ReverseCallNonEntry, true);
+            return ExecuteMoMethod(Constants.METHOD_OnExit, rouMethod.Mos, null, null, fields.Mos, fields.MethodContext, _config.ReverseCallNonEntry);
         }
 
         private IList<Instruction> AsyncIfExceptionHandled(RouMethod rouMethod, BoxTypeReference returnBoxTypeRef, MethodReference setResultMethodRef, Instruction ifUnhandledBrTo, Instruction ifHandledBrTo, AsyncFields fields, AsyncVariables variables)
@@ -587,7 +587,7 @@ namespace Rougamo.Fody
             {
                 return ExecuteMoMethod(Constants.METHOD_OnSuccess, moveNextMethodDef, rouMethod.Mos, endAnchor, null, null, fields.MoArray, fields.MethodContext, _config.ReverseCallNonEntry);
             }
-            return ExecuteMoMethod(Constants.METHOD_OnSuccess, rouMethod.Mos, null, null, fields.Mos, fields.MethodContext, _config.ReverseCallNonEntry, true);
+            return ExecuteMoMethod(Constants.METHOD_OnSuccess, rouMethod.Mos, null, null, fields.Mos, fields.MethodContext, _config.ReverseCallNonEntry);
         }
 
         private IList<Instruction> AsyncIfSuccessRetry(RouMethod rouMethod, Instruction ifRetryGoTo, Instruction ifNotRetryGoTo, AsyncFields fields)

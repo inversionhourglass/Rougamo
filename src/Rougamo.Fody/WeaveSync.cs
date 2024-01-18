@@ -212,7 +212,7 @@ namespace Rougamo.Fody
             {
                 return ExecuteMoMethod(Constants.METHOD_OnEntry, rouMethod.MethodDef, rouMethod.Mos, endAnchor, variables.MoArray, variables.MethodContext, null, null, false);
             }
-            return ExecuteMoMethod(Constants.METHOD_OnEntry, rouMethod.Mos, variables.Mos, variables.MethodContext, null, null, false, true);
+            return ExecuteMoMethod(Constants.METHOD_OnEntry, rouMethod.Mos, variables.Mos, variables.MethodContext, null, null, false);
         }
 
         private IList<Instruction> SyncIfOnEntryReplacedReturn(RouMethod rouMethod, BoxTypeReference returnBoxTypeRef, Instruction endAnchor, SyncVariables variables)
@@ -380,7 +380,7 @@ namespace Rougamo.Fody
             {
                 return ExecuteMoMethod(Constants.METHOD_OnException, rouMethod.MethodDef, rouMethod.Mos, endAnchor, variables.MoArray, variables.MethodContext, null, null, _config.ReverseCallNonEntry);
             }
-            return ExecuteMoMethod(Constants.METHOD_OnException, rouMethod.Mos, variables.Mos, variables.MethodContext, null, null, _config.ReverseCallNonEntry, true);
+            return ExecuteMoMethod(Constants.METHOD_OnException, rouMethod.Mos, variables.Mos, variables.MethodContext, null, null, _config.ReverseCallNonEntry);
         }
 
         private IList<Instruction> SyncIfExceptionRetry(RouMethod rouMethod, Instruction retryAnchor, Instruction endAnchor, SyncVariables variables)
@@ -473,7 +473,7 @@ namespace Rougamo.Fody
             {
                 return ExecuteMoMethod(Constants.METHOD_OnSuccess, rouMethod.MethodDef, rouMethod.Mos, endAnchor, variables.MoArray, variables.MethodContext, null, null, _config.ReverseCallNonEntry);
             }
-            return ExecuteMoMethod(Constants.METHOD_OnSuccess, rouMethod.Mos, variables.Mos, variables.MethodContext, null, null, _config.ReverseCallNonEntry, true);
+            return ExecuteMoMethod(Constants.METHOD_OnSuccess, rouMethod.Mos, variables.Mos, variables.MethodContext, null, null, _config.ReverseCallNonEntry);
         }
 
         private IList<Instruction> SyncIfOnSuccessRetry(RouMethod rouMethod, Instruction endAnchor, Instruction endFinally, SyncVariables variables)
@@ -516,7 +516,7 @@ namespace Rougamo.Fody
             {
                 return ExecuteMoMethod(Constants.METHOD_OnExit, rouMethod.MethodDef, rouMethod.Mos, endAnchor, variables.MoArray, variables.MethodContext, null, null, _config.ReverseCallNonEntry);
             }
-            return ExecuteMoMethod(Constants.METHOD_OnExit, rouMethod.Mos, variables.Mos, variables.MethodContext, null, null, _config.ReverseCallNonEntry, true);
+            return ExecuteMoMethod(Constants.METHOD_OnExit, rouMethod.Mos, variables.Mos, variables.MethodContext, null, null, _config.ReverseCallNonEntry);
         }
 
         private IList<Instruction> SyncRetryFork(RouMethod rouMethod, Instruction retry, Instruction notRetry, SyncVariables variables)
