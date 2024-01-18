@@ -101,7 +101,6 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        // todo: boxing参数不需要，默认采用原类型变量，等待所有分支都改完后删除该参数
         private IList<Instruction> InitMo(MethodDefinition methodDef, Mo mo, bool boxing)
         {
             if (mo.Attribute != null)
@@ -123,8 +122,8 @@ namespace Rougamo.Fody
                 var moVariable = methodDef.Body.CreateVariable(typeRef);
                 Instruction[] ins = [
                         Create(OpCodes.Ldloca, moVariable),
-                    Create(OpCodes.Initobj, typeRef),
-                    Create(OpCodes.Ldloc, moVariable)
+                        Create(OpCodes.Initobj, typeRef),
+                        Create(OpCodes.Ldloc, moVariable)
                     ];
                 return boxing ? [.. ins, Create(OpCodes.Box, typeRef)] : ins;
             }
@@ -324,11 +323,34 @@ namespace Rougamo.Fody
 
                 if (moVariables == null)
                 {
+                    MethodReference methodRef;
+                    OpCode ldfldoa;
+                    OpCode callov;
+                    if (originCall)
+                    {
+                        methodRef = mo.On(methodName, ModuleDefinition) ?? _methodIMosRef[methodName];
+                        if (mo.IsStruct)
+                        {
+                            ldfldoa = OpCodes.Ldflda;
+                            callov = OpCodes.Call;
+                        }
+                        else
+                        {
+                            ldfldoa = OpCodes.Ldfld;
+                            callov = OpCodes.Callvirt;
+                        }
+                    }
+                    else
+                    {
+                        methodRef = _methodIMosRef[methodName];
+                        ldfldoa = OpCodes.Ldfld;
+                        callov = OpCodes.Callvirt;
+                    }
                     instructions.Add(Create(OpCodes.Ldarg_0));
-                    instructions.Add(Create(OpCodes.Ldfld, moFields![j]));
+                    instructions.Add(Create(ldfldoa, moFields![j]));
                     instructions.Add(Create(OpCodes.Ldarg_0));
                     instructions.Add(Create(OpCodes.Ldfld, contextField));
-                    instructions.Add(Create(OpCodes.Callvirt, _methodIMosRef[methodName]));
+                    instructions.Add(Create(callov, methodRef));
                 }
                 else
                 {
