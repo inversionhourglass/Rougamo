@@ -282,7 +282,7 @@ namespace Rougamo.Fody
                 {
                     moArray = rouMethod.MethodDef.Body.CreateVariable(_typeIMoArrayRef);
                     var moFieldRefs = fields.Mos.Select(x => new FieldReference(x.Name, x.FieldType, variables.StateMachine.VariableType)).ToArray();
-                    instructions.AddRange(CreateTempMoArray(variables.StateMachine, moFieldRefs));
+                    instructions.AddRange(CreateTempMoArray(variables.StateMachine, moFieldRefs, rouMethod.Mos));
                     instructions.Add(Create(OpCodes.Stloc, moArray));
                 }
             }
