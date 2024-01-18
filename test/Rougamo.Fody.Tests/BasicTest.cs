@@ -550,5 +550,37 @@ namespace Rougamo.Fody.Tests
             Assert.Contains(nameof(BasicUsage.Mos.ValueMo3), executedMos);
             Assert.Contains(nameof(BasicUsage.Mos.Mo), executedMos);
         }
+
+        [Fact]
+        public void OmitTest()
+        {
+            var instance = GetInstance(nameof(OmitUseCase));
+            var sInstance = GetStaticInstance(nameof(OmitUseCase));
+
+            var executedMos = new List<string>();
+            List<string> returnMos;
+
+            executedMos.Clear();
+            instance.Mos(executedMos);
+            Assert.Contains(nameof(BasicUsage.Mos.ValueOmitMos), executedMos);
+            Assert.DoesNotContain(nameof(BasicUsage.Mos.ValueOmitArguments), executedMos);
+            Assert.DoesNotContain(nameof(BasicUsage.Mos.ValueOmitArgumentsButFeature), executedMos);
+            Assert.DoesNotContain(nameof(BasicUsage.Mos.ValueOmitAll), executedMos);
+
+            returnMos = instance.Arguments(0);
+            Assert.DoesNotContain(nameof(BasicUsage.Mos.ValueOmitMos), returnMos);
+            Assert.Contains(nameof(BasicUsage.Mos.ValueOmitArguments), returnMos);
+            Assert.DoesNotContain(nameof(BasicUsage.Mos.ValueOmitArgumentsButFeature), returnMos);
+            Assert.DoesNotContain(nameof(BasicUsage.Mos.ValueOmitAll), returnMos);
+
+            returnMos = instance.ArgumentsFailed(0);
+            Assert.Null(returnMos);
+
+            returnMos = sInstance.All(0);
+            Assert.DoesNotContain(nameof(BasicUsage.Mos.ValueOmitMos), returnMos);
+            Assert.DoesNotContain(nameof(BasicUsage.Mos.ValueOmitArguments), returnMos);
+            Assert.DoesNotContain(nameof(BasicUsage.Mos.ValueOmitArgumentsButFeature), returnMos);
+            Assert.Contains(nameof(BasicUsage.Mos.ValueOmitAll), returnMos);
+        }
     }
 }
