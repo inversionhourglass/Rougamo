@@ -4,6 +4,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Threading.Tasks;
 
 namespace BasicUsage.Mos
 {
@@ -32,7 +33,12 @@ namespace BasicUsage.Mos
             }
             if (context.Method is MethodInfo mi)
             {
-                if (mi.ReturnType == typeof(List<string>))
+                var returnType = mi.ReturnType;
+                if (returnType.IsGenericType && (returnType.GetGenericTypeDefinition() == typeof(Task<>) || returnType.GetGenericTypeDefinition() == typeof(ValueTask<>)))
+                {
+                    returnType = returnType.GetGenericArguments()[0];
+                }
+                if (returnType == typeof(List<string>))
                 {
                     if (!context.Datas.Contains(LIST_KEY) || context.Datas[LIST_KEY] is not List<string> mos)
                     {
@@ -42,11 +48,11 @@ namespace BasicUsage.Mos
                     mos.Add(name);
                     context.ReplaceReturnValue(mo, mos);
                 }
-                else if (typeof(IDictionary).IsAssignableFrom(mi.ReturnType))
+                else if (typeof(IDictionary).IsAssignableFrom(returnType))
                 {
                     if (!context.Datas.Contains(MAP_KEY) || context.Datas[MAP_KEY] is not IDictionary map)
                     {
-                        map = (IDictionary)Activator.CreateInstance(mi.ReturnType);
+                        map = (IDictionary)Activator.CreateInstance(returnType);
                         context.Datas[MAP_KEY] = map;
                     }
                     map[name] = name;
