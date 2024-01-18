@@ -4,11 +4,13 @@
     {
         public const string TYPE_IMo = "Rougamo.IMo";
         public const string TYPE_MoAttribute = "Rougamo.MoAttribute";
+        public const string TYPE_RougamoAttribute = "Rougamo.RougamoAttribute";
         public const string TYPE_RougamoAttribute_1 = "Rougamo.RougamoAttribute`1";
         public const string TYPE_MoProxyAttribute = "Rougamo.MoProxyAttribute";
         public const string TYPE_IgnoreMoAttribute = "Rougamo.IgnoreMoAttribute";
         public const string TYPE_MoRepulsion = "Rougamo.MoRepulsion";
         public const string TYPE_AccessFlags = "Rougamo.AccessFlags";
+        public const string TYPE_Omit = "Rougamo.Context.Omit";
         public const string TYPE_IRougamo_1 = "Rougamo.IRougamo`1";
         public const string TYPE_IRougamo_2 = "Rougamo.IRougamo`2";
         public const string TYPE_IRepulsionsRougamo = "Rougamo.IRepulsionsRougamo`2";
@@ -51,6 +53,7 @@
         public const string PROP_Arguments = "Arguments";
         public const string PROP_RewriteArguments = "RewriteArguments";
         public const string PROP_RetryCount = "RetryCount";
+        public const string PROP_MethodContextOmits = "MethodContextOmits";
 
         public const string FIELD_Format = "<{0}>k__BackingField";
         public const string FIELD_Repulsions = "<Repulsions>k__BackingField";

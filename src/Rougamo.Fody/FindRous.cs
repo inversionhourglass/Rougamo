@@ -379,6 +379,11 @@ namespace Rougamo.Fody
                     var moTypeDef = genericTypeRefs![0].Resolve();
                     genericMos.TryAdd(moTypeDef.FullName, moTypeDef);
                 }
+                else if (attribute.AttributeType.Is(Constants.TYPE_RougamoAttribute))
+                {
+                    var moTypeDef = (TypeDefinition)attribute.ConstructorArguments[0].Value;
+                    genericMos.TryAdd(moTypeDef.FullName, moTypeDef);
+                }
                 else if (proxies.TryGetValue(attribute.AttributeType.FullName, out var proxy))
                 {
                     proxied.TryAdd(proxy.FullName, proxy);

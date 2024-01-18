@@ -109,6 +109,31 @@ namespace Rougamo.Fody
 
         #endregion Extract-Mo-Order
 
+        #region Extract-Mo-MethodContextOmits
+
+        public static Omit ExtractOmits(this Mo mo)
+        {
+            var typeDef = mo.TypeDef;
+            if (mo.Attribute != null)
+            {
+                typeDef = mo.Attribute.AttributeType.Resolve();
+            }
+            var flags = ExtractFromIl(typeDef!, Constants.PROP_MethodContextOmits, Constants.TYPE_Omit, ParseOmits);
+            return flags ?? Omit.None;
+        }
+
+        private static Omit? ParseOmits(Instruction instruction)
+        {
+            var opCode = instruction.OpCode;
+            if (opCode == OpCodes.Ldc_I4_0) return Omit.None;
+            if (opCode == OpCodes.Ldc_I4_1) return Omit.Mos;
+            if (opCode == OpCodes.Ldc_I4_2) return Omit.Arguments;
+            if (opCode == OpCodes.Ldc_I4_3) return Omit.All;
+            return null;
+        }
+
+        #endregion Extract-Mo-MethodContextOmits
+
         #region Extract-Property-Value
 
         private static T? ExtractFromIl<T>(TypeDefinition typeDef, string propertyName, string propertyTypeFullName, Func<Instruction, T?> tryResolve) where T : struct

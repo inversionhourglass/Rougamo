@@ -13,6 +13,7 @@ namespace Rougamo.Fody
         private bool? _isAsync;
         private bool? _isIterator;
         private bool? _isAsyncIterator;
+        private Omit? _omit;
         private readonly HashSet<Mo> _mos;
         private readonly RouType _rouType;
         private Mo[]? _sortedMos;
@@ -41,6 +42,8 @@ namespace Rougamo.Fody
                 return _sortedMos;
             }
         }
+
+        public Omit MethodContextOmits => _omit ??= Mos.Aggregate(Omit.All, (x, y) => x & y.MethodContextOmits);
 
         public void AddMo(Mo mo)
         {

@@ -12,6 +12,7 @@ namespace Rougamo.Fody
         private bool _patternSet;
         private int? _features;
         private double? _order;
+        private Omit? _omit;
 
         public Mo(CustomAttribute attribute, MoFrom from)
         {
@@ -86,10 +87,27 @@ namespace Rougamo.Fody
             }
         }
 
-        public MethodReference On(string methodName, ModuleDefinition moduleDef)
+        public Omit MethodContextOmits
         {
-            var typeDef = TypeDef ?? Attribute!.AttributeType.Resolve();
-            return typeDef.Methods.FirstOrDefault(x => x.Name == methodName).ImportInto(moduleDef);
+            get
+            {
+                if (!_omit.HasValue)
+                {
+                    _omit = this.ExtractOmits();
+                    if ((_omit & Omit.Arguments) != 0 && (Features & (0x10 | (int)Feature.FreshArgs)) != 0)
+                    {
+                        _omit &= (Omit.All ^ Omit.Arguments);
+                    }
+                }
+                return _omit.Value;
+            }
+        }
+
+        public TypeDefinition MoTypeDef => TypeDef ?? Attribute!.AttributeType.Resolve();
+
+        public MethodReference? On(string methodName, ModuleDefinition moduleDef)
+        {
+            return MoTypeDef.Methods.FirstOrDefault(x => x.Name == methodName)?.ImportInto(moduleDef);
         }
 
         public string FullName => Attribute?.AttributeType?.FullName ?? TypeDef!.FullName;

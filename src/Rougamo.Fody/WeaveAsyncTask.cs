@@ -258,7 +258,7 @@ namespace Rougamo.Fody
             foreach (var mo in mos)
             {
                 instructions.Add(stateMachineVariable.LdlocOrA());
-                instructions.AddRange(InitMo(methodDef, mo));
+                instructions.AddRange(InitMo(methodDef, mo, true));
                 instructions.Add(Create(OpCodes.Stfld, moFields[i]));
 
                 i++;
@@ -286,7 +286,7 @@ namespace Rougamo.Fody
             var contextFieldRef = new FieldReference(fields.MethodContext.Name, fields.MethodContext.FieldType, variables.StateMachine.VariableType);
 
             instructions.Add(variables.StateMachine.LdlocOrA());
-            instructions.AddRange(InitMethodContext(rouMethod.MethodDef, true, false, moArray, variables.StateMachine, mosFieldRef));
+            instructions.AddRange(InitMethodContext(rouMethod.MethodDef, true, false, moArray, variables.StateMachine, mosFieldRef, Omit.None));
             instructions.Add(Create(OpCodes.Stfld, contextFieldRef));
 
             return instructions;

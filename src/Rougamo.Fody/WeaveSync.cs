@@ -22,7 +22,7 @@ namespace Rougamo.Fody
             SetTryCatchFinally(rouMethod.Features, rouMethod.MethodDef, anchors);
 
             instructions.InsertAfter(anchors.InitMos, SyncInitMos(rouMethod.MethodDef, rouMethod.Mos, variables));
-            instructions.InsertAfter(anchors.InitContext, SyncInitMethodContext(rouMethod.MethodDef, variables));
+            instructions.InsertAfter(anchors.InitContext, SyncInitMethodContext(rouMethod.MethodDef, rouMethod.Mos, rouMethod.MethodContextOmits, variables));
             instructions.InsertAfter(anchors.OnEntry, SyncOnEntry(rouMethod, anchors.IfEntryReplaced, variables));
             instructions.InsertAfter(anchors.IfEntryReplaced, SyncIfOnEntryReplacedReturn(rouMethod, returnBoxTypeRef, anchors.RewriteArg, variables));
             instructions.InsertAfter(anchors.RewriteArg, SyncRewriteArguments(rouMethod, anchors.TryStart, variables));
@@ -57,7 +57,7 @@ namespace Rougamo.Fody
             }
             else
             {
-                mos = rouMethod.Mos.Select(x => rouMethod.MethodDef.Body.CreateVariable(_typeIMoRef)).ToArray();
+                mos = rouMethod.Mos.Select(x => rouMethod.MethodDef.Body.CreateVariable(x.MoTypeDef.ImportInto(ModuleDefinition))).ToArray();
             }
             var methodContext = rouMethod.MethodDef.Body.CreateVariable(_typeMethodContextRef);
             var isRetry = rouMethod.MethodDef.Body.CreateVariable(_typeBoolRef);
@@ -171,7 +171,7 @@ namespace Rougamo.Fody
             var i = 0;
             foreach (var mo in mos)
             {
-                instructions.AddRange(InitMo(methodDef, mo));
+                instructions.AddRange(InitMo(methodDef, mo, false));
                 instructions.Add(Create(OpCodes.Stloc, moVariables[i]));
 
                 i++;
@@ -180,21 +180,25 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private IList<Instruction> SyncInitMethodContext(MethodDefinition methodDef, SyncVariables variables)
+        private IList<Instruction> SyncInitMethodContext(MethodDefinition methodDef, Mo[] mos, Omit omit, SyncVariables variables)
         {
             var instructions = new List<Instruction>();
-            VariableDefinition moArray;
-            if (variables.MoArray != null)
+            VariableDefinition? moArray;
+            if ((omit & Omit.Mos) != 0)
+            {
+                moArray = null;
+            }
+            else if (variables.MoArray != null)
             {
                 moArray = variables.MoArray;
             }
             else
             {
                 moArray = methodDef.Body.CreateVariable(_typeIMoArrayRef);
-                instructions.AddRange(CreateTempMoArray(variables.Mos));
+                instructions.AddRange(CreateTempMoArray(variables.Mos, mos));
                 instructions.Add(Create(OpCodes.Stloc, moArray));
             }
-            instructions.AddRange(InitMethodContext(methodDef, false, false, moArray, null, null));
+            instructions.AddRange(InitMethodContext(methodDef, false, false, moArray, null, null, omit));
             instructions.Add(Create(OpCodes.Stloc, variables.MethodContext));
 
             return instructions;
@@ -208,7 +212,7 @@ namespace Rougamo.Fody
             {
                 return ExecuteMoMethod(Constants.METHOD_OnEntry, rouMethod.MethodDef, rouMethod.Mos, endAnchor, variables.MoArray, variables.MethodContext, null, null, false);
             }
-            return ExecuteMoMethod(Constants.METHOD_OnEntry, rouMethod.Mos, variables.Mos, variables.MethodContext, null, null, false);
+            return ExecuteMoMethod(Constants.METHOD_OnEntry, rouMethod.Mos, variables.Mos, variables.MethodContext, null, null, false, true);
         }
 
         private IList<Instruction> SyncIfOnEntryReplacedReturn(RouMethod rouMethod, BoxTypeReference returnBoxTypeRef, Instruction endAnchor, SyncVariables variables)
@@ -376,7 +380,7 @@ namespace Rougamo.Fody
             {
                 return ExecuteMoMethod(Constants.METHOD_OnException, rouMethod.MethodDef, rouMethod.Mos, endAnchor, variables.MoArray, variables.MethodContext, null, null, _config.ReverseCallNonEntry);
             }
-            return ExecuteMoMethod(Constants.METHOD_OnException, rouMethod.Mos, variables.Mos, variables.MethodContext, null, null, _config.ReverseCallNonEntry);
+            return ExecuteMoMethod(Constants.METHOD_OnException, rouMethod.Mos, variables.Mos, variables.MethodContext, null, null, _config.ReverseCallNonEntry, true);
         }
 
         private IList<Instruction> SyncIfExceptionRetry(RouMethod rouMethod, Instruction retryAnchor, Instruction endAnchor, SyncVariables variables)
@@ -469,7 +473,7 @@ namespace Rougamo.Fody
             {
                 return ExecuteMoMethod(Constants.METHOD_OnSuccess, rouMethod.MethodDef, rouMethod.Mos, endAnchor, variables.MoArray, variables.MethodContext, null, null, _config.ReverseCallNonEntry);
             }
-            return ExecuteMoMethod(Constants.METHOD_OnSuccess, rouMethod.Mos, variables.Mos, variables.MethodContext, null, null, _config.ReverseCallNonEntry);
+            return ExecuteMoMethod(Constants.METHOD_OnSuccess, rouMethod.Mos, variables.Mos, variables.MethodContext, null, null, _config.ReverseCallNonEntry, true);
         }
 
         private IList<Instruction> SyncIfOnSuccessRetry(RouMethod rouMethod, Instruction endAnchor, Instruction endFinally, SyncVariables variables)
@@ -512,7 +516,7 @@ namespace Rougamo.Fody
             {
                 return ExecuteMoMethod(Constants.METHOD_OnExit, rouMethod.MethodDef, rouMethod.Mos, endAnchor, variables.MoArray, variables.MethodContext, null, null, _config.ReverseCallNonEntry);
             }
-            return ExecuteMoMethod(Constants.METHOD_OnExit, rouMethod.Mos, variables.Mos, variables.MethodContext, null, null, _config.ReverseCallNonEntry);
+            return ExecuteMoMethod(Constants.METHOD_OnExit, rouMethod.Mos, variables.Mos, variables.MethodContext, null, null, _config.ReverseCallNonEntry, true);
         }
 
         private IList<Instruction> SyncRetryFork(RouMethod rouMethod, Instruction retry, Instruction notRetry, SyncVariables variables)

@@ -39,7 +39,7 @@ namespace Rougamo.Fody
 
         #region LoadMosOnStack
 
-        private IList<Instruction> CreateTempMoArray(VariableDefinition[] moVariables)
+        private IList<Instruction> CreateTempMoArray(VariableDefinition[] moVariables, Mo[] mos)
         {
             var instructions = new List<Instruction>
             {
@@ -48,9 +48,14 @@ namespace Rougamo.Fody
             };
             for (var i = 0; i < moVariables.Length; i++)
             {
+                var moVariable = moVariables[i];
                 instructions.Add(Create(OpCodes.Dup));
                 instructions.Add(Create(OpCodes.Ldc_I4, i));
-                instructions.Add(Create(OpCodes.Ldloc, moVariables[i]));
+                instructions.Add(Create(OpCodes.Ldloc, moVariable));
+                if (mos[i].IsStruct && moVariable.VariableType.FullName != Constants.TYPE_IMo)
+                {
+                    instructions.Add(Create(OpCodes.Box, moVariable.VariableType));
+                }
                 instructions.Add(Create(OpCodes.Stelem_Ref));
             }
 
@@ -88,7 +93,7 @@ namespace Rougamo.Fody
             {
                 instructions.Add(Create(OpCodes.Dup));
                 instructions.Add(Create(OpCodes.Ldc_I4, i));
-                instructions.AddRange(InitMo(methodDef, mo));
+                instructions.AddRange(InitMo(methodDef, mo, true));
                 instructions.Add(Create(OpCodes.Stelem_Ref));
                 i++;
             }
@@ -96,7 +101,8 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private IList<Instruction> InitMo(MethodDefinition methodDef, Mo mo)
+        // todo: boxing参数不需要，默认采用原类型变量，等待所有分支都改完后删除该参数
+        private IList<Instruction> InitMo(MethodDefinition methodDef, Mo mo, bool boxing)
         {
             if (mo.Attribute != null)
             {
@@ -115,12 +121,12 @@ namespace Rougamo.Fody
             {
                 var typeRef = Import(mo.TypeDef!);
                 var moVariable = methodDef.Body.CreateVariable(typeRef);
-                return [
+                Instruction[] ins = [
                         Create(OpCodes.Ldloca, moVariable),
-                        Create(OpCodes.Initobj, typeRef),
-                        Create(OpCodes.Ldloc, moVariable),
-                        Create(OpCodes.Box, typeRef)
+                    Create(OpCodes.Initobj, typeRef),
+                    Create(OpCodes.Ldloc, moVariable)
                     ];
+                return boxing ? [.. ins, Create(OpCodes.Box, typeRef)] : ins;
             }
             return [Create(OpCodes.Newobj, Import(mo.TypeDef!.GetZeroArgsCtor()))];
         }
@@ -158,7 +164,7 @@ namespace Rougamo.Fody
 
         #endregion LoadMosOnStack
 
-        private List<Instruction> InitMethodContext(MethodDefinition methodDef, bool isAsync, bool isIterator, VariableDefinition? moArrayVariable, VariableDefinition? stateMachineVariable, FieldReference? mosFieldRef)
+        private List<Instruction> InitMethodContext(MethodDefinition methodDef, bool isAsync, bool isIterator, VariableDefinition? moArrayVariable, VariableDefinition? stateMachineVariable, FieldReference? mosFieldRef, Omit omit)
         {
             var instructions = new List<Instruction>();
 
@@ -171,7 +177,11 @@ namespace Rougamo.Fody
             instructions.Add(Create(isAsyncCode));
             instructions.Add(Create(isIteratorCode));
             instructions.Add(Create(mosNonEntryFIFO));
-            if (mosFieldRef == null)
+            if ((omit & Omit.Mos) != 0)
+            {
+                instructions.Add(Create(OpCodes.Ldnull));
+            }
+            else if (mosFieldRef == null)
             {
                 instructions.Add(Create(OpCodes.Ldloc, moArrayVariable));
             }
@@ -180,7 +190,14 @@ namespace Rougamo.Fody
                 instructions.Add(stateMachineVariable!.LdlocOrA());
                 instructions.Add(Create(OpCodes.Ldfld, mosFieldRef));
             }
-            instructions.AddRange(LoadMethodArgumentsOnStack(methodDef));
+            if ((omit & Omit.Arguments) != 0)
+            {
+                instructions.Add(Create(OpCodes.Ldnull));
+            }
+            else
+            {
+                instructions.AddRange(LoadMethodArgumentsOnStack(methodDef));
+            }
             instructions.Add(Create(OpCodes.Newobj, _methodMethodContextCtorRef));
 
             return instructions;
@@ -293,15 +310,17 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private List<Instruction> ExecuteMoMethod(string methodName, Mo[] mos, VariableDefinition[]? moVariables, VariableDefinition? contextVariable, FieldReference[]? moFields, FieldReference? contextField, bool reverseCall)
+        // todo: originCall参数后续不需要，默认应该为true，后续所有分支改善完毕后删除
+        private List<Instruction> ExecuteMoMethod(string methodName, Mo[] mos, VariableDefinition[]? moVariables, VariableDefinition? contextVariable, FieldReference[]? moFields, FieldReference? contextField, bool reverseCall, bool originCall = false)
         {
             var instructions = new List<Instruction>();
 
             for (int i = 0; i < mos.Length; i++)
             {
                 var j = reverseCall ? mos.Length - i - 1 : i;
+                var mo = mos[j];
 
-                if (!((Feature)Enum.Parse(typeof(Feature), methodName)).IsMatch(mos[j].Features)) continue;
+                if (!((Feature)Enum.Parse(typeof(Feature), methodName)).IsMatch(mo.Features)) continue;
 
                 if (moVariables == null)
                 {
@@ -313,9 +332,33 @@ namespace Rougamo.Fody
                 }
                 else
                 {
-                    instructions.Add(Create(OpCodes.Ldloc, moVariables![j]));
+                    MethodReference methodRef;
+                    OpCode ldlocoa;
+                    OpCode callov;
+                    if (originCall)
+                    {
+                        methodRef = mo.On(methodName, ModuleDefinition) ?? _methodIMosRef[methodName];
+                        if (mo.IsStruct)
+                        {
+                            ldlocoa = OpCodes.Ldloca;
+                            callov = OpCodes.Call;
+                        }
+                        else
+                        {
+                            ldlocoa = OpCodes.Ldloc;
+                            callov = OpCodes.Callvirt;
+                        }
+                    }
+                    else
+                    {
+                        methodRef = _methodIMosRef[methodName];
+                        ldlocoa = OpCodes.Ldloc;
+                        callov = OpCodes.Callvirt;
+                    }
+
+                    instructions.Add(Create(ldlocoa, moVariables![j]));
                     instructions.Add(Create(OpCodes.Ldloc, contextVariable));
-                    instructions.Add(Create(OpCodes.Callvirt, _methodIMosRef[methodName]));
+                    instructions.Add(Create(callov, methodRef));
                 }
             }
 

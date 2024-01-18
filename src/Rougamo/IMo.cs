@@ -27,8 +27,7 @@ namespace Rougamo
         double Order { get; }
 
         /// <summary>
-        /// If you declare a struct that implment IMo, and you do not need the Mos property of MethodContext,
-        /// then you should set it to true, or Rougamo will boxing your struct as a IMo object and save it into MethodContext.Mos.
+        /// If you declare a struct that implment IMo, then you can use this property to minimize boxing operation.
         /// </summary>
         Omit MethodContextOmits { get; }
 
