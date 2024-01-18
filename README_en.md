@@ -667,6 +667,37 @@ public class Class2 : IRepulsionsRougamo<Mo1Attribute, TestRepulsion>
 ```
 Through the above example, you may notice that this multi-type mutual exclusion is not mutual exclusion between multiple types, but the mutual exclusion of the first generic type and the type defined by the second generic type, and the second generic type is mutually exclusive. They are not mutually exclusive. Just like the above example, when `Mo1Attribute` does not take effect, the mutually exclusive `Mo2Attribute` and `Mo3Attribute` will take effect. It needs to be understood here that the reason for defining mutual exclusion is the possible repeated application of Attribute and empty interface implementation, not to exclude all weaving repetitions. At the same time, it is not recommended to use multiple mutual exclusion definitions, which is prone to logical confusion. It is recommended to carefully consider a set of unified rules before application weaving, rather than random definitions, and then try to use multiple mutual exclusions to solve problems.
 
+# Performance Optimization
+
+## Structs
+To accomplish AOP operations, it is inevitable to create objects of your custom implementation of `IMo` or types derived from `MoAttribute` every time a method is called. These objects, created during method calls, will be garbage collected after the method invocation, leading to an unavoidable increase in GC burden. Even if we handwrite AOP code, the same scenario arises. However, we can reduce the GC pressure in various ways, and one of them is using structs instead of classes.
+
+One commonly used approach in Rougamo is to mark classes, methods, or assemblies with an Attribute. However, we cannot define attributes for structs directly. Therefore, we need to define a struct that implements the `IMo` interface and then specify this struct through the `RougamoAttribute`:
+```csharp
+struct ValueMo : IMo
+{
+    // Implement the interface, define AOP operations
+}
+
+[Rougamo(typeof(ValueMo))]
+class Cls
+{
+    // If the project uses C# 11 and above syntax, you can directly use the following generic Attribute
+    [Rougamo<ValueMo>]
+    public void M() { }
+}
+```
+
+## Omit
+In the [Partially Weaving](#partially-weaving) section, we discussed reducing woven code size by selecting woven features using Features. Here, we'll introduce another feature, `IMo.MethodContextOmits`, used to improve performance.
+
+The `MethodContext` contains contextual information about the method and serves as a messenger passed between multiple `IMo` objects. However, there are times when we don't need all the information in these messages, and obtaining/storing this information has a significant cost. In such cases, we can use the `MethodContextOmits` property to specify the data that is not required.
+
+Currently, `MethodContextOmits` can specify a combination of the following values:
+- `None`, the default value, indicating that all data is needed.
+- `Mos`, indicating that `MethodContext.Mos` property is not needed. This property contains all the `IMo` objects woven into the current method. If you are using structs, storing this property will involve boxing operations and will also increase an `IReadOnlyList<IMo>` object. **Note: When using `ExMoAttribute`, do not specify this value.**
+- `Arguments`, indicating that `MethodContext.Arguments` property is not needed. This property stores all input parameter values of the called method. If the parameters include value types, boxing operations will be performed, and an additional `object[]` object will be created. **Note: If the Features property includes either `RewriteArgs` or `FreshArgs`, specifying this value will be ineffective, and the arguments will still be stored.**
+
 # Other
 
 ## Priority

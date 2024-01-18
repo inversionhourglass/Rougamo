@@ -704,6 +704,37 @@ public class Class2 : IRepulsionsRougamo<Mo1Attribute, TestRepulsion>
 ```
 通过上面的例子，你可能注意到，这个多类型互斥并不是多类型之间互相互斥，而是第一个泛型与第二个泛型定义的类型互斥，第二个泛型之间并不互斥，也就像上面的示例那样，当`Mo1Attribute`不生效时，与它互斥的`Mo2Attribute`、`Mo3Attribute`都将生效。这里需要理解，定义互斥的原因是Attribute和空接口实现两种方式可能存在的重复应用，而并不是为了排除所有织入的重复。同时也不推荐使用多互斥定义，这样容易出现逻辑混乱，建议在应用织入前仔细思考一套统一的规则，而不是随意定义，然后试图使用多互斥来解决问题。
 
+# 性能优化
+
+## 结构体
+要想完成AOP操作，那么就必然会在每次调用方法时创建大家自定义实现`IMo`或集成自`MoAttribute`类型的对象，这些对象在方法调用完成后将被GC回收，所以Rougamo的使用必然会增加GC的负担，这是不可避免的，即时我们手写AOP代码也会如此，但我们可以通过各种方式减少GC的压力，使用结构体代替类便是其中一种方式。
+
+Rougamo较为常用的方式是使用Attribute标记到类或方法或程序集上，但我们无法定义结构体的Attribute，所以我们需要直接定义结构体实现`IMo`接口，然后通过`RougamoAttribute`指定该结构体：
+```csharp
+struct ValueMo : IMo
+{
+    // 实现接口，定义AOP操作
+}
+
+[Rougamo(typeof(ValueMo))]
+class Cls
+{
+    // 如果项目使用C#11及以上语法，可以直接使用下面这种泛型Attribute
+    [Rougamo<ValueMo>]
+    public void M() { }
+}
+```
+
+## Omit
+在 [部分织入](#部分织入) 的部分介绍了通过Features来选择织入功能减少织入的代码量，在这里将介绍另一个用于提升性能的功能`IMo.MethodContextOmits`。
+
+`MethodContext`包含了方法的上下文信息，是多个`IMo`对象直接传递的信使，但这些信息中有时并不是所有信息我们都会需要，同时获取/存储这些信息存在较大的成本，此时我们可以通过`MethodContextOmits`属性指定不需要的数据。
+
+目前`MethodContextOmits`可以指定以下一种或几种值的组合：
+- `None`，默认值，所有数据都需要
+- `Mos`，不需要`MethodContext.Mos`属性，该属性包含了当前方法织入的所有`IMo`对象，如果你使用了结构体，那么在存储到该属性中时将包含一个装箱操作，同时也会增加一个`IReadOnlyList<IMo>`对象。**需要注意的是，使用`ExMoAttribute`时请务必不要指定该值**
+- `Arguments`，不需要`MethodContext.Arguments`属性，该属性存储了调用放方法的所有入参值，如果入参中包含值类型，那么将产生一个装箱操作，同时也会增加一个`object[]`对象。**需要注意的是，如果Features属性包含了`RewriteArgs`或`FreshArgs`中的任意一个，那么就表示需要使用到参数，此时指定该值将无效，参数依旧会被存储下来**
+
 # 其他
 
 ## 优先级
