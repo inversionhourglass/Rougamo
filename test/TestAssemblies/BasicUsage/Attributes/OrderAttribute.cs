@@ -5,6 +5,8 @@ namespace BasicUsage.Attributes
 {
     public class OrderAttribute : MoAttribute
     {
+        public new virtual double Order { get; set; }
+
         public override void OnEntry(MethodContext context)
         {
             var useCase = (OrderUseCase)context.Target;

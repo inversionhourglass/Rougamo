@@ -7,7 +7,7 @@ namespace Issues.Attributes
     {
         public static int ReplacedValue = -1;
 
-        public override AccessFlags Flags { get; set; } = AccessFlags.NonPublic;
+        public new AccessFlags Flags { get; set; } = AccessFlags.NonPublic;
 
         public override void OnEntry(MethodContext context)
         {

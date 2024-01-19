@@ -8,16 +8,16 @@ namespace Rougamo
     public abstract class MoAttribute : Attribute, IMo
     {
         /// <inheritdoc/>
-        public virtual AccessFlags Flags { get; set; }
+        public virtual AccessFlags Flags { get; }
 
         /// <inheritdoc/>
-        public virtual string? Pattern { get; set; }
+        public virtual string? Pattern { get; }
 
         /// <inheritdoc/>
-        public virtual Feature Features { get; set; }
+        public virtual Feature Features { get; }
 
         /// <inheritdoc/>
-        public virtual double Order { get; set; }
+        public virtual double Order { get; }
 
         /// <inheritdoc/>
         public virtual Omit MethodContextOmits { get; }

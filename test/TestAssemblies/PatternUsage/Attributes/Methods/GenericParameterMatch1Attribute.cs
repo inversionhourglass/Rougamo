@@ -7,6 +7,6 @@
             Pattern = "method(* *<TA,TB>.*<TC,TD>(TA,TB,TC,TD))";
         }
 
-        public override string? Pattern { get; set; }
+        public override string? Pattern { get; }
     }
 }

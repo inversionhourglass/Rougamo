@@ -16,10 +16,12 @@ namespace BasicUsage.Attributes
         {
             Pattern = "y";
         }
+
+        public new string Pattern { get; set; }
     }
 
     internal class ZAttribute : MoAttribute
     {
-        public override string Pattern { get; set; } = "z";
+        public override string Pattern { get; } = "z";
     }
 }

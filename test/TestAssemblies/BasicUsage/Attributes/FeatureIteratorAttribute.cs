@@ -14,7 +14,7 @@ namespace BasicUsage.Attributes
 
         public int Seed { get; }
 
-        public override Feature Features { get; set; } = Feature.Observe;
+        public override Feature Features { get; } = Feature.Observe;
 
         public override void OnEntry(MethodContext context)
         {

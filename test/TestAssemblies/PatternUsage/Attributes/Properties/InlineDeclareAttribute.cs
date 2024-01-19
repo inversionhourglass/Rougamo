@@ -2,6 +2,6 @@
 {
     public class InlineDeclareAttribute : SetOnEntryAttribute
     {
-        public override string? Pattern => "property(* *)";
+        public new string? Pattern { get; set; } = "property(* *)";
     }
 }
