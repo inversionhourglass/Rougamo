@@ -733,7 +733,7 @@ class Cls
 目前`MethodContextOmits`可以指定以下一种或几种值的组合：
 - `None`，默认值，所有数据都需要
 - `Mos`，不需要`MethodContext.Mos`属性，该属性包含了当前方法织入的所有`IMo`对象，如果你使用了结构体，那么在存储到该属性中时将包含一个装箱操作，同时也会增加一个`IReadOnlyList<IMo>`对象。**需要注意的是，使用`ExMoAttribute`时请务必不要指定该值**
-- `Arguments`，不需要`MethodContext.Arguments`属性，该属性存储了调用放方法的所有入参值，如果入参中包含值类型，那么将产生一个装箱操作，同时也会增加一个`object[]`对象。**需要注意的是，如果Features属性包含了`RewriteArgs`或`FreshArgs`中的任意一个，那么就表示需要使用到参数，此时指定该值将无效，参数依旧会被存储下来**
+- `Arguments`，不需要`MethodContext.Arguments`属性，该属性存储了调用放方法的所有入参值，如果入参中包含值类型，那么将产生一个装箱操作，同时也会增加一个`object[]`对象。**需要注意的是，如果Features属性包含了`Args`、`RewriteArgs`或`FreshArgs`中的任意一个，那么就表示需要使用到参数，此时指定该值将无效，参数依旧会被存储下来**
 
 # 其他
 

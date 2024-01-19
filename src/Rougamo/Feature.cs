@@ -30,9 +30,13 @@ namespace Rougamo
         /// </summary>
         OnExit = 0x8,
         /// <summary>
+        /// Not a really feature, use <see cref="RewriteArgs"/> or <see cref="NonRewriteArgs"/> instead, or for exception only
+        /// </summary>
+        Args = 0x10,
+        /// <summary>
         /// OnEntry and RewriteArgument
         /// </summary>
-        RewriteArgs = 0x10 | OnEntry,
+        RewriteArgs = Args | OnEntry,
         /// <summary>
         /// OnEntry and return early with replaced return value
         /// </summary>
@@ -74,7 +78,7 @@ namespace Rougamo
         /// <summary>
         /// Except Rewrite Arguments
         /// </summary>
-        NonRewriteArgs = (All ^ 0x10) & All,
+        NonRewriteArgs = (All ^ Args) & All,
         /// <summary>
         /// Except Retry
         /// </summary>

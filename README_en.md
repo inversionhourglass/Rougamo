@@ -696,7 +696,7 @@ The `MethodContext` contains contextual information about the method and serves 
 Currently, `MethodContextOmits` can specify a combination of the following values:
 - `None`, the default value, indicating that all data is needed.
 - `Mos`, indicating that `MethodContext.Mos` property is not needed. This property contains all the `IMo` objects woven into the current method. If you are using structs, storing this property will involve boxing operations and will also increase an `IReadOnlyList<IMo>` object. **Note: When using `ExMoAttribute`, do not specify this value.**
-- `Arguments`, indicating that `MethodContext.Arguments` property is not needed. This property stores all input parameter values of the called method. If the parameters include value types, boxing operations will be performed, and an additional `object[]` object will be created. **Note: If the Features property includes either `RewriteArgs` or `FreshArgs`, specifying this value will be ineffective, and the arguments will still be stored.**
+- `Arguments`, indicating that `MethodContext.Arguments` property is not needed. This property stores all input parameter values of the called method. If the parameters include value types, boxing operations will be performed, and an additional `object[]` object will be created. **Note: If the Features property includes either `Args` or `RewriteArgs` or `FreshArgs`, specifying this value will be ineffective, and the arguments will still be stored.**
 
 # Other
 
