@@ -737,6 +737,19 @@ class Cls
 
 # 其他
 
+## 应用时设置MoAttribute内置属性
+`MoAttribute`有很多内置属性，比如`Pattern`、`Order`等，这些属性我们可以在继承`MoAttribute`时直接重写，但有时我们还希望在应用Attribute时再设置，比如当一个方法上应用了多个Attribute时，我们希望为这个方法上的Attribute设置各自的`Order`，让他们按自己预期的顺序去执行，但由于肉夹馍内置属性没有公开setter，所以我们无法直接设置，此时可以通过关键字`new`重新公开setter.
+```csharp
+public class TestAttribute : MoAttribute
+{
+    // 通过new关键字覆盖了MoAttribute的Order属性，同时将setter设置为public
+    // virtual关键字是可选的，如果你确定没有类型会继承自TestAttribute并重写Order属性，那么可以去掉virtual
+    // 这里为Order设置了一个默认值，当然也可以不设置
+    public new virtual double Order { get; set; } = 10;
+}
+```
+关于为什么不直接将`MoAttriibute`属性的setter都直接公开，主要是考虑到使用肉夹馍做中间件的朋友，中间件可能会为`MoAttribute`的部分属性设置默认值，同时不希望其他人在使用该中间件时不再修改该属性，也不希望将该属性值暴露出去让使用方知道。但遗憾的是，一旦父类定义了一个属性具有public setter，那么子类就无法将其屏蔽掉。所以最终选择的方式是默认屏蔽，由子类决定是否公开。
+
 ## 优先级
 1. `IgnoreMoAttribute`
 2. Method `MoAttribute`

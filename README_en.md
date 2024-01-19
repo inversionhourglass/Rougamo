@@ -700,6 +700,23 @@ Currently, `MethodContextOmits` can specify a combination of the following value
 
 # Other
 
+## Setting MoAttribute Built-in Properties When Applying
+
+`MoAttribute` comes with many built-in properties, such as `Pattern`, `Order`, etc. These properties can be directly overridden when inheriting from `MoAttribute`. However, there are times when we want to set these attributes when applying the attribute. For example, when applying multiple attributes to a method, we may want to set their respective `Order` for the method so that they execute in the desired order. Since the built-in properties of MoAttribute do not have a publicly accessible setter, we cannot set them directly. In such cases, we can use the `new` keyword to re-expose the setter.
+
+```csharp
+public class TestAttribute : MoAttribute
+{
+    // Overriding the Order property of MoAttribute with the new keyword
+    // Making the setter public
+    // The virtual keyword is optional; if you are sure that no type will inherit from TestAttribute and override the Order property, you can omit virtual
+    // Here, a default value is set for Order, but it can also be omitted
+    public new virtual double Order { get; set; } = 10;
+}
+```
+
+As for why we don't directly expose the setter for MoAttribute properties, it mainly considers friends using the framework as middleware. Middleware may set default values for some MoAttribute properties and may not want others to modify these properties when using the middleware, nor do they want to expose these property values for users to see. Unfortunately, once a parent class defines a property with a public setter, it cannot be hidden by a subclass. Therefore, the chosen approach is to default to hiding, allowing the subclass to decide whether to make it public or not.
+
 ## Priority
 1. `IgnoreMoAttribute`
 2. Method `MoAttribute`
