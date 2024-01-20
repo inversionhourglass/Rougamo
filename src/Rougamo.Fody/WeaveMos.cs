@@ -154,7 +154,6 @@ namespace Rougamo.Fody
 
                 ins.Add(Create(OpCodes.Dup));
                 ins.Add(LoadValueOnStack(properties[i].Argument.Type, properties[i].Argument.Value));
-                // todo: 由于Attribute的特性，即使属性仅仅声明了getter，在应用Attribute时也可以给这个属性赋值，这种情况这里是无法获取setter进行设置的，现在做跳过处理
                 var setter = attrTypeDef.RecursionImportPropertySet(ModuleDefinition, properties[i].Name);
                 if (setter == null) continue;
 

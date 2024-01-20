@@ -521,10 +521,12 @@ namespace Rougamo.Fody.Tests
             executedMos.Clear();
             instance.M(executedMos);
             Assert.Contains(nameof(BasicUsage.Mos.Mo), executedMos);
+            Assert.Contains(nameof(BasicUsage.Mos.ValueMo), executedMos);
 
             executedMos.Clear();
             await (Task)instance.MAsync(executedMos);
             Assert.Contains(nameof(BasicUsage.Mos.Mo), executedMos);
+            Assert.Contains(nameof(BasicUsage.Mos.ValueMo), executedMos);
         }
 
         [Fact]
