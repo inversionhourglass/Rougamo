@@ -561,7 +561,7 @@ namespace Rougamo.Fody
             {
                 Create(OpCodes.Ldarg_0),
                 Create(OpCodes.Ldfld, fields.MethodContext),
-                ldlocReturn.Copy(),
+                ldlocReturn.Clone(),
             };
             if (returnBoxTypeRef)
             {

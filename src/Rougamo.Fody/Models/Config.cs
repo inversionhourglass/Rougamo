@@ -5,13 +5,14 @@ namespace Rougamo.Fody.Models
 {
     internal class Config
     {
-        public Config(bool enabled, bool compositeAccessibility, int moArrayThreshold,  bool recordingIteratorReturns, bool reverseCallNonEntry, string[] exceptTypePatterns)
+        public Config(bool enabled, bool compositeAccessibility, int moArrayThreshold,  bool recordingIteratorReturns, bool reverseCallNonEntry, bool strict, string[] exceptTypePatterns)
         {
             Enabled = enabled;
             CompositeAccessibility = compositeAccessibility;
             MoArrayThreshold = moArrayThreshold;
             RecordingIteratorReturns = recordingIteratorReturns;
             ReverseCallNonEntry = reverseCallNonEntry;
+            Strict = strict;
             ExceptTypePatterns = exceptTypePatterns.Select(x => new Regex(x)).ToArray();
         }
 
@@ -24,6 +25,8 @@ namespace Rougamo.Fody.Models
         public bool RecordingIteratorReturns { get; }
 
         public bool ReverseCallNonEntry { get; }
+
+        public bool Strict { get; }
 
         public Regex[] ExceptTypePatterns { get; }
     }

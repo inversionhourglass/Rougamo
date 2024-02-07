@@ -13,6 +13,11 @@ namespace Rougamo.Fody
     {
         private void SyncMethodWeave(RouMethod rouMethod)
         {
+            if (!rouMethod.MethodDef.IsConstructor && _config.Strict)
+            {
+                StrictSyncMethodWeave(rouMethod);
+            }
+
             var instructions = rouMethod.MethodDef.Body.Instructions;
             var returnBoxTypeRef = new BoxTypeReference(rouMethod.MethodDef.ReturnType.ImportInto(ModuleDefinition));
 

@@ -20,6 +20,7 @@ namespace Rougamo.Fody
         private TypeReference _typeObjectRef;
         private TypeReference _typeObjectArrayRef;
         private TypeReference _typeExceptionRef;
+        private TypeReference _typeDebuggerStepThroughAttributeRef;
         private TypeDefinition _typeListDef;
         private TypeReference _typeListRef;
         private TypeReference _typeIMoRef;
@@ -30,6 +31,7 @@ namespace Rougamo.Fody
         private MethodReference _methodGetMethodFromHandleRef;
         private MethodReference _methodListAddRef;
         private MethodReference _methodListToArrayRef;
+        private MethodReference _methodDebuggerStepThroughCtorRef;
         private MethodReference _methodMethodContextCtorRef;
         private MethodReference _methodMethodContextSetExceptionRef;
         private MethodReference _methodMethodContextSetReturnValueRef;
@@ -81,9 +83,10 @@ namespace Rougamo.Fody
             var recordingIteratorReturns = "true".Equals(GetConfigValue("false", "iterator-returns", "enumerable-returns"), StringComparison.OrdinalIgnoreCase);
 #endif
             var reverseCallNonEntry = "true".Equals(GetConfigValue("true", "reverse-call-nonentry", "reverse-call-ending"), StringComparison.OrdinalIgnoreCase);
+            var strict = "true".Equals(GetConfigValue("true", "strict"), StringComparison.OrdinalIgnoreCase);
             var exceptTypePatterns = GetConfigValue(string.Empty, "except-type-patterns").Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
 
-            _config = new Config(enabled, compositeAccessibility, moArrayThreshold, recordingIteratorReturns, reverseCallNonEntry, exceptTypePatterns);
+            _config = new Config(enabled, compositeAccessibility, moArrayThreshold, recordingIteratorReturns, reverseCallNonEntry, strict, exceptTypePatterns);
         }
 
         private string GetConfigValue(string defaultValue, params string[] configKeys)

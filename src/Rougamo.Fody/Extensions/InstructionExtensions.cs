@@ -46,7 +46,7 @@ namespace Rougamo.Fody
             return (instruction.OpCode.Code == Code.Call || instruction.OpCode.Code == Code.Callvirt) && ((MethodReference)instruction.Operand).Name == methodName;
         }
 
-        public static Instruction Copy(this Instruction instruction)
+        public static Instruction Clone(this Instruction instruction)
         {
             if (instruction.Operand == null) return Instruction.Create(instruction.OpCode);
             if (instruction.Operand is sbyte sbyteValue) return Instruction.Create(instruction.OpCode, sbyteValue);

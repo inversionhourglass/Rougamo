@@ -269,6 +269,18 @@ namespace Rougamo.Fody
         public static MethodReference ImportInto(this MethodReference methodRef, ModuleDefinition moduleDef) =>
             moduleDef.ImportReference(methodRef);
 
+        public static TypeReference ImportInto(this ParameterDefinition parameterDef, ModuleDefinition moduleDef)
+        {
+            var parameterTypeRef = parameterDef.ParameterType.ImportInto(moduleDef);
+            var isByReference = parameterDef.ParameterType.IsByReference;
+            if (isByReference)
+            {
+                parameterTypeRef = ((ByReferenceType)parameterDef.ParameterType).ElementType.ImportInto(moduleDef);
+            }
+
+            return parameterTypeRef;
+        }
+
         #endregion Import
 
         public static TypeDefinition ResolveStateMachine(this MethodDefinition methodDef, string stateMachineAttributeName)
@@ -508,6 +520,101 @@ namespace Rougamo.Fody
             }
             updateTarget = current;
             return true;
+        }
+
+        public static MethodDefinition Clone(this MethodDefinition methodDef, string methodName)
+        {
+            var clonedMethodDef = new MethodDefinition(methodName, methodDef.Attributes, methodDef.ReturnType);
+
+            if (methodDef.HasCustomAttributes)
+            {
+                clonedMethodDef.CustomAttributes.Add(methodDef.CustomAttributes);
+            }
+
+            var map = new Dictionary<object, object>();
+
+            if (methodDef.HasGenericParameters)
+            {
+                foreach (var generic in methodDef.GenericParameters)
+                {
+                    var clonedGeneric = new GenericParameter(generic.Name, clonedMethodDef);
+                    clonedMethodDef.GenericParameters.Add(clonedGeneric);
+
+                    map[generic] = clonedGeneric;
+                }
+            }
+
+            foreach (var parameterDef in methodDef.Parameters)
+            {
+                var parameterTypeRef = parameterDef.ParameterType;
+                var isByReference = parameterTypeRef.IsByReference;
+                if (isByReference)
+                {
+                    parameterTypeRef = ((ByReferenceType)parameterTypeRef).ElementType;
+                }
+                if (parameterTypeRef.IsGenericParameter && map.TryGetValue(parameterTypeRef, out var mapTo))
+                {
+                    parameterTypeRef = (GenericParameter)mapTo;
+                }
+                if (isByReference)
+                {
+                    parameterTypeRef = new ByReferenceType(parameterTypeRef);
+                    map[parameterDef.ParameterType] = parameterTypeRef;
+                }
+                var clonedParameterDef = new ParameterDefinition(parameterDef.Name, parameterDef.Attributes, parameterTypeRef);
+                clonedMethodDef.Parameters.Add(clonedParameterDef);
+
+                map[parameterDef] = clonedParameterDef;
+            }
+
+            foreach (var variable in methodDef.Body.Variables)
+            {
+                var clonedVariable = new VariableDefinition(variable.VariableType);
+                clonedMethodDef.Body.Variables.Add(clonedVariable);
+
+                map[variable] = clonedVariable;
+            }
+
+            var instructionMap = new Dictionary<Instruction, Instruction>();
+            var brs = new List<Instruction>();
+            foreach (var instruction in methodDef.Body.Instructions)
+            {
+                var cloned = instruction.Clone();
+                clonedMethodDef.Body.Instructions.Add(cloned);
+
+                instructionMap[instruction] = cloned;
+                if (cloned.Operand != null)
+                {
+                    if (map.TryGetValue(cloned.Operand, out var value))
+                    {
+                        cloned.Operand = value;
+                    }
+                    else if (cloned.Operand is Instruction)
+                    {
+                        brs.Add(cloned);
+                    }
+                }
+            }
+            foreach (var br in brs)
+            {
+                br.Operand = instructionMap[(Instruction)br.Operand];
+            }
+
+            foreach (var handler in methodDef.Body.ExceptionHandlers)
+            {
+                clonedMethodDef.Body.ExceptionHandlers.Add(new ExceptionHandler(handler.HandlerType)
+                {
+                    TryStart = instructionMap[handler.TryStart],
+                    TryEnd = instructionMap[handler.TryEnd],
+                    HandlerStart = instructionMap[handler.HandlerStart],
+                    HandlerEnd = instructionMap[handler.HandlerEnd]
+                });
+            }
+
+            clonedMethodDef.Body.InitLocals = methodDef.Body.InitLocals;
+            clonedMethodDef.Body.MaxStackSize = methodDef.Body.MaxStackSize;
+
+            return clonedMethodDef;
         }
     }
 }
