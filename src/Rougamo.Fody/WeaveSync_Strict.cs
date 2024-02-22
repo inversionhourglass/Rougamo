@@ -13,6 +13,10 @@ namespace Rougamo.Fody
             var actualMethodDef = rouMethod.MethodDef.Clone($"$Rougamo_{rouMethod.MethodDef.Name}");
             rouMethod.MethodDef.DeclaringType.Methods.Add(actualMethodDef);
 
+            //var swap = rouMethod.MethodDef.DebugInformation;
+            //actualMethodDef.DebugInformation = rouMethod.MethodDef.DebugInformation;
+            rouMethod.MethodDef.DebugInformation = null;
+
             DebuggerStepThrough(rouMethod.MethodDef);
 
             StrictSyncAdaptedCall(rouMethod, actualMethodDef);
@@ -20,9 +24,12 @@ namespace Rougamo.Fody
 
         private void StrictSyncAdaptedCall(RouMethod rouMethod, MethodDefinition methodDef)
         {
-            var instructions = rouMethod.MethodDef.Body.Instructions;
+            var body = rouMethod.MethodDef.Body;
+            var instructions = body.Instructions;
 
             instructions.Clear();
+            body.Variables.Clear();
+            body.ExceptionHandlers.Clear();
 
             if (!methodDef.IsStatic) instructions.Add(Create(OpCodes.Ldarg_0));
             foreach(var parameter in rouMethod.MethodDef.Parameters)

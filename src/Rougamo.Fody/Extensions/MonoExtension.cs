@@ -9,6 +9,10 @@ namespace Rougamo.Fody
 {
     internal static class MonoExtension
     {
+        private static readonly System.Reflection.ConstructorInfo _CtorMethodDebugInformation = typeof(MethodDebugInformation).GetConstructors(System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance).Single();
+        private static readonly System.Reflection.FieldInfo _FieldVariableIndex = typeof(VariableDebugInformation).GetField("index", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+        private static readonly System.Reflection.FieldInfo _FieldIndexVariable = typeof(VariableIndex).GetField("variable", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
+
         public static bool Is(this TypeReference typeRef, string fullName)
         {
             return typeRef.Resolve()?.FullName == fullName;
@@ -576,6 +580,7 @@ namespace Rougamo.Fody
             }
 
             var instructionMap = new Dictionary<Instruction, Instruction>();
+            var offsetMap = new Dictionary<int, Instruction>();
             var brs = new List<Instruction>();
             foreach (var instruction in methodDef.Body.Instructions)
             {
@@ -583,6 +588,7 @@ namespace Rougamo.Fody
                 clonedMethodDef.Body.Instructions.Add(cloned);
 
                 instructionMap[instruction] = cloned;
+                offsetMap[instruction.Offset] = cloned;
                 if (cloned.Operand != null)
                 {
                     if (map.TryGetValue(cloned.Operand, out var value))
@@ -614,7 +620,44 @@ namespace Rougamo.Fody
             clonedMethodDef.Body.InitLocals = methodDef.Body.InitLocals;
             clonedMethodDef.Body.MaxStackSize = methodDef.Body.MaxStackSize;
 
+            clonedMethodDef.DebugInformation = (MethodDebugInformation)_CtorMethodDebugInformation.Invoke(new object[] { clonedMethodDef });
+            foreach (var point in methodDef.DebugInformation.SequencePoints)
+            {
+                var clonedPoint = new SequencePoint(offsetMap[point.Offset], point.Document)
+                {
+                    StartLine = point.StartLine,
+                    StartColumn = point.StartColumn,
+                    EndLine = point.EndLine,
+                    EndColumn = point.EndColumn
+                };
+                clonedMethodDef.DebugInformation.SequencePoints.Add(clonedPoint);
+            }
+            clonedMethodDef.DebugInformation.Scope = methodDef.DebugInformation.Scope.Clone(offsetMap, map);
+
             return clonedMethodDef;
+        }
+
+        public static ScopeDebugInformation Clone(this ScopeDebugInformation scope, Dictionary<int, Instruction> offsetMap, Dictionary<object, object> variableMap)
+        {
+            var start = scope.Start.IsEndOfMethod ? null : offsetMap[scope.Start.Offset];
+            var end = scope.End.IsEndOfMethod ? null : offsetMap[scope.End.Offset];
+            var clonedScope = new ScopeDebugInformation(start, end);
+            foreach (var constant in scope.Constants)
+            {
+                clonedScope.Constants.Add(constant);
+            }
+            foreach (var variable in scope.Variables)
+            {
+                var index = _FieldVariableIndex.GetValue(variable);
+                var variableDef = _FieldIndexVariable.GetValue(index);
+                clonedScope.Variables.Add(new VariableDebugInformation((VariableDefinition)variableMap[variableDef], variable.Name));
+            }
+            foreach (var childScope in scope.Scopes)
+            {
+                clonedScope.Scopes.Add(childScope.Clone(offsetMap, variableMap));
+            }
+
+            return clonedScope;
         }
     }
 }

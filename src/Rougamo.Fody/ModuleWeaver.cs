@@ -44,8 +44,6 @@ namespace Rougamo.Fody
         private MethodReference _methodMethodContextGetRetryCountRef;
         private Dictionary<string, MethodReference> _methodIMosRef;
 
-        private Delegate _isMatch;
-
         private List<RouType> _rouTypes;
         private Config _config;
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
