@@ -13,8 +13,6 @@ namespace Rougamo.Fody
             var actualMethodDef = rouMethod.MethodDef.Clone($"$Rougamo_{rouMethod.MethodDef.Name}");
             rouMethod.MethodDef.DeclaringType.Methods.Add(actualMethodDef);
 
-            //var swap = rouMethod.MethodDef.DebugInformation;
-            //actualMethodDef.DebugInformation = rouMethod.MethodDef.DebugInformation;
             rouMethod.MethodDef.DebugInformation = null;
 
             DebuggerStepThrough(rouMethod.MethodDef);

@@ -14,6 +14,9 @@ namespace Rougamo.Fody
         private void AsyncTaskMethodWeave(RouMethod rouMethod)
         {
             var stateMachineTypeDef = rouMethod.MethodDef.ResolveStateMachine(Constants.TYPE_AsyncStateMachineAttribute);
+
+            StrictAsyncTaskMethodWeave(rouMethod, stateMachineTypeDef);
+
             var moveNextMethodDef = stateMachineTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
             var moveNextMethodName = stateMachineTypeDef.DeclaringType.FullName;
 

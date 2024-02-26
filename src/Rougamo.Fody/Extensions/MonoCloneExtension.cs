@@ -1,5 +1,6 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -11,16 +12,111 @@ namespace Rougamo.Fody
         private static readonly System.Reflection.FieldInfo _FieldVariableIndex = typeof(VariableDebugInformation).GetField("index", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         private static readonly System.Reflection.FieldInfo _FieldIndexVariable = typeof(VariableIndex).GetField("variable", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
 
-        public static MethodDefinition Clone(this MethodDefinition methodDef, string methodName)
+        public static TypeDefinition Clone(this TypeDefinition typeDef, string typeName)
+        {
+            var clonedTypeDef = new TypeDefinition(typeDef.Namespace, typeName, typeDef.Attributes, typeDef.BaseType);
+
+            if (typeDef.HasInterfaces)
+            {
+                clonedTypeDef.Interfaces.Add(typeDef.Interfaces);
+            }
+
+            if (typeDef.IsNested)
+            {
+                clonedTypeDef.DeclaringType = typeDef.DeclaringType;
+            }
+
+            if (typeDef.HasCustomAttributes)
+            {
+                clonedTypeDef.CustomAttributes.Add(typeDef.CustomAttributes);
+            }
+
+            var map = new Dictionary<object, object>();
+
+            if (typeDef.HasGenericParameters)
+            {
+                var genericTypeRef = new GenericInstanceType(clonedTypeDef);
+                foreach (var generic in typeDef.GenericParameters)
+                {
+                    var clonedGeneric = new GenericParameter(generic.Name, clonedTypeDef);
+                    clonedTypeDef.GenericParameters.Add(clonedGeneric);
+
+                    map[generic] = clonedGeneric;
+
+                    genericTypeRef.GenericArguments.Add(clonedGeneric);
+                }
+                map[clonedTypeDef] = genericTypeRef;
+            }
+            else
+            {
+                map[clonedTypeDef] = clonedTypeDef;
+            }
+
+            if (typeDef.HasFields)
+            {
+                foreach (var field in typeDef.Fields)
+                {
+                    var clonedField = new FieldDefinition(field.Name, field.Attributes, field.FieldType);
+                    clonedTypeDef.Fields.Add(clonedField);
+
+                    map[field] = clonedField;
+                }
+            }
+
+            if (typeDef.HasMethods)
+            {
+                var methodMap = new Dictionary<MethodDefinition, MethodDefinition>();
+                foreach (var method in typeDef.Methods)
+                {
+                    var clonedMethod = new MethodDefinition(method.Name, method.Attributes, method.ReturnType);
+                    clonedTypeDef.Methods.Add(clonedMethod);
+
+                    methodMap[method] = clonedMethod;
+                    map[method] = clonedMethod;
+                }
+                foreach (var item in methodMap)
+                {
+                    item.Key.Clone(item.Value, map, true);
+                }
+            }
+
+            if (typeDef.HasNestedTypes)
+            {
+                foreach (var nestedType in typeDef.NestedTypes)
+                {
+                    clonedTypeDef.NestedTypes.Add(nestedType.Clone(nestedType.Name));
+                }
+            }
+
+            return clonedTypeDef;
+        }
+
+        public static MethodDefinition Clone(this MethodDefinition methodDef, string methodName, Dictionary<object, object>? map = null)
         {
             var clonedMethodDef = new MethodDefinition(methodName, methodDef.Attributes, methodDef.ReturnType);
+
+            methodDef.Clone(clonedMethodDef, map, false);
+
+            return clonedMethodDef;
+        }
+
+        public static void Clone(this MethodDefinition methodDef, MethodDefinition clonedMethodDef, Dictionary<object, object>? map, bool withOverrides)
+        {
+            clonedMethodDef.HasThis = methodDef.HasThis;
+            clonedMethodDef.ExplicitThis = methodDef.ExplicitThis;
+            clonedMethodDef.CallingConvention = methodDef.CallingConvention;
 
             if (methodDef.HasCustomAttributes)
             {
                 clonedMethodDef.CustomAttributes.Add(methodDef.CustomAttributes);
             }
 
-            var map = new Dictionary<object, object>();
+            if (withOverrides && methodDef.HasOverrides)
+            {
+                clonedMethodDef.Overrides.Add(methodDef.Overrides);
+            }
+
+            map ??= [];
 
             if (methodDef.HasGenericParameters)
             {
@@ -33,35 +129,31 @@ namespace Rougamo.Fody
                 }
             }
 
-            foreach (var parameterDef in methodDef.Parameters)
+            if (methodDef.HasParameters)
             {
-                var parameterTypeRef = parameterDef.ParameterType;
-                var isByReference = parameterTypeRef.IsByReference;
-                if (isByReference)
+                foreach (var parameterDef in methodDef.Parameters)
                 {
-                    parameterTypeRef = ((ByReferenceType)parameterTypeRef).ElementType;
-                }
-                if (parameterTypeRef.IsGenericParameter && map.TryGetValue(parameterTypeRef, out var mapTo))
-                {
-                    parameterTypeRef = (GenericParameter)mapTo;
-                }
-                if (isByReference)
-                {
-                    parameterTypeRef = new ByReferenceType(parameterTypeRef);
-                    map[parameterDef.ParameterType] = parameterTypeRef;
-                }
-                var clonedParameterDef = new ParameterDefinition(parameterDef.Name, parameterDef.Attributes, parameterTypeRef);
-                clonedMethodDef.Parameters.Add(clonedParameterDef);
+                    var clonedParameterDef = parameterDef.Clone(map);
+                    clonedMethodDef.Parameters.Add(clonedParameterDef);
 
-                map[parameterDef] = clonedParameterDef;
+                    map[parameterDef] = clonedParameterDef;
+                }
             }
 
-            foreach (var variable in methodDef.Body.Variables)
+            if (methodDef.Body.HasVariables)
             {
-                var clonedVariable = new VariableDefinition(variable.VariableType);
-                clonedMethodDef.Body.Variables.Add(clonedVariable);
+                foreach (var variable in methodDef.Body.Variables)
+                {
+                    var variableType = variable.VariableType;
+                    if (variableType.Resolve() == methodDef.DeclaringType)
+                    {
+                        variableType = (TypeReference)map[clonedMethodDef.DeclaringType];
+                    }
+                    var clonedVariable = new VariableDefinition(variableType);
+                    clonedMethodDef.Body.Variables.Add(clonedVariable);
 
-                map[variable] = clonedVariable;
+                    map[variable] = clonedVariable;
+                }
             }
 
             var instructionMap = new Dictionary<Instruction, Instruction>();
@@ -74,15 +166,41 @@ namespace Rougamo.Fody
 
                 instructionMap[instruction] = cloned;
                 offsetMap[instruction.Offset] = cloned;
+                var operand = cloned.Operand;
                 if (cloned.Operand != null)
                 {
-                    if (map.TryGetValue(cloned.Operand, out var value))
+                    if (map.TryGetValue(operand, out var value))
                     {
                         cloned.Operand = value;
                     }
-                    else if (cloned.Operand is Instruction)
+                    else if (operand is Instruction)
                     {
                         brs.Add(cloned);
+                    }
+                    else if (operand is FieldReference fieldRef && map.TryGetValue(fieldRef.Resolve(), out var fdObj))
+                    {
+                        var fd = (FieldDefinition)fdObj;
+                        var fr = new FieldReference(fd.Name, fd.FieldType, (TypeReference)map[fd.DeclaringType]);
+                        cloned.Operand = fr;
+                    }
+                    else if (operand is MethodReference mr)
+                    {
+                        if (map.TryGetValue(mr.Resolve(), out var mdObj))
+                        {
+                            // ignore, rougamo donot needs to implement this
+                            throw new NotImplementedException("MonoCloneExtensions -> MethodDefinition -> MethodReference");
+                        }
+                        else if (mr is GenericInstanceMethod gim && gim.GenericArguments.Any(x => x.Resolve() == methodDef.DeclaringType))
+                        {
+                            var tr = (TypeReference)map[clonedMethodDef.DeclaringType];
+                            var generics = gim.GenericArguments.Select(x => x.Resolve() == methodDef.DeclaringType ? tr : x).ToArray();
+                            mr = gim.Resolve().ImportInto(methodDef.Module);
+                            if (gim.DeclaringType is GenericInstanceType git)
+                            {
+                                mr = git.GenericTypeMethodReference(mr, methodDef.Module);
+                            }
+                            cloned.Operand = mr.GenericMethodReference(generics);
+                        }
                     }
                 }
             }
@@ -95,6 +213,7 @@ namespace Rougamo.Fody
             {
                 clonedMethodDef.Body.ExceptionHandlers.Add(new ExceptionHandler(handler.HandlerType)
                 {
+                    CatchType = map.TryGetValue(handler.CatchType, out var catchType) ? (TypeReference)catchType : handler.CatchType,
                     TryStart = instructionMap[handler.TryStart],
                     TryEnd = instructionMap[handler.TryEnd],
                     HandlerStart = instructionMap[handler.HandlerStart],
@@ -118,12 +237,33 @@ namespace Rougamo.Fody
                 clonedMethodDef.DebugInformation.SequencePoints.Add(clonedPoint);
             }
             clonedMethodDef.DebugInformation.Scope = methodDef.DebugInformation.Scope.Clone(offsetMap, map);
-
-            return clonedMethodDef;
         }
 
-        public static ScopeDebugInformation Clone(this ScopeDebugInformation scope, Dictionary<int, Instruction> offsetMap, Dictionary<object, object> variableMap)
+        public static ParameterDefinition Clone(this ParameterDefinition parameterDef, Dictionary<object, object> map)
         {
+            var parameterTypeRef = parameterDef.ParameterType;
+            var isByReference = parameterTypeRef.IsByReference; // out or ref parameter
+            if (isByReference)
+            {
+                parameterTypeRef = ((ByReferenceType)parameterTypeRef).ElementType;
+            }
+            if (parameterTypeRef.IsGenericParameter && map.TryGetValue(parameterTypeRef, out var mapTo))
+            {
+                parameterTypeRef = (GenericParameter)mapTo;
+            }
+            if (isByReference)
+            {
+                parameterTypeRef = new ByReferenceType(parameterTypeRef);
+                map[parameterDef.ParameterType] = parameterTypeRef;
+            }
+
+            return new ParameterDefinition(parameterDef.Name, parameterDef.Attributes, parameterTypeRef);
+        }
+
+        public static ScopeDebugInformation? Clone(this ScopeDebugInformation? scope, Dictionary<int, Instruction> offsetMap, Dictionary<object, object> variableMap)
+        {
+            if (scope == null) return null;
+
             var start = scope.Start.IsEndOfMethod ? null : offsetMap[scope.Start.Offset];
             var end = scope.End.IsEndOfMethod ? null : offsetMap[scope.End.Offset];
             var clonedScope = new ScopeDebugInformation(start, end);
