@@ -91,16 +91,16 @@ namespace Rougamo.Fody
             return clonedTypeDef;
         }
 
-        public static MethodDefinition Clone(this MethodDefinition methodDef, string methodName, Dictionary<object, object>? map = null)
+        public static MethodDefinition Clone(this MethodDefinition methodDef, string methodName, Dictionary<object, object>? map = null, bool cloneBody = true)
         {
             var clonedMethodDef = new MethodDefinition(methodName, methodDef.Attributes, methodDef.ReturnType);
 
-            methodDef.Clone(clonedMethodDef, map, false);
+            methodDef.Clone(clonedMethodDef, map, false, cloneBody);
 
             return clonedMethodDef;
         }
 
-        public static void Clone(this MethodDefinition methodDef, MethodDefinition clonedMethodDef, Dictionary<object, object>? map, bool withOverrides)
+        public static void Clone(this MethodDefinition methodDef, MethodDefinition clonedMethodDef, Dictionary<object, object>? map, bool withOverrides, bool cloneBody = true)
         {
             clonedMethodDef.HasThis = methodDef.HasThis;
             clonedMethodDef.ExplicitThis = methodDef.ExplicitThis;
@@ -139,6 +139,8 @@ namespace Rougamo.Fody
                     map[parameterDef] = clonedParameterDef;
                 }
             }
+
+            if (!cloneBody) return;
 
             if (methodDef.Body.HasVariables)
             {

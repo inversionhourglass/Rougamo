@@ -12,6 +12,8 @@ namespace Rougamo.Fody
     public partial class ModuleWeaver : BaseModuleWeaver
     {
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+        private TypeDefinition _typeListDef;
+
         private TypeReference _typeVoidRef;
         private TypeReference _typeSystemRef;
         private TypeReference _typeMethodBaseRef;
@@ -20,18 +22,23 @@ namespace Rougamo.Fody
         private TypeReference _typeObjectRef;
         private TypeReference _typeObjectArrayRef;
         private TypeReference _typeExceptionRef;
-        private TypeReference _typeDebuggerStepThroughAttributeRef;
-        private TypeDefinition _typeListDef;
         private TypeReference _typeListRef;
         private TypeReference _typeIMoRef;
         private TypeReference _typeMethodContextRef;
         private TypeReference _typeIMoArrayRef;
+        private TypeReference _typeDebuggerStepThroughAttributeRef;
+        private TypeReference _typeAsyncStateMachineAttributeRef;
 
         private MethodReference _methodGetTypeFromHandleRef;
         private MethodReference _methodGetMethodFromHandleRef;
         private MethodReference _methodListAddRef;
         private MethodReference _methodListToArrayRef;
         private MethodReference _methodDebuggerStepThroughCtorRef;
+        private MethodReference _methodAsyncStateMachineAttributeCtorRef;
+        private MethodReference _methodAsyncTaskMethodBuilderCreateref;
+        private MethodReference _methodAsyncValueTaskMethodBuilderCreateRef;
+        private MethodReference _methodGenericAsyncTaskMethodBuilderCreateRef;
+        private MethodReference _methodGenericAsyncValueTaskMethodBuilderCreateRef;
         private MethodReference _methodMethodContextCtorRef;
         private MethodReference _methodMethodContextSetExceptionRef;
         private MethodReference _methodMethodContextSetReturnValueRef;

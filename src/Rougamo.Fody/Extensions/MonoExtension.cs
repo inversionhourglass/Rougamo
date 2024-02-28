@@ -345,6 +345,19 @@ namespace Rougamo.Fody
             return Instruction.Create(OpCodes.Stobj, typeRef); // struct & enum & generic parameter
         }
 
+        public static TypeReference MakeReference(this TypeDefinition typeDef)
+        {
+            if (!typeDef.HasGenericParameters) return typeDef;
+
+            var generic = new GenericInstanceType(typeDef);
+            foreach (var genericParameter in typeDef.GenericParameters)
+            {
+                generic.GenericArguments.Add(genericParameter);
+            }
+
+            return generic;
+        }
+
         public static MethodReference GenericTypeMethodReference(this TypeReference typeRef, MethodReference methodRef, ModuleDefinition moduleDefinition)
         {
             var genericMethodRef = new MethodReference(methodRef.Name, methodRef.ReturnType, typeRef)
@@ -371,6 +384,20 @@ namespace Rougamo.Fody
             genericInstanceMethod.GenericArguments.Add(genericTypeRefs);
 
             return genericInstanceMethod;
+        }
+
+        public static void DebuggerStepThrough(this MethodDefinition methodDef, MethodReference ctor)
+        {
+            methodDef.CustomAttributes.Clear();
+            methodDef.CustomAttributes.Add(new CustomAttribute(ctor));
+        }
+
+        public static void Clear(this MethodDefinition methodDef)
+        {
+            methodDef.DebugInformation = null;
+            methodDef.Body.Instructions.Clear();
+            methodDef.Body.Variables.Clear();
+            methodDef.Body.ExceptionHandlers.Clear();
         }
 
         private static Code[] _EmptyCodes = new[] { Code.Nop, Code.Ret };

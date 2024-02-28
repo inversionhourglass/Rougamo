@@ -13,21 +13,15 @@ namespace Rougamo.Fody
             var actualMethodDef = rouMethod.MethodDef.Clone($"$Rougamo_{rouMethod.MethodDef.Name}");
             rouMethod.MethodDef.DeclaringType.Methods.Add(actualMethodDef);
 
-            rouMethod.MethodDef.DebugInformation = null;
-
-            DebuggerStepThrough(rouMethod.MethodDef);
+            rouMethod.MethodDef.DebuggerStepThrough(_methodDebuggerStepThroughCtorRef);
+            rouMethod.MethodDef.Clear();
 
             StrictSyncAdaptedCall(rouMethod, actualMethodDef);
         }
 
         private void StrictSyncAdaptedCall(RouMethod rouMethod, MethodDefinition methodDef)
         {
-            var body = rouMethod.MethodDef.Body;
-            var instructions = body.Instructions;
-
-            instructions.Clear();
-            body.Variables.Clear();
-            body.ExceptionHandlers.Clear();
+            var instructions = rouMethod.MethodDef.Body.Instructions;
 
             if (!methodDef.IsStatic) instructions.Add(Create(OpCodes.Ldarg_0));
             foreach(var parameter in rouMethod.MethodDef.Parameters)
@@ -46,12 +40,6 @@ namespace Rougamo.Fody
             }
             instructions.Add(Create(OpCodes.Call, methodRef));
             instructions.Add(Create(OpCodes.Ret));
-        }
-
-        private void DebuggerStepThrough(MethodDefinition methodDef)
-        {
-            methodDef.CustomAttributes.Clear();
-            methodDef.CustomAttributes.Add(new CustomAttribute(_methodDebuggerStepThroughCtorRef));
         }
     }
 }
