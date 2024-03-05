@@ -68,11 +68,17 @@ namespace Rougamo.Fody
                     }
                     else if (methodRef is GenericInstanceMethod gim)
                     {
-                        var idx = gim.GenericArguments.IndexOf(stateMachineTypeDef);
-                        if (idx != -1)
+                        var mr = new GenericInstanceMethod(gim);
+                        foreach (var generic in gim.GenericArguments)
                         {
-                            gim.GenericArguments.RemoveAt(idx);
-                            gim.GenericArguments.Insert(idx, clonedStateMachineTypeDef);
+                            if (generic == stateMachineTypeDef)
+                            {
+                                mr.GenericArguments.Add(clonedStateMachineTypeDef);
+                            }
+                            else
+                            {
+                                mr.GenericArguments.Add(generic);
+                            }
                         }
                     }
                 }
@@ -85,40 +91,6 @@ namespace Rougamo.Fody
                     instruction.Operand = clonedStateMachine;
                 }
             }
-
-            //var isValueType = clonedStateMachineTypeDef.IsValueType;
-            //var builderFieldDef = clonedStateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_Builder);
-            //var builderTypeRef = builderFieldDef.FieldType;
-            //var builderFieldRef = new FieldReference(builderFieldDef.Name, builderTypeRef, stateMachineTypeRef);
-            //var builderCreateMethodRef = builderTypeRef.GenericTypeMethodReference(builderTypeRef.Resolve().Methods.Single(x => x.Name == "Create"), ModuleDefinition);
-            //var thisFieldDef = clonedStateMachineTypeDef.Fields.Single(x => x.Name = Constants.)
-
-            //var instructions = clonedMethodDef.Body.Instructions;
-
-            //if (isValueType)
-            //{
-            //    instructions.Add(Create(OpCodes.Ldloca, stateMachine));
-            //}
-            //else
-            //{
-            //    var stateMachineCtorDef = clonedStateMachineTypeDef.Methods.Single(x => x.IsConstructor && !x.IsStatic);
-            //    var stateMachineCtorRef = stateMachineTypeRef.GenericTypeMethodReference(stateMachineCtorDef.ImportInto(ModuleDefinition), ModuleDefinition);
-            //    instructions.Add(Create(OpCodes.Newobj, stateMachineCtorRef));
-            //    instructions.Add(Create(OpCodes.Stloc, stateMachine));
-            //    instructions.Add(Create(OpCodes.Ldloc, stateMachine));
-            //}
-            //instructions.Add(Create(OpCodes.Call, builderCreateMethodRef));
-            //instructions.Add(Create(OpCodes.Stfld, builderFieldRef));
-            //if (isValueType)
-            //{
-            //    instructions.Add(Create(OpCodes.Ldloca, stateMachine));
-            //}
-            //else
-            //{
-            //    instructions.Add(Create(OpCodes.Ldloc, stateMachine));
-            //}
-            //instructions.Add(Create(OpCodes.Ldarg_0));
-            //instructions.Add(Create())
 
             return clonedMethodDef;
         }
