@@ -1,5 +1,6 @@
 ﻿using Fody;
 using System;
+using System.Linq;
 using System.Reflection;
 
 namespace Rougamo.Fody.Tests
@@ -44,6 +45,13 @@ namespace Rougamo.Fody.Tests
             if (processor != null) type = processor(type);
 
             return new StaticMembersDynamicWrapper(type);
+        }
+
+        protected T GetMethodDelegate<T>(object instance, string methodName) where T : Delegate
+        {
+            var method = instance.GetType().GetMethods().Single(x => x.Name == methodName);
+
+            return (T)method.CreateDelegate(typeof(T), instance);
         }
     }
 }
