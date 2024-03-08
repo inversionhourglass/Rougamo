@@ -1,8 +1,6 @@
-- [#46](https://github.com/inversionhourglass/Rougamo/issues/46) 新的结构体，优化GC
-    - 新增`RougamoAttribute`支持自定义结构体实现`IMo`接口，通过结构体优化GC
-    - 优化`MethodContext`内部字段，通过延迟初始化、全局空缓存的方式优化GC
-    - 优化织入代码，使用原始类型来存储`IMo`对象，而不使用`IMo`接口类型存储，在实现类型为结构体时可以避免装箱操作。当然，如果织入的`IMo`对象过多，导致使用数组进行存储，那也是没有办法的
-- [#55](https://github.com/inversionhourglass/Rougamo/issues/55) 屏蔽`MoAttribute`定义的属性
-    - `MoAttribute`的所有属性改为仅getter为public，如果希望公开`MoAttribute`定义的属性，可以通过`new`的方式覆盖并修改可访问性，例：`public new virtual double Order { get; set; }`
+- [#61](https://github.com/inversionhourglass/Rougamo/issues/51) `Omit`新增枚举项`ReturnValue`
+  - `Omit.ReturnValue`可以让`MethodContext`忽略记录方法返回值，但同时也会导致无法设置返回值，包括异常处理设置返回值
+  - 将`Omit`的优先级调整为高于`Feature`，这也就意味着，如果设置了`Omit.Arguments`，那么即使设置了`Feature.RewriteArgs`也无法重写方法参数
+  - 由于`ref struct`类型限制，无法将其装箱为`object`，也无法从`object`拆箱得到，所以如果方法使用该类型作为参数或者返回值，那么必须使用`Omit`表明不需要使用到方法参数或返回值，否则将在编译时报错
 
 ---
