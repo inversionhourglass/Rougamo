@@ -26,6 +26,7 @@
         public const string TYPE_MulticastDelegate = "System.MulticastDelegate";
         public const string TYPE_ObsoleteAttribute = "System.ObsoleteAttribute";
         public const string TYPE_CompilerGeneratedAttribute = "System.CompilerGeneratedAttribute";
+        public const string TYPE_IsByRefLikeAttribute = "System.Runtime.CompilerServices.IsByRefLikeAttribute";
         public const string TYPE_Runtime_CompilerGeneratedAttribute = "System.Runtime.CompilerServices.CompilerGeneratedAttribute";
         public const string TYPE_AsyncStateMachineAttribute = "System.Runtime.CompilerServices.AsyncStateMachineAttribute";
         public const string TYPE_IteratorStateMachineAttribute = "System.Runtime.CompilerServices.IteratorStateMachineAttribute";

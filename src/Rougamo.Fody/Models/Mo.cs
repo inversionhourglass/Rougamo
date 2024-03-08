@@ -94,10 +94,6 @@ namespace Rougamo.Fody
                 if (!_omit.HasValue)
                 {
                     _omit = this.ExtractOmits();
-                    if ((_omit & Omit.Arguments) != 0 && (Features & (0x10 | (int)Feature.FreshArgs)) != 0)
-                    {
-                        _omit &= (Omit.All ^ Omit.Arguments);
-                    }
                 }
                 return _omit.Value;
             }

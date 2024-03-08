@@ -1,12 +1,10 @@
 ﻿using BasicUsage.Mos;
 using Rougamo;
 using System.Collections.Generic;
-using System.Data;
 using System.Threading.Tasks;
 
 namespace BasicUsage
 {
-    [Rougamo<ValueOmitAll>]
     public class OmitUseCase
     {
         [Rougamo(typeof(ValueOmitMos))]
@@ -19,7 +17,7 @@ namespace BasicUsage
         public List<string> Arguments(int x) => null;
 
         [Rougamo(typeof(ValueOmitArgumentsButFeature))]
-        public List<string> ArgumentsFailed(int x) => null;
+        public List<string> ArgumentsStillSucceed(int x) => null;
 
         [Rougamo(typeof(ValueOmitAll))]
         public static List<string> All(int x) => null;
@@ -35,7 +33,7 @@ namespace BasicUsage
         }
 
         [Rougamo<ValueOmitArgumentsButFeature>]
-        public static async Task<List<string>> ArgumentsFailedAsync(int x)
+        public static async Task<List<string>> ArgumentsStillSucceedAsync(int x)
         {
             await Task.Yield();
             return null;

@@ -577,15 +577,15 @@ namespace Rougamo.Fody.Tests
             Assert.DoesNotContain(nameof(BasicUsage.Mos.ValueOmitAll), returnMos);
             Assert.DoesNotContain(nameof(BasicUsage.Mos.ClassOmitMos), returnMos);
 
-            returnMos = instance.ArgumentsFailed(0);
-            Assert.Null(returnMos);
-
-            returnMos = sInstance.All(0);
+            returnMos = instance.ArgumentsStillSucceed(0);
             Assert.DoesNotContain(nameof(BasicUsage.Mos.ValueOmitMos), returnMos);
             Assert.DoesNotContain(nameof(BasicUsage.Mos.ValueOmitArguments), returnMos);
-            Assert.DoesNotContain(nameof(BasicUsage.Mos.ValueOmitArgumentsButFeature), returnMos);
-            Assert.Contains(nameof(BasicUsage.Mos.ValueOmitAll), returnMos);
+            Assert.Contains(nameof(BasicUsage.Mos.ValueOmitArgumentsButFeature), returnMos);
+            Assert.DoesNotContain(nameof(BasicUsage.Mos.ValueOmitAll), returnMos);
             Assert.DoesNotContain(nameof(BasicUsage.Mos.ClassOmitMos), returnMos);
+
+            returnMos = sInstance.All(0);
+            Assert.Null(returnMos);
 
             executedMos.Clear();
             await (Task)sInstance.MosAsync(executedMos);
@@ -602,15 +602,15 @@ namespace Rougamo.Fody.Tests
             Assert.DoesNotContain(nameof(BasicUsage.Mos.ValueOmitAll), returnMos);
             Assert.DoesNotContain(nameof(BasicUsage.Mos.ClassOmitMos), returnMos);
 
-            returnMos = await (Task<List<string>>)sInstance.ArgumentsFailedAsync(0);
-            Assert.Null(returnMos);
-
-            returnMos = await (ValueTask<List<string>>)instance.AllAsync(0);
+            returnMos = await (Task<List<string>>)sInstance.ArgumentsStillSucceedAsync(0);
             Assert.DoesNotContain(nameof(BasicUsage.Mos.ValueOmitMos), returnMos);
             Assert.DoesNotContain(nameof(BasicUsage.Mos.ValueOmitArguments), returnMos);
-            Assert.DoesNotContain(nameof(BasicUsage.Mos.ValueOmitArgumentsButFeature), returnMos);
-            Assert.Contains(nameof(BasicUsage.Mos.ValueOmitAll), returnMos);
+            Assert.Contains(nameof(BasicUsage.Mos.ValueOmitArgumentsButFeature), returnMos);
+            Assert.DoesNotContain(nameof(BasicUsage.Mos.ValueOmitAll), returnMos);
             Assert.DoesNotContain(nameof(BasicUsage.Mos.ClassOmitMos), returnMos);
+
+            returnMos = await (ValueTask<List<string>>)instance.AllAsync(0);
+            Assert.Null(returnMos);
 
             executedMos.Clear();
             ((IEnumerable<string>)instance.Iterator(executedMos)).ToArray();

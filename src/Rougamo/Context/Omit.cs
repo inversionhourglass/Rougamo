@@ -29,8 +29,12 @@ namespace Rougamo.Context
         /// </summary>
         Arguments = 0x2,
         /// <summary>
+        /// Omit MethodContext.ReturnValue property
+        /// </summary>
+        ReturnValue = 0x4,
+        /// <summary>
         /// Omit all
         /// </summary>
-        All = Mos | Arguments
+        All = Mos | Arguments | ReturnValue
     }
 }

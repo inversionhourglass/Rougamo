@@ -5,6 +5,7 @@ using Rougamo.Fody.Enhances;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
 using static Mono.Cecil.Cil.Instruction;
 
 namespace Rougamo.Fody
@@ -17,6 +18,8 @@ namespace Rougamo.Fody
             {
                 foreach (var rouMethod in rouType.Methods)
                 {
+                    CheckRefStruct(rouMethod);
+
                     if (rouMethod.IsIterator)
                     {
                         IteratorMethodWeave(rouMethod);
@@ -412,6 +415,44 @@ namespace Rougamo.Fody
                     HandlerEnd = anchors.FinallyEnd
                 };
                 methodDef.Body.ExceptionHandlers.Add(finallyHandler);
+            }
+        }
+
+        private void CheckRefStruct(RouMethod rouMethod)
+        {
+            TypeDefinition typeDef;
+            if ((rouMethod.MethodContextOmits & Omit.ReturnValue) == 0 && (typeDef = rouMethod.MethodDef.ReturnType.Resolve()) != null && typeDef.CustomAttributes.Any(x => x.Is(Constants.TYPE_IsByRefLikeAttribute)))
+            {
+                var builder = new StringBuilder($"Cannot save ref struct value as an object. Change the return value type of the {rouMethod.MethodDef.FullName} method or set the MethodContextOmits property for the listed types to Omit.ReturnValue: [");
+                foreach (var mo in rouMethod.Mos)
+                {
+                    if ((rouMethod.MethodContextOmits & Omit.ReturnValue) == 0)
+                    {
+                        builder.Append(mo.MoTypeDef.FullName);
+                        builder.Append(", ");
+                    }
+                }
+                builder.Length -= 2;
+                builder.Append("]. For more information: https://github.com/inversionhourglass/Rougamo/issues/61");
+
+                throw new RougamoException(builder.ToString());
+            }
+
+            if ((rouMethod.MethodContextOmits & Omit.Arguments) == 0 && rouMethod.MethodDef.Parameters.Any(x => (typeDef = x.ParameterType.Resolve()) != null && typeDef.CustomAttributes.Any(y => y.Is(Constants.TYPE_IsByRefLikeAttribute))))
+            {
+                var builder = new StringBuilder($"Cannot save ref struct value as an object. Change the parameter type of the {rouMethod.MethodDef.FullName} method or set the MethodContextOmits property for the listed types to Omit.Arguments: [");
+                foreach (var mo in rouMethod.Mos)
+                {
+                    if ((rouMethod.MethodContextOmits & Omit.Arguments) == 0)
+                    {
+                        builder.Append(mo.MoTypeDef.FullName);
+                        builder.Append(", ");
+                    }
+                }
+                builder.Length -= 2;
+                builder.Append("]. For more information: https://github.com/inversionhourglass/Rougamo/issues/61");
+
+                throw new RougamoException(builder.ToString());
             }
         }
     }
