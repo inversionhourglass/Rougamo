@@ -435,7 +435,7 @@ namespace Rougamo.Fody
                 builder.Length -= 2;
                 builder.Append("]. For more information: https://github.com/inversionhourglass/Rougamo/issues/61");
 
-                throw new RougamoException(builder.ToString());
+                throw new RougamoException(builder.ToString(), rouMethod.MethodDef);
             }
 
             if ((rouMethod.MethodContextOmits & Omit.Arguments) == 0 && rouMethod.MethodDef.Parameters.Any(x => (typeDef = x.ParameterType.Resolve()) != null && typeDef.CustomAttributes.Any(y => y.Is(Constants.TYPE_IsByRefLikeAttribute))))
@@ -451,8 +451,8 @@ namespace Rougamo.Fody
                 }
                 builder.Length -= 2;
                 builder.Append("]. For more information: https://github.com/inversionhourglass/Rougamo/issues/61");
-
-                throw new RougamoException(builder.ToString());
+                
+                throw new RougamoException(builder.ToString(), rouMethod.MethodDef);
             }
         }
     }

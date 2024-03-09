@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Mono.Cecil;
+using System;
 
 namespace Rougamo.Fody
 {
@@ -7,5 +8,12 @@ namespace Rougamo.Fody
         public RougamoException() : base() { }
 
         public RougamoException(string message) : base(message) { }
+
+        public RougamoException(string message, MethodDefinition methodDef) : this(message)
+        {
+            MethodDef = methodDef;
+        }
+
+        public MethodDefinition? MethodDef { get; set; }
     }
 }
