@@ -39,7 +39,8 @@
 
         public const string TYPE_ARRAY_Type = "System.Type[]";
 
-        public const string PROP_SetterFormat = "set_{0}";
+        public static string Setter(string propertyName) => $"set_{propertyName}";
+        public static string Getter(string propertyName) => $"get_{propertyName}";
         public const string PROP_Flags = "Flags";
         public const string PROP_Pattern = "Pattern";
         public const string PROP_Features = "Features";
@@ -55,6 +56,7 @@
         public const string PROP_RewriteArguments = "RewriteArguments";
         public const string PROP_RetryCount = "RetryCount";
         public const string PROP_MethodContextOmits = "MethodContextOmits";
+        public const string PROP_IsCompleted = "IsCompleted";
 
         public const string FIELD_Format = "<{0}>k__BackingField";
         public const string FIELD_Repulsions = "<Repulsions>k__BackingField";
@@ -66,6 +68,7 @@
         public const string FIELD_RougamoContext = ">_<rougamo_context";
         public const string FIELD_Builder = "<>t__builder";
         public const string FIELD_State = "<>1__state";
+        public const string FIELD_Awaiter = "<>u_1";
         public const string FIELD_Current_Suffix = "current";
         public const string FIELD_IteratorReturnList = ">_<returns";
 
@@ -78,6 +81,9 @@
         public const string METHOD_MoveNext = "MoveNext";
         public const string METHOD_SetResult = "SetResult";
         public const string METHOD_SetException = "SetException";
+        public const string METHOD_GetAwaiter = "GetAwaiter";
+        public const string METHOD_GetResult = "GetResult";
+        public const string METHOD_AwaitUnsafeOnCompleted = "AwaitUnsafeOnCompleted";
         public const string METHOD_GetEnumerator_Prefix = "System.Collections.Generic.IEnumerable<";
         public const string METHOD_GetEnumerator_Suffix = ">.GetEnumerator";
         public const string METHOD_GetAsyncEnumerator_Prefix = "System.Collections.Generic.IAsyncEnumerable<";

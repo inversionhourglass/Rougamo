@@ -177,7 +177,7 @@ namespace Rougamo.Fody
         private static T? ExtractFromCtor<T>(TypeDefinition typeDef, string propTypeFullName, string propertyName, Func<Instruction, T?> tryResolve) where T : struct
         {
             var propFieldName = string.Format(Constants.FIELD_Format, propertyName);
-            var setterName = string.Format(Constants.PROP_SetterFormat, propertyName);
+            var setterName = Constants.Setter(propertyName);
             do
             {
                 var nonCtor = typeDef.GetConstructors().FirstOrDefault(ctor => !ctor.HasParameters);
@@ -231,7 +231,7 @@ namespace Rougamo.Fody
         private static T? ExtractFromCtor<T>(TypeDefinition typeDef, string propTypeFullName, string propertyName, Func<Instruction, T?> tryResolve) where T : class
         {
             var propFieldName = string.Format(Constants.FIELD_Format, propertyName);
-            var setterName = string.Format(Constants.PROP_SetterFormat, propertyName);
+            var setterName = Constants.Setter(propertyName);
             do
             {
                 var nonCtor = typeDef.GetConstructors().FirstOrDefault(ctor => !ctor.HasParameters);

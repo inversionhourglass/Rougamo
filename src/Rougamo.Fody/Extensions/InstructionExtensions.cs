@@ -177,5 +177,20 @@ namespace Rougamo.Fody
             }
             return null;
         }
+
+        public static Instruction Set(this Instruction instruction, OpCode opcode)
+        {
+            instruction.OpCode = opcode;
+
+            return instruction;
+        }
+
+        public static Instruction Set(this Instruction instruction, OpCode opcode, object operand)
+        {
+            instruction.OpCode = opcode;
+            instruction.Operand = operand;
+
+            return instruction;
+        }
     }
 }

@@ -18,6 +18,7 @@ namespace Rougamo.Fody
             if (_config.Strict)
             {
                 StrictAsyncTaskMethodWeave(rouMethod, stateMachineTypeDef);
+                if (rouMethod.MethodDef.FullName.Contains("AsyncGenericUseCase")) return;
             }
 
             var moveNextMethodDef = stateMachineTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
@@ -84,11 +85,12 @@ namespace Rougamo.Fody
             var methodContext = new FieldDefinition(Constants.FIELD_RougamoContext, FieldAttributes.Public, _typeMethodContextRef);
             var builder = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_Builder);
             var state = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_State);
+            var @this = rouMethod.MethodDef.IsStatic || stateMachineTypeDef.IsValueType ? null : stateMachineTypeDef.Fields.Single(x => x.Name.Contains("this") && x.FieldType.Resolve() == stateMachineTypeDef.DeclaringType);
             var parameters = StateMachineParameterFields(rouMethod);
 
             stateMachineTypeDef.Fields.Add(methodContext);
 
-            return new AsyncFields(stateMachineTypeDef, moArray, mos, methodContext, state, builder, parameters);
+            return new AsyncFields(stateMachineTypeDef, moArray, mos, methodContext, state, builder, @this, parameters);
         }
 
         private BoxTypeReference AsyncResolveReturnBoxTypeRef(TypeReference returnTypeRef, FieldReference builderField)

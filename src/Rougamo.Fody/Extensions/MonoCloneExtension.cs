@@ -201,7 +201,7 @@ namespace Rougamo.Fody
                             {
                                 mr = git.GenericTypeMethodReference(mr, methodDef.Module);
                             }
-                            cloned.Operand = mr.GenericMethodReference(generics);
+                            cloned.Operand = mr.WithGenerics(generics);
                         }
                     }
                 }

@@ -36,7 +36,7 @@ namespace Rougamo.Fody
             }
             if (rouMethod.MethodDef.HasGenericParameters)
             {
-                methodRef = methodRef.GenericMethodReference(rouMethod.MethodDef.GenericParameters.Cast<TypeReference>().ToArray());
+                methodRef = methodRef.WithGenerics(rouMethod.MethodDef.GenericParameters.Cast<TypeReference>().ToArray());
             }
             instructions.Add(Create(OpCodes.Call, methodRef));
             instructions.Add(Create(OpCodes.Ret));

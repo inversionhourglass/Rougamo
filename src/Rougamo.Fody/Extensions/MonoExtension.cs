@@ -358,6 +358,14 @@ namespace Rougamo.Fody
             return generic;
         }
 
+        public static MethodReference MakeReference(this MethodDefinition medthodDef)
+        {
+            if (!medthodDef.DeclaringType.HasGenericParameters) return medthodDef;
+
+            var declaringTypeRef = medthodDef.DeclaringType.MakeReference();
+            return declaringTypeRef.GenericTypeMethodReference(medthodDef, medthodDef.Module);
+        }
+
         public static MethodReference GenericTypeMethodReference(this TypeReference typeRef, MethodReference methodRef, ModuleDefinition moduleDefinition)
         {
             var genericMethodRef = new MethodReference(methodRef.Name, methodRef.ReturnType, typeRef)
@@ -378,12 +386,27 @@ namespace Rougamo.Fody
             return genericMethodRef.ImportInto(moduleDefinition);
         }
 
-        public static MethodReference GenericMethodReference(this MethodReference methodRef, params TypeReference[] genericTypeRefs)
+        public static MethodReference WithGenerics(this MethodReference methodRef, params TypeReference[] genericTypeRefs)
         {
             var genericInstanceMethod = new GenericInstanceMethod(methodRef);
             genericInstanceMethod.GenericArguments.Add(genericTypeRefs);
 
             return genericInstanceMethod;
+        }
+
+        public static TypeReference ReplaceGenericArgs(this TypeReference typeRef, Dictionary<string, GenericParameter> genericMap)
+        {
+            if (typeRef is GenericParameter gp && genericMap.TryGetValue(gp.Name, out var value)) return value;
+
+            if (typeRef is not GenericInstanceType git) return typeRef;
+
+            var replacedGit = new GenericInstanceType(git.GetElementType());
+            foreach (var generic in git.GenericArguments)
+            {
+                replacedGit.GenericArguments.Add(generic.ReplaceGenericArgs(genericMap));
+            }
+
+            return replacedGit;
         }
 
         public static void DebuggerStepThrough(this MethodDefinition methodDef, MethodReference ctor)
