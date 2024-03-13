@@ -199,7 +199,7 @@ namespace Rougamo.Fody
                             mr = gim.Resolve().ImportInto(methodDef.Module);
                             if (gim.DeclaringType is GenericInstanceType git)
                             {
-                                mr = git.GenericTypeMethodReference(mr, methodDef.Module);
+                                mr = mr.WithGenericDeclaringType(git);
                             }
                             cloned.Operand = mr.WithGenerics(generics);
                         }

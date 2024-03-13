@@ -363,10 +363,10 @@ namespace Rougamo.Fody
             if (!medthodDef.DeclaringType.HasGenericParameters) return medthodDef;
 
             var declaringTypeRef = medthodDef.DeclaringType.MakeReference();
-            return declaringTypeRef.GenericTypeMethodReference(medthodDef, medthodDef.Module);
+            return medthodDef.WithGenericDeclaringType(declaringTypeRef);
         }
 
-        public static MethodReference GenericTypeMethodReference(this TypeReference typeRef, MethodReference methodRef, ModuleDefinition moduleDefinition)
+        public static MethodReference WithGenericDeclaringType(this MethodReference methodRef, TypeReference typeRef)
         {
             var genericMethodRef = new MethodReference(methodRef.Name, methodRef.ReturnType, typeRef)
             {
@@ -383,7 +383,7 @@ namespace Rougamo.Fody
                 genericMethodRef.GenericParameters.Add(new GenericParameter(parameter.Name, genericMethodRef));
             }
 
-            return genericMethodRef.ImportInto(moduleDefinition);
+            return genericMethodRef.ImportInto(methodRef.Module);
         }
 
         public static MethodReference WithGenerics(this MethodReference methodRef, params TypeReference[] genericTypeRefs)

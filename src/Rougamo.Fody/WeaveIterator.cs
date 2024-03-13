@@ -184,7 +184,7 @@ namespace Rougamo.Fody
 
             var returnsFieldRef = new FieldReference(fields.RecordedReturn!.Name, fields.RecordedReturn!.FieldType, variables.StateMachine.VariableType);
             var returnsTypeCtorDef = _typeListDef.GetZeroArgsCtor();
-            var returnsTypeCtorRef = fields.RecordedReturn.FieldType.GenericTypeMethodReference(returnsTypeCtorDef, ModuleDefinition);
+            var returnsTypeCtorRef = returnsTypeCtorDef.WithGenericDeclaringType(fields.RecordedReturn.FieldType);
 
             return new[]
             {
@@ -211,7 +211,7 @@ namespace Rougamo.Fody
         {
             if (fields.RecordedReturn == null || (rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) == 0 || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return EmptyInstructions;
 
-            var listAddMethodRef = fields.RecordedReturn!.FieldType.GenericTypeMethodReference(_methodListAddRef, ModuleDefinition);
+            var listAddMethodRef = _methodListAddRef.WithGenericDeclaringType(fields.RecordedReturn!.FieldType);
 
             return new[]
             {
@@ -251,7 +251,7 @@ namespace Rougamo.Fody
         {
             if (fields.RecordedReturn == null || (rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) == 0 || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return EmptyInstructions;
 
-            var listToArrayMethodRef = fields.RecordedReturn!.FieldType.GenericTypeMethodReference(_methodListToArrayRef, ModuleDefinition);
+            var listToArrayMethodRef = _methodListToArrayRef.WithGenericDeclaringType(fields.RecordedReturn!.FieldType);
 
             return new[]
             {

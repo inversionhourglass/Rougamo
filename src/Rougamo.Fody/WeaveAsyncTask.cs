@@ -687,7 +687,7 @@ namespace Rougamo.Fody
 
         private MethodReference AsyncGetGenericSetResult(TypeReference builderTypeRef)
         {
-            return builderTypeRef.GenericTypeMethodReference(builderTypeRef.Resolve().Methods.Single(x => x.Name == "SetResult" && x.Parameters.Count == 1 && x.IsPublic), ModuleDefinition);
+            return builderTypeRef.Resolve().Methods.Single(x => x.Name == "SetResult" && x.Parameters.Count == 1 && x.IsPublic).WithGenericDeclaringType(builderTypeRef);
         }
     }
 }

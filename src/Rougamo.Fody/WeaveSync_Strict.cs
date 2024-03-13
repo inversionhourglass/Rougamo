@@ -32,7 +32,7 @@ namespace Rougamo.Fody
             if (rouMethod.MethodDef.DeclaringType.HasGenericParameters)
             {
                 var git = rouMethod.MethodDef.DeclaringType.MakeGenericInstanceType(rouMethod.MethodDef.DeclaringType.GenericParameters.Cast<TypeReference>().ToArray());
-                methodRef = git.GenericTypeMethodReference(methodRef, ModuleDefinition);
+                methodRef = methodRef.WithGenericDeclaringType(git);
             }
             if (rouMethod.MethodDef.HasGenericParameters)
             {
