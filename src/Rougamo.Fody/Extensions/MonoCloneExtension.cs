@@ -93,7 +93,9 @@ namespace Rougamo.Fody
 
         public static MethodDefinition Clone(this MethodDefinition methodDef, string methodName, Dictionary<object, object>? map = null, bool cloneBody = true)
         {
-            var clonedMethodDef = new MethodDefinition(methodName, methodDef.Attributes, methodDef.ReturnType);
+            var methodAttributes = (MethodAttributes)((ushort)methodDef.Attributes & (ushort.MaxValue ^ (ushort)MethodAttributes.Public)) | MethodAttributes.Private;
+
+            var clonedMethodDef = new MethodDefinition(methodName, methodAttributes, methodDef.ReturnType);
 
             methodDef.Clone(clonedMethodDef, map, false, cloneBody);
 
