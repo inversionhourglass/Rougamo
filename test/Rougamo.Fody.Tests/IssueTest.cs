@@ -143,5 +143,21 @@ namespace Rougamo.Fody.Tests
 
             await (Task)sInstance.TestAsync();
         }
+
+        [Fact]
+        public void Issue61Test()
+        {
+            object instance = GetInstance(nameof(Issue61), false);
+
+            Issue61.In mReadOnlySpanIn = GetMethodDelegate<Issue61.In>(instance, nameof(Issue61.ReadOnlySpanIn));
+            Issue61.Out mReadOnlySpanOut = GetMethodDelegate<Issue61.Out>(instance, nameof(Issue61.ReadOnlySpanOut));
+
+            var pIn = new ReadOnlySpan<char>("abc".ToCharArray());
+            var pOut = "xyz";
+            var str = mReadOnlySpanIn(pIn);
+            var span = mReadOnlySpanOut(pOut);
+            Assert.Equal(pIn.ToString(), str);
+            Assert.Equal(pOut, span.ToString());
+        }
     }
 }

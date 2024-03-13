@@ -59,13 +59,27 @@ namespace Rougamo.Fody
 
         public override void Execute()
         {
-            ReadConfig();
-            if (!_config.Enabled) return;
+            try
+            {
+                ReadConfig();
+                if (!_config.Enabled) return;
 
-            LoadBasicReference();
-            FindRous();
-            if (_rouTypes.Count == 0) return;
-            WeaveMos();
+                LoadBasicReference();
+                FindRous();
+                if (_rouTypes.Count == 0) return;
+                WeaveMos();
+            }
+            catch (RougamoException e)
+            {
+                if (e.MethodDef == null)
+                {
+                    WriteError(e.Message);
+                }
+                else
+                {
+                    WriteError(e.Message, e.MethodDef);
+                }
+            }
         }
 
         public override IEnumerable<string> GetAssembliesForScanning()

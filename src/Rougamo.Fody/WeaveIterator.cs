@@ -74,7 +74,7 @@ namespace Rougamo.Fody
             FieldDefinition? recordedReturn = null;
             var parameters = StateMachineParameterFields(rouMethod);
             parameters = IteratorGetPrivateParameterFields(getEnumeratorMethodDef, parameters);
-            if (_config.RecordingIteratorReturns)
+            if (_config.RecordingIteratorReturns && (rouMethod.MethodContextOmits & Omit.ReturnValue) == 0)
             {
                 var listReturnsRef = new GenericInstanceType(_typeListRef);
                 listReturnsRef.GenericArguments.Add(((GenericInstanceType)rouMethod.MethodDef.ReturnType).GenericArguments[0]);
@@ -209,7 +209,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction> IteratorSaveYeildReturn(RouMethod rouMethod, IIteratorFields fields)
         {
-            if (fields.RecordedReturn == null || (rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) == 0) return EmptyInstructions;
+            if (fields.RecordedReturn == null || (rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) == 0 || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return EmptyInstructions;
 
             var listAddMethodRef = fields.RecordedReturn!.FieldType.GenericTypeMethodReference(_methodListAddRef, ModuleDefinition);
 
@@ -249,7 +249,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction> IteratorSaveReturnValue(RouMethod rouMethod, IIteratorFields fields)
         {
-            if (fields.RecordedReturn == null || (rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) == 0) return EmptyInstructions;
+            if (fields.RecordedReturn == null || (rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) == 0 || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return EmptyInstructions;
 
             var listToArrayMethodRef = fields.RecordedReturn!.FieldType.GenericTypeMethodReference(_methodListToArrayRef, ModuleDefinition);
 

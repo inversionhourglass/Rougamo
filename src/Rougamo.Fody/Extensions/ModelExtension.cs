@@ -116,6 +116,10 @@ namespace Rougamo.Fody
             var typeDef = mo.TypeDef;
             if (mo.Attribute != null)
             {
+                if (mo.Attribute.Properties.TryGet(Constants.PROP_MethodContextOmits, out var property))
+                {
+                    return (Omit)Convert.ToInt32(property!.Value.Argument.Value);
+                }
                 typeDef = mo.Attribute.AttributeType.Resolve();
             }
             var flags = ExtractFromIl(typeDef!, Constants.PROP_MethodContextOmits, Constants.TYPE_Omit, ParseOmits);
@@ -128,7 +132,11 @@ namespace Rougamo.Fody
             if (opCode == OpCodes.Ldc_I4_0) return Omit.None;
             if (opCode == OpCodes.Ldc_I4_1) return Omit.Mos;
             if (opCode == OpCodes.Ldc_I4_2) return Omit.Arguments;
-            if (opCode == OpCodes.Ldc_I4_3) return Omit.All;
+            if (opCode == OpCodes.Ldc_I4_3) return Omit.Mos | Omit.Arguments;
+            if (opCode == OpCodes.Ldc_I4_4) return Omit.ReturnValue;
+            if (opCode == OpCodes.Ldc_I4_5) return Omit.Mos | Omit.ReturnValue;
+            if (opCode == OpCodes.Ldc_I4_6) return Omit.Arguments | Omit.ReturnValue;
+            if (opCode == OpCodes.Ldc_I4_7) return Omit.All;
             return null;
         }
 

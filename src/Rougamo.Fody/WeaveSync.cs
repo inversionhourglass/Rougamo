@@ -222,7 +222,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction> SyncIfOnEntryReplacedReturn(RouMethod rouMethod, BoxTypeReference returnBoxTypeRef, Instruction endAnchor, SyncVariables variables)
         {
-            if (!Feature.EntryReplace.IsMatch(rouMethod.Features)) return EmptyInstructions;
+            if (!Feature.EntryReplace.IsMatch(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return EmptyInstructions;
 
             var instructions = new List<Instruction>
             {
@@ -250,7 +250,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction> SyncRewriteArguments(RouMethod rouMethod, Instruction endAnchor, SyncVariables variables)
         {
-            if (rouMethod.MethodDef.Parameters.Count == 0 || !Feature.RewriteArgs.IsMatch(rouMethod.Features)) return EmptyInstructions;
+            if (rouMethod.MethodDef.Parameters.Count == 0 || !Feature.RewriteArgs.IsMatch(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.Arguments) != 0) return EmptyInstructions;
 
             var instructions = new List<Instruction>
             {
@@ -372,7 +372,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction> SyncOnExceptionRefreshArgs(RouMethod rouMethod, SyncVariables variable)
         {
-            if ((rouMethod.Features & (int)(Feature.OnException | Feature.OnExit)) == 0 || (rouMethod.Features & (int)Feature.FreshArgs) == 0) return EmptyInstructions;
+            if ((rouMethod.Features & (int)(Feature.OnException | Feature.OnExit)) == 0 || (rouMethod.Features & (int)Feature.FreshArgs) == 0 || (rouMethod.MethodContextOmits & Omit.Arguments) != 0) return EmptyInstructions;
 
             return UpdateMethodArguments(rouMethod.MethodDef, variable.MethodContext);
         }
@@ -405,7 +405,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction> SyncIfExceptionHandled(RouMethod rouMethod, BoxTypeReference returnBoxTypeRef, Instruction finallyEndAnchor, Instruction endAnchor, SyncVariables variables)
         {
-            if (!Feature.ExceptionHandle.IsMatch(rouMethod.Features)) return EmptyInstructions;
+            if (!Feature.ExceptionHandle.IsMatch(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return EmptyInstructions;
 
             var instructions = new List<Instruction>
             {
@@ -447,7 +447,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction> SyncSaveReturnValue(RouMethod rouMethod, BoxTypeReference returnBoxTypeRef, SyncVariables variables)
         {
-            if (variables.Return == null || (rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) == 0) return EmptyInstructions;
+            if (variables.Return == null || (rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) == 0 || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return EmptyInstructions;
 
             var instructions = new List<Instruction>
             {
@@ -465,7 +465,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction> SyncOnSuccessRefreshArgs(RouMethod rouMethod, SyncVariables variable)
         {
-            if ((rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) == 0 || (rouMethod.Features & (int)Feature.FreshArgs) == 0) return EmptyInstructions;
+            if ((rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) == 0 || (rouMethod.Features & (int)Feature.FreshArgs) == 0 || (rouMethod.MethodContextOmits & Omit.Arguments) != 0) return EmptyInstructions;
 
             return UpdateMethodArguments(rouMethod.MethodDef, variable.MethodContext);
         }
@@ -500,7 +500,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction> SyncIfOnSuccessReplacedReturn(RouMethod rouMethod, BoxTypeReference returnBoxTypeRef, Instruction endAnchor, SyncVariables variables)
         {
-            if (variables.Return == null || !Feature.SuccessReplace.IsMatch(rouMethod.Features)) return EmptyInstructions;
+            if (variables.Return == null || !Feature.SuccessReplace.IsMatch(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return EmptyInstructions;
 
             var instructions = new List<Instruction>
             {
