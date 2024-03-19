@@ -46,9 +46,9 @@ namespace Rougamo.Fody
                 git.GenericArguments.Add(((GenericInstanceType)returnTypeRef).GenericArguments);
                 awaiterTypeRef = git;
             }
-            var getAwaiterMethodRef = getAwaiterMethodDef.ImportInto(ModuleDefinition).WithGenericDeclaringType(returnTypeRef);
-            var isCompletedMethodRef = isCompletedMethodDef.ImportInto(ModuleDefinition).WithGenericDeclaringType(awaiterTypeRef);
-            var getResultMethodRef = getResultMethodDef.ImportInto(ModuleDefinition).WithGenericDeclaringType(awaiterTypeRef);
+            var getAwaiterMethodRef = getAwaiterMethodDef.WithGenericDeclaringType(returnTypeRef);
+            var isCompletedMethodRef = isCompletedMethodDef.WithGenericDeclaringType(awaiterTypeRef);
+            var getResultMethodRef = getResultMethodDef.WithGenericDeclaringType(awaiterTypeRef);
             var declaringTypeRef = actualMethodDef.DeclaringType.MakeReference().ReplaceGenericArgs(genericMap);
             var actualMethodRef = actualMethodDef.WithGenericDeclaringType(declaringTypeRef);
             if (proxyStateMachineTypeDef.HasGenericParameters)
@@ -63,9 +63,9 @@ namespace Rougamo.Fody
             var builderTypeRef = fields.Builder.FieldType;
             var builderTypeDef = builderTypeRef.Resolve();
             var awaitUnsafeOnCompletedMethodDef = builderTypeDef.Methods.Single(x => x.Name == Constants.METHOD_AwaitUnsafeOnCompleted);
-            var awaitUnsafeOnCompletedMethodRef = awaitUnsafeOnCompletedMethodDef.ImportInto(ModuleDefinition).WithGenericDeclaringType(builderTypeRef).WithGenerics(awaiterTypeRef, proxyStateMachineTypeRef);
-            var setExceptionMethodRef = builderTypeDef.Methods.Single(x => x.Name == Constants.METHOD_SetException).ImportInto(ModuleDefinition).WithGenericDeclaringType(builderTypeRef);
-            var setResultMethodRef = builderTypeDef.Methods.Single(x => x.Name == Constants.METHOD_SetResult).ImportInto(ModuleDefinition).WithGenericDeclaringType(builderTypeRef);
+            var awaitUnsafeOnCompletedMethodRef = awaitUnsafeOnCompletedMethodDef.WithGenericDeclaringType(builderTypeRef).WithGenerics(awaiterTypeRef, proxyStateMachineTypeRef);
+            var setExceptionMethodRef = builderTypeDef.Methods.Single(x => x.Name == Constants.METHOD_SetException).WithGenericDeclaringType(builderTypeRef);
+            var setResultMethodRef = builderTypeDef.Methods.Single(x => x.Name == Constants.METHOD_SetResult).WithGenericDeclaringType(builderTypeRef);
 
             StrictAsyncFieldCleanup(proxyStateMachineTypeDef, fields);
             var fAwaiter = new FieldDefinition(Constants.FIELD_Awaiter, FieldAttributes.Private, awaiterTypeRef);
@@ -284,7 +284,7 @@ namespace Rougamo.Fody
                     if (methodRef.Resolve().IsConstructor && methodRef.DeclaringType.Resolve() == stateMachineTypeDef)
                     {
                         var stateMachineCtorDef = clonedStateMachineTypeDef.Methods.Single(x => x.IsConstructor && !x.IsStatic);
-                        var stateMachineCtorRef = stateMachineCtorDef.ImportInto(ModuleDefinition).WithGenericDeclaringType(cloneStateMachineTypeRef);
+                        var stateMachineCtorRef = stateMachineCtorDef.WithGenericDeclaringType(cloneStateMachineTypeRef);
                         instruction.Operand = stateMachineCtorRef;
                     }
                     else if (methodRef is GenericInstanceMethod gim)

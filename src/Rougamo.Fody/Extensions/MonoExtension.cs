@@ -368,7 +368,31 @@ namespace Rougamo.Fody
 
         public static MethodReference WithGenericDeclaringType(this MethodReference methodRef, TypeReference typeRef)
         {
-            var genericMethodRef = new MethodReference(methodRef.Name, methodRef.ReturnType, typeRef)
+            methodRef = methodRef.ImportInto(typeRef.Module);
+            if (typeRef is not GenericInstanceType genericTypeRef) return methodRef;
+
+            var returnTypeRef = methodRef.ReturnType;
+
+            if (returnTypeRef is GenericInstanceType git)
+            {
+                var newGit = new GenericInstanceType(git.ElementType);
+                foreach (var generic in git.GenericArguments)
+                {
+                    if (generic is GenericParameter gp)
+                    {
+                        var index = methodRef.DeclaringType.GenericParameters.IndexOf(gp);
+                        if (index != -1)
+                        {
+                            newGit.GenericArguments.Add(genericTypeRef.GenericArguments[index]);
+                            continue;
+                        }
+                    }
+                    newGit.GenericArguments.Add(generic);
+                }
+                returnTypeRef = newGit;
+            }
+
+            var genericMethodRef = new MethodReference(methodRef.Name, returnTypeRef, typeRef)
             {
                 HasThis = methodRef.HasThis,
                 ExplicitThis = methodRef.ExplicitThis,
@@ -383,7 +407,7 @@ namespace Rougamo.Fody
                 genericMethodRef.GenericParameters.Add(new GenericParameter(parameter.Name, genericMethodRef));
             }
 
-            return genericMethodRef.ImportInto(methodRef.Module);
+            return genericMethodRef;
         }
 
         public static MethodReference WithGenerics(this MethodReference methodRef, params TypeReference[] genericTypeRefs)

@@ -682,12 +682,12 @@ namespace Rougamo.Fody
 
         private MethodReference AsyncGetSetResult(TypeReference builderTypeRef)
         {
-            return builderTypeRef.Resolve().Methods.Single(x => x.Name == "SetResult" && x.Parameters.Count == 0 && x.IsPublic).ImportInto(ModuleDefinition);
+            return builderTypeRef.Resolve().Methods.Single(x => x.Name == Constants.METHOD_SetResult && x.Parameters.Count == 0 && x.IsPublic).ImportInto(ModuleDefinition);
         }
 
         private MethodReference AsyncGetGenericSetResult(TypeReference builderTypeRef)
         {
-            return builderTypeRef.Resolve().Methods.Single(x => x.Name == "SetResult" && x.Parameters.Count == 1 && x.IsPublic).WithGenericDeclaringType(builderTypeRef);
+            return builderTypeRef.Resolve().Methods.Single(x => x.Name == Constants.METHOD_SetResult && x.Parameters.Count == 1 && x.IsPublic).WithGenericDeclaringType(builderTypeRef);
         }
     }
 }
