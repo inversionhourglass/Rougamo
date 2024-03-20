@@ -108,6 +108,7 @@ namespace Rougamo.Fody
             var nopCatchEnd = Create(OpCodes.Nop);
             var ret = Create(OpCodes.Ret);
 
+            // var state = this._state;
             instructions.Add(Create(OpCodes.Ldarg_0));
             instructions.Add(Create(OpCodes.Ldfld, fields.State));
             instructions.Add(Create(OpCodes.Stloc, vState));
@@ -115,8 +116,9 @@ namespace Rougamo.Fody
             {
                 instructions.Add(nopTryStart.Set(OpCodes.Ldloc, vState));
                 instructions.Add(Create(OpCodes.Brfalse, nopIfStateEqZeroStart));
-                // -if
+                // -if (state != 0)
                 {
+                    // var awaiter = ActualMethod(x, y, z).GetAwaiter();
                     if (fields.This != null)
                     {
                         instructions.Add(Create(OpCodes.Ldarg_0));
@@ -129,7 +131,7 @@ namespace Rougamo.Fody
                     }
                     instructions.Add(Create(OpCodes.Call, actualMethodRef));
                     if (vTargetReturn != null)
-                    {
+                    {// value type result has to use address to call
                         instructions.Add(Create(OpCodes.Stloc, vTargetReturn));
                         instructions.Add(Create(OpCodes.Ldloca, vTargetReturn));
                     }
@@ -139,24 +141,27 @@ namespace Rougamo.Fody
                     instructions.Add(Create(opAwaiterLdloc, vAwaiter));
                     instructions.Add(Create(opAwaiterCall, isCompletedMethodRef));
                     instructions.Add(Create(OpCodes.Brtrue, nopIfStateEqZeroEnd));
-                    // -if
+                    // -if (!awaiter.IsCompleted)
                     {
+                        // state = (this._state = 0);
                         instructions.Add(Create(OpCodes.Ldarg_0));
                         instructions.Add(Create(OpCodes.Ldc_I4_0));
                         instructions.Add(Create(OpCodes.Dup));
                         instructions.Add(Create(OpCodes.Stloc, vState));
                         instructions.Add(Create(OpCodes.Stfld, fields.State));
 
+                        // this._awaiter = awaiter;
                         instructions.Add(Create(OpCodes.Ldarg_0));
                         instructions.Add(Create(OpCodes.Ldloc, vAwaiter));
                         instructions.Add(Create(OpCodes.Stfld, fields.Awaiter));
 
                         if (vThis != null)
-                        {
+                        {// @this = this;
                             instructions.Add(Create(OpCodes.Ldarg_0));
                             instructions.Add(Create(OpCodes.Stloc, vThis));
                         }
 
+                        // this._builder.AwaitUnsafeOnCompleted(ref awaiter, ref @this);
                         instructions.Add(Create(OpCodes.Ldarg_0));
                         instructions.Add(Create(opBuilderLdfld, fields.Builder));
                         instructions.Add(Create(OpCodes.Ldloca, vAwaiter));
@@ -170,15 +175,18 @@ namespace Rougamo.Fody
                         }
                         instructions.Add(Create(opBuilderCall, awaitUnsafeOnCompletedMethodRef));
 
+                        // return;
                         instructions.Add(Create(OpCodes.Leave, ret));
                     }
                 }
                 // -else
                 {
+                    // awaiter = this._awaiter;
                     instructions.Add(nopIfStateEqZeroStart.Set(OpCodes.Ldarg_0));
                     instructions.Add(Create(OpCodes.Ldfld, fields.Awaiter));
                     instructions.Add(Create(OpCodes.Stloc, vAwaiter));
 
+                    // this._awaiter = default;
                     instructions.Add(Create(OpCodes.Ldarg_0));
                     if (awaiterTypeRef.IsValueType)
                     {
@@ -190,39 +198,48 @@ namespace Rougamo.Fody
                         instructions.Add(Create(OpCodes.Ldnull));
                         instructions.Add(Create(OpCodes.Stfld));
                     }
+
+                    // state = (this._state = -1);
                     instructions.Add(Create(OpCodes.Ldarg_0));
                     instructions.Add(Create(OpCodes.Ldc_I4_M1));
                     instructions.Add(Create(OpCodes.Dup));
                     instructions.Add(Create(OpCodes.Stloc, vState));
                     instructions.Add(Create(OpCodes.Stfld, fields.State));
                 }
+                // var result = awaiter.GetResult(); <--> awaiter.GetResult();
                 instructions.Add(nopIfStateEqZeroEnd.Set(opAwaiterLdloc, vAwaiter));
                 instructions.Add(Create(opAwaiterCall, getResultMethodRef));
                 if (vResult != null)
                 {
                     instructions.Add(Create(OpCodes.Stloc, vResult));
                 }
+
                 instructions.Add(Create(OpCodes.Leave, nopCatchEnd));
             }
-            // catch
+            // catch (Exception ex)
             {
                 instructions.Add(nopCatchStart.Set(OpCodes.Stloc, vException));
 
+                // this._state = -2;
                 instructions.Add(Create(OpCodes.Ldarg_0));
                 instructions.Add(Create(OpCodes.Ldc_I4, -2));
                 instructions.Add(Create(OpCodes.Stfld, fields.State));
 
+                // this._builder.SetException(ex);
                 instructions.Add(Create(OpCodes.Ldarg_0));
                 instructions.Add(Create(opBuilderLdfld, fields.Builder));
                 instructions.Add(Create(OpCodes.Ldloc, vException));
                 instructions.Add(Create(opBuilderCall, setExceptionMethodRef));
 
+                // return;
                 instructions.Add(Create(OpCodes.Leave, ret));
             }
+            // this._state = -2;
             instructions.Add(nopCatchEnd.Set(OpCodes.Ldarg_0));
             instructions.Add(Create(OpCodes.Ldc_I4, -2));
             instructions.Add(Create(OpCodes.Stfld, fields.State));
 
+            // this._builder.SetResult(result); <--> this._builder.SetResult();
             instructions.Add(Create(OpCodes.Ldarg_0));
             instructions.Add(Create(opBuilderLdfld, fields.Builder));
             if (vResult != null)
@@ -231,6 +248,7 @@ namespace Rougamo.Fody
             }
             instructions.Add(Create(opBuilderCall, setResultMethodRef));
 
+            // return;
             instructions.Add(ret);
 
             proxyMoveNextDef.Body.ExceptionHandlers.Add(new ExceptionHandler(ExceptionHandlerType.Catch)
