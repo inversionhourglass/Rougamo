@@ -215,9 +215,10 @@ namespace Rougamo.Fody
 
             foreach (var handler in methodDef.Body.ExceptionHandlers)
             {
+                var catchType = handler.CatchType == null ? null : (map.TryGetValue(handler.CatchType, out var ct) ? (TypeReference)ct : handler.CatchType);
                 clonedMethodDef.Body.ExceptionHandlers.Add(new ExceptionHandler(handler.HandlerType)
                 {
-                    CatchType = map.TryGetValue(handler.CatchType, out var catchType) ? (TypeReference)catchType : handler.CatchType,
+                    CatchType = catchType,
                     TryStart = instructionMap[handler.TryStart],
                     TryEnd = instructionMap[handler.TryEnd],
                     HandlerStart = instructionMap[handler.HandlerStart],
