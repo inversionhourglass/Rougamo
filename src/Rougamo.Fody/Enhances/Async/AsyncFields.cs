@@ -20,24 +20,14 @@ namespace Rougamo.Fody.Enhances.Async
                 {
                     DeclaringTypeRef.GenericArguments.Add(parameter);
                 }
-                MoArray = moArray == null ? null : new FieldReference(moArray.Name, moArray.FieldType, DeclaringTypeRef);
-                Mos = mos.Select(x => new FieldReference(x.Name, x.FieldType, DeclaringTypeRef)).ToArray();
-                MethodContext = new FieldReference(methodContext.Name, methodContext.FieldType, DeclaringTypeRef);
-                State = new FieldReference(state.Name, state.FieldType, DeclaringTypeRef);
-                Builder = new FieldReference(builder.Name, builder.FieldType, DeclaringTypeRef);
-                DeclaringThis = declaringThis == null ? null : new FieldReference(declaringThis.Name, declaringThis.FieldType, DeclaringTypeRef);
-                Parameters = parameters.Select(x => x == null ? null : new FieldReference(x.Name, x.FieldType, DeclaringTypeRef)).ToArray();
             }
-            else
-            {
-                MoArray = moArray;
-                Mos = mos;
-                MethodContext = methodContext;
-                State = state;
-                Builder = builder;
-                DeclaringThis = declaringThis;
-                Parameters = parameters;
-            }
+            MoArray = MakeReference(moArray);
+            Mos = mos.Select(x => MakeReference(x)!).ToArray();
+            MethodContext = MakeReference(methodContext)!;
+            State = MakeReference(state)!;
+            Builder = MakeReference(builder)!;
+            Parameters = parameters.Select(x => MakeReference(x)!).ToArray();
+            DeclaringThis = MakeReference(declaringThis);
         }
 
         public GenericInstanceType? DeclaringTypeRef { get; }
@@ -52,9 +42,17 @@ namespace Rougamo.Fody.Enhances.Async
 
         public FieldReference Builder { get; }
 
-        public FieldReference? DeclaringThis { get; }
-
         public FieldReference?[] Parameters { get; }
+
+        private FieldReference? _declaringThis;
+        public FieldReference? DeclaringThis
+        {
+            get => _declaringThis;
+            set
+            {
+                _declaringThis = value is FieldDefinition fd ? MakeReference(fd) : value;
+            }
+        }
 
         private FieldReference? _awaiter;
         public FieldReference? Awaiter
@@ -62,27 +60,20 @@ namespace Rougamo.Fody.Enhances.Async
             get => _awaiter;
             set
             {
-                if (value is FieldDefinition && DeclaringTypeRef != null)
-                {
-                    _awaiter = new FieldReference(value.Name, value.FieldType, DeclaringTypeRef);
-                }
-                else
-                {
-                    _awaiter = value;
-                }
+                _awaiter = value is FieldDefinition fd ? MakeReference(fd) : value;
             }
         }
 
         public void SetParameter(int index, FieldDefinition fieldDef)
         {
-            if (DeclaringTypeRef != null)
-            {
-                Parameters[index] = new FieldReference(fieldDef.Name, fieldDef.FieldType, DeclaringTypeRef);
-            }
-            else
-            {
-                Parameters[index] = fieldDef;
-            }
+            Parameters[index] = MakeReference(fieldDef);
+        }
+
+        private FieldReference? MakeReference(FieldDefinition? fieldDef)
+        {
+            if (DeclaringTypeRef == null || fieldDef == null) return fieldDef;
+
+            return new FieldReference(fieldDef.Name, fieldDef.FieldType, DeclaringTypeRef);
         }
     }
 }
