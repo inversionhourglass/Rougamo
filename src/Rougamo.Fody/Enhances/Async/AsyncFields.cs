@@ -10,7 +10,7 @@ namespace Rougamo.Fody.Enhances.Async
             FieldDefinition? moArray, FieldDefinition[] mos,
             FieldDefinition methodContext,
             FieldDefinition state, FieldDefinition builder,
-            FieldDefinition? @this, FieldDefinition?[] parameters)
+            FieldDefinition? declaringThis, FieldDefinition?[] parameters)
         {
             if (stateMachineTypeDef.HasGenericParameters)
             {
@@ -25,7 +25,7 @@ namespace Rougamo.Fody.Enhances.Async
                 MethodContext = new FieldReference(methodContext.Name, methodContext.FieldType, DeclaringTypeRef);
                 State = new FieldReference(state.Name, state.FieldType, DeclaringTypeRef);
                 Builder = new FieldReference(builder.Name, builder.FieldType, DeclaringTypeRef);
-                This = @this == null ? null : new FieldReference(@this.Name, @this.FieldType, DeclaringTypeRef);
+                DeclaringThis = declaringThis == null ? null : new FieldReference(declaringThis.Name, declaringThis.FieldType, DeclaringTypeRef);
                 Parameters = parameters.Select(x => x == null ? null : new FieldReference(x.Name, x.FieldType, DeclaringTypeRef)).ToArray();
             }
             else
@@ -35,7 +35,7 @@ namespace Rougamo.Fody.Enhances.Async
                 MethodContext = methodContext;
                 State = state;
                 Builder = builder;
-                This = @this;
+                DeclaringThis = declaringThis;
                 Parameters = parameters;
             }
         }
@@ -52,7 +52,7 @@ namespace Rougamo.Fody.Enhances.Async
 
         public FieldReference Builder { get; }
 
-        public FieldReference? This { get; }
+        public FieldReference? DeclaringThis { get; }
 
         public FieldReference?[] Parameters { get; }
 
@@ -70,6 +70,18 @@ namespace Rougamo.Fody.Enhances.Async
                 {
                     _awaiter = value;
                 }
+            }
+        }
+
+        public void SetParameter(int index, FieldDefinition fieldDef)
+        {
+            if (DeclaringTypeRef != null)
+            {
+                Parameters[index] = new FieldReference(fieldDef.Name, fieldDef.FieldType, DeclaringTypeRef);
+            }
+            else
+            {
+                Parameters[index] = fieldDef;
             }
         }
     }

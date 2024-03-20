@@ -13,5 +13,7 @@ namespace Rougamo.Fody.Enhances
         FieldReference State { get; }
 
         FieldReference?[] Parameters { get; }
+
+        void SetParameter(int index, FieldDefinition fieldDef);
     }
 }

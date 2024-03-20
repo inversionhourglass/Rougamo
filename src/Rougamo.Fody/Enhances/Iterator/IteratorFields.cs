@@ -54,5 +54,10 @@ namespace Rougamo.Fody.Enhances.Iterator
         public FieldReference? RecordedReturn { get; }
 
         public FieldReference?[] Parameters { get; }
+
+        public void SetParameter(int index, FieldDefinition fieldDef)
+        {
+            throw new NotImplementedException();
+        }
     }
 }

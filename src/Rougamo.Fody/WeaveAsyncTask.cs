@@ -18,7 +18,12 @@ namespace Rougamo.Fody
             if (_config.Strict)
             {
                 StrictAsyncTaskMethodWeave(rouMethod, stateMachineTypeDef);
-                if (rouMethod.MethodDef.FullName.Contains("AsyncGenericUseCase")) return;
+#if DEBUG
+                if (rouMethod.MethodDef.FullName.Contains("Strict_"))
+#endif
+                {
+                    return;
+                }
             }
 
             var moveNextMethodDef = stateMachineTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
@@ -85,12 +90,12 @@ namespace Rougamo.Fody
             var methodContext = new FieldDefinition(Constants.FIELD_RougamoContext, FieldAttributes.Public, _typeMethodContextRef);
             var builder = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_Builder);
             var state = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_State);
-            var @this = rouMethod.MethodDef.IsStatic || stateMachineTypeDef.IsValueType ? null : stateMachineTypeDef.Fields.Single(x => x.Name.Contains("this") && x.FieldType.Resolve() == stateMachineTypeDef.DeclaringType);
+            var declaringThis = rouMethod.MethodDef.IsStatic || stateMachineTypeDef.IsValueType ? null : stateMachineTypeDef.Fields.Single(x => x.Name.Contains("this") && x.FieldType.Resolve() == stateMachineTypeDef.DeclaringType);
             var parameters = StateMachineParameterFields(rouMethod);
 
             stateMachineTypeDef.Fields.Add(methodContext);
 
-            return new AsyncFields(stateMachineTypeDef, moArray, mos, methodContext, state, builder, @this, parameters);
+            return new AsyncFields(stateMachineTypeDef, moArray, mos, methodContext, state, builder, declaringThis, parameters);
         }
 
         private BoxTypeReference AsyncResolveReturnBoxTypeRef(TypeReference returnTypeRef, FieldReference builderField)
@@ -678,6 +683,39 @@ namespace Rougamo.Fody
             }
 
             return parameterFieldDefs;
+        }
+
+        private void StateMachineParameterFieldsComplement(RouMethod rouMethod, TypeDefinition stateMachineTypeDef, IStateMachineFields fields)
+        {
+            if (fields.Parameters.All(x => x != null)) return;
+
+            var instructions = rouMethod.MethodDef.Body.Instructions;
+            var parameters = rouMethod.MethodDef.Parameters;
+            var setState = instructions.Single(x => x.OpCode.Code == Code.Ldc_I4_M1 && x.Next.OpCode.Code == Code.Stfld && x.Next.Operand is FieldReference fr && fr.Resolve() == fields.State.Resolve());
+            var vStateMachine = rouMethod.MethodDef.Body.Variables.Single(x => x.VariableType.Resolve() == stateMachineTypeDef);
+
+            for (var i = 0; i < fields.Parameters.Length; i++)
+            {
+                var parameterFieldRef = fields.Parameters[i];
+                if (parameterFieldRef != null) continue;
+
+                var parameter = parameters[i];
+                var fieldTypeRef = parameter.ParameterType;
+                if (stateMachineTypeDef.HasGenericParameters)
+                {
+                    fieldTypeRef = fieldTypeRef.ReplaceGenericArgs(stateMachineTypeDef.GenericParameters.ToDictionary(x => x.Name, x => x));
+                }
+                var parameterFieldDef = new FieldDefinition(parameter.Name, FieldAttributes.Public, fieldTypeRef);
+                stateMachineTypeDef.Fields.Add(parameterFieldDef);
+                fields.SetParameter(i, parameterFieldDef);
+                parameterFieldRef = new FieldReference(parameterFieldDef.Name, parameterFieldDef.FieldType, vStateMachine.VariableType);
+
+                instructions.InsertBefore(setState, [
+                    vStateMachine.LdlocOrA(),
+                    Create(OpCodes.Ldarg, parameter),
+                    Create(OpCodes.Stfld, parameterFieldRef)
+                ]);
+            }
         }
 
         private MethodReference AsyncGetSetResult(TypeReference builderTypeRef)
