@@ -369,30 +369,9 @@ namespace Rougamo.Fody
         public static MethodReference WithGenericDeclaringType(this MethodReference methodRef, TypeReference typeRef)
         {
             methodRef = methodRef.ImportInto(typeRef.Module);
-            if (typeRef is not GenericInstanceType genericTypeRef) return methodRef;
+            if (typeRef is not GenericInstanceType) return methodRef;
 
-            var returnTypeRef = methodRef.ReturnType;
-
-            if (returnTypeRef is GenericInstanceType git)
-            {
-                var newGit = new GenericInstanceType(git.ElementType);
-                foreach (var generic in git.GenericArguments)
-                {
-                    if (generic is GenericParameter gp)
-                    {
-                        var index = methodRef.DeclaringType.GenericParameters.IndexOf(gp);
-                        if (index != -1)
-                        {
-                            newGit.GenericArguments.Add(genericTypeRef.GenericArguments[index]);
-                            continue;
-                        }
-                    }
-                    newGit.GenericArguments.Add(generic);
-                }
-                returnTypeRef = newGit;
-            }
-
-            var genericMethodRef = new MethodReference(methodRef.Name, returnTypeRef, typeRef)
+            var genericMethodRef = new MethodReference(methodRef.Name, methodRef.ReturnType, typeRef)
             {
                 HasThis = methodRef.HasThis,
                 ExplicitThis = methodRef.ExplicitThis,
@@ -412,7 +391,9 @@ namespace Rougamo.Fody
 
         public static MethodReference WithGenerics(this MethodReference methodRef, params TypeReference[] genericTypeRefs)
         {
-            var genericInstanceMethod = new GenericInstanceMethod(methodRef);
+            if (genericTypeRefs.Length == 0) return methodRef;
+
+            var genericInstanceMethod = new GenericInstanceMethod(methodRef.GetElementMethod());
             genericInstanceMethod.GenericArguments.Add(genericTypeRefs);
 
             return genericInstanceMethod;
@@ -422,15 +403,29 @@ namespace Rougamo.Fody
         {
             if (typeRef is GenericParameter gp && genericMap.TryGetValue(gp.Name, out var value)) return value;
 
-            if (typeRef is not GenericInstanceType git) return typeRef;
-
-            var replacedGit = new GenericInstanceType(git.GetElementType());
-            foreach (var generic in git.GenericArguments)
+            if (typeRef is GenericInstanceType git)
             {
-                replacedGit.GenericArguments.Add(generic.ReplaceGenericArgs(genericMap));
+                var replacedGit = new GenericInstanceType(git.GetElementType());
+                foreach (var generic in git.GenericArguments)
+                {
+                    replacedGit.GenericArguments.Add(generic.ReplaceGenericArgs(genericMap));
+                }
+
+                return replacedGit;
             }
 
-            return replacedGit;
+            if (typeRef is TypeDefinition typeDef && typeDef.HasGenericParameters)
+            {
+                var replacedGit = new GenericInstanceType(typeDef.GetElementType());
+                foreach (var generic in typeDef.GenericParameters)
+                {
+                    replacedGit.GenericArguments.Add(generic.ReplaceGenericArgs(genericMap));
+                }
+
+                return replacedGit;
+            }
+
+            return typeRef;
         }
 
         public static void DebuggerStepThrough(this MethodDefinition methodDef, MethodReference ctor)

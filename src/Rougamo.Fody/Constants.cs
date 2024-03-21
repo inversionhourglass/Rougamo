@@ -68,7 +68,8 @@
         public const string FIELD_RougamoContext = ">_<rougamo_context";
         public const string FIELD_Builder = "<>t__builder";
         public const string FIELD_State = "<>1__state";
-        public const string FIELD_Awaiter = "<>u_1";
+        public const string FIELD_This = "<>4__this";
+        public const string FIELD_Awaiter = "<>u__1";
         public const string FIELD_Current_Suffix = "current";
         public const string FIELD_IteratorReturnList = ">_<returns";
 

@@ -21,7 +21,9 @@ namespace Rougamo.Fody
             rouMethod.MethodDef.DeclaringType.Methods.Add(actualMethodDef);
 
             var moveNextDef = stateMachineTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
-            if (rouMethod.MethodDef.FullName.Contains("AsyncGenericUseCase"))
+#if DEBUG
+            if (rouMethod.MethodDef.FullName.Contains("Strict_"))
+#endif
             {
                 moveNextDef.Clear();
                 StrictAsyncProxyCall(rouMethod, stateMachineTypeDef, moveNextDef, actualMethodDef);
@@ -46,6 +48,11 @@ namespace Rougamo.Fody
                 git.GenericArguments.Add(((GenericInstanceType)returnTypeRef).GenericArguments);
                 awaiterTypeRef = git;
             }
+            else
+            {
+                returnTypeRef = returnTypeRef.ImportInto(ModuleDefinition);
+                awaiterTypeRef = awaiterTypeRef.ImportInto(ModuleDefinition);
+            }
             var getAwaiterMethodRef = getAwaiterMethodDef.WithGenericDeclaringType(returnTypeRef);
             var isCompletedMethodRef = isCompletedMethodDef.WithGenericDeclaringType(awaiterTypeRef);
             var getResultMethodRef = getResultMethodDef.WithGenericDeclaringType(awaiterTypeRef);
@@ -59,13 +66,14 @@ namespace Rougamo.Fody
             }
 
             var fields = AsyncResolveFields(rouMethod, proxyStateMachineTypeDef);
+            StrictSetAbsentFields(rouMethod, proxyStateMachineTypeDef, fields);
 
             var builderTypeRef = fields.Builder.FieldType;
             var builderTypeDef = builderTypeRef.Resolve();
-            var awaitUnsafeOnCompletedMethodDef = builderTypeDef.Methods.Single(x => x.Name == Constants.METHOD_AwaitUnsafeOnCompleted);
+            var awaitUnsafeOnCompletedMethodDef = builderTypeDef.Methods.Single(x => x.Name == Constants.METHOD_AwaitUnsafeOnCompleted && x.IsPublic);
             var awaitUnsafeOnCompletedMethodRef = awaitUnsafeOnCompletedMethodDef.WithGenericDeclaringType(builderTypeRef).WithGenerics(awaiterTypeRef, proxyStateMachineTypeRef);
-            var setExceptionMethodRef = builderTypeDef.Methods.Single(x => x.Name == Constants.METHOD_SetException).WithGenericDeclaringType(builderTypeRef);
-            var setResultMethodRef = builderTypeDef.Methods.Single(x => x.Name == Constants.METHOD_SetResult).WithGenericDeclaringType(builderTypeRef);
+            var setExceptionMethodRef = builderTypeDef.Methods.Single(x => x.Name == Constants.METHOD_SetException && x.IsPublic).WithGenericDeclaringType(builderTypeRef);
+            var setResultMethodRef = builderTypeDef.Methods.Single(x => x.Name == Constants.METHOD_SetResult && x.IsPublic).WithGenericDeclaringType(builderTypeRef);
 
             StrictAsyncFieldCleanup(proxyStateMachineTypeDef, fields);
             var fAwaiter = new FieldDefinition(Constants.FIELD_Awaiter, FieldAttributes.Private, awaiterTypeRef);
@@ -119,10 +127,11 @@ namespace Rougamo.Fody
                 // -if (state != 0)
                 {
                     // var awaiter = ActualMethod(x, y, z).GetAwaiter();
-                    if (fields.This != null)
+                    if (fields.DeclaringThis != null)
                     {
+                        var ldfld = fields.DeclaringThis.FieldType.IsValueType ? OpCodes.Ldflda : OpCodes.Ldfld;
                         instructions.Add(Create(OpCodes.Ldarg_0));
-                        instructions.Add(Create(OpCodes.Ldfld, fields.This));
+                        instructions.Add(Create(ldfld, fields.DeclaringThis));
                     }
                     foreach (var parameter in fields.Parameters)
                     {
@@ -280,17 +289,19 @@ namespace Rougamo.Fody
 
             StrictAsyncAsyncStateMachineAttributeClone(clonedMethodDef, clonedStateMachineTypeDef);
 
-            var cloneStateMachineTypeRef = clonedStateMachineTypeDef.MakeReference();
-            var stateMachine = clonedMethodDef.Body.Variables.Single(x => x.VariableType.Resolve() == stateMachineTypeDef);
-            var index = clonedMethodDef.Body.Variables.IndexOf(stateMachine);
-            clonedMethodDef.Body.Variables.Remove(stateMachine);
-            var clonedStateMachine = new VariableDefinition(cloneStateMachineTypeRef); //clonedMethodDef.Body.CreateVariable(stateMachineTypeRef);
-            clonedMethodDef.Body.Variables.Insert(index, clonedStateMachine);
+            var genericMap = methodDef.DeclaringType.GenericParameters.ToDictionary(x => x.Name, x => x);
+            genericMap.AddRange(clonedMethodDef.GenericParameters.ToDictionary(x => x.Name, x => x));
+            var stateMachineVariableTypeRef = clonedStateMachineTypeDef.MakeReference().ReplaceGenericArgs(genericMap);
+            var vStateMachine = clonedMethodDef.Body.Variables.Single(x => x.VariableType.Resolve() == stateMachineTypeDef);
+            var index = clonedMethodDef.Body.Variables.IndexOf(vStateMachine);
+            clonedMethodDef.Body.Variables.Remove(vStateMachine);
+            var vClonedStateMachine = new VariableDefinition(stateMachineVariableTypeRef);
+            clonedMethodDef.Body.Variables.Insert(index, vClonedStateMachine);
 
             var fieldMap = new Dictionary<FieldDefinition, FieldReference>();
             foreach (var fieldDef in stateMachineTypeDef.Fields)
             {
-                fieldMap[fieldDef] = new FieldReference(fieldDef.Name, fieldDef.FieldType, cloneStateMachineTypeRef);
+                fieldMap[fieldDef] = new FieldReference(fieldDef.Name, fieldDef.FieldType, stateMachineVariableTypeRef);
             }
 
             foreach (var instruction in clonedMethodDef.Body.Instructions)
@@ -302,32 +313,37 @@ namespace Rougamo.Fody
                     if (methodRef.Resolve().IsConstructor && methodRef.DeclaringType.Resolve() == stateMachineTypeDef)
                     {
                         var stateMachineCtorDef = clonedStateMachineTypeDef.Methods.Single(x => x.IsConstructor && !x.IsStatic);
-                        var stateMachineCtorRef = stateMachineCtorDef.WithGenericDeclaringType(cloneStateMachineTypeRef);
+                        var stateMachineCtorRef = stateMachineCtorDef.WithGenericDeclaringType(stateMachineVariableTypeRef);
                         instruction.Operand = stateMachineCtorRef;
                     }
                     else if (methodRef is GenericInstanceMethod gim)
                     {
-                        var mr = new GenericInstanceMethod(gim);
+                        var mr = new GenericInstanceMethod(gim.ElementMethod);
                         foreach (var generic in gim.GenericArguments)
                         {
                             if (generic == stateMachineTypeDef)
                             {
                                 mr.GenericArguments.Add(clonedStateMachineTypeDef);
                             }
+                            else if (generic is GenericInstanceType git && git.ElementType == stateMachineTypeDef)
+                            {
+                                mr.GenericArguments.Add(clonedStateMachineTypeDef.ReplaceGenericArgs(genericMap));
+                            }
                             else
                             {
-                                mr.GenericArguments.Add(generic);
+                                mr.GenericArguments.Add(generic.ReplaceGenericArgs(genericMap));
                             }
                         }
+                        instruction.Operand = mr;
                     }
                 }
                 else if (instruction.Operand is FieldReference fr && fieldMap.TryGetValue(fr.Resolve(), out var fieldRef))
                 {
                     instruction.Operand = fieldRef;
                 }
-                else if (instruction.Operand == stateMachine)
+                else if (instruction.Operand == vStateMachine)
                 {
-                    instruction.Operand = clonedStateMachine;
+                    instruction.Operand = vClonedStateMachine;
                 }
             }
 
@@ -366,6 +382,74 @@ namespace Rougamo.Fody
                 if (fieldNames.ContainsKey(field.Name)) continue;
 
                 stateMachineTypeDef.Fields.Remove(field);
+            }
+        }
+
+        private void StrictSetAbsentFields(RouMethod rouMethod, TypeDefinition stateMachineTypeDef, AsyncFields fields)
+        {
+            var instructions = rouMethod.MethodDef.Body.Instructions;
+            var setState = instructions.Single(x => x.OpCode.Code == Code.Ldc_I4_M1 && x.Next.OpCode.Code == Code.Stfld && x.Next.Operand is FieldReference fr && fr.Resolve() == fields.State.Resolve());
+            var vStateMachine = rouMethod.MethodDef.Body.Variables.Single(x => x.VariableType.Resolve() == stateMachineTypeDef);
+            var genericMap = stateMachineTypeDef.GenericParameters.ToDictionary(x => x.Name, x => x);
+
+            StrictAddAbsentField(stateMachineTypeDef, StrictSetAbsentFieldThis(rouMethod, fields, vStateMachine, setState, genericMap));
+
+            StrictAddAbsentField(stateMachineTypeDef, StrictSetAbsentFieldParameters(rouMethod, fields, vStateMachine, setState, genericMap));
+        }
+
+        private IEnumerable<FieldDefinition> StrictSetAbsentFieldThis(RouMethod rouMethod, AsyncFields fields, VariableDefinition vStateMachine, Instruction setState, Dictionary<string, GenericParameter> genericMap)
+        {
+            if (rouMethod.MethodDef.IsStatic || fields.DeclaringThis != null) yield break;
+
+            var thisTypeRef = vStateMachine.VariableType.DeclaringType.ReplaceGenericArgs(genericMap);
+            var thisFieldDef = new FieldDefinition(Constants.FIELD_This, FieldAttributes.Public, thisTypeRef);
+            var thisFieldRef = new FieldReference(thisFieldDef.Name, thisFieldDef.FieldType, vStateMachine.VariableType);
+
+            fields.DeclaringThis = thisFieldDef;
+
+            rouMethod.MethodDef.Body.Instructions.InsertBefore(setState, [
+                vStateMachine.LdlocOrA(),
+                Create(OpCodes.Ldarg_0),
+                Create(OpCodes.Stfld, thisFieldRef)
+            ]);
+
+            yield return thisFieldDef;
+        }
+
+        private IEnumerable<FieldDefinition> StrictSetAbsentFieldParameters(RouMethod rouMethod, AsyncFields fields, VariableDefinition vStateMachine, Instruction setState, Dictionary<string, GenericParameter> genericMap)
+        {
+            if (fields.Parameters.All(x => x != null)) yield break;
+
+            var instructions = rouMethod.MethodDef.Body.Instructions;
+            var parameters = rouMethod.MethodDef.Parameters;
+
+            for (var i = 0; i < fields.Parameters.Length; i++)
+            {
+                var parameterFieldRef = fields.Parameters[i];
+                if (parameterFieldRef != null) continue;
+
+                var parameter = parameters[i];
+                var fieldTypeRef = parameter.ParameterType.ReplaceGenericArgs(genericMap);
+                var parameterFieldDef = new FieldDefinition(parameter.Name, FieldAttributes.Public, fieldTypeRef);
+                parameterFieldRef = new FieldReference(parameterFieldDef.Name, parameterFieldDef.FieldType, vStateMachine.VariableType);
+                
+                fields.SetParameter(i, parameterFieldDef);
+
+                instructions.InsertBefore(setState, [
+                    vStateMachine.LdlocOrA(),
+                    Create(OpCodes.Ldarg, parameter),
+                    Create(OpCodes.Stfld, parameterFieldRef)
+                ]);
+
+                yield return parameterFieldDef;
+            }
+        }
+
+        private void StrictAddAbsentField(TypeDefinition typeDef, IEnumerable<FieldDefinition> fieldDefs)
+        {
+            foreach (var fieldDef in fieldDefs)
+            {
+                typeDef.Fields.Add(fieldDef);
             }
         }
     }
