@@ -6,6 +6,8 @@ namespace BasicUsage.Attributes
 {
     public class AsyncAttribute : MoAttribute
     {
+        public override AccessFlags Flags => AccessFlags.All;
+
         public override void OnEntry(MethodContext context)
         {
             var datas = (List<string>)context.Arguments[0];

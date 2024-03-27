@@ -121,10 +121,13 @@ namespace Rougamo.Fody
             return typeRef.Resolve().FullName.StartsWith("System.Nullable");
         }
 
+        [Obsolete]
         public static bool IsUnboxable(this TypeReference typeRef)
         {
             return typeRef.IsValueType || typeRef.IsEnum(out _) && !typeRef.IsArray || typeRef.IsGenericParameter;
         }
+
+        public static bool NeedBox(this TypeReference typeRef) => typeRef.IsValueType || typeRef.IsGenericParameter;
 
         public static OpCode GetStElemCode(this TypeReference typeRef)
         {

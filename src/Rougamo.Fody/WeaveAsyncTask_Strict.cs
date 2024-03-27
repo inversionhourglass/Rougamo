@@ -22,15 +22,18 @@ namespace Rougamo.Fody
 
             var moveNextDef = stateMachineTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
 #if DEBUG
-            if (rouMethod.MethodDef.FullName.Contains("Strict_"))
+            //if (rouMethod.MethodDef.FullName.Contains("Strict_"))
 #endif
             {
                 moveNextDef.Clear();
-                StrictAsyncProxyCall(rouMethod, stateMachineTypeDef, moveNextDef, actualMethodDef);
+                var bag = StrictAsyncProxyCall(rouMethod, stateMachineTypeDef, moveNextDef, actualMethodDef);
+                StrictAsyncWeave(rouMethod, bag, moveNextDef);
+
+                moveNextDef.Body.OptimizePlus(EmptyInstructions);
             }
         }
 
-        private void StrictAsyncProxyCall(RouMethod rouMethod, TypeDefinition proxyStateMachineTypeDef, MethodDefinition proxyMoveNextDef, MethodDefinition actualMethodDef)
+        private StrictAsyncBag StrictAsyncProxyCall(RouMethod rouMethod, TypeDefinition proxyStateMachineTypeDef, MethodDefinition proxyMoveNextDef, MethodDefinition actualMethodDef)
         {
             var genericMap = proxyStateMachineTypeDef.GenericParameters.ToDictionary(x => x.Name, x => x);
 
@@ -122,6 +125,29 @@ namespace Rougamo.Fody
             instructions.Add(Create(OpCodes.Stloc, vState));
             // -try
             {
+                /**
+                 * if (state != 0)
+                 * {
+                 *     var mo1 = new Mo1Attribute();
+                 *     var context = new MethodContext(...);
+                 *     mo1.OnEntry(context);
+                 *     if (context.ReturnValueReplaced)
+                 *     {
+                 *         var result = context.ReturnValue;
+                 *         mo1.OnExit(context);
+                 *         goto nopCatchEnd;
+                 *     }
+                 *     if (context.RewriteArguments)
+                 *     {
+                 *         arg1 = (int)context.Argument[0];
+                 *     }
+                 * }
+                 * 
+                 * while (true)
+                 * {
+                 *     try
+                 *     {
+                 */
                 instructions.Add(nopTryStart.Set(OpCodes.Ldloc, vState));
                 instructions.Add(Create(OpCodes.Brfalse, nopIfStateEqZeroStart));
                 // -if (state != 0)
@@ -188,7 +214,7 @@ namespace Rougamo.Fody
                         instructions.Add(Create(OpCodes.Leave, ret));
                     }
                 }
-                // -else
+                // -else (state == 0)
                 {
                     // awaiter = this._awaiter;
                     instructions.Add(nopIfStateEqZeroStart.Set(OpCodes.Ldarg_0));
@@ -223,7 +249,46 @@ namespace Rougamo.Fody
                     instructions.Add(Create(OpCodes.Stloc, vResult));
                 }
 
+                /**
+                 *     context.ResultValue = result;
+                 *     context.Arguments[0] = arg1;
+                 *     mo1.OnSuccess(context);
+                 *     
+                 *     if (context.RetryCount > 0) continue;
+                 *     
+                 *     if (context.ReturnValueReplaced)
+                 *     {
+                 *         result = (int) context.ReturnValue;
+                 *     }
+                 *     
+                 *     mo1.OnExit(context);
+                 *     
+                 *     break;
+                 */
+
                 instructions.Add(Create(OpCodes.Leave, nopCatchEnd));
+
+                /**
+                 *     }
+                 *     catch (Exception e)
+                 *     {
+                 *         context.Exception = e;
+                 *         context.Arguments[0] = arg1;
+                 *         mo1.OnException(context);
+                 *         
+                 *         if (context.RetryCount > 0) continue;
+                 *         
+                 *         if (context.ExceptionHandled)
+                 *         {
+                 *             result = (int) context.ReturnValue;
+                 *             mo1.OnExit(context);
+                 *             break;
+                 *         }
+                 *         
+                 *         throw;
+                 *     }
+                 * } // while true end
+                 */
             }
             // catch (Exception ex)
             {
@@ -269,7 +334,139 @@ namespace Rougamo.Fody
                 CatchType = _typeExceptionRef
             });
 
-            proxyMoveNextDef.Body.OptimizePlus(EmptyInstructions);
+            return new(fields, new(vState, vThis, vResult));
+        }
+
+        private void StrictAsyncWeave(RouMethod rouMethod, StrictAsyncBag bag, MethodDefinition proxyMoveNextDef)
+        {
+            var outerHandler = proxyMoveNextDef.Body.ExceptionHandlers.Single();
+            var tryStart = outerHandler.TryStart;
+            var tryLastLeave = outerHandler.TryEnd.Previous;
+            var tryLastLeaveCode = tryLastLeave.OpCode.Code;
+            var outerCatchStart = outerHandler.HandlerStart;
+            var outerCatchEnd = outerHandler.HandlerEnd;
+            if (tryLastLeaveCode != Code.Leave && tryLastLeaveCode != Code.Leave_S) throw new RougamoException($"{proxyMoveNextDef.FullName} has changed, the last instruction in try scope is {tryLastLeaveCode} not leave.");
+
+            var instructions = proxyMoveNextDef.Body.Instructions;
+
+            var vInnerException = proxyMoveNextDef.Body.CreateVariable(_typeExceptionRef);
+
+            var oldTryStart = instructions.InsertAfter(tryStart, tryStart.Clone());
+            var innerCatchStart = Create(OpCodes.Stloc, vInnerException);
+
+            var nopRetryLoopStart = Create(OpCodes.Nop);
+            var nopOnEntryEnd = Create(OpCodes.Nop);
+            var nopEntryReplaceCheckEnd = Create(OpCodes.Nop);
+            var nopOnSuccessEnd = Create(OpCodes.Nop);
+            var nopSuccessRetryCheckEnd = Create(OpCodes.Nop);
+            var nopSuccessReplacedEnd = Create(OpCodes.Nop);
+            var nopOnExceptionEnd = Create(OpCodes.Nop);
+            var nopExceptionRetryCheckEnd = Create(OpCodes.Nop);
+            var nopExceptionRethrowEnd = Create(OpCodes.Nop);
+
+            /**
+             * if (state != 0)
+             * {
+             *     var mo1 = new Mo1Attribute();
+             *     var context = new MethodContext(...);
+             *     mo1.OnEntry(context);
+             *     if (context.ReturnValueReplaced)
+             *     {
+             *         var result = context.ReturnValue;
+             *         mo1.OnExit(context);
+             *         goto nopCatchEnd;
+             *     }
+             *     if (context.RewriteArguments)
+             *     {
+             *         arg1 = (int)context.Argument[0];
+             *     }
+             * }
+             * 
+             * while (true)
+             * {
+             *     try
+             *     {
+             */
+            tryStart.Set(OpCodes.Ldloc, bag.Variables.State);
+            instructions.InsertBefore(oldTryStart, Create(OpCodes.Brfalse, nopRetryLoopStart));
+            // -if (state != 0)
+            {
+                instructions.InsertBefore(oldTryStart, StrictAsyncInitMos(proxyMoveNextDef, rouMethod.Mos, bag.Fields));
+                instructions.InsertBefore(oldTryStart, StrictAsyncInitMethodContext(rouMethod, proxyMoveNextDef, bag));
+                instructions.InsertBefore(oldTryStart, StateMachineOnEntry(rouMethod, proxyMoveNextDef, nopOnEntryEnd, bag.Fields));
+                instructions.InsertBefore(oldTryStart, nopOnEntryEnd);
+                instructions.InsertBefore(oldTryStart, StrictAsyncIfOnEntryReplacedReturn(rouMethod, proxyMoveNextDef, nopEntryReplaceCheckEnd, outerCatchEnd, bag));
+                instructions.InsertBefore(oldTryStart, nopEntryReplaceCheckEnd);
+                instructions.InsertBefore(oldTryStart, StateMachineRewriteArguments(rouMethod, nopRetryLoopStart, bag.Fields));
+            }
+            instructions.InsertBefore(oldTryStart, nopRetryLoopStart);
+
+            /**
+             *     context.ResultValue = result;
+             *     context.Arguments[0] = arg1;
+             *     mo1.OnSuccess(context);
+             *     
+             *     if (context.RetryCount > 0) continue;
+             *     
+             *     if (context.ReturnValueReplaced)
+             *     {
+             *         result = (int) context.ReturnValue;
+             *     }
+             *     
+             *     mo1.OnExit(context);
+             *     
+             *     break;
+             */
+            instructions.InsertBefore(tryLastLeave, StrictAsyncSaveReturnValue(rouMethod, bag));
+            instructions.InsertBefore(tryLastLeave, StateMachineOnSuccess(rouMethod, proxyMoveNextDef, nopOnSuccessEnd, bag.Fields));
+            instructions.InsertBefore(tryLastLeave, nopOnSuccessEnd);
+            instructions.InsertBefore(tryLastLeave, StrictAsyncIfRetry(rouMethod, nopRetryLoopStart, nopSuccessRetryCheckEnd, bag));
+            instructions.InsertBefore(tryLastLeave, nopSuccessRetryCheckEnd);
+            instructions.InsertBefore(tryLastLeave, StrictAsyncIfSuccessReplacedReturn(rouMethod, nopSuccessReplacedEnd, bag));
+            instructions.InsertBefore(tryLastLeave, nopSuccessReplacedEnd);
+            instructions.InsertBefore(tryLastLeave, StateMachineOnExit(rouMethod, proxyMoveNextDef, tryLastLeave, bag.Fields));
+
+            /**
+             *     }
+             *     catch (Exception e)
+             *     {
+             *         context.Exception = e;
+             *         context.Arguments[0] = arg1;
+             *         mo1.OnException(context);
+             *         
+             *         if (context.RetryCount > 0) continue;
+             *         
+             *         if (!context.ExceptionHandled) throw;
+             *         
+             *         result = (int) context.ReturnValue;
+             *         mo1.OnExit(context);
+             *         break;
+             *     }
+             * } // while true end
+             */
+            instructions.InsertBefore(outerCatchStart, innerCatchStart);
+            instructions.InsertBefore(outerCatchStart, StrictStateMachineSaveException(rouMethod, bag.Fields, vInnerException));
+            instructions.InsertBefore(outerCatchStart, StateMachineOnException(rouMethod, proxyMoveNextDef, nopOnExceptionEnd, bag.Fields));
+            instructions.InsertBefore(outerCatchStart, nopOnExceptionEnd);
+            instructions.InsertBefore(outerCatchStart, StrictAsyncIfRetry(rouMethod, nopRetryLoopStart, nopExceptionRetryCheckEnd, bag));
+            instructions.InsertBefore(outerCatchStart, nopExceptionRetryCheckEnd);
+            instructions.InsertBefore(outerCatchStart, StrictAsyncIfExceptionNotHandled(rouMethod, nopExceptionRethrowEnd, bag.Fields));
+            instructions.InsertBefore(outerCatchStart, nopExceptionRethrowEnd);
+            instructions.InsertBefore(outerCatchStart, StrictAsyncExceptionHandled(rouMethod, proxyMoveNextDef, outerCatchEnd, bag));
+
+            outerHandler.TryStart = tryStart;
+            outerHandler.TryEnd = outerCatchStart;
+            outerHandler.HandlerStart = outerCatchStart;
+            outerHandler.HandlerEnd = outerCatchEnd;
+
+            proxyMoveNextDef.Body.ExceptionHandlers.Add(new ExceptionHandler(ExceptionHandlerType.Catch)
+            {
+                TryStart = oldTryStart,
+                TryEnd = innerCatchStart,
+                HandlerStart = innerCatchStart,
+                HandlerEnd = outerCatchStart,
+                CatchType = _typeExceptionRef
+            });
         }
 
         private TypeDefinition? StrictAsyncStateMachineClone(TypeDefinition stateMachineTypeDef)
@@ -451,6 +648,261 @@ namespace Rougamo.Fody
             {
                 typeDef.Fields.Add(fieldDef);
             }
+        }
+
+        private IList<Instruction> StrictAsyncInitMos(MethodDefinition moveNextMethodDef, Mo[] mos, AsyncFields fields)
+        {
+            if (fields.MoArray != null)
+            {
+                var instructions = new List<Instruction> { Create(OpCodes.Ldarg_0) };
+                instructions.AddRange(InitMoArray(moveNextMethodDef, mos));
+                instructions.Add(Create(OpCodes.Stfld, fields.MoArray));
+
+                return instructions;
+            }
+
+            return StrictAsyncInitMoFields(moveNextMethodDef, mos, fields.Mos);
+        }
+
+        private IList<Instruction> StrictAsyncInitMoFields(MethodDefinition methodDef, Mo[] mos, FieldReference[] moFields)
+        {
+            var instructions = new List<Instruction>();
+
+            var i = 0;
+            foreach (var mo in mos)
+            {
+                instructions.Add(Create(OpCodes.Ldarg_0));
+                instructions.AddRange(InitMo(methodDef, mo, false));
+                instructions.Add(Create(OpCodes.Stfld, moFields[i]));
+
+                i++;
+            }
+
+            return instructions;
+        }
+
+        private IList<Instruction> StrictAsyncInitMethodContext(RouMethod rouMethod, MethodDefinition moveNextMethodDef, StrictAsyncBag bag)
+        {
+            var instructions = new List<Instruction>();
+            VariableDefinition? moArray = null;
+            if ((rouMethod.MethodContextOmits & Omit.Mos) == 0 && bag.Fields.MoArray == null)
+            {
+                moArray = moveNextMethodDef.Body.CreateVariable(_typeIMoArrayRef);
+                instructions.AddRange(CreateTempMoArray(null, bag.Fields.Mos, rouMethod.Mos));
+                instructions.Add(Create(OpCodes.Stloc, moArray));
+            }
+
+            instructions.Add(Create(OpCodes.Ldarg_0));
+            instructions.AddRange(StrictStateMachineInitMethodContext(moveNextMethodDef, moArray, bag, rouMethod.MethodContextOmits));
+            instructions.Add(Create(OpCodes.Stfld, bag.Fields.MethodContext));
+
+            return instructions;
+        }
+
+        private List<Instruction> StrictStateMachineInitMethodContext(MethodDefinition methodDef, VariableDefinition? moArrayVariable, StrictAsyncBag bag, Omit omit)
+        {
+            var instructions = new List<Instruction>();
+
+            if (bag.Fields.DeclaringThis != null)
+            {
+                instructions.Add(Create(OpCodes.Ldarg_0));
+                instructions.Add(Create(OpCodes.Ldfld, bag.Fields.DeclaringThis));
+            }
+            else
+            {
+                instructions.Add(Create(OpCodes.Ldnull));
+            }
+            instructions.Add(Create(OpCodes.Ldtoken, methodDef.DeclaringType.DeclaringType));
+            instructions.Add(Create(OpCodes.Call, _methodGetTypeFromHandleRef));
+            instructions.AddRange(LoadMethodBaseOnStack(methodDef));
+            if ((omit & Omit.Mos) != 0)
+            {
+                instructions.Add(Create(OpCodes.Ldnull));
+            }
+            else if (bag.Fields.MoArray == null)
+            {
+                instructions.Add(Create(OpCodes.Ldloc, moArrayVariable));
+            }
+            else
+            {
+                instructions.Add(Create(OpCodes.Ldarg_0));
+                instructions.Add(Create(OpCodes.Ldfld, bag.Fields.MoArray));
+            }
+            if ((omit & Omit.Arguments) != 0)
+            {
+                instructions.Add(Create(OpCodes.Ldnull));
+            }
+            else
+            {
+                instructions.AddRange(StrictAsyncLoadArguments(bag.Fields.Parameters));
+            }
+            instructions.Add(Create(OpCodes.Newobj, _methodMethodContext3CtorRef));
+
+            return instructions;
+        }
+
+        private IList<Instruction>? StrictAsyncIfOnEntryReplacedReturn(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction endAnchor, Instruction tailAnchor, StrictAsyncBag bag)
+        {
+            if (!Feature.EntryReplace.IsMatch(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return null;
+
+            var instructions = new List<Instruction>
+            {
+                Create(OpCodes.Ldarg_0),
+                Create(OpCodes.Ldfld, bag.Fields.MethodContext),
+                Create(OpCodes.Callvirt, _methodMethodContextGetReturnValueReplacedRef),
+                Create(OpCodes.Brfalse_S, endAnchor),
+            };
+            if (bag.Variables.Result != null)
+            {
+                instructions.AddRange(AssignResultFromContext(bag));
+            }
+            var onExitEndAnchor = Create(OpCodes.Leave, tailAnchor);
+            instructions.AddRange(StateMachineOnExit(rouMethod, moveNextMethodDef, onExitEndAnchor, bag.Fields));
+            instructions.Add(onExitEndAnchor);
+
+            return instructions;
+        }
+
+        private IList<Instruction>? StrictAsyncSaveReturnValue(RouMethod rouMethod, StrictAsyncBag bag)
+        {
+            if (bag.Variables.Result == null || (rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) == 0 || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return null;
+
+            var instructions = new List<Instruction>
+            {
+                Create(OpCodes.Ldarg_0),
+                Create(OpCodes.Ldfld, bag.Fields.MethodContext),
+                Create(OpCodes.Ldloc, bag.Variables.Result)
+            };
+            if (bag.Variables.Result.VariableType.NeedBox())
+            {
+                instructions.Add(Create(OpCodes.Box, bag.Variables.Result.VariableType));
+            }
+            instructions.Add(Create(OpCodes.Callvirt, _methodMethodContextSetReturnValueRef));
+
+            return instructions;
+        }
+
+        private IList<Instruction>? StrictAsyncIfRetry(RouMethod rouMethod, Instruction loopStartAnchor, Instruction endAnchor, StrictAsyncBag bag)
+        {
+            if (!Feature.SuccessRetry.IsMatch(rouMethod.Features)) return null;
+
+            return [
+                Create(OpCodes.Ldarg_0),
+                Create(OpCodes.Ldfld, bag.Fields.MethodContext),
+                Create(OpCodes.Callvirt, _methodMethodContextGetRetryCountRef),
+                Create(OpCodes.Ldc_I4_0),
+                Create(OpCodes.Ble, endAnchor),
+                Create(OpCodes.Leave_S, loopStartAnchor)
+            ];
+        }
+
+        private IList<Instruction>? StrictAsyncIfSuccessReplacedReturn(RouMethod rouMethod, Instruction endAnchor, StrictAsyncBag bag)
+        {
+            if (bag.Variables.Result == null || !Feature.SuccessReplace.IsMatch(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return EmptyInstructions;
+
+            var instructions = new List<Instruction>
+            {
+                Create(OpCodes.Ldarg_0),
+                Create(OpCodes.Ldfld, bag.Fields.MethodContext),
+                Create(OpCodes.Callvirt, _methodMethodContextGetReturnValueReplacedRef),
+                Create(OpCodes.Brfalse_S, endAnchor),
+                Create(OpCodes.Ldarg_0),
+                Create(OpCodes.Ldfld, bag.Fields.MethodContext),
+                Create(OpCodes.Callvirt, _methodMethodContextGetReturnValueRef),
+            };
+            var castOp = bag.Variables.Result.VariableType.NeedBox() ? OpCodes.Unbox_Any : OpCodes.Castclass;
+            instructions.Add(Create(castOp, bag.Variables.Result.VariableType));
+            instructions.Add(Create(OpCodes.Stloc, bag.Variables.Result));
+
+            return instructions;
+        }
+
+        private IList<Instruction>? StrictStateMachineSaveException(RouMethod rouMethod, IStateMachineFields fields, VariableDefinition vException)
+        {
+            if ((rouMethod.Features & (int)(Feature.OnException | Feature.OnSuccess | Feature.OnExit)) == 0) return null;
+
+            return [
+                Create(OpCodes.Ldarg_0),
+                Create(OpCodes.Ldfld, fields.MethodContext),
+                Create(OpCodes.Ldloc, vException),
+                Create(OpCodes.Callvirt, _methodMethodContextSetExceptionRef)
+            ];
+        }
+
+        private IList<Instruction> StrictAsyncIfExceptionNotHandled(RouMethod rouMethod, Instruction endAnchor, IStateMachineFields fields)
+        {
+            if (!Feature.ExceptionHandle.IsMatch(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return [Create(OpCodes.Rethrow)];
+
+            return [
+                Create(OpCodes.Ldarg_0),
+                Create(OpCodes.Ldfld, fields.MethodContext),
+                Create(OpCodes.Callvirt, _methodMethodContextGetExceptionHandledRef),
+                Create(OpCodes.Brtrue, endAnchor),
+                Create(OpCodes.Rethrow)
+            ];
+        }
+
+        private IList<Instruction>? StrictAsyncExceptionHandled(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction tailAnchor, StrictAsyncBag bag)
+        {
+            if (!Feature.ExceptionHandle.IsMatch(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return null;
+
+            var instructions = new List<Instruction>();
+
+            var endAnchor = Create(OpCodes.Leave, tailAnchor);
+
+            if (bag.Variables.Result != null)
+            {
+                instructions.AddRange(AssignResultFromContext(bag));
+            }
+            instructions.AddRange(StateMachineOnExit(rouMethod, moveNextMethodDef, endAnchor, bag.Fields));
+            instructions.Add(endAnchor);
+
+            return instructions;
+        }
+
+        private IList<Instruction> StrictAsyncLoadArguments(FieldReference?[] parameters)
+        {
+            var instructions = new List<Instruction>
+            {
+                Create(OpCodes.Ldc_I4, parameters.Length),
+                Create(OpCodes.Newarr, _typeObjectRef)
+            };
+            for (int i = 0; i < parameters.Length; i++)
+            {
+                var parameter = parameters[i];
+
+                instructions.Add(Create(OpCodes.Dup));
+
+                instructions.Add(Create(OpCodes.Ldc_I4, i));
+                if (parameter == null)
+                {
+                    instructions.Add(Create(OpCodes.Ldnull));
+                }
+                else
+                {
+                    instructions.Add(Create(OpCodes.Ldarg_0));
+                    instructions.Add(Create(OpCodes.Ldfld, parameter));
+                    if (parameter.FieldType.IsValueType || parameter.FieldType.IsGenericParameter)
+                    {
+                        instructions.Add(Create(OpCodes.Box, parameter.FieldType));
+                    }
+                }
+                instructions.Add(Create(OpCodes.Stelem_Ref));
+            }
+
+            return instructions;
+        }
+
+        private IList<Instruction> AssignResultFromContext(StrictAsyncBag bag)
+        {
+            var castOp = bag.Variables.Result!.VariableType.NeedBox() ? OpCodes.Unbox_Any : OpCodes.Castclass;
+            return [
+                    Create(OpCodes.Ldarg_0),
+                    Create(OpCodes.Ldfld, bag.Fields.MethodContext),
+                    Create(OpCodes.Callvirt, _methodMethodContextGetReturnValueRef),
+                    Create(castOp, bag.Variables.Result.VariableType),
+                    Create(OpCodes.Stloc, bag.Variables.Result)
+                ];
         }
     }
 }

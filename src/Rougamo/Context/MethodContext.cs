@@ -30,6 +30,7 @@ namespace Rougamo.Context
 
         /// <summary>
         /// </summary>
+        [Obsolete]
         public MethodContext(object target, Type targetType, MethodBase method, bool isAsync, bool isIterator, bool mosNonEntryFIFO, IMo[]? mos, object[]? args)
         {
             Target = target;
@@ -38,6 +39,22 @@ namespace Rougamo.Context
             IsAsync = isAsync;
             IsIterator = isIterator;
             MosNonEntryFIFO = mosNonEntryFIFO;
+            Mos = mos ?? _EmptyMos;
+            Arguments = args ?? _EmptyArgs;
+        }
+
+        /// <summary>
+        /// </summary>
+        public MethodContext(object target, Type targetType, MethodBase method, IMo[]? mos, object[]? args)
+        {
+            Target = target;
+            TargetType = targetType;
+            Method = method;
+#pragma warning disable CS0612 // Type or member is obsolete
+            IsAsync = false;
+            IsIterator = false;
+            MosNonEntryFIFO = false;
+#pragma warning restore CS0612 // Type or member is obsolete
             Mos = mos ?? _EmptyMos;
             Arguments = args ?? _EmptyArgs;
         }
@@ -62,6 +79,7 @@ namespace Rougamo.Context
         /// <summary>
         /// Whether the execution order of multiple IMo non-OnEntry methods is consistent with OnEntry, the default false indicates that the execution order is opposite to OnEntry.
         /// </summary>
+        [Obsolete]
         public bool MosNonEntryFIFO { get; }
 
         /// <summary>
@@ -104,11 +122,13 @@ namespace Rougamo.Context
         /// <summary>
         /// Is method run in async
         /// </summary>
+        [Obsolete]
         public bool IsAsync { get; }
 
         /// <summary>
         /// return true if method use yield return syntax
         /// </summary>
+        [Obsolete]
         public bool IsIterator { get; }
 
         /// <summary>

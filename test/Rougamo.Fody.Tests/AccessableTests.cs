@@ -9,6 +9,19 @@ namespace Rougamo.Fody.Tests
     [Collection(nameof(BasicUsage))]
     public class AccessableTests : TestBase
     {
+        //#if NET461
+        //        public AccessableTests() : base("../../Release/net461/BasicUsage.dll")
+        //#elif NET48
+        //                public AccessableTests() : base("../../Release/net48/BasicUsage.dll")
+        //#elif NETCOREAPP3_1
+        //                public AccessableTests() : base("../../Release/netcoreapp3.1/BasicUsage.dll")
+        //#elif NET6_0
+        //                public AccessableTests() : base("../../Release/net6.0/BasicUsage.dll")
+        //#elif NET7_0
+        //                public AccessableTests() : base("../../Release/net7.0/BasicUsage.dll")
+        //#elif NET8_0
+        //                public AccessableTests() : base("../../Release/net8.0/BasicUsage.dll")
+        //#endif
         public AccessableTests() : base("BasicUsage.dll")
         {
         }

@@ -65,7 +65,7 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private IList<Instruction> CreateTempMoArray(VariableDefinition stateMachineVariable, FieldReference[] moFields, Mo[] mos)
+        private IList<Instruction> CreateTempMoArray(VariableDefinition? stateMachineVariable, FieldReference[] moFields, Mo[] mos)
         {
             var instructions = new List<Instruction>
             {
@@ -77,7 +77,14 @@ namespace Rougamo.Fody
                 var moField = moFields[i];
                 instructions.Add(Create(OpCodes.Dup));
                 instructions.Add(Create(OpCodes.Ldc_I4, i));
-                instructions.Add(stateMachineVariable.LdlocOrA());
+                if (stateMachineVariable != null)
+                {
+                    instructions.Add(stateMachineVariable.LdlocOrA());
+                }
+                else
+                {
+                    instructions.Add(Create(OpCodes.Ldarg_0));
+                }
                 instructions.Add(Create(OpCodes.Ldfld, moField));
                 if (mos[i].IsStruct && moField.FieldType.FullName != Constants.TYPE_IMo)
                 {

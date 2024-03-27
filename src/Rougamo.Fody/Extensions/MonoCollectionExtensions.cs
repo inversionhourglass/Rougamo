@@ -55,8 +55,10 @@ namespace Rougamo.Fody
         /// <summary>
         /// insert <paramref name="items"/> before <paramref name="targetItem"/>
         /// </summary>
-        public static void InsertBefore<T>(this Collection<T> collection, T targetItem, IList<T> items)
+        public static void InsertBefore<T>(this Collection<T> collection, T targetItem, IList<T>? items)
         {
+            if (items == null) return;
+
             var index = collection.IndexOf(targetItem);
             if (index < 0) throw new System.IndexOutOfRangeException("could not found targetItem from collection");
 

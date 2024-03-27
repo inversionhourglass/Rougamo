@@ -40,6 +40,7 @@ namespace Rougamo.Fody
         private MethodReference _methodGenericAsyncTaskMethodBuilderCreateRef;
         private MethodReference _methodGenericAsyncValueTaskMethodBuilderCreateRef;
         private MethodReference _methodMethodContextCtorRef;
+        private MethodReference _methodMethodContext3CtorRef;
         private MethodReference _methodMethodContextSetExceptionRef;
         private MethodReference _methodMethodContextSetReturnValueRef;
         private MethodReference _methodMethodContextGetReturnValueRef;
