@@ -20,6 +20,7 @@ namespace Rougamo.Fody
 
             var instructions = rouMethod.MethodDef.Body.Instructions;
             var returnBoxTypeRef = new BoxTypeReference(rouMethod.MethodDef.ReturnType.ImportInto(ModuleDefinition));
+            var fixedInitiate = SyncExtractBaseCtorCall(rouMethod.MethodDef);
 
             var variables = SyncCreateVariables(rouMethod);
             var anchors = SyncCreateAnchors(rouMethod.MethodDef, variables);
@@ -49,8 +50,41 @@ namespace Rougamo.Fody
 
             instructions.InsertAfter(anchors.FinallyEnd, SyncRetryFork(rouMethod, anchors.TryStart, anchors.Ret, variables));
 
+            instructions.InsertBefore(instructions.First(), fixedInitiate);
+
             rouMethod.MethodDef.Body.InitLocals = true;
             rouMethod.MethodDef.Body.OptimizePlus(anchors.GetNops());
+        }
+
+        private IList<Instruction>? SyncExtractBaseCtorCall(MethodDefinition methodDef)
+        {
+            if (!methodDef.IsConstructor || methodDef.IsStatic) return null;
+
+            var baseType = methodDef.DeclaringType.BaseType;
+
+            var instructions = new List<Instruction>();
+
+            foreach (var instruction in methodDef.Body.Instructions)
+            {
+                instructions.Add(instruction);
+                if (instruction.OpCode.Code == Code.Call &&
+                    instruction.Operand is MethodReference mr && mr.Resolve().IsConstructor &&
+                    (mr.DeclaringType == methodDef.DeclaringType || mr.DeclaringType == baseType))
+                {
+                    if (instruction.Next != null && instruction.Next.OpCode.Code == Code.Nop)
+                    {
+                        instructions.Add(instruction.Next);
+                    }
+                    break;
+                }
+            }
+
+            for (var i = 0; i < instructions.Count; i++)
+            {
+                methodDef.Body.Instructions.RemoveAt(0);
+            }
+
+            return instructions;
         }
 
         private SyncVariables SyncCreateVariables(RouMethod rouMethod)
