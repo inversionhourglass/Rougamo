@@ -633,7 +633,7 @@ namespace Rougamo.Fody
                 var fieldTypeRef = parameter.ParameterType.ReplaceGenericArgs(genericMap);
                 var parameterFieldDef = new FieldDefinition(parameter.Name, FieldAttributes.Public, fieldTypeRef);
                 parameterFieldRef = new FieldReference(parameterFieldDef.Name, parameterFieldDef.FieldType, vStateMachine.VariableType);
-                
+
                 fields.SetParameter(i, parameterFieldDef);
 
                 instructions.InsertBefore(setState, [
@@ -818,8 +818,11 @@ namespace Rougamo.Fody
                 Create(OpCodes.Ldfld, bag.Fields.MethodContext),
                 Create(OpCodes.Callvirt, _methodMethodContextGetReturnValueRef),
             };
-            var castOp = bag.Variables.Result.VariableType.NeedBox() ? OpCodes.Unbox_Any : OpCodes.Castclass;
-            instructions.Add(Create(castOp, bag.Variables.Result.VariableType));
+            if (bag.Variables.Result.VariableType.FullName != typeof(object).FullName)
+            {
+                var castOp = bag.Variables.Result.VariableType.NeedBox() ? OpCodes.Unbox_Any : OpCodes.Castclass;
+                instructions.Add(Create(castOp, bag.Variables.Result.VariableType));
+            }
             instructions.Add(Create(OpCodes.Stloc, bag.Variables.Result));
 
             return instructions;
@@ -903,14 +906,20 @@ namespace Rougamo.Fody
 
         private IList<Instruction> AssignResultFromContext(StrictAsyncBag bag)
         {
-            var castOp = bag.Variables.Result!.VariableType.NeedBox() ? OpCodes.Unbox_Any : OpCodes.Castclass;
-            return [
-                    Create(OpCodes.Ldarg_0),
-                    Create(OpCodes.Ldfld, bag.Fields.MethodContext),
-                    Create(OpCodes.Callvirt, _methodMethodContextGetReturnValueRef),
-                    Create(castOp, bag.Variables.Result.VariableType),
-                    Create(OpCodes.Stloc, bag.Variables.Result)
-                ];
+            var instructions = new List<Instruction>
+            {
+                Create(OpCodes.Ldarg_0),
+                Create(OpCodes.Ldfld, bag.Fields.MethodContext),
+                Create(OpCodes.Callvirt, _methodMethodContextGetReturnValueRef)
+            };
+            if (bag.Variables.Result!.VariableType.FullName != typeof(object).FullName)
+            {
+                var castOp = bag.Variables.Result.VariableType.NeedBox() ? OpCodes.Unbox_Any : OpCodes.Castclass;
+                instructions.Add(Create(castOp, bag.Variables.Result.VariableType));
+            }
+            instructions.Add(Create(OpCodes.Stloc, bag.Variables.Result));
+
+            return instructions;
         }
 
         private void StrictAsyncDefaultMoContext(Mono.Collections.Generic.Collection<Instruction> instructions, AsyncFields fields)

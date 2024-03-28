@@ -548,6 +548,10 @@ namespace Rougamo.Fody
             {
                 instructions.Add(Create(OpCodes.Unbox_Any, returnBoxTypeRef));
             }
+            else if (((TypeReference)returnBoxTypeRef).FullName != typeof(object).FullName)
+            {
+                instructions.Add(Create(OpCodes.Castclass, returnBoxTypeRef));
+            }
             instructions.Add(Create(OpCodes.Stloc, returnVariable));
             return instructions;
         }
