@@ -466,7 +466,7 @@ namespace Rougamo.Fody
 
             if ((rouMethod.Features & (int)Feature.OnException) != 0)
             {
-                proxyMoveNextDef.Body.ExceptionHandlers.Add(new ExceptionHandler(ExceptionHandlerType.Catch)
+                proxyMoveNextDef.Body.ExceptionHandlers.Insert(0, new ExceptionHandler(ExceptionHandlerType.Catch)
                 {
                     TryStart = oldTryStart,
                     TryEnd = innerCatchStart,
