@@ -299,6 +299,8 @@ namespace Rougamo.Fody
                 instructions.Add(Create(OpCodes.Ldc_I4, -2));
                 instructions.Add(Create(OpCodes.Stfld, fields.State));
 
+                StrictAsyncDefaultMoContext(instructions, fields);
+
                 // this._builder.SetException(ex);
                 instructions.Add(Create(OpCodes.Ldarg_0));
                 instructions.Add(Create(opBuilderLdfld, fields.Builder));
@@ -312,6 +314,8 @@ namespace Rougamo.Fody
             instructions.Add(nopCatchEnd.Set(OpCodes.Ldarg_0));
             instructions.Add(Create(OpCodes.Ldc_I4, -2));
             instructions.Add(Create(OpCodes.Stfld, fields.State));
+
+            StrictAsyncDefaultMoContext(instructions, fields);
 
             // this._builder.SetResult(result); <--> this._builder.SetResult();
             instructions.Add(Create(OpCodes.Ldarg_0));
@@ -693,7 +697,7 @@ namespace Rougamo.Fody
             }
 
             instructions.Add(Create(OpCodes.Ldarg_0));
-            instructions.AddRange(StrictStateMachineInitMethodContext(moveNextMethodDef, moArray, bag, rouMethod.MethodContextOmits));
+            instructions.AddRange(StrictStateMachineInitMethodContext(rouMethod.MethodDef, moArray, bag, rouMethod.MethodContextOmits));
             instructions.Add(Create(OpCodes.Stfld, bag.Fields.MethodContext));
 
             return instructions;
@@ -712,7 +716,7 @@ namespace Rougamo.Fody
             {
                 instructions.Add(Create(OpCodes.Ldnull));
             }
-            instructions.Add(Create(OpCodes.Ldtoken, methodDef.DeclaringType.DeclaringType));
+            instructions.Add(Create(OpCodes.Ldtoken, methodDef.DeclaringType));
             instructions.Add(Create(OpCodes.Call, _methodGetTypeFromHandleRef));
             instructions.AddRange(LoadMethodBaseOnStack(methodDef));
             if ((omit & Omit.Mos) != 0)
@@ -903,6 +907,32 @@ namespace Rougamo.Fody
                     Create(castOp, bag.Variables.Result.VariableType),
                     Create(OpCodes.Stloc, bag.Variables.Result)
                 ];
+        }
+
+        private void StrictAsyncDefaultMoContext(Mono.Collections.Generic.Collection<Instruction> instructions, AsyncFields fields)
+        {
+            if (fields.MoArray != null)
+            {
+                // this._mos = null;
+                instructions.Add(Create(OpCodes.Ldarg_0));
+                instructions.Add(Create(OpCodes.Ldnull));
+                instructions.Add(Create(OpCodes.Stfld, fields.MoArray));
+            }
+            else
+            {
+                foreach (var mo in fields.Mos)
+                {
+                    // this._mo = null;
+                    instructions.Add(Create(OpCodes.Ldarg_0));
+                    instructions.Add(Create(OpCodes.Ldnull));
+                    instructions.Add(Create(OpCodes.Stfld, mo));
+                }
+            }
+
+            // this._context = null;
+            instructions.Add(Create(OpCodes.Ldarg_0));
+            instructions.Add(Create(OpCodes.Ldnull));
+            instructions.Add(Create(OpCodes.Stfld, fields.MethodContext));
         }
     }
 }
