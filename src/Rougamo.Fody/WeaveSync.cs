@@ -49,6 +49,7 @@ namespace Rougamo.Fody
 
             instructions.InsertAfter(anchors.FinallyEnd, SyncRetryFork(rouMethod, anchors.TryStart, anchors.Ret, variables));
 
+            rouMethod.MethodDef.Body.InitLocals = true;
             rouMethod.MethodDef.Body.OptimizePlus(anchors.GetNops());
         }
 

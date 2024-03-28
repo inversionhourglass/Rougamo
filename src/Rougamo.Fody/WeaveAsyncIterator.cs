@@ -41,6 +41,9 @@ namespace Rougamo.Fody
 
             if (anchors.YieldReturn != null) instructions.InsertAfter(anchors.SaveYieldReturnValue, IteratorSaveYeildReturn(rouMethod, fields));
 
+            rouMethod.MethodDef.Body.InitLocals = true;
+            moveNextMethodDef.Body.InitLocals = true;
+
             rouMethod.MethodDef.Body.OptimizePlus(EmptyInstructions);
             moveNextMethodDef.Body.OptimizePlus(anchors.GetNops());
         }

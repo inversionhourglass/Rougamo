@@ -44,6 +44,9 @@ namespace Rougamo.Fody
             instructions.InsertAfter(anchors.OnSuccess, StateMachineOnSuccess(rouMethod, moveNextMethodDef, anchors.OnExitAfterSuccess, fields));
             instructions.InsertAfter(anchors.OnExitAfterSuccess, StateMachineOnExit(rouMethod, moveNextMethodDef, anchors.EndFinally, fields));
 
+            rouMethod.MethodDef.Body.InitLocals = true;
+            moveNextMethodDef.Body.InitLocals = true;
+
             rouMethod.MethodDef.Body.OptimizePlus(EmptyInstructions);
             moveNextMethodDef.Body.OptimizePlus(anchors.GetNops());
         }
