@@ -330,7 +330,7 @@ namespace Rougamo.Fody
             {
                 append(Create(OpCodes.Unbox_Any, parameterTypeRef));
             }
-            else if (!parameterTypeRef.Is(typeof(object).FullName))
+            else if (parameterTypeRef.IsArray || !parameterTypeRef.Is(typeof(object).FullName))
             {
                 append(Create(OpCodes.Castclass, parameterTypeRef));
             }
