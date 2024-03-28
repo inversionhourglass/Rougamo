@@ -184,7 +184,18 @@ namespace Rougamo.Fody
             var isAsyncCode = isAsync ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0;
             var isIteratorCode = isIterator ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0;
             var mosNonEntryFIFO = _config.ReverseCallNonEntry ? OpCodes.Ldc_I4_0 : OpCodes.Ldc_I4_1;
-            instructions.Add(LoadThisOnStack(methodDef));
+            if (methodDef.HasThis)
+            {
+                instructions.Add(Create(OpCodes.Ldarg_0));
+                if (methodDef.DeclaringType.IsValueType)
+                {
+                    instructions.Add(Create(OpCodes.Box, methodDef.DeclaringType));
+                }
+            }
+            else
+            {
+                instructions.Add(Create(OpCodes.Ldnull));
+            }
             instructions.AddRange(LoadDeclaringTypeOnStack(methodDef));
             instructions.AddRange(LoadMethodBaseOnStack(methodDef));
             instructions.Add(Create(isAsyncCode));

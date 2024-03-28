@@ -110,11 +110,6 @@ namespace Rougamo.Fody
             throw new NotSupportedException("Not a supported primitve parameter type: " + type);
         }
 
-        private Instruction LoadThisOnStack(MethodDefinition methodDef)
-        {
-            return methodDef.HasThis ? Instruction.Create(OpCodes.Ldarg_0) : Instruction.Create(OpCodes.Ldnull);
-        }
-
         private IList<Instruction> LoadDeclaringTypeOnStack(MethodDefinition methodDef)
         {
             return LoadValueOnStack(_typeSystemRef, methodDef.DeclaringType);

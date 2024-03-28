@@ -711,6 +711,10 @@ namespace Rougamo.Fody
             {
                 instructions.Add(Create(OpCodes.Ldarg_0));
                 instructions.Add(Create(OpCodes.Ldfld, bag.Fields.DeclaringThis));
+                if (bag.Fields.DeclaringThis.FieldType.IsValueType)
+                {
+                    instructions.Add(Create(OpCodes.Box, bag.Fields.DeclaringThis.FieldType));
+                }
             }
             else
             {
