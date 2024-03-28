@@ -1,9 +1,7 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
-using Mono.Cecil.Rocks;
 using Rougamo.Fody.Enhances;
 using Rougamo.Fody.Enhances.Async;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using static Mono.Cecil.Cil.Instruction;
@@ -424,7 +422,7 @@ namespace Rougamo.Fody
             instructions.InsertBefore(tryLastLeave, StrictAsyncSaveReturnValue(rouMethod, bag));
             instructions.InsertBefore(tryLastLeave, StateMachineOnSuccess(rouMethod, proxyMoveNextDef, nopOnSuccessEnd, bag.Fields));
             instructions.InsertBefore(tryLastLeave, nopOnSuccessEnd);
-            instructions.InsertBefore(tryLastLeave, StrictAsyncIfRetry(rouMethod, nopRetryLoopStart, nopSuccessRetryCheckEnd, bag));
+            instructions.InsertBefore(tryLastLeave, StrictAsyncIfSuccessRetry(rouMethod, nopRetryLoopStart, nopSuccessRetryCheckEnd, bag));
             instructions.InsertBefore(tryLastLeave, nopSuccessRetryCheckEnd);
             instructions.InsertBefore(tryLastLeave, StrictAsyncIfSuccessReplacedReturn(rouMethod, nopSuccessReplacedEnd, bag));
             instructions.InsertBefore(tryLastLeave, nopSuccessReplacedEnd);
@@ -448,29 +446,35 @@ namespace Rougamo.Fody
              *     }
              * } // while true end
              */
-            instructions.InsertBefore(outerCatchStart, innerCatchStart);
-            instructions.InsertBefore(outerCatchStart, StrictStateMachineSaveException(rouMethod, bag.Fields, vInnerException));
-            instructions.InsertBefore(outerCatchStart, StateMachineOnException(rouMethod, proxyMoveNextDef, nopOnExceptionEnd, bag.Fields));
-            instructions.InsertBefore(outerCatchStart, nopOnExceptionEnd);
-            instructions.InsertBefore(outerCatchStart, StrictAsyncIfRetry(rouMethod, nopRetryLoopStart, nopExceptionRetryCheckEnd, bag));
-            instructions.InsertBefore(outerCatchStart, nopExceptionRetryCheckEnd);
-            instructions.InsertBefore(outerCatchStart, StrictAsyncIfExceptionNotHandled(rouMethod, nopExceptionRethrowEnd, bag.Fields));
-            instructions.InsertBefore(outerCatchStart, nopExceptionRethrowEnd);
-            instructions.InsertBefore(outerCatchStart, StrictAsyncExceptionHandled(rouMethod, proxyMoveNextDef, outerCatchEnd, bag));
+            if ((rouMethod.Features & (int)Feature.OnException) != 0)
+            {
+                instructions.InsertBefore(outerCatchStart, innerCatchStart);
+                instructions.InsertBefore(outerCatchStart, StrictStateMachineSaveException(rouMethod, bag.Fields, vInnerException));
+                instructions.InsertBefore(outerCatchStart, StateMachineOnException(rouMethod, proxyMoveNextDef, nopOnExceptionEnd, bag.Fields));
+                instructions.InsertBefore(outerCatchStart, nopOnExceptionEnd);
+                instructions.InsertBefore(outerCatchStart, StrictAsyncIfExceptionRetry(rouMethod, nopRetryLoopStart, nopExceptionRetryCheckEnd, bag));
+                instructions.InsertBefore(outerCatchStart, nopExceptionRetryCheckEnd);
+                instructions.InsertBefore(outerCatchStart, StrictAsyncIfExceptionNotHandled(rouMethod, nopExceptionRethrowEnd, bag.Fields));
+                instructions.InsertBefore(outerCatchStart, nopExceptionRethrowEnd);
+                instructions.InsertBefore(outerCatchStart, StrictAsyncExceptionHandled(rouMethod, proxyMoveNextDef, outerCatchEnd, bag));
+            }
 
             outerHandler.TryStart = tryStart;
             outerHandler.TryEnd = outerCatchStart;
             outerHandler.HandlerStart = outerCatchStart;
             outerHandler.HandlerEnd = outerCatchEnd;
 
-            proxyMoveNextDef.Body.ExceptionHandlers.Add(new ExceptionHandler(ExceptionHandlerType.Catch)
+            if ((rouMethod.Features & (int)Feature.OnException) != 0)
             {
-                TryStart = oldTryStart,
-                TryEnd = innerCatchStart,
-                HandlerStart = innerCatchStart,
-                HandlerEnd = outerCatchStart,
-                CatchType = _typeExceptionRef
-            });
+                proxyMoveNextDef.Body.ExceptionHandlers.Add(new ExceptionHandler(ExceptionHandlerType.Catch)
+                {
+                    TryStart = oldTryStart,
+                    TryEnd = innerCatchStart,
+                    HandlerStart = innerCatchStart,
+                    HandlerEnd = outerCatchStart,
+                    CatchType = _typeExceptionRef
+                });
+            }
         }
 
         private TypeDefinition? StrictAsyncStateMachineClone(TypeDefinition stateMachineTypeDef)
@@ -790,10 +794,18 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private IList<Instruction>? StrictAsyncIfRetry(RouMethod rouMethod, Instruction loopStartAnchor, Instruction endAnchor, StrictAsyncBag bag)
+        private IList<Instruction>? StrictAsyncIfSuccessRetry(RouMethod rouMethod, Instruction loopStartAnchor, Instruction endAnchor, StrictAsyncBag bag)
         {
-            if (!Feature.SuccessRetry.IsMatch(rouMethod.Features)) return null;
+            return !Feature.SuccessRetry.IsMatch(rouMethod.Features) ? null : StrictAsyncIfRetry(rouMethod, loopStartAnchor, endAnchor, bag);
+        }
 
+        private IList<Instruction>? StrictAsyncIfExceptionRetry(RouMethod rouMethod, Instruction loopStartAnchor, Instruction endAnchor, StrictAsyncBag bag)
+        {
+            return !Feature.ExceptionRetry.IsMatch(rouMethod.Features) ? null : StrictAsyncIfRetry(rouMethod, loopStartAnchor, endAnchor, bag);
+        }
+
+        private IList<Instruction> StrictAsyncIfRetry(RouMethod rouMethod, Instruction loopStartAnchor, Instruction endAnchor, StrictAsyncBag bag)
+        {
             return [
                 Create(OpCodes.Ldarg_0),
                 Create(OpCodes.Ldfld, bag.Fields.MethodContext),
