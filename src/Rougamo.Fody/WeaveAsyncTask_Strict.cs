@@ -927,25 +927,38 @@ namespace Rougamo.Fody
             if (fields.MoArray != null)
             {
                 // this._mos = null;
-                instructions.Add(Create(OpCodes.Ldarg_0));
-                instructions.Add(Create(OpCodes.Ldnull));
-                instructions.Add(Create(OpCodes.Stfld, fields.MoArray));
+                instructions.Add(StrictAsyncFieldDefault(fields.MoArray));
             }
             else
             {
                 foreach (var mo in fields.Mos)
                 {
                     // this._mo = null;
-                    instructions.Add(Create(OpCodes.Ldarg_0));
-                    instructions.Add(Create(OpCodes.Ldnull));
-                    instructions.Add(Create(OpCodes.Stfld, mo));
+                    instructions.Add(StrictAsyncFieldDefault(mo));
                 }
             }
 
             // this._context = null;
-            instructions.Add(Create(OpCodes.Ldarg_0));
-            instructions.Add(Create(OpCodes.Ldnull));
-            instructions.Add(Create(OpCodes.Stfld, fields.MethodContext));
+            instructions.Add(StrictAsyncFieldDefault(fields.MethodContext));
+        }
+
+        private IList<Instruction> StrictAsyncFieldDefault(FieldReference fieldRef)
+        {
+            var fieldType = fieldRef.FieldType;
+            if (fieldType.IsValueType || fieldType.IsGenericParameter)
+            {
+                return [
+                    Create(OpCodes.Ldarg_0),
+                    Create(OpCodes.Ldflda, fieldRef),
+                    Create(OpCodes.Initobj, fieldType)
+                ];
+            }
+
+            return [
+                Create(OpCodes.Ldarg_0),
+                Create(OpCodes.Ldnull),
+                Create(OpCodes.Stfld, fieldRef)
+            ];
         }
     }
 }
