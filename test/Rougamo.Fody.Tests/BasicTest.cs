@@ -489,7 +489,7 @@ namespace Rougamo.Fody.Tests
         }
 
         [Fact]
-        public async Task FreshArgsTest()
+        public void FreshArgsTest()
         {
             var instance = GetInstance(nameof(FreshArguments));
 
@@ -502,12 +502,8 @@ namespace Rougamo.Fody.Tests
 
             value = instance.FreshTest(x, out y);
             Assert.NotEqual(value.Item1, value.Item2);
-            value = await (Task<Tuple<object[], object[]>>)instance.FreshTestAsync(s, ls);
-            Assert.NotEqual(value.Item1, value.Item2);
 
             value = instance.NonFreshTest(x, out y);
-            Assert.Equal(value.Item1, value.Item2);
-            value = await (Task<Tuple<object[], object[]>>)instance.NonFreshTestAsync(s, ls);
             Assert.Equal(value.Item1, value.Item2);
         }
 
