@@ -37,7 +37,7 @@ namespace Rougamo.Fody
 
             var proxyStateMachineTypeRef = proxyStateMachineTypeDef.MakeReference();
             var returnTypeRef = actualMethodDef.ReturnType;
-            var getAwaiterMethodDef = returnTypeRef.Resolve().Methods.Single(x => x.Name == Constants.METHOD_GetAwaiter);
+            var getAwaiterMethodDef = returnTypeRef.Resolve().Methods.SingleOrDefault(x => x.Name == Constants.METHOD_GetAwaiter);
             var awaiterTypeRef = getAwaiterMethodDef.ReturnType;
             var awaiterTypeDef = awaiterTypeRef.Resolve();
             var isCompletedMethodDef = awaiterTypeDef.Methods.Single(x => x.Name == Constants.Getter(Constants.PROP_IsCompleted));
@@ -436,7 +436,7 @@ namespace Rougamo.Fody
              *     }
              * } // while true end
              */
-            if ((rouMethod.Features & (int)Feature.OnException) != 0)
+            if ((rouMethod.Features & (int)(Feature.OnException | Feature.OnExit)) != 0)
             {
                 instructions.InsertBefore(outerCatchStart, innerCatchStart);
                 instructions.InsertBefore(outerCatchStart, StrictStateMachineSaveException(rouMethod, bag.Fields, vInnerException));
@@ -452,7 +452,7 @@ namespace Rougamo.Fody
             outerHandler.HandlerStart = outerCatchStart;
             outerHandler.HandlerEnd = outerCatchEnd;
 
-            if ((rouMethod.Features & (int)Feature.OnException) != 0)
+            if ((rouMethod.Features & (int)(Feature.OnException | Feature.OnExit)) != 0)
             {
                 proxyMoveNextDef.Body.ExceptionHandlers.Insert(0, new ExceptionHandler(ExceptionHandlerType.Catch)
                 {
