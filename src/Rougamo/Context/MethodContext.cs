@@ -51,7 +51,7 @@ namespace Rougamo.Context
             TargetType = targetType;
             Method = method;
 #pragma warning disable CS0612 // Type or member is obsolete
-            IsAsync = false;
+            IsAsync = true;
             IsIterator = false;
             MosNonEntryFIFO = false;
 #pragma warning restore CS0612 // Type or member is obsolete
