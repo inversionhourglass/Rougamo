@@ -19,16 +19,11 @@ namespace Rougamo.Fody
             rouMethod.MethodDef.DeclaringType.Methods.Add(actualMethodDef);
 
             var moveNextDef = stateMachineTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
-#if DEBUG
-            //if (rouMethod.MethodDef.FullName.Contains("Strict_"))
-#endif
-            {
-                moveNextDef.Clear();
-                var bag = StrictAsyncProxyCall(rouMethod, stateMachineTypeDef, moveNextDef, actualMethodDef);
-                StrictAsyncWeave(rouMethod, bag, moveNextDef);
+            moveNextDef.Clear();
+            var bag = StrictAsyncProxyCall(rouMethod, stateMachineTypeDef, moveNextDef, actualMethodDef);
+            StrictAsyncWeave(rouMethod, bag, moveNextDef);
 
-                moveNextDef.Body.OptimizePlus(EmptyInstructions);
-            }
+            moveNextDef.Body.OptimizePlus(EmptyInstructions);
         }
 
         private StrictAsyncBag StrictAsyncProxyCall(RouMethod rouMethod, TypeDefinition proxyStateMachineTypeDef, MethodDefinition proxyMoveNextDef, MethodDefinition actualMethodDef)
@@ -123,29 +118,6 @@ namespace Rougamo.Fody
             instructions.Add(Create(OpCodes.Stloc, vState));
             // -try
             {
-                /**
-                 * if (state != 0)
-                 * {
-                 *     var mo1 = new Mo1Attribute();
-                 *     var context = new MethodContext(...);
-                 *     mo1.OnEntry(context);
-                 *     if (context.ReturnValueReplaced)
-                 *     {
-                 *         var result = context.ReturnValue;
-                 *         mo1.OnExit(context);
-                 *         goto nopCatchEnd;
-                 *     }
-                 *     if (context.RewriteArguments)
-                 *     {
-                 *         arg1 = (int)context.Argument[0];
-                 *     }
-                 * }
-                 * 
-                 * while (true)
-                 * {
-                 *     try
-                 *     {
-                 */
                 instructions.Add(nopTryStart.Set(OpCodes.Ldloc, vState));
                 instructions.Add(Create(OpCodes.Brfalse, nopIfStateEqZeroStart));
                 // -if (state != 0)
@@ -247,46 +219,7 @@ namespace Rougamo.Fody
                     instructions.Add(Create(OpCodes.Stloc, vResult));
                 }
 
-                /**
-                 *     context.ResultValue = result;
-                 *     context.Arguments[0] = arg1;
-                 *     mo1.OnSuccess(context);
-                 *     
-                 *     if (context.RetryCount > 0) continue;
-                 *     
-                 *     if (context.ReturnValueReplaced)
-                 *     {
-                 *         result = (int) context.ReturnValue;
-                 *     }
-                 *     
-                 *     mo1.OnExit(context);
-                 *     
-                 *     break;
-                 */
-
                 instructions.Add(Create(OpCodes.Leave, nopCatchEnd));
-
-                /**
-                 *     }
-                 *     catch (Exception e)
-                 *     {
-                 *         context.Exception = e;
-                 *         context.Arguments[0] = arg1;
-                 *         mo1.OnException(context);
-                 *         
-                 *         if (context.RetryCount > 0) continue;
-                 *         
-                 *         if (context.ExceptionHandled)
-                 *         {
-                 *             result = (int) context.ReturnValue;
-                 *             mo1.OnExit(context);
-                 *             break;
-                 *         }
-                 *         
-                 *         throw;
-                 *     }
-                 * } // while true end
-                 */
             }
             // catch (Exception ex)
             {

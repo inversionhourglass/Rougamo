@@ -18,12 +18,7 @@ namespace Rougamo.Fody
             if (_config.Strict)
             {
                 StrictAsyncTaskMethodWeave(rouMethod, stateMachineTypeDef);
-#if DEBUG
-                //if (rouMethod.MethodDef.FullName.Contains("Strict_"))
-#endif
-                {
-                    return;
-                }
+                return;
             }
 
             var moveNextMethodDef = stateMachineTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
