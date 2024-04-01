@@ -321,7 +321,7 @@ namespace Rougamo.Fody
             };
         }
 
-        private IList<Instruction> StateMachineOnEntry(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction endAnchor, IStateMachineFields fields)
+        private IList<Instruction> StateMachineOnEntry(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction? endAnchor, IStateMachineFields fields)
         {
             if (rouMethod.Mos.All(x => !Feature.OnEntry.IsMatch(x.Features))) return EmptyInstructions;
 
@@ -475,7 +475,7 @@ namespace Rougamo.Fody
             return StateMachineUpdateMethodArguments(fields);
         }
 
-        private IList<Instruction> StateMachineOnException(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction endAnchor, IStateMachineFields fields)
+        private IList<Instruction> StateMachineOnException(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction? endAnchor, IStateMachineFields fields)
         {
             if (rouMethod.Mos.All(x => !Feature.OnException.IsMatch(x.Features))) return EmptyInstructions;
 
@@ -592,7 +592,7 @@ namespace Rougamo.Fody
             return StateMachineUpdateMethodArguments(fields);
         }
 
-        private IList<Instruction> StateMachineOnSuccess(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction endAnchor, IStateMachineFields fields)
+        private IList<Instruction> StateMachineOnSuccess(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction? endAnchor, IStateMachineFields fields)
         {
             if (rouMethod.Mos.All(x => !Feature.OnSuccess.IsMatch(x.Features))) return EmptyInstructions;
 

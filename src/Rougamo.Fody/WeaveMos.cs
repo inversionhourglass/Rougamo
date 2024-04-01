@@ -227,7 +227,7 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private List<Instruction> ExecuteMoMethod(string methodName, MethodDefinition methodDef, Mo[] mos, Instruction loopExit, VariableDefinition? mosVariable, VariableDefinition? contextVariable, FieldReference? mosField, FieldReference? contextField, bool reverseCall)
+        private List<Instruction> ExecuteMoMethod(string methodName, MethodDefinition methodDef, Mo[] mos, Instruction? loopExit, VariableDefinition? mosVariable, VariableDefinition? contextVariable, FieldReference? mosField, FieldReference? contextField, bool reverseCall)
         {
             var instructions = new List<Instruction>();
             var flagVariable = methodDef.Body.CreateVariable(_typeIntRef);
@@ -235,6 +235,8 @@ namespace Rougamo.Fody
             Instruction loopFirst;
             Instruction bodyFirst = Create(OpCodes.Nop);
             var updateFlagStart = Create(OpCodes.Ldloc, flagVariable);
+            var managedLoopExit = loopExit == null;
+            if (managedLoopExit) loopExit = Create(OpCodes.Nop);
 
             if (reverseCall)
             {
@@ -330,6 +332,8 @@ namespace Rougamo.Fody
             }
             instructions.Add(Create(OpCodes.Stloc, flagVariable));
             instructions.Add(Create(OpCodes.Br_S, loopFirst));
+
+            if (managedLoopExit) instructions.Add(loopExit!);
 
             return instructions;
         }

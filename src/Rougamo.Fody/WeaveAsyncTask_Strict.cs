@@ -357,14 +357,6 @@ namespace Rougamo.Fody
             var innerCatchStart = Create(OpCodes.Stloc, vInnerException);
 
             var nopRetryLoopStart = Create(OpCodes.Nop);
-            var nopOnEntryEnd = Create(OpCodes.Nop);
-            var nopEntryReplaceCheckEnd = Create(OpCodes.Nop);
-            var nopOnSuccessEnd = Create(OpCodes.Nop);
-            var nopSuccessRetryCheckEnd = Create(OpCodes.Nop);
-            var nopSuccessReplacedEnd = Create(OpCodes.Nop);
-            var nopOnExceptionEnd = Create(OpCodes.Nop);
-            var nopExceptionRetryCheckEnd = Create(OpCodes.Nop);
-            var nopExceptionRethrowEnd = Create(OpCodes.Nop);
 
             /**
              * if (state != 0)
@@ -395,10 +387,8 @@ namespace Rougamo.Fody
             {
                 instructions.InsertBefore(oldTryStart, StrictAsyncInitMos(proxyMoveNextDef, rouMethod.Mos, bag.Fields));
                 instructions.InsertBefore(oldTryStart, StrictAsyncInitMethodContext(rouMethod, proxyMoveNextDef, bag));
-                instructions.InsertBefore(oldTryStart, StateMachineOnEntry(rouMethod, proxyMoveNextDef, nopOnEntryEnd, bag.Fields));
-                instructions.InsertBefore(oldTryStart, nopOnEntryEnd);
-                instructions.InsertBefore(oldTryStart, StrictAsyncIfOnEntryReplacedReturn(rouMethod, proxyMoveNextDef, nopEntryReplaceCheckEnd, outerCatchEnd, bag));
-                instructions.InsertBefore(oldTryStart, nopEntryReplaceCheckEnd);
+                instructions.InsertBefore(oldTryStart, StateMachineOnEntry(rouMethod, proxyMoveNextDef, null, bag.Fields));
+                instructions.InsertBefore(oldTryStart, StrictAsyncIfOnEntryReplacedReturn(rouMethod, proxyMoveNextDef, null, outerCatchEnd, bag));
                 instructions.InsertBefore(oldTryStart, StateMachineRewriteArguments(rouMethod, nopRetryLoopStart, bag.Fields));
             }
             instructions.InsertBefore(oldTryStart, nopRetryLoopStart);
@@ -420,12 +410,9 @@ namespace Rougamo.Fody
              *     break;
              */
             instructions.InsertBefore(tryLastLeave, StrictAsyncSaveReturnValue(rouMethod, bag));
-            instructions.InsertBefore(tryLastLeave, StateMachineOnSuccess(rouMethod, proxyMoveNextDef, nopOnSuccessEnd, bag.Fields));
-            instructions.InsertBefore(tryLastLeave, nopOnSuccessEnd);
-            instructions.InsertBefore(tryLastLeave, StrictAsyncIfSuccessRetry(rouMethod, nopRetryLoopStart, nopSuccessRetryCheckEnd, bag));
-            instructions.InsertBefore(tryLastLeave, nopSuccessRetryCheckEnd);
-            instructions.InsertBefore(tryLastLeave, StrictAsyncIfSuccessReplacedReturn(rouMethod, nopSuccessReplacedEnd, bag));
-            instructions.InsertBefore(tryLastLeave, nopSuccessReplacedEnd);
+            instructions.InsertBefore(tryLastLeave, StateMachineOnSuccess(rouMethod, proxyMoveNextDef, null, bag.Fields));
+            instructions.InsertBefore(tryLastLeave, StrictAsyncIfSuccessRetry(rouMethod, nopRetryLoopStart, null, bag));
+            instructions.InsertBefore(tryLastLeave, StrictAsyncIfSuccessReplacedReturn(rouMethod, null, bag));
             instructions.InsertBefore(tryLastLeave, StateMachineOnExit(rouMethod, proxyMoveNextDef, tryLastLeave, bag.Fields));
 
             /**
@@ -450,12 +437,9 @@ namespace Rougamo.Fody
             {
                 instructions.InsertBefore(outerCatchStart, innerCatchStart);
                 instructions.InsertBefore(outerCatchStart, StrictStateMachineSaveException(rouMethod, bag.Fields, vInnerException));
-                instructions.InsertBefore(outerCatchStart, StateMachineOnException(rouMethod, proxyMoveNextDef, nopOnExceptionEnd, bag.Fields));
-                instructions.InsertBefore(outerCatchStart, nopOnExceptionEnd);
-                instructions.InsertBefore(outerCatchStart, StrictAsyncIfExceptionRetry(rouMethod, nopRetryLoopStart, nopExceptionRetryCheckEnd, bag));
-                instructions.InsertBefore(outerCatchStart, nopExceptionRetryCheckEnd);
-                instructions.InsertBefore(outerCatchStart, StrictAsyncIfExceptionNotHandled(rouMethod, nopExceptionRethrowEnd, bag.Fields));
-                instructions.InsertBefore(outerCatchStart, nopExceptionRethrowEnd);
+                instructions.InsertBefore(outerCatchStart, StateMachineOnException(rouMethod, proxyMoveNextDef, null, bag.Fields));
+                instructions.InsertBefore(outerCatchStart, StrictAsyncIfExceptionRetry(rouMethod, nopRetryLoopStart, null, bag));
+                instructions.InsertBefore(outerCatchStart, StrictAsyncIfExceptionNotHandled(rouMethod, null, bag.Fields));
                 instructions.InsertBefore(outerCatchStart, StrictAsyncExceptionHandled(rouMethod, proxyMoveNextDef, outerCatchEnd, bag));
             }
 
@@ -753,9 +737,12 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private IList<Instruction>? StrictAsyncIfOnEntryReplacedReturn(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction endAnchor, Instruction tailAnchor, StrictAsyncBag bag)
+        private IList<Instruction>? StrictAsyncIfOnEntryReplacedReturn(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction? endAnchor, Instruction tailAnchor, StrictAsyncBag bag)
         {
             if (!Feature.EntryReplace.IsMatch(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return null;
+
+            var managedEndAnchor = endAnchor == null;
+            if (managedEndAnchor) endAnchor = Create(OpCodes.Nop);
 
             var instructions = new List<Instruction>
             {
@@ -771,6 +758,8 @@ namespace Rougamo.Fody
             var onExitEndAnchor = Create(OpCodes.Leave, tailAnchor);
             instructions.AddRange(StateMachineOnExit(rouMethod, moveNextMethodDef, onExitEndAnchor, bag.Fields));
             instructions.Add(onExitEndAnchor);
+
+            if (managedEndAnchor) instructions.Add(endAnchor!);
 
             return instructions;
         }
@@ -794,19 +783,22 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private IList<Instruction>? StrictAsyncIfSuccessRetry(RouMethod rouMethod, Instruction loopStartAnchor, Instruction endAnchor, StrictAsyncBag bag)
+        private IList<Instruction>? StrictAsyncIfSuccessRetry(RouMethod rouMethod, Instruction loopStartAnchor, Instruction? endAnchor, StrictAsyncBag bag)
         {
             return !Feature.SuccessRetry.IsMatch(rouMethod.Features) ? null : StrictAsyncIfRetry(rouMethod, loopStartAnchor, endAnchor, bag);
         }
 
-        private IList<Instruction>? StrictAsyncIfExceptionRetry(RouMethod rouMethod, Instruction loopStartAnchor, Instruction endAnchor, StrictAsyncBag bag)
+        private IList<Instruction>? StrictAsyncIfExceptionRetry(RouMethod rouMethod, Instruction loopStartAnchor, Instruction? endAnchor, StrictAsyncBag bag)
         {
             return !Feature.ExceptionRetry.IsMatch(rouMethod.Features) ? null : StrictAsyncIfRetry(rouMethod, loopStartAnchor, endAnchor, bag);
         }
 
-        private IList<Instruction> StrictAsyncIfRetry(RouMethod rouMethod, Instruction loopStartAnchor, Instruction endAnchor, StrictAsyncBag bag)
+        private IList<Instruction> StrictAsyncIfRetry(RouMethod rouMethod, Instruction loopStartAnchor, Instruction? endAnchor, StrictAsyncBag bag)
         {
-            return [
+            var managedAnchor = endAnchor == null;
+            if (managedAnchor) endAnchor = Create(OpCodes.Nop);
+
+            List<Instruction> instructions = [
                 Create(OpCodes.Ldarg_0),
                 Create(OpCodes.Ldfld, bag.Fields.MethodContext),
                 Create(OpCodes.Callvirt, _methodMethodContextGetRetryCountRef),
@@ -814,11 +806,18 @@ namespace Rougamo.Fody
                 Create(OpCodes.Ble, endAnchor),
                 Create(OpCodes.Leave_S, loopStartAnchor)
             ];
+
+            if (managedAnchor) instructions.Add(endAnchor!);
+
+            return instructions;
         }
 
-        private IList<Instruction>? StrictAsyncIfSuccessReplacedReturn(RouMethod rouMethod, Instruction endAnchor, StrictAsyncBag bag)
+        private IList<Instruction>? StrictAsyncIfSuccessReplacedReturn(RouMethod rouMethod, Instruction? endAnchor, StrictAsyncBag bag)
         {
             if (bag.Variables.Result == null || !Feature.SuccessReplace.IsMatch(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return EmptyInstructions;
+
+            var managedAnchor = endAnchor == null;
+            if (managedAnchor) endAnchor = Create(OpCodes.Nop);
 
             var instructions = new List<Instruction>
             {
@@ -837,6 +836,8 @@ namespace Rougamo.Fody
             }
             instructions.Add(Create(OpCodes.Stloc, bag.Variables.Result));
 
+            if (managedAnchor) instructions.Add(endAnchor!);
+
             return instructions;
         }
 
@@ -852,17 +853,24 @@ namespace Rougamo.Fody
             ];
         }
 
-        private IList<Instruction> StrictAsyncIfExceptionNotHandled(RouMethod rouMethod, Instruction endAnchor, IStateMachineFields fields)
+        private IList<Instruction> StrictAsyncIfExceptionNotHandled(RouMethod rouMethod, Instruction? endAnchor, IStateMachineFields fields)
         {
             if (!Feature.ExceptionHandle.IsMatch(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return [Create(OpCodes.Rethrow)];
 
-            return [
+            var managedAnchor = endAnchor == null;
+            if (managedAnchor) endAnchor = Create(OpCodes.Nop);
+
+            List<Instruction> instructions = [
                 Create(OpCodes.Ldarg_0),
                 Create(OpCodes.Ldfld, fields.MethodContext),
                 Create(OpCodes.Callvirt, _methodMethodContextGetExceptionHandledRef),
                 Create(OpCodes.Brtrue, endAnchor),
                 Create(OpCodes.Rethrow)
             ];
+
+            if (managedAnchor) instructions.Add(endAnchor!);
+
+            return instructions;
         }
 
         private IList<Instruction>? StrictAsyncExceptionHandled(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction tailAnchor, StrictAsyncBag bag)
