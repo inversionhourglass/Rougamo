@@ -425,11 +425,14 @@ namespace Rougamo.Fody
              *         
              *         if (context.RetryCount > 0) continue;
              *         
-             *         if (!context.ExceptionHandled) throw;
-             *         
-             *         result = (int) context.ReturnValue;
+             *         if (context.ExceptionHandled)
+             *         {
+             *             result = (int) context.ReturnValue;
+             *         }
              *         mo1.OnExit(context);
-             *         break;
+             *         
+             *         if (context.ExceptionHandled) break;
+             *         throw;
              *     }
              * } // while true end
              */
@@ -439,8 +442,9 @@ namespace Rougamo.Fody
                 instructions.InsertBefore(outerCatchStart, StrictStateMachineSaveException(rouMethod, bag.Fields, vInnerException));
                 instructions.InsertBefore(outerCatchStart, StateMachineOnException(rouMethod, proxyMoveNextDef, null, bag.Fields));
                 instructions.InsertBefore(outerCatchStart, StrictAsyncIfExceptionRetry(rouMethod, nopRetryLoopStart, null, bag));
-                instructions.InsertBefore(outerCatchStart, StrictAsyncIfExceptionNotHandled(rouMethod, null, bag.Fields));
-                instructions.InsertBefore(outerCatchStart, StrictAsyncExceptionHandled(rouMethod, proxyMoveNextDef, outerCatchEnd, bag));
+                instructions.InsertBefore(outerCatchStart, StrictAsyncSaveExceptionHandledResult(rouMethod, bag));
+                instructions.InsertBefore(outerCatchStart, StateMachineOnExit(rouMethod, proxyMoveNextDef, null, bag.Fields));
+                instructions.InsertBefore(outerCatchStart, StrictAsyncCheckExceptionHandled(rouMethod, outerCatchEnd, bag.Fields));
             }
 
             outerHandler.TryStart = tryStart;
@@ -853,42 +857,42 @@ namespace Rougamo.Fody
             ];
         }
 
-        private IList<Instruction> StrictAsyncIfExceptionNotHandled(RouMethod rouMethod, Instruction? endAnchor, IStateMachineFields fields)
+        private IList<Instruction>? StrictAsyncSaveExceptionHandledResult(RouMethod rouMethod, StrictAsyncBag bag)
         {
-            if (!Feature.ExceptionHandle.IsMatch(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return [Create(OpCodes.Rethrow)];
+            if (!Feature.ExceptionHandle.IsMatch(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return null;
 
-            var managedAnchor = endAnchor == null;
-            if (managedAnchor) endAnchor = Create(OpCodes.Nop);
+            if (bag.Variables.Result == null) return null;
 
-            List<Instruction> instructions = [
+            var endAnchor = Create(OpCodes.Nop);
+
+            var instructions = new List<Instruction>
+            {
                 Create(OpCodes.Ldarg_0),
-                Create(OpCodes.Ldfld, fields.MethodContext),
+                Create(OpCodes.Ldfld, bag.Fields.MethodContext),
                 Create(OpCodes.Callvirt, _methodMethodContextGetExceptionHandledRef),
-                Create(OpCodes.Brtrue, endAnchor),
-                Create(OpCodes.Rethrow)
-            ];
+                Create(OpCodes.Brfalse, endAnchor)
+            };
 
-            if (managedAnchor) instructions.Add(endAnchor!);
+            instructions.AddRange(AssignResultFromContext(bag));
+            instructions.Add(endAnchor);
 
             return instructions;
         }
 
-        private IList<Instruction>? StrictAsyncExceptionHandled(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction tailAnchor, StrictAsyncBag bag)
+        private IList<Instruction> StrictAsyncCheckExceptionHandled(RouMethod rouMethod, Instruction tailAnchor, IStateMachineFields fields)
         {
-            if (!Feature.ExceptionHandle.IsMatch(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return null;
+            if (!Feature.ExceptionHandle.IsMatch(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return [Create(OpCodes.Rethrow)];
 
-            var instructions = new List<Instruction>();
+            var rethrow = Create(OpCodes.Rethrow);
 
-            var endAnchor = Create(OpCodes.Leave, tailAnchor);
-
-            if (bag.Variables.Result != null)
-            {
-                instructions.AddRange(AssignResultFromContext(bag));
-            }
-            instructions.AddRange(StateMachineOnExit(rouMethod, moveNextMethodDef, endAnchor, bag.Fields));
-            instructions.Add(endAnchor);
-
-            return instructions;
+            return [
+                Create(OpCodes.Ldarg_0),
+                Create(OpCodes.Ldfld, fields.MethodContext),
+                Create(OpCodes.Callvirt, _methodMethodContextGetExceptionHandledRef),
+                Create(OpCodes.Brfalse, rethrow),
+                Create(OpCodes.Leave, tailAnchor),
+                rethrow
+            ];
         }
 
         private IList<Instruction> StrictAsyncLoadArguments(FieldReference?[] parameters)

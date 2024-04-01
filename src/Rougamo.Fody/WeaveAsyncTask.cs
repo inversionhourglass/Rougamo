@@ -530,7 +530,7 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private IList<Instruction> StateMachineOnExit(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction endAnchor, IStateMachineFields fields)
+        private IList<Instruction> StateMachineOnExit(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction? endAnchor, IStateMachineFields fields)
         {
             if (rouMethod.Mos.All(x => !Feature.OnExit.IsMatch(x.Features))) return EmptyInstructions;
 
