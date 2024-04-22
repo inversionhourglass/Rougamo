@@ -159,5 +159,12 @@ namespace Rougamo.Fody.Tests
             Assert.Equal(pIn.ToString(), str);
             Assert.Equal(pOut, span.ToString());
         }
+
+        [Fact]
+        public void Issue66Test()
+        {
+            var instance = GetInstance("Issue66`2", false, t => t.MakeGenericType(typeof(int), typeof(int)));
+            instance.M();
+        }
     }
 }
