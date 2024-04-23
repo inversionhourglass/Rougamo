@@ -140,12 +140,16 @@ namespace Rougamo.Fody.Signature
                 {
                     gitNs = typeRef.Namespace;
                     var name = ShortGenericName(typeRef.Name, out var genericCount);
-                    var argumentSignatures = new Stack<TypeSignature>();
-                    boundary -= genericCount;
-                    for (; i >= boundary; i--)
+                    Stack<TypeSignature>? argumentSignatures = null;
+                    if (genericCount != 0)
                     {
-                        var argumentSignature = ParseType(git.GenericArguments[i], genericParameters, genericMap);
-                        argumentSignatures.Push(argumentSignature!);
+                        argumentSignatures = new Stack<TypeSignature>();
+                        boundary -= genericCount;
+                        for (; i >= boundary; i--)
+                        {
+                            var argumentSignature = ParseType(git.GenericArguments[i], genericParameters, genericMap);
+                            argumentSignatures.Push(argumentSignature!);
+                        }
                     }
                     nestedTypes.Push(new GenericSignature(name, argumentSignatures));
                 } while ((typeRef = typeRef.DeclaringType) != null);
@@ -264,7 +268,12 @@ namespace Rougamo.Fody.Signature
         private static string ShortGenericName(string name, out int genericCount)
         {
             var index = name.IndexOf('`');
-            if (index == -1) throw new ArgumentException($"{name} is not a generic name", nameof(name));
+            //if (index == -1) throw new ArgumentException($"{name} is not a generic name", nameof(name));
+            if (index == -1)
+            {
+                genericCount = 0;
+                return name;
+            }
             genericCount = int.Parse(name.Substring(index + 1));
             return name.Substring(0, index);
         }

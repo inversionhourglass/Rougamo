@@ -51,6 +51,8 @@ namespace Rougamo.Fody
                 {
                     if ((methodDef.Attributes & MethodAttributes.Abstract) != 0) continue;
 
+                    if (!methodDef.IsGetter && !methodDef.IsSetter && methodDef.CustomAttributes.Any(x => x.AttributeType.Is(Constants.TYPE_CompilerGeneratedAttribute) || x.AttributeType.Is(Constants.TYPE_Runtime_CompilerGeneratedAttribute))) continue;
+
                     var attributes = new Collection<CustomAttribute>();
                     var property = typeDef.Properties.SingleOrDefault(x => x.SetMethod == methodDef || x.GetMethod == methodDef);
                     if (property != null)
