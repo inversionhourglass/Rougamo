@@ -5,12 +5,12 @@ namespace Rougamo.Fody.Signature
 {
     public class GenericSignature
     {
-        public static readonly GenericSignature[] EmptyArray = new GenericSignature[0];
+        public static readonly GenericSignature[] EmptyArray = [];
 
-        public GenericSignature(string name, IReadOnlyCollection<TypeSignature> generics)
+        public GenericSignature(string name, IReadOnlyCollection<TypeSignature>? generics)
         {
             Name = name;
-            Generics = generics.ToArray();
+            Generics = generics == null ? TypeSignature.EmptyArray : generics.ToArray();
         }
 
         public string Name { get; }

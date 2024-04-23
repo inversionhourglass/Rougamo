@@ -11,7 +11,7 @@ namespace Rougamo.Fody.Signature
     {
         public const char NESTED_SEPARATOR = '/';
 
-        public static readonly TypeSignature[] EmptyArray = new TypeSignature[0];
+        public static readonly TypeSignature[] EmptyArray = [];
 
         /// <summary/>
         public TypeSignature(string @namespace, IReadOnlyCollection<GenericSignature> nestedTypes, IReadOnlyCollection<int> arrayRanks, TypeReference reference)
