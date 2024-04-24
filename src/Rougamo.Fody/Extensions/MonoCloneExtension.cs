@@ -58,7 +58,8 @@ namespace Rougamo.Fody
             {
                 foreach (var field in typeDef.Fields)
                 {
-                    var clonedField = new FieldDefinition(field.Name, field.Attributes, field.FieldType);
+                    var fieldType = field.FieldType.Resolve() == typeDef ? (TypeReference)map[typeDef] : field.FieldType;
+                    var clonedField = new FieldDefinition(field.Name, field.Attributes, fieldType);
                     clonedTypeDef.Fields.Add(clonedField);
 
                     map[field] = clonedField;
@@ -70,7 +71,8 @@ namespace Rougamo.Fody
                 var methodMap = new Dictionary<MethodDefinition, MethodDefinition>();
                 foreach (var method in typeDef.Methods)
                 {
-                    var clonedMethod = new MethodDefinition(method.Name, method.Attributes, method.ReturnType);
+                    var returnType = method.ReturnType.Resolve() == typeDef ? (TypeReference)map[typeDef] : method.ReturnType;
+                    var clonedMethod = new MethodDefinition(method.Name, method.Attributes, returnType);
                     clonedTypeDef.Methods.Add(clonedMethod);
 
                     methodMap[method] = clonedMethod;
@@ -79,6 +81,19 @@ namespace Rougamo.Fody
                 foreach (var item in methodMap)
                 {
                     item.Key.Clone(item.Value, map, true);
+                }
+            }
+
+            if (typeDef.HasProperties)
+            {
+                foreach (var prop in typeDef.Properties)
+                {
+                    var propType = prop.PropertyType.Resolve() == typeDef ? (TypeReference)map[typeDef] : prop.PropertyType;
+                    var clonedProp = new PropertyDefinition(prop.Name, prop.Attributes, propType);
+                    clonedTypeDef.Properties.Add(clonedProp);
+
+                    if (prop.SetMethod != null) clonedProp.SetMethod = (MethodDefinition)map[prop.SetMethod];
+                    if (prop.GetMethod != null) clonedProp.GetMethod = (MethodDefinition)map[prop.GetMethod];
                 }
             }
 
