@@ -57,6 +57,7 @@
         public const string PROP_RetryCount = "RetryCount";
         public const string PROP_MethodContextOmits = "MethodContextOmits";
         public const string PROP_IsCompleted = "IsCompleted";
+        public const string PROP_Current = "Current";
 
         public const string FIELD_Format = "<{0}>k__BackingField";
         public const string FIELD_Repulsions = "<Repulsions>k__BackingField";
@@ -71,7 +72,9 @@
         public const string FIELD_This = "<>4__this";
         public const string FIELD_Awaiter = "<>u__1";
         public const string FIELD_Current_Suffix = "current";
+        public const string FIELD_Iterator = ">_<iterator";
         public const string FIELD_IteratorReturnList = ">_<returns";
+        public const string FIELD_InitialThreadId = "<>l__initialThreadId";
 
         public const string METHOD_OnEntry = "OnEntry";
         public const string METHOD_OnSuccess = "OnSuccess";
@@ -85,6 +88,7 @@
         public const string METHOD_GetAwaiter = "GetAwaiter";
         public const string METHOD_GetResult = "GetResult";
         public const string METHOD_AwaitUnsafeOnCompleted = "AwaitUnsafeOnCompleted";
+        public const string METHOD_GetEnumerator = "GetEnumerator";
         public const string METHOD_GetEnumerator_Prefix = "System.Collections.Generic.IEnumerable<";
         public const string METHOD_GetEnumerator_Suffix = ">.GetEnumerator";
         public const string METHOD_GetAsyncEnumerator_Prefix = "System.Collections.Generic.IAsyncEnumerable<";

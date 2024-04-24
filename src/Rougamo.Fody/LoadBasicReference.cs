@@ -1,5 +1,6 @@
 ﻿using Mono.Cecil.Cil;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -30,6 +31,7 @@ namespace Rougamo.Fody
             _methodGetMethodFromHandleRef = typeof(MethodBase).GetMethod("GetMethodFromHandle", new[] { typeof(RuntimeMethodHandle), typeof(RuntimeTypeHandle) }).ImportInto(ModuleDefinition);
             _methodListAddRef = _typeListDef.Methods.Single(x => x.Name == "Add" && x.Parameters.Count == 1 && x.Parameters[0].ParameterType == _typeListDef.GenericParameters[0]);
             _methodListToArrayRef = _typeListDef.Methods.Single(x => x.Name == "ToArray" && !x.HasParameters);
+            _methodIEnumeratorMoveNextRef = FindTypeDefinition(typeof(IEnumerator).FullName).Methods.Single(x => x.Name == Constants.METHOD_MoveNext).ImportInto(ModuleDefinition);
             _methodDebuggerStepThroughCtorRef = _typeDebuggerStepThroughAttributeRef.Resolve().Methods.Single(x => x.IsConstructor && !x.IsStatic && !x.Parameters.Any()).ImportInto(ModuleDefinition);
             var asyncStateMachineAttributeCtorRef = typeAsyncStateMachineAttributeRef.Resolve().Methods.Single(x => x.IsConstructor && !x.IsStatic && x.Parameters.Single().ParameterType.Is(Constants.TYPE_Type)).ImportInto(ModuleDefinition);
             var iteratorStateMachineAttributeCtorRef = typeIteratorStateMachineAttributeRef.Resolve().Methods.Single(x => x.IsConstructor && !x.IsStatic && x.Parameters.Single().ParameterType.Is(Constants.TYPE_Type)).ImportInto(ModuleDefinition);

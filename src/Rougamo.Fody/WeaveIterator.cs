@@ -81,9 +81,11 @@ namespace Rougamo.Fody
             var methodContext = new FieldDefinition(Constants.FIELD_RougamoContext, FieldAttributes.Public, _typeMethodContextRef);
             var state = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_State);
             var current = stateMachineTypeDef.Fields.Single(m => m.Name.EndsWith(Constants.FIELD_Current_Suffix));
+            var initialThreadId = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_InitialThreadId);
+            var declaringThis = stateMachineTypeDef.Fields.SingleOrDefault(x => x.FieldType.Resolve() == stateMachineTypeDef.DeclaringType);
             FieldDefinition? recordedReturn = null;
-            var parameters = StateMachineParameterFields(rouMethod);
-            parameters = IteratorGetPrivateParameterFields(getEnumeratorMethodDef, parameters);
+            var transitParameters = StateMachineParameterFields(rouMethod);
+            var parameters = IteratorGetPrivateParameterFields(getEnumeratorMethodDef, transitParameters);
             if (_config.RecordingIteratorReturns && (rouMethod.MethodContextOmits & Omit.ReturnValue) == 0)
             {
                 var listReturnsRef = new GenericInstanceType(_typeListRef);
@@ -94,7 +96,7 @@ namespace Rougamo.Fody
 
             stateMachineTypeDef.Fields.Add(methodContext);
 
-            return new IteratorFields(stateMachineTypeDef, moArray, mos, methodContext, state, current, recordedReturn, parameters);
+            return new IteratorFields(stateMachineTypeDef, moArray, mos, methodContext, state, current, initialThreadId, recordedReturn, declaringThis, transitParameters, parameters);
         }
 
         private IteratorVariables IteratorResolveVariables(RouMethod rouMethod, MethodDefinition moveNextMethodDef, TypeDefinition stateMachineTypeDef)
@@ -274,14 +276,15 @@ namespace Rougamo.Fody
             };
         }
 
-        private FieldDefinition?[] IteratorGetPrivateParameterFields(MethodDefinition getEnumeratorMethodDef, FieldDefinition?[] parameterFieldDefs)
+        private FieldDefinition?[] IteratorGetPrivateParameterFields(MethodDefinition getEnumeratorMethodDef, FieldDefinition?[] transitParameterFieldDefs)
         {
-            if (parameterFieldDefs.Length == 0) return parameterFieldDefs;
+            if (transitParameterFieldDefs.Length == 0) return [];
 
+            var parameters = new FieldDefinition?[transitParameterFieldDefs.Length];
             var map = new Dictionary<FieldDefinition, int>();
-            for (var i = 0; i < parameterFieldDefs.Length; i++)
+            for (var i = 0; i < transitParameterFieldDefs.Length; i++)
             {
-                var parameterFieldDef = parameterFieldDefs[i];
+                var parameterFieldDef = transitParameterFieldDefs[i];
                 if (parameterFieldDef == null) continue;
 
                 map.Add(parameterFieldDef, i);
@@ -291,11 +294,11 @@ namespace Rougamo.Fody
             {
                 if (instruction.OpCode.Code == Code.Ldfld && map.TryGetValue(((FieldReference)instruction.Operand).Resolve(), out var index))
                 {
-                    parameterFieldDefs[index] = ((FieldReference)instruction.Next.Operand).Resolve();
+                    parameters[index] = ((FieldReference)instruction.Next.Operand).Resolve();
                 }
             }
 
-            return parameterFieldDefs;
+            return parameters;
         }
     }
 }

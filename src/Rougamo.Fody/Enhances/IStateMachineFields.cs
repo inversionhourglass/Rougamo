@@ -14,6 +14,8 @@ namespace Rougamo.Fody.Enhances
 
         FieldReference?[] Parameters { get; }
 
+        FieldReference? DeclaringThis { get; set; }
+
         void SetParameter(int index, FieldDefinition fieldDef);
     }
 }

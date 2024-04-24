@@ -32,6 +32,7 @@ namespace Rougamo.Fody
         private MethodReference _methodGetMethodFromHandleRef;
         private MethodReference _methodListAddRef;
         private MethodReference _methodListToArrayRef;
+        private MethodReference _methodIEnumeratorMoveNextRef;
         private MethodReference _methodDebuggerStepThroughCtorRef;
         private MethodReference _methodAsyncTaskMethodBuilderCreateref;
         private MethodReference _methodAsyncValueTaskMethodBuilderCreateRef;

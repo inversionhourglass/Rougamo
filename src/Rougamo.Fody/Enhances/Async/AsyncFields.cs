@@ -3,24 +3,15 @@ using System.Linq;
 
 namespace Rougamo.Fody.Enhances.Async
 {
-    internal class AsyncFields : IStateMachineFields
+    internal class AsyncFields : StateMachineFields, IStateMachineFields
     {
         public AsyncFields(
             TypeDefinition stateMachineTypeDef,
             FieldDefinition? moArray, FieldDefinition[] mos,
             FieldDefinition methodContext,
             FieldDefinition state, FieldDefinition builder,
-            FieldDefinition? declaringThis, FieldDefinition?[] parameters)
+            FieldDefinition? declaringThis, FieldDefinition?[] parameters) : base(stateMachineTypeDef)
         {
-            if (stateMachineTypeDef.HasGenericParameters)
-            {
-                // public async Task<MyClass<T>> Mt<T>()
-                DeclaringTypeRef = new GenericInstanceType(stateMachineTypeDef);
-                foreach (var parameter in stateMachineTypeDef.GenericParameters)
-                {
-                    DeclaringTypeRef.GenericArguments.Add(parameter);
-                }
-            }
             MoArray = MakeReference(moArray);
             Mos = mos.Select(x => MakeReference(x)!).ToArray();
             MethodContext = MakeReference(methodContext)!;
@@ -29,8 +20,6 @@ namespace Rougamo.Fody.Enhances.Async
             Parameters = parameters.Select(x => MakeReference(x)!).ToArray();
             DeclaringThis = MakeReference(declaringThis);
         }
-
-        public GenericInstanceType? DeclaringTypeRef { get; }
 
         public FieldReference? MoArray { get; }
 
@@ -67,13 +56,6 @@ namespace Rougamo.Fody.Enhances.Async
         public void SetParameter(int index, FieldDefinition fieldDef)
         {
             Parameters[index] = MakeReference(fieldDef);
-        }
-
-        private FieldReference? MakeReference(FieldDefinition? fieldDef)
-        {
-            if (DeclaringTypeRef == null || fieldDef == null) return fieldDef;
-
-            return new FieldReference(fieldDef.Name, fieldDef.FieldType, DeclaringTypeRef);
         }
     }
 }

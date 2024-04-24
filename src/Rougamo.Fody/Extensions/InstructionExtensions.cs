@@ -181,6 +181,7 @@ namespace Rougamo.Fody
         public static Instruction Set(this Instruction instruction, OpCode opcode)
         {
             instruction.OpCode = opcode;
+            instruction.Operand = null;
 
             return instruction;
         }
@@ -191,6 +192,34 @@ namespace Rougamo.Fody
             instruction.Operand = operand;
 
             return instruction;
+        }
+
+        public static VariableDefinition ResolveVariable(this Instruction instruction, MethodDefinition methodDef)
+        {
+            var variables = methodDef.Body.Variables;
+
+            switch (instruction.OpCode.Code)
+            {
+                case Code.Stloc_0:
+                case Code.Ldloc_0:
+                    return variables[0];
+                case Code.Stloc_1:
+                case Code.Ldloc_1:
+                    return variables[1];
+                case Code.Stloc_2:
+                case Code.Ldloc_2:
+                    return variables[2];
+                case Code.Stloc_3:
+                case Code.Ldloc_3:
+                    return variables[3];
+                case Code.Stloc:
+                case Code.Stloc_S:
+                case Code.Ldloc:
+                case Code.Ldloca_S:
+                    return (VariableDefinition)instruction.Operand;
+                default:
+                    throw new RougamoException($"Instruction is not a ldloc or stloc operation, its opcode is {instruction.OpCode} and the offset is {instruction.Offset} in method {methodDef}");
+            }
         }
     }
 }

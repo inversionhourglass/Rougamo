@@ -54,6 +54,8 @@ namespace Rougamo.Fody.Enhances.AsyncIterator
 
         public FieldReference?[] Parameters { get; }
 
+        public FieldReference? DeclaringThis { get; set; }
+
         public void SetParameter(int index, FieldDefinition fieldDef)
         {
             throw new System.NotImplementedException();
