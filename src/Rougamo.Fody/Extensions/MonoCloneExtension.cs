@@ -46,10 +46,12 @@ namespace Rougamo.Fody
                     genericTypeRef.GenericArguments.Add(clonedGeneric);
                 }
                 map[clonedTypeDef] = genericTypeRef;
+                map[typeDef] = genericTypeRef;
             }
             else
             {
                 map[clonedTypeDef] = clonedTypeDef;
+                map[typeDef] = clonedTypeDef;
             }
 
             if (typeDef.HasFields)
@@ -171,40 +173,41 @@ namespace Rougamo.Fody
                 instructionMap[instruction] = cloned;
                 offsetMap[instruction.Offset] = cloned;
                 var operand = cloned.Operand;
-                if (cloned.Operand != null)
+                if (cloned.Operand == null) continue;
+
+                if (map.TryGetValue(operand, out var value))
                 {
-                    if (map.TryGetValue(operand, out var value))
+                    cloned.Operand = value;
+                }
+                else if (operand is Instruction)
+                {
+                    brs.Add(cloned);
+                }
+                else if (operand is FieldReference fieldRef && map.TryGetValue(fieldRef.Resolve(), out var fdObj))
+                {
+                    var fd = (FieldDefinition)fdObj;
+                    var fr = new FieldReference(fd.Name, fd.FieldType, (TypeReference)map[fd.DeclaringType]);
+                    cloned.Operand = fr;
+                }
+                else if (operand is MethodReference mr)
+                {
+                    if (map.TryGetValue(mr.Resolve(), out var mdObj))
                     {
-                        cloned.Operand = value;
+                        if (!map.TryGetValue(mr.DeclaringType.Resolve(), out var trObj)) throw new NotImplementedException("MonoCloneExtensions -> MethodDefinition -> MethodReference");
+
+                        var md = (MethodDefinition)mdObj;
+                        cloned.Operand = md.WithGenericDeclaringType((TypeReference)trObj);
                     }
-                    else if (operand is Instruction)
+                    else if (mr is GenericInstanceMethod gim && gim.GenericArguments.Any(x => x.Resolve() == methodDef.DeclaringType))
                     {
-                        brs.Add(cloned);
-                    }
-                    else if (operand is FieldReference fieldRef && map.TryGetValue(fieldRef.Resolve(), out var fdObj))
-                    {
-                        var fd = (FieldDefinition)fdObj;
-                        var fr = new FieldReference(fd.Name, fd.FieldType, (TypeReference)map[fd.DeclaringType]);
-                        cloned.Operand = fr;
-                    }
-                    else if (operand is MethodReference mr)
-                    {
-                        if (map.TryGetValue(mr.Resolve(), out var mdObj))
+                        var tr = (TypeReference)map[clonedMethodDef.DeclaringType];
+                        var generics = gim.GenericArguments.Select(x => x.Resolve() == methodDef.DeclaringType ? tr : x).ToArray();
+                        mr = gim.Resolve().ImportInto(methodDef.Module);
+                        if (gim.DeclaringType is GenericInstanceType git)
                         {
-                            // ignore, rougamo donot needs to implement this
-                            throw new NotImplementedException("MonoCloneExtensions -> MethodDefinition -> MethodReference");
+                            mr = mr.WithGenericDeclaringType(git);
                         }
-                        else if (mr is GenericInstanceMethod gim && gim.GenericArguments.Any(x => x.Resolve() == methodDef.DeclaringType))
-                        {
-                            var tr = (TypeReference)map[clonedMethodDef.DeclaringType];
-                            var generics = gim.GenericArguments.Select(x => x.Resolve() == methodDef.DeclaringType ? tr : x).ToArray();
-                            mr = gim.Resolve().ImportInto(methodDef.Module);
-                            if (gim.DeclaringType is GenericInstanceType git)
-                            {
-                                mr = mr.WithGenericDeclaringType(git);
-                            }
-                            cloned.Operand = mr.WithGenerics(generics);
-                        }
+                        cloned.Operand = mr.WithGenerics(generics);
                     }
                 }
             }

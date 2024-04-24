@@ -13,6 +13,13 @@ namespace Rougamo.Fody
         private void IteratorMethodWeave(RouMethod rouMethod)
         {
             var stateMachineTypeDef = rouMethod.MethodDef.ResolveStateMachine(Constants.TYPE_IteratorStateMachineAttribute);
+
+            if (_config.Strict)
+            {
+                StrictIteratorMethodWeave(rouMethod, stateMachineTypeDef);
+                return;
+            }
+
             var moveNextMethodDef = stateMachineTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
             var moveNextMethodName = stateMachineTypeDef.DeclaringType.FullName;
 

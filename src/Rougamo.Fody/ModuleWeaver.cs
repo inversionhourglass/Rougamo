@@ -27,14 +27,12 @@ namespace Rougamo.Fody
         private TypeReference _typeMethodContextRef;
         private TypeReference _typeIMoArrayRef;
         private TypeReference _typeDebuggerStepThroughAttributeRef;
-        private TypeReference _typeAsyncStateMachineAttributeRef;
 
         private MethodReference _methodGetTypeFromHandleRef;
         private MethodReference _methodGetMethodFromHandleRef;
         private MethodReference _methodListAddRef;
         private MethodReference _methodListToArrayRef;
         private MethodReference _methodDebuggerStepThroughCtorRef;
-        private MethodReference _methodAsyncStateMachineAttributeCtorRef;
         private MethodReference _methodAsyncTaskMethodBuilderCreateref;
         private MethodReference _methodAsyncValueTaskMethodBuilderCreateRef;
         private MethodReference _methodGenericAsyncTaskMethodBuilderCreateRef;
@@ -51,6 +49,7 @@ namespace Rougamo.Fody
         private MethodReference _methodMethodContextGetRewriteArgumentsRef;
         private MethodReference _methodMethodContextGetRetryCountRef;
         private Dictionary<string, MethodReference> _methodIMosRef;
+        private Dictionary<string, MethodReference> _stateMachineCtorRefs;
 
         private List<RouType> _rouTypes;
         private Config _config;

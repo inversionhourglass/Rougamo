@@ -12,10 +12,10 @@ namespace Rougamo.Fody
     {
         private void StrictAsyncTaskMethodWeave(RouMethod rouMethod, TypeDefinition stateMachineTypeDef)
         {
-            var actualStateMachineTypeDef = StrictAsyncStateMachineClone(stateMachineTypeDef);
+            var actualStateMachineTypeDef = StrictStateMachineClone(stateMachineTypeDef);
             if (actualStateMachineTypeDef == null) return;
 
-            var actualMethodDef = StrictAsyncSetupMethodClone(rouMethod.MethodDef, stateMachineTypeDef, actualStateMachineTypeDef);
+            var actualMethodDef = StrictStateMachineSetupMethodClone(rouMethod.MethodDef, stateMachineTypeDef, actualStateMachineTypeDef, Constants.TYPE_AsyncStateMachineAttribute);
             rouMethod.MethodDef.DeclaringType.Methods.Add(actualMethodDef);
 
             var moveNextDef = stateMachineTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
@@ -398,7 +398,7 @@ namespace Rougamo.Fody
             }
         }
 
-        private TypeDefinition? StrictAsyncStateMachineClone(TypeDefinition stateMachineTypeDef)
+        private TypeDefinition? StrictStateMachineClone(TypeDefinition stateMachineTypeDef)
         {
             var typeName = $"$Rougamo_{stateMachineTypeDef.Name}";
             if (stateMachineTypeDef.DeclaringType.NestedTypes.Any(x => x.Name == typeName)) return null;
@@ -409,20 +409,24 @@ namespace Rougamo.Fody
             return actualTypeDef;
         }
 
-        private MethodDefinition StrictAsyncSetupMethodClone(MethodDefinition methodDef, TypeDefinition stateMachineTypeDef, TypeDefinition clonedStateMachineTypeDef)
+        private MethodDefinition StrictStateMachineSetupMethodClone(MethodDefinition methodDef, TypeDefinition stateMachineTypeDef, TypeDefinition clonedStateMachineTypeDef, string stateMachineAttributeTypeName)
         {
             var clonedMethodDef = methodDef.Clone($"$Rougamo_{methodDef.Name}");
 
-            StrictAsyncAsyncStateMachineAttributeClone(clonedMethodDef, clonedStateMachineTypeDef);
+            StrictStateMachineAttributeClone(clonedMethodDef, clonedStateMachineTypeDef, stateMachineAttributeTypeName);
 
             var genericMap = methodDef.DeclaringType.GenericParameters.ToDictionary(x => x.Name, x => x);
             genericMap.AddRange(clonedMethodDef.GenericParameters.ToDictionary(x => x.Name, x => x));
             var stateMachineVariableTypeRef = clonedStateMachineTypeDef.MakeReference().ReplaceGenericArgs(genericMap);
-            var vStateMachine = clonedMethodDef.Body.Variables.Single(x => x.VariableType.Resolve() == stateMachineTypeDef);
-            var index = clonedMethodDef.Body.Variables.IndexOf(vStateMachine);
-            clonedMethodDef.Body.Variables.Remove(vStateMachine);
-            var vClonedStateMachine = new VariableDefinition(stateMachineVariableTypeRef);
-            clonedMethodDef.Body.Variables.Insert(index, vClonedStateMachine);
+            var vStateMachine = clonedMethodDef.Body.Variables.SingleOrDefault(x => x.VariableType.Resolve() == stateMachineTypeDef);
+            VariableDefinition? vClonedStateMachine = null;
+            if (vStateMachine != null)
+            {
+                var index = clonedMethodDef.Body.Variables.IndexOf(vStateMachine);
+                clonedMethodDef.Body.Variables.Remove(vStateMachine);
+                vClonedStateMachine = new VariableDefinition(stateMachineVariableTypeRef);
+                clonedMethodDef.Body.Variables.Insert(index, vClonedStateMachine);
+            }
 
             var fieldMap = new Dictionary<FieldDefinition, FieldReference>();
             foreach (var fieldDef in stateMachineTypeDef.Fields)
@@ -476,14 +480,14 @@ namespace Rougamo.Fody
             return clonedMethodDef;
         }
 
-        private void StrictAsyncAsyncStateMachineAttributeClone(MethodDefinition clonedMethodDef, TypeDefinition clonedStateMachineTypeDef)
+        private void StrictStateMachineAttributeClone(MethodDefinition clonedMethodDef, TypeDefinition clonedStateMachineTypeDef, string stateMachineAttributeTypeName)
         {
-            var asyncStateMachineAttribute = clonedMethodDef.CustomAttributes.Single(x => x.Is(Constants.TYPE_AsyncStateMachineAttribute));
-            clonedMethodDef.CustomAttributes.Remove(asyncStateMachineAttribute);
+            var stateMachineAttribute = clonedMethodDef.CustomAttributes.Single(x => x.Is(stateMachineAttributeTypeName));
+            clonedMethodDef.CustomAttributes.Remove(stateMachineAttribute);
 
-            asyncStateMachineAttribute = new CustomAttribute(_methodAsyncStateMachineAttributeCtorRef);
-            asyncStateMachineAttribute.ConstructorArguments.Add(new CustomAttributeArgument(_typeSystemRef, clonedStateMachineTypeDef));
-            clonedMethodDef.CustomAttributes.Add(asyncStateMachineAttribute);
+            stateMachineAttribute = new CustomAttribute(_stateMachineCtorRefs[stateMachineAttributeTypeName]);
+            stateMachineAttribute.ConstructorArguments.Add(new CustomAttributeArgument(_typeSystemRef, clonedStateMachineTypeDef));
+            clonedMethodDef.CustomAttributes.Add(stateMachineAttribute);
         }
 
         private void StrictAsyncFieldCleanup(TypeDefinition stateMachineTypeDef, AsyncFields fields)
