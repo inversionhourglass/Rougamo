@@ -318,8 +318,8 @@ namespace Rougamo.Fody
             instructions.InsertBefore(oldTryStart, Create(OpCodes.Brfalse, nopRetryLoopStart));
             // -if (state != 0)
             {
-                instructions.InsertBefore(oldTryStart, StrictAsyncInitMos(proxyMoveNextDef, rouMethod.Mos, context.Fields));
-                instructions.InsertBefore(oldTryStart, StrictAsyncInitMethodContext(rouMethod, proxyMoveNextDef, context));
+                instructions.InsertBefore(oldTryStart, StrictStateMachineInitMos(proxyMoveNextDef, rouMethod.Mos, context.Fields));
+                instructions.InsertBefore(oldTryStart, StrictStateMachineInitMethodContext(rouMethod, proxyMoveNextDef, context.Fields));
                 instructions.InsertBefore(oldTryStart, StateMachineOnEntry(rouMethod, proxyMoveNextDef, null, context.Fields));
                 instructions.InsertBefore(oldTryStart, StrictAsyncIfOnEntryReplacedReturn(rouMethod, proxyMoveNextDef, null, outerCatchEnd, context));
                 instructions.InsertBefore(oldTryStart, StateMachineRewriteArguments(rouMethod, nopRetryLoopStart, context.Fields));
@@ -583,7 +583,7 @@ namespace Rougamo.Fody
             }
         }
 
-        private IList<Instruction> StrictAsyncInitMos(MethodDefinition moveNextMethodDef, Mo[] mos, AsyncFields fields)
+        private IList<Instruction> StrictStateMachineInitMos(MethodDefinition moveNextMethodDef, Mo[] mos, IStateMachineFields fields)
         {
             if (fields.MoArray != null)
             {
@@ -594,10 +594,10 @@ namespace Rougamo.Fody
                 return instructions;
             }
 
-            return StrictAsyncInitMoFields(moveNextMethodDef, mos, fields.Mos);
+            return StrictStateMachineInitMoFields(moveNextMethodDef, mos, fields.Mos);
         }
 
-        private IList<Instruction> StrictAsyncInitMoFields(MethodDefinition methodDef, Mo[] mos, FieldReference[] moFields)
+        private IList<Instruction> StrictStateMachineInitMoFields(MethodDefinition methodDef, Mo[] mos, FieldReference[] moFields)
         {
             var instructions = new List<Instruction>();
 
@@ -614,35 +614,35 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private IList<Instruction> StrictAsyncInitMethodContext(RouMethod rouMethod, MethodDefinition moveNextMethodDef, StrictAsyncContext context)
+        private IList<Instruction> StrictStateMachineInitMethodContext(RouMethod rouMethod, MethodDefinition moveNextMethodDef, IStateMachineFields fields)
         {
             var instructions = new List<Instruction>();
             VariableDefinition? moArray = null;
-            if ((rouMethod.MethodContextOmits & Omit.Mos) == 0 && context.Fields.MoArray == null)
+            if ((rouMethod.MethodContextOmits & Omit.Mos) == 0 && fields.MoArray == null)
             {
                 moArray = moveNextMethodDef.Body.CreateVariable(_typeIMoArrayRef);
-                instructions.AddRange(CreateTempMoArray(null, context.Fields.Mos, rouMethod.Mos));
+                instructions.AddRange(CreateTempMoArray(null, fields.Mos, rouMethod.Mos));
                 instructions.Add(Create(OpCodes.Stloc, moArray));
             }
 
             instructions.Add(Create(OpCodes.Ldarg_0));
-            instructions.AddRange(StrictStateMachineInitMethodContext(rouMethod.MethodDef, moArray, context, rouMethod.MethodContextOmits));
-            instructions.Add(Create(OpCodes.Stfld, context.Fields.MethodContext));
+            instructions.AddRange(StrictStateMachineInitMethodContext(rouMethod.MethodDef, moArray, fields, rouMethod.MethodContextOmits));
+            instructions.Add(Create(OpCodes.Stfld, fields.MethodContext));
 
             return instructions;
         }
 
-        private List<Instruction> StrictStateMachineInitMethodContext(MethodDefinition methodDef, VariableDefinition? moArrayVariable, StrictAsyncContext context, Omit omit)
+        private List<Instruction> StrictStateMachineInitMethodContext(MethodDefinition methodDef, VariableDefinition? moArrayVariable, IStateMachineFields fields, Omit omit)
         {
             var instructions = new List<Instruction>();
 
-            if (context.Fields.DeclaringThis != null)
+            if (fields.DeclaringThis != null)
             {
                 instructions.Add(Create(OpCodes.Ldarg_0));
-                instructions.Add(Create(OpCodes.Ldfld, context.Fields.DeclaringThis));
-                if (context.Fields.DeclaringThis.FieldType.IsValueType)
+                instructions.Add(Create(OpCodes.Ldfld, fields.DeclaringThis));
+                if (fields.DeclaringThis.FieldType.IsValueType)
                 {
-                    instructions.Add(Create(OpCodes.Box, context.Fields.DeclaringThis.FieldType));
+                    instructions.Add(Create(OpCodes.Box, fields.DeclaringThis.FieldType));
                 }
             }
             else
@@ -656,14 +656,14 @@ namespace Rougamo.Fody
             {
                 instructions.Add(Create(OpCodes.Ldnull));
             }
-            else if (context.Fields.MoArray == null)
+            else if (fields.MoArray == null)
             {
                 instructions.Add(Create(OpCodes.Ldloc, moArrayVariable));
             }
             else
             {
                 instructions.Add(Create(OpCodes.Ldarg_0));
-                instructions.Add(Create(OpCodes.Ldfld, context.Fields.MoArray));
+                instructions.Add(Create(OpCodes.Ldfld, fields.MoArray));
             }
             if ((omit & Omit.Arguments) != 0)
             {
@@ -671,7 +671,7 @@ namespace Rougamo.Fody
             }
             else
             {
-                instructions.AddRange(StrictAsyncLoadArguments(context.Fields.Parameters));
+                instructions.AddRange(StrictAsyncLoadArguments(fields.Parameters));
             }
             instructions.Add(Create(OpCodes.Newobj, _methodMethodContext3CtorRef));
 

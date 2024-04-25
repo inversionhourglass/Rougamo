@@ -45,7 +45,7 @@ namespace BasicUsage
         {
             yield return nameof(FeatureIteratorUseCase);
             yield return nameof(DiffApplyArray);
-            //yield return value;
+            yield return value;
         }
 
         [Feature(1, Features = Feature.OnException)]

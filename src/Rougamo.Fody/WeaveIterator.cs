@@ -86,7 +86,7 @@ namespace Rougamo.Fody
             FieldDefinition? recordedReturn = null;
             var transitParameters = StateMachineParameterFields(rouMethod);
             var parameters = IteratorGetPrivateParameterFields(getEnumeratorMethodDef, transitParameters);
-            if (_config.RecordingIteratorReturns && (rouMethod.MethodContextOmits & Omit.ReturnValue) == 0)
+            if (_config.RecordingIteratorReturns && (rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) != 0 && (rouMethod.MethodContextOmits & Omit.ReturnValue) == 0)
             {
                 var listReturnsRef = new GenericInstanceType(_typeListRef);
                 listReturnsRef.GenericArguments.Add(((GenericInstanceType)rouMethod.MethodDef.ReturnType).GenericArguments[0]);
@@ -219,20 +219,19 @@ namespace Rougamo.Fody
             };
         }
 
-        private IList<Instruction> IteratorSaveYeildReturn(RouMethod rouMethod, IIteratorFields fields)
+        private IList<Instruction>? IteratorSaveYeildReturn(RouMethod rouMethod, IIteratorFields fields)
         {
-            if (fields.RecordedReturn == null || (rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) == 0 || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return EmptyInstructions;
+            if (fields.RecordedReturn == null || (rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) == 0 || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return null;
 
             var listAddMethodRef = _methodListAddRef.WithGenericDeclaringType(fields.RecordedReturn!.FieldType);
 
-            return new[]
-            {
+            return [
                 Create(OpCodes.Ldarg_0),
                 Create(OpCodes.Ldfld, fields.RecordedReturn),
                 Create(OpCodes.Ldarg_0),
                 Create(OpCodes.Ldfld, fields.Current),
                 Create(OpCodes.Callvirt, listAddMethodRef)
-            };
+            ];
         }
 
         private IList<Instruction> IteratorIfLastYeild(RouMethod rouMethod, Instruction ifNotLastYeildGoto, IteratorVariables variables)
@@ -259,21 +258,20 @@ namespace Rougamo.Fody
             };
         }
 
-        private IList<Instruction> IteratorSaveReturnValue(RouMethod rouMethod, IIteratorFields fields)
+        private IList<Instruction>? IteratorSaveReturnValue(RouMethod rouMethod, IIteratorFields fields)
         {
-            if (fields.RecordedReturn == null || (rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) == 0 || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return EmptyInstructions;
+            if (fields.RecordedReturn == null || (rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) == 0 || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return null;
 
             var listToArrayMethodRef = _methodListToArrayRef.WithGenericDeclaringType(fields.RecordedReturn!.FieldType);
 
-            return new[]
-            {
+            return [
                 Create(OpCodes.Ldarg_0),
                 Create(OpCodes.Ldfld, fields.MethodContext),
                 Create(OpCodes.Ldarg_0),
                 Create(OpCodes.Ldfld, fields.RecordedReturn),
                 Create(OpCodes.Callvirt, listToArrayMethodRef),
                 Create(OpCodes.Callvirt, _methodMethodContextSetReturnValueRef)
-            };
+            ];
         }
 
         private FieldDefinition?[] IteratorGetPrivateParameterFields(MethodDefinition getEnumeratorMethodDef, FieldDefinition?[] transitParameterFieldDefs)
