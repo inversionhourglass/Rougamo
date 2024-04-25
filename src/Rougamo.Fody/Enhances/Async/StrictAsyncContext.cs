@@ -1,8 +1,8 @@
 ﻿namespace Rougamo.Fody.Enhances.Async
 {
-    internal class StrictAsyncBag
+    internal class StrictAsyncContext
     {
-        public StrictAsyncBag(AsyncFields fields, StrictAsyncVariables variables)
+        public StrictAsyncContext(AsyncFields fields, StrictAsyncVariables variables)
         {
             Fields = fields;
             Variables = variables;

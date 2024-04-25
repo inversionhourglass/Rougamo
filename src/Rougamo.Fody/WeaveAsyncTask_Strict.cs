@@ -20,13 +20,13 @@ namespace Rougamo.Fody
 
             var moveNextDef = stateMachineTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
             moveNextDef.Clear();
-            var bag = StrictAsyncProxyCall(rouMethod, stateMachineTypeDef, moveNextDef, actualMethodDef);
-            StrictAsyncWeave(rouMethod, bag, moveNextDef);
+            var context = StrictAsyncProxyCall(rouMethod, stateMachineTypeDef, moveNextDef, actualMethodDef);
+            StrictAsyncWeave(rouMethod, context, moveNextDef);
 
             moveNextDef.Body.OptimizePlus(EmptyInstructions);
         }
 
-        private StrictAsyncBag StrictAsyncProxyCall(RouMethod rouMethod, TypeDefinition proxyStateMachineTypeDef, MethodDefinition proxyMoveNextDef, MethodDefinition actualMethodDef)
+        private StrictAsyncContext StrictAsyncProxyCall(RouMethod rouMethod, TypeDefinition proxyStateMachineTypeDef, MethodDefinition proxyMoveNextDef, MethodDefinition actualMethodDef)
         {
             var genericMap = proxyStateMachineTypeDef.GenericParameters.ToDictionary(x => x.Name, x => x);
 
@@ -272,7 +272,7 @@ namespace Rougamo.Fody
             return new(fields, new(vState, vThis, vResult));
         }
 
-        private void StrictAsyncWeave(RouMethod rouMethod, StrictAsyncBag bag, MethodDefinition proxyMoveNextDef)
+        private void StrictAsyncWeave(RouMethod rouMethod, StrictAsyncContext context, MethodDefinition proxyMoveNextDef)
         {
             var outerHandler = proxyMoveNextDef.Body.ExceptionHandlers.Single();
             var tryStart = outerHandler.TryStart;
@@ -314,15 +314,15 @@ namespace Rougamo.Fody
              *     try
              *     {
              */
-            tryStart.Set(OpCodes.Ldloc, bag.Variables.State);
+            tryStart.Set(OpCodes.Ldloc, context.Variables.State);
             instructions.InsertBefore(oldTryStart, Create(OpCodes.Brfalse, nopRetryLoopStart));
             // -if (state != 0)
             {
-                instructions.InsertBefore(oldTryStart, StrictAsyncInitMos(proxyMoveNextDef, rouMethod.Mos, bag.Fields));
-                instructions.InsertBefore(oldTryStart, StrictAsyncInitMethodContext(rouMethod, proxyMoveNextDef, bag));
-                instructions.InsertBefore(oldTryStart, StateMachineOnEntry(rouMethod, proxyMoveNextDef, null, bag.Fields));
-                instructions.InsertBefore(oldTryStart, StrictAsyncIfOnEntryReplacedReturn(rouMethod, proxyMoveNextDef, null, outerCatchEnd, bag));
-                instructions.InsertBefore(oldTryStart, StateMachineRewriteArguments(rouMethod, nopRetryLoopStart, bag.Fields));
+                instructions.InsertBefore(oldTryStart, StrictAsyncInitMos(proxyMoveNextDef, rouMethod.Mos, context.Fields));
+                instructions.InsertBefore(oldTryStart, StrictAsyncInitMethodContext(rouMethod, proxyMoveNextDef, context));
+                instructions.InsertBefore(oldTryStart, StateMachineOnEntry(rouMethod, proxyMoveNextDef, null, context.Fields));
+                instructions.InsertBefore(oldTryStart, StrictAsyncIfOnEntryReplacedReturn(rouMethod, proxyMoveNextDef, null, outerCatchEnd, context));
+                instructions.InsertBefore(oldTryStart, StateMachineRewriteArguments(rouMethod, nopRetryLoopStart, context.Fields));
             }
             instructions.InsertBefore(oldTryStart, nopRetryLoopStart);
 
@@ -342,11 +342,11 @@ namespace Rougamo.Fody
              *     
              *     break;
              */
-            instructions.InsertBefore(tryLastLeave, StrictAsyncSaveReturnValue(rouMethod, bag));
-            instructions.InsertBefore(tryLastLeave, StateMachineOnSuccess(rouMethod, proxyMoveNextDef, null, bag.Fields));
-            instructions.InsertBefore(tryLastLeave, StrictAsyncIfSuccessRetry(rouMethod, nopRetryLoopStart, null, bag));
-            instructions.InsertBefore(tryLastLeave, StrictAsyncIfSuccessReplacedReturn(rouMethod, null, bag));
-            instructions.InsertBefore(tryLastLeave, StateMachineOnExit(rouMethod, proxyMoveNextDef, tryLastLeave, bag.Fields));
+            instructions.InsertBefore(tryLastLeave, StrictAsyncSaveReturnValue(rouMethod, context));
+            instructions.InsertBefore(tryLastLeave, StateMachineOnSuccess(rouMethod, proxyMoveNextDef, null, context.Fields));
+            instructions.InsertBefore(tryLastLeave, StrictAsyncIfSuccessRetry(rouMethod, nopRetryLoopStart, null, context));
+            instructions.InsertBefore(tryLastLeave, StrictAsyncIfSuccessReplacedReturn(rouMethod, null, context));
+            instructions.InsertBefore(tryLastLeave, StateMachineOnExit(rouMethod, proxyMoveNextDef, tryLastLeave, context.Fields));
 
             /**
              *     }
@@ -372,12 +372,12 @@ namespace Rougamo.Fody
             if ((rouMethod.Features & (int)(Feature.OnException | Feature.OnExit)) != 0)
             {
                 instructions.InsertBefore(outerCatchStart, innerCatchStart);
-                instructions.InsertBefore(outerCatchStart, StrictStateMachineSaveException(rouMethod, bag.Fields, vInnerException));
-                instructions.InsertBefore(outerCatchStart, StateMachineOnException(rouMethod, proxyMoveNextDef, null, bag.Fields));
-                instructions.InsertBefore(outerCatchStart, StrictAsyncIfExceptionRetry(rouMethod, nopRetryLoopStart, null, bag));
-                instructions.InsertBefore(outerCatchStart, StrictAsyncSaveExceptionHandledResult(rouMethod, bag));
-                instructions.InsertBefore(outerCatchStart, StateMachineOnExit(rouMethod, proxyMoveNextDef, null, bag.Fields));
-                instructions.InsertBefore(outerCatchStart, StrictAsyncCheckExceptionHandled(rouMethod, outerCatchEnd, bag.Fields));
+                instructions.InsertBefore(outerCatchStart, StrictStateMachineSaveException(rouMethod, context.Fields, vInnerException));
+                instructions.InsertBefore(outerCatchStart, StateMachineOnException(rouMethod, proxyMoveNextDef, null, context.Fields));
+                instructions.InsertBefore(outerCatchStart, StrictAsyncIfExceptionRetry(rouMethod, nopRetryLoopStart, null, context));
+                instructions.InsertBefore(outerCatchStart, StrictAsyncSaveExceptionHandledResult(rouMethod, context));
+                instructions.InsertBefore(outerCatchStart, StateMachineOnExit(rouMethod, proxyMoveNextDef, null, context.Fields));
+                instructions.InsertBefore(outerCatchStart, StrictAsyncCheckExceptionHandled(rouMethod, outerCatchEnd, context.Fields));
             }
 
             outerHandler.TryStart = tryStart;
@@ -614,35 +614,35 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private IList<Instruction> StrictAsyncInitMethodContext(RouMethod rouMethod, MethodDefinition moveNextMethodDef, StrictAsyncBag bag)
+        private IList<Instruction> StrictAsyncInitMethodContext(RouMethod rouMethod, MethodDefinition moveNextMethodDef, StrictAsyncContext context)
         {
             var instructions = new List<Instruction>();
             VariableDefinition? moArray = null;
-            if ((rouMethod.MethodContextOmits & Omit.Mos) == 0 && bag.Fields.MoArray == null)
+            if ((rouMethod.MethodContextOmits & Omit.Mos) == 0 && context.Fields.MoArray == null)
             {
                 moArray = moveNextMethodDef.Body.CreateVariable(_typeIMoArrayRef);
-                instructions.AddRange(CreateTempMoArray(null, bag.Fields.Mos, rouMethod.Mos));
+                instructions.AddRange(CreateTempMoArray(null, context.Fields.Mos, rouMethod.Mos));
                 instructions.Add(Create(OpCodes.Stloc, moArray));
             }
 
             instructions.Add(Create(OpCodes.Ldarg_0));
-            instructions.AddRange(StrictStateMachineInitMethodContext(rouMethod.MethodDef, moArray, bag, rouMethod.MethodContextOmits));
-            instructions.Add(Create(OpCodes.Stfld, bag.Fields.MethodContext));
+            instructions.AddRange(StrictStateMachineInitMethodContext(rouMethod.MethodDef, moArray, context, rouMethod.MethodContextOmits));
+            instructions.Add(Create(OpCodes.Stfld, context.Fields.MethodContext));
 
             return instructions;
         }
 
-        private List<Instruction> StrictStateMachineInitMethodContext(MethodDefinition methodDef, VariableDefinition? moArrayVariable, StrictAsyncBag bag, Omit omit)
+        private List<Instruction> StrictStateMachineInitMethodContext(MethodDefinition methodDef, VariableDefinition? moArrayVariable, StrictAsyncContext context, Omit omit)
         {
             var instructions = new List<Instruction>();
 
-            if (bag.Fields.DeclaringThis != null)
+            if (context.Fields.DeclaringThis != null)
             {
                 instructions.Add(Create(OpCodes.Ldarg_0));
-                instructions.Add(Create(OpCodes.Ldfld, bag.Fields.DeclaringThis));
-                if (bag.Fields.DeclaringThis.FieldType.IsValueType)
+                instructions.Add(Create(OpCodes.Ldfld, context.Fields.DeclaringThis));
+                if (context.Fields.DeclaringThis.FieldType.IsValueType)
                 {
-                    instructions.Add(Create(OpCodes.Box, bag.Fields.DeclaringThis.FieldType));
+                    instructions.Add(Create(OpCodes.Box, context.Fields.DeclaringThis.FieldType));
                 }
             }
             else
@@ -656,14 +656,14 @@ namespace Rougamo.Fody
             {
                 instructions.Add(Create(OpCodes.Ldnull));
             }
-            else if (bag.Fields.MoArray == null)
+            else if (context.Fields.MoArray == null)
             {
                 instructions.Add(Create(OpCodes.Ldloc, moArrayVariable));
             }
             else
             {
                 instructions.Add(Create(OpCodes.Ldarg_0));
-                instructions.Add(Create(OpCodes.Ldfld, bag.Fields.MoArray));
+                instructions.Add(Create(OpCodes.Ldfld, context.Fields.MoArray));
             }
             if ((omit & Omit.Arguments) != 0)
             {
@@ -671,14 +671,14 @@ namespace Rougamo.Fody
             }
             else
             {
-                instructions.AddRange(StrictAsyncLoadArguments(bag.Fields.Parameters));
+                instructions.AddRange(StrictAsyncLoadArguments(context.Fields.Parameters));
             }
             instructions.Add(Create(OpCodes.Newobj, _methodMethodContext3CtorRef));
 
             return instructions;
         }
 
-        private IList<Instruction>? StrictAsyncIfOnEntryReplacedReturn(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction? endAnchor, Instruction tailAnchor, StrictAsyncBag bag)
+        private IList<Instruction>? StrictAsyncIfOnEntryReplacedReturn(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction? endAnchor, Instruction tailAnchor, StrictAsyncContext context)
         {
             if (!Feature.EntryReplace.IsMatch(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return null;
 
@@ -688,16 +688,16 @@ namespace Rougamo.Fody
             var instructions = new List<Instruction>
             {
                 Create(OpCodes.Ldarg_0),
-                Create(OpCodes.Ldfld, bag.Fields.MethodContext),
+                Create(OpCodes.Ldfld, context.Fields.MethodContext),
                 Create(OpCodes.Callvirt, _methodMethodContextGetReturnValueReplacedRef),
                 Create(OpCodes.Brfalse_S, endAnchor),
             };
-            if (bag.Variables.Result != null)
+            if (context.Variables.Result != null)
             {
-                instructions.AddRange(AssignResultFromContext(bag));
+                instructions.AddRange(AssignResultFromContext(context));
             }
             var onExitEndAnchor = Create(OpCodes.Leave, tailAnchor);
-            instructions.AddRange(StateMachineOnExit(rouMethod, moveNextMethodDef, onExitEndAnchor, bag.Fields));
+            instructions.AddRange(StateMachineOnExit(rouMethod, moveNextMethodDef, onExitEndAnchor, context.Fields));
             instructions.Add(onExitEndAnchor);
 
             if (managedEndAnchor) instructions.Add(endAnchor!);
@@ -705,43 +705,43 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private IList<Instruction>? StrictAsyncSaveReturnValue(RouMethod rouMethod, StrictAsyncBag bag)
+        private IList<Instruction>? StrictAsyncSaveReturnValue(RouMethod rouMethod, StrictAsyncContext context)
         {
-            if (bag.Variables.Result == null || (rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) == 0 || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return null;
+            if (context.Variables.Result == null || (rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) == 0 || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return null;
 
             var instructions = new List<Instruction>
             {
                 Create(OpCodes.Ldarg_0),
-                Create(OpCodes.Ldfld, bag.Fields.MethodContext),
-                Create(OpCodes.Ldloc, bag.Variables.Result)
+                Create(OpCodes.Ldfld, context.Fields.MethodContext),
+                Create(OpCodes.Ldloc, context.Variables.Result)
             };
-            if (bag.Variables.Result.VariableType.NeedBox())
+            if (context.Variables.Result.VariableType.NeedBox())
             {
-                instructions.Add(Create(OpCodes.Box, bag.Variables.Result.VariableType));
+                instructions.Add(Create(OpCodes.Box, context.Variables.Result.VariableType));
             }
             instructions.Add(Create(OpCodes.Callvirt, _methodMethodContextSetReturnValueRef));
 
             return instructions;
         }
 
-        private IList<Instruction>? StrictAsyncIfSuccessRetry(RouMethod rouMethod, Instruction loopStartAnchor, Instruction? endAnchor, StrictAsyncBag bag)
+        private IList<Instruction>? StrictAsyncIfSuccessRetry(RouMethod rouMethod, Instruction loopStartAnchor, Instruction? endAnchor, StrictAsyncContext context)
         {
-            return !Feature.SuccessRetry.IsMatch(rouMethod.Features) ? null : StrictAsyncIfRetry(rouMethod, loopStartAnchor, endAnchor, bag);
+            return !Feature.SuccessRetry.IsMatch(rouMethod.Features) ? null : StrictAsyncIfRetry(rouMethod, loopStartAnchor, endAnchor, context);
         }
 
-        private IList<Instruction>? StrictAsyncIfExceptionRetry(RouMethod rouMethod, Instruction loopStartAnchor, Instruction? endAnchor, StrictAsyncBag bag)
+        private IList<Instruction>? StrictAsyncIfExceptionRetry(RouMethod rouMethod, Instruction loopStartAnchor, Instruction? endAnchor, StrictAsyncContext context)
         {
-            return !Feature.ExceptionRetry.IsMatch(rouMethod.Features) ? null : StrictAsyncIfRetry(rouMethod, loopStartAnchor, endAnchor, bag);
+            return !Feature.ExceptionRetry.IsMatch(rouMethod.Features) ? null : StrictAsyncIfRetry(rouMethod, loopStartAnchor, endAnchor, context);
         }
 
-        private IList<Instruction> StrictAsyncIfRetry(RouMethod rouMethod, Instruction loopStartAnchor, Instruction? endAnchor, StrictAsyncBag bag)
+        private IList<Instruction> StrictAsyncIfRetry(RouMethod rouMethod, Instruction loopStartAnchor, Instruction? endAnchor, StrictAsyncContext context)
         {
             var managedAnchor = endAnchor == null;
             if (managedAnchor) endAnchor = Create(OpCodes.Nop);
 
             List<Instruction> instructions = [
                 Create(OpCodes.Ldarg_0),
-                Create(OpCodes.Ldfld, bag.Fields.MethodContext),
+                Create(OpCodes.Ldfld, context.Fields.MethodContext),
                 Create(OpCodes.Callvirt, _methodMethodContextGetRetryCountRef),
                 Create(OpCodes.Ldc_I4_0),
                 Create(OpCodes.Ble, endAnchor),
@@ -753,9 +753,9 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private IList<Instruction>? StrictAsyncIfSuccessReplacedReturn(RouMethod rouMethod, Instruction? endAnchor, StrictAsyncBag bag)
+        private IList<Instruction>? StrictAsyncIfSuccessReplacedReturn(RouMethod rouMethod, Instruction? endAnchor, StrictAsyncContext context)
         {
-            if (bag.Variables.Result == null || !Feature.SuccessReplace.IsMatch(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return EmptyInstructions;
+            if (context.Variables.Result == null || !Feature.SuccessReplace.IsMatch(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return EmptyInstructions;
 
             var managedAnchor = endAnchor == null;
             if (managedAnchor) endAnchor = Create(OpCodes.Nop);
@@ -763,19 +763,19 @@ namespace Rougamo.Fody
             var instructions = new List<Instruction>
             {
                 Create(OpCodes.Ldarg_0),
-                Create(OpCodes.Ldfld, bag.Fields.MethodContext),
+                Create(OpCodes.Ldfld, context.Fields.MethodContext),
                 Create(OpCodes.Callvirt, _methodMethodContextGetReturnValueReplacedRef),
                 Create(OpCodes.Brfalse_S, endAnchor),
                 Create(OpCodes.Ldarg_0),
-                Create(OpCodes.Ldfld, bag.Fields.MethodContext),
+                Create(OpCodes.Ldfld, context.Fields.MethodContext),
                 Create(OpCodes.Callvirt, _methodMethodContextGetReturnValueRef),
             };
-            if (bag.Variables.Result.VariableType.FullName != typeof(object).FullName)
+            if (context.Variables.Result.VariableType.FullName != typeof(object).FullName)
             {
-                var castOp = bag.Variables.Result.VariableType.NeedBox() ? OpCodes.Unbox_Any : OpCodes.Castclass;
-                instructions.Add(Create(castOp, bag.Variables.Result.VariableType));
+                var castOp = context.Variables.Result.VariableType.NeedBox() ? OpCodes.Unbox_Any : OpCodes.Castclass;
+                instructions.Add(Create(castOp, context.Variables.Result.VariableType));
             }
-            instructions.Add(Create(OpCodes.Stloc, bag.Variables.Result));
+            instructions.Add(Create(OpCodes.Stloc, context.Variables.Result));
 
             if (managedAnchor) instructions.Add(endAnchor!);
 
@@ -794,23 +794,23 @@ namespace Rougamo.Fody
             ];
         }
 
-        private IList<Instruction>? StrictAsyncSaveExceptionHandledResult(RouMethod rouMethod, StrictAsyncBag bag)
+        private IList<Instruction>? StrictAsyncSaveExceptionHandledResult(RouMethod rouMethod, StrictAsyncContext context)
         {
             if (!Feature.ExceptionHandle.IsMatch(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return null;
 
-            if (bag.Variables.Result == null) return null;
+            if (context.Variables.Result == null) return null;
 
             var endAnchor = Create(OpCodes.Nop);
 
             var instructions = new List<Instruction>
             {
                 Create(OpCodes.Ldarg_0),
-                Create(OpCodes.Ldfld, bag.Fields.MethodContext),
+                Create(OpCodes.Ldfld, context.Fields.MethodContext),
                 Create(OpCodes.Callvirt, _methodMethodContextGetExceptionHandledRef),
                 Create(OpCodes.Brfalse, endAnchor)
             };
 
-            instructions.AddRange(AssignResultFromContext(bag));
+            instructions.AddRange(AssignResultFromContext(context));
             instructions.Add(endAnchor);
 
             return instructions;
@@ -865,20 +865,20 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private IList<Instruction> AssignResultFromContext(StrictAsyncBag bag)
+        private IList<Instruction> AssignResultFromContext(StrictAsyncContext context)
         {
             var instructions = new List<Instruction>
             {
                 Create(OpCodes.Ldarg_0),
-                Create(OpCodes.Ldfld, bag.Fields.MethodContext),
+                Create(OpCodes.Ldfld, context.Fields.MethodContext),
                 Create(OpCodes.Callvirt, _methodMethodContextGetReturnValueRef)
             };
-            if (bag.Variables.Result!.VariableType.FullName != typeof(object).FullName)
+            if (context.Variables.Result!.VariableType.FullName != typeof(object).FullName)
             {
-                var castOp = bag.Variables.Result.VariableType.NeedBox() ? OpCodes.Unbox_Any : OpCodes.Castclass;
-                instructions.Add(Create(castOp, bag.Variables.Result.VariableType));
+                var castOp = context.Variables.Result.VariableType.NeedBox() ? OpCodes.Unbox_Any : OpCodes.Castclass;
+                instructions.Add(Create(castOp, context.Variables.Result.VariableType));
             }
-            instructions.Add(Create(OpCodes.Stloc, bag.Variables.Result));
+            instructions.Add(Create(OpCodes.Stloc, context.Variables.Result));
 
             return instructions;
         }
