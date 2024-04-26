@@ -18,13 +18,24 @@
 
         public const string TYPE_Void = "System.Void";
         public const string TYPE_String = "System.String";
+        public const string TYPE_Boolean = "System.Boolean";
+        public const string TYPE_Byte = "System.Byte";
+        public const string TYPE_Int16 = "System.Int16";
         public const string TYPE_Int32 = "System.Int32";
+        public const string TYPE_Int64 = "System.Int63";
+        public const string TYPE_SByte = "System.SByte";
+        public const string TYPE_UInt16 = "System.UInt16";
+        public const string TYPE_UInt32 = "System.UInt32";
+        public const string TYPE_UInt64 = "System.UInt64";
+        public const string TYPE_Single = "Single";
         public const string TYPE_Double = "System.Double";
         public const string TYPE_Type = "System.Type";
         public const string TYPE_Task = "System.Threading.Tasks.Task";
         public const string TYPE_ValueTask = "System.Threading.Tasks.ValueTask";
         public const string TYPE_MulticastDelegate = "System.MulticastDelegate";
         public const string TYPE_ObsoleteAttribute = "System.ObsoleteAttribute";
+        public const string TYPE_IEnumerable = "System.Collections.Generic.IEnumerable";
+        public const string TYPE_IAsyncEnumerable = "System.Collections.Generic.IAsyncEnumerable";
         public const string TYPE_CompilerGeneratedAttribute = "System.CompilerGeneratedAttribute";
         public const string TYPE_IsByRefLikeAttribute = "System.Runtime.CompilerServices.IsByRefLikeAttribute";
         public const string TYPE_Runtime_CompilerGeneratedAttribute = "System.Runtime.CompilerServices.CompilerGeneratedAttribute";
@@ -68,6 +79,7 @@
         public const string FIELD_RougamoMos = ">_<rougamo_mos";
         public const string FIELD_RougamoContext = ">_<rougamo_context";
         public const string FIELD_Builder = "<>t__builder";
+        public const string FIELD_Promise = "<>v__promiseOfValueOrEnd";
         public const string FIELD_State = "<>1__state";
         public const string FIELD_This = "<>4__this";
         public const string FIELD_Awaiter = "<>u__1";
@@ -75,6 +87,7 @@
         public const string FIELD_Iterator = ">_<iterator";
         public const string FIELD_IteratorReturnList = ">_<returns";
         public const string FIELD_InitialThreadId = "<>l__initialThreadId";
+        public const string FIELD_Disposed = "<>w__disposeMode";
 
         public const string METHOD_OnEntry = "OnEntry";
         public const string METHOD_OnSuccess = "OnSuccess";
@@ -88,10 +101,12 @@
         public const string METHOD_GetAwaiter = "GetAwaiter";
         public const string METHOD_GetResult = "GetResult";
         public const string METHOD_AwaitUnsafeOnCompleted = "AwaitUnsafeOnCompleted";
+        public const string METHOD_Complete = "Complete";
         public const string METHOD_GetEnumerator = "GetEnumerator";
-        public const string METHOD_GetEnumerator_Prefix = "System.Collections.Generic.IEnumerable<";
-        public const string METHOD_GetEnumerator_Suffix = ">.GetEnumerator";
-        public const string METHOD_GetAsyncEnumerator_Prefix = "System.Collections.Generic.IAsyncEnumerable<";
-        public const string METHOD_GetAsyncEnumerator_Suffix = ">.GetAsyncEnumerator";
+        public const string METHOD_GetAsyncEnumerator = "GetAsyncEnumerator";
+        public const string METHOD_MoveNextAsync = "MoveNextAsync";
+
+        public static string GenericPrefix(string name) => $"{name}<";
+        public static string GenericSuffix(string name) => $">.{name}";
     }
 }

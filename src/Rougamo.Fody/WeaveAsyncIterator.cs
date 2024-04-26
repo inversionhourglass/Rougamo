@@ -12,6 +12,13 @@ namespace Rougamo.Fody
         private void AiteratorMethodWeave(RouMethod rouMethod)
         {
             var stateMachineTypeDef = rouMethod.MethodDef.ResolveStateMachine(Constants.TYPE_AsyncIteratorStateMachineAttribute);
+
+            if (_config.Strict)
+            {
+                StrictAiteratorTaskMethodWeave(rouMethod, stateMachineTypeDef);
+                return;
+            }
+
             var moveNextMethodDef = stateMachineTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
             var moveNextMethodName = stateMachineTypeDef.DeclaringType.FullName;
 
@@ -50,7 +57,7 @@ namespace Rougamo.Fody
 
         private AiteratorFields AiteratorResolveFields(RouMethod rouMethod, TypeDefinition stateMachineTypeDef)
         {
-            var getEnumeratorMethodDef = stateMachineTypeDef.Methods.Single(x => x.Name.StartsWith(Constants.METHOD_GetAsyncEnumerator_Prefix) && x.Name.EndsWith(Constants.METHOD_GetAsyncEnumerator_Suffix));
+            var getEnumeratorMethodDef = stateMachineTypeDef.Methods.Single(x => x.Name.StartsWith(Constants.GenericPrefix(Constants.TYPE_IAsyncEnumerable)) && x.Name.EndsWith(Constants.GenericSuffix(Constants.METHOD_GetAsyncEnumerator)));
 
             FieldDefinition? moArray = null;
             var mos = new FieldDefinition[0];
@@ -70,10 +77,14 @@ namespace Rougamo.Fody
             }
             var methodContext = new FieldDefinition(Constants.FIELD_RougamoContext, FieldAttributes.Public, _typeMethodContextRef);
             var state = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_State);
-            var current = stateMachineTypeDef.Fields.Single(m => m.Name.EndsWith(Constants.FIELD_Current_Suffix));
+            var current = stateMachineTypeDef.Fields.Single(x => x.Name.EndsWith(Constants.FIELD_Current_Suffix));
+            var initialThreadId = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_InitialThreadId);
+            var disposed = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_Disposed);
+            var builder = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_Builder);
+            var promise = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_Promise);
             FieldDefinition? recordedReturn = null;
-            var parameters = StateMachineParameterFields(rouMethod);
-            parameters = IteratorGetPrivateParameterFields(getEnumeratorMethodDef, parameters);
+            var transitParameters = StateMachineParameterFields(rouMethod);
+            var parameters = IteratorGetPrivateParameterFields(getEnumeratorMethodDef, transitParameters);
             if (_config.RecordingIteratorReturns && (rouMethod.MethodContextOmits & Omit.ReturnValue) == 0)
             {
                 var listReturnsRef = new GenericInstanceType(_typeListRef);
@@ -84,7 +95,7 @@ namespace Rougamo.Fody
 
             stateMachineTypeDef.Fields.Add(methodContext);
 
-            return new AiteratorFields(stateMachineTypeDef, moArray, mos, methodContext, state, current, recordedReturn, parameters);
+            return new AiteratorFields(stateMachineTypeDef, moArray, mos, methodContext, state, current, initialThreadId, disposed, builder, promise, recordedReturn, transitParameters, parameters);
         }
 
         private AiteratorVariables AiteratorResolveVariables(RouMethod rouMethod, MethodDefinition moveNextMethodDef, TypeDefinition stateMachineTypeDef)

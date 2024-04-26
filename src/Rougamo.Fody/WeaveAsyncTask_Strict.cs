@@ -485,7 +485,12 @@ namespace Rougamo.Fody
             var stateMachineAttribute = clonedMethodDef.CustomAttributes.Single(x => x.Is(stateMachineAttributeTypeName));
             clonedMethodDef.CustomAttributes.Remove(stateMachineAttribute);
 
-            stateMachineAttribute = new CustomAttribute(_stateMachineCtorRefs[stateMachineAttributeTypeName]);
+            if (!_stateMachineCtorRefs.TryGetValue(stateMachineAttributeTypeName, out var ctor))
+            {
+                ctor = stateMachineAttribute.AttributeType.Resolve().Methods.Single(x => x.IsConstructor && !x.IsStatic && x.Parameters.Single().ParameterType.Is(Constants.TYPE_Type)).ImportInto(ModuleDefinition);
+                _stateMachineCtorRefs[stateMachineAttributeTypeName] = ctor;
+            }
+            stateMachineAttribute = new CustomAttribute(ctor);
             stateMachineAttribute.ConstructorArguments.Add(new CustomAttributeArgument(_typeSystemRef, clonedStateMachineTypeDef));
             clonedMethodDef.CustomAttributes.Add(stateMachineAttribute);
         }

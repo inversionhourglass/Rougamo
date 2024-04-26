@@ -348,6 +348,40 @@ namespace Rougamo.Fody
             return Instruction.Create(OpCodes.Stobj, typeRef); // struct & enum & generic parameter
         }
 
+        public static bool ShouldInitobj(this TypeReference typeRef, out Instruction[] defaultValueOp)
+        {
+            switch (typeRef.FullName)
+            {
+                case Constants.TYPE_Boolean:
+                case Constants.TYPE_Byte:
+                case Constants.TYPE_Int16:
+                case Constants.TYPE_Int32:
+                case Constants.TYPE_SByte:
+                case Constants.TYPE_UInt16:
+                case Constants.TYPE_UInt32:
+                    defaultValueOp = [Instruction.Create(OpCodes.Ldc_I4_0)];
+                    return false;
+                case Constants.TYPE_Int64:
+                case Constants.TYPE_UInt64:
+                    defaultValueOp = [Instruction.Create(OpCodes.Ldc_I4_0), Instruction.Create(OpCodes.Conv_I8)];
+                    return false;
+                case Constants.TYPE_Single:
+                    defaultValueOp = [Instruction.Create(OpCodes.Ldc_R4, 0)];
+                    return false;
+                case Constants.TYPE_Double:
+                    defaultValueOp = [Instruction.Create(OpCodes.Ldc_R8, 0)];
+                    return false;
+                default:
+                    if (!typeRef.IsArray && (typeRef.IsGenericParameter || typeRef.IsValueType))
+                    {
+                        defaultValueOp = [Instruction.Create(OpCodes.Initobj, typeRef)];
+                        return true;
+                    }
+                    defaultValueOp = [Instruction.Create(OpCodes.Ldnull)];
+                    return false;
+            }
+        }
+
         public static TypeReference MakeReference(this TypeDefinition typeDef)
         {
             if (!typeDef.HasGenericParameters) return typeDef;

@@ -47,7 +47,7 @@ namespace Rougamo.Fody
             }
 
             var fields = IteratorResolveFields(rouMethod, proxyStateMachineTypeDef);
-            StrictIteratorSetAbsentFields(rouMethod, proxyStateMachineTypeDef, fields);
+            StrictIteratorSetAbsentFields(rouMethod, proxyStateMachineTypeDef, fields, Constants.GenericPrefix(Constants.TYPE_IEnumerable), Constants.GenericSuffix(Constants.METHOD_GetEnumerator));
             StrictFieldCleanup(proxyStateMachineTypeDef, fields);
 
             var fIterator = new FieldDefinition(Constants.FIELD_Iterator, FieldAttributes.Private, enumeratorTypeRef);
@@ -83,8 +83,8 @@ namespace Rougamo.Fody
             // else (state == 0)
             {
                 instructions.Add(anchor.StateIs0);
-                instructions.Add(Create(OpCodes.Ldarg_0));
                 // _iterator = ActualMethod(x, y, z).GetEnumerator();
+                instructions.Add(Create(OpCodes.Ldarg_0));
                 if (fields.DeclaringThis != null)
                 {
                     var ldfld = fields.DeclaringThis.FieldType.IsValueType ? OpCodes.Ldflda : OpCodes.Ldfld;
@@ -231,7 +231,7 @@ namespace Rougamo.Fody
             ];
         }
 
-        private void StrictIteratorSetAbsentFields(RouMethod rouMethod, TypeDefinition stateMachineTypeDef, IteratorFields fields)
+        private void StrictIteratorSetAbsentFields(RouMethod rouMethod, TypeDefinition stateMachineTypeDef, IIteratorFields fields, string mGetEnumeratorPrefix, string mGetEnumeratorSuffix)
         {
             var instructions = rouMethod.MethodDef.Body.Instructions;
             var vStateMachine = rouMethod.MethodDef.Body.Variables.SingleOrDefault(x => x.VariableType.Resolve() == stateMachineTypeDef);
@@ -240,7 +240,7 @@ namespace Rougamo.Fody
             var ret = instructions.Last();
             var genericMap = stateMachineTypeDef.GenericParameters.ToDictionary(x => x.Name, x => x);
             
-            var getEnumeratorMethodDef = stateMachineTypeDef.Methods.Single(x => x.Name.StartsWith(Constants.METHOD_GetEnumerator_Prefix) && x.Name.EndsWith(Constants.METHOD_GetEnumerator_Suffix));
+            var getEnumeratorMethodDef = stateMachineTypeDef.Methods.Single(x => x.Name.StartsWith(mGetEnumeratorPrefix) && x.Name.EndsWith(mGetEnumeratorSuffix));
 
             StrictAddAbsentField(stateMachineTypeDef, StrictSetAbsentFieldThis(rouMethod, fields, stateMachineTypeRef, loadStateMachine, ret, genericMap));
 
@@ -268,7 +268,7 @@ namespace Rougamo.Fody
             throw new RougamoException($"Cannot find {stateMachineTypeDef} init instruction from {methodDef}");
         }
 
-        private void StrictIteratorSetAbsentFieldThis(TypeDefinition stateMachineTypeDef, MethodDefinition getEnumeratorMethodDef, IteratorFields fields)
+        private void StrictIteratorSetAbsentFieldThis(TypeDefinition stateMachineTypeDef, MethodDefinition getEnumeratorMethodDef, IIteratorFields fields)
         {
             var instructions = getEnumeratorMethodDef.Body.Instructions;
 
@@ -297,7 +297,7 @@ namespace Rougamo.Fody
             ]);
         }
 
-        private IEnumerable<FieldDefinition> StrictIteratorSetAbsentFieldParameters(MethodDefinition getEnumeratorMethodDef, IteratorFields fields)
+        private IEnumerable<FieldDefinition> StrictIteratorSetAbsentFieldParameters(MethodDefinition getEnumeratorMethodDef, IIteratorFields fields)
         {
             if (fields.TransitParameters.All(x => x != null)) yield break;
 

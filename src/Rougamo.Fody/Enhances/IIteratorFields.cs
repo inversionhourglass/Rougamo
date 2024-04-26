@@ -7,5 +7,7 @@ namespace Rougamo.Fody.Enhances
         FieldReference Current { get; }
 
         FieldReference? RecordedReturn { get; }
+
+        FieldReference?[] TransitParameters { get; set; }
     }
 }
