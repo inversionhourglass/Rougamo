@@ -1,6 +1,7 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
+using Rougamo.Fody.Enhances.AsyncIterator;
 using System.Linq;
 using static Mono.Cecil.Cil.Instruction;
 
@@ -18,10 +19,13 @@ namespace Rougamo.Fody
 
             var moveNextDef = stateMachineTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
             moveNextDef.Clear();
-            StrictAiteratorProxyCall(rouMethod, stateMachineTypeDef, moveNextDef, actualMethodDef);
+            var context = StrictAiteratorProxyCall(rouMethod, stateMachineTypeDef, moveNextDef, actualMethodDef);
+            StrictAiteratorWeave(rouMethod, moveNextDef, context);
+
+            moveNextDef.Body.OptimizePlus(EmptyInstructions);
         }
 
-        private void StrictAiteratorProxyCall(RouMethod rouMethod, TypeDefinition proxyStateMachineTypeDef, MethodDefinition proxyMoveNextDef, MethodDefinition actualMethodDef)
+        private StrictAiteratorContext StrictAiteratorProxyCall(RouMethod rouMethod, TypeDefinition proxyStateMachineTypeDef, MethodDefinition proxyMoveNextDef, MethodDefinition actualMethodDef)
         {
             var genericMap = proxyStateMachineTypeDef.GenericParameters.ToDictionary(x => x.Name, x => x);
 
@@ -81,13 +85,12 @@ namespace Rougamo.Fody
 
             var instructions = proxyMoveNextDef.Body.Instructions;
 
+            var anchors = new StrictAiteratorAnchors();
             var nopDone = Create(OpCodes.Nop);
             var nopYield = Create(OpCodes.Nop);
-            var nopMoveNextCore = Create(OpCodes.Nop);
             var nopNotDisposed = Create(OpCodes.Nop);
             var nopStateNotZero = Create(OpCodes.Nop);
             var nopGetResult = Create(OpCodes.Nop);
-            var nopNoNext = Create(OpCodes.Nop);
             var nopTryStart = Create(OpCodes.Nop);
             var nopCatchStart = Create(OpCodes.Nop);
             var ret = Create(OpCodes.Ret);
@@ -100,7 +103,7 @@ namespace Rougamo.Fody
             // -try
             {
                 instructions.Add(nopTryStart.Set(OpCodes.Ldloc, vState));
-                instructions.Add(Create(OpCodes.Brfalse, nopMoveNextCore));
+                instructions.Add(Create(OpCodes.Brfalse, anchors.CheckStateIs0));
                 // -if (state != 0)
                 {
                     // if (_disposed) goto Done;
@@ -116,11 +119,11 @@ namespace Rougamo.Fody
 
                     instructions.Add(Create(OpCodes.Ldloc, vState));
                     instructions.Add(Create(OpCodes.Ldc_I4, -4));
-                    instructions.Add(Create(OpCodes.Beq, nopMoveNextCore));
+                    instructions.Add(Create(OpCodes.Beq, anchors.CheckStateIs0));
                     // -if (state != -4)
                     {
                         // _iterator = ActualMethod(x, y, z).GetAsyncEnumerator();
-                        instructions.Add(Create(OpCodes.Ldarg_0));
+                        instructions.Add(anchors.ReadyProxyCall.Set(OpCodes.Ldarg_0));
                         if (fields.DeclaringThis != null)
                         {
                             var ldfld = fields.DeclaringThis.FieldType.IsValueType ? OpCodes.Ldflda : OpCodes.Ldfld;
@@ -141,8 +144,7 @@ namespace Rougamo.Fody
                     }
                 }
 
-                instructions.Add(nopMoveNextCore);
-                instructions.Add(Create(OpCodes.Ldloc, vState));
+                instructions.Add(anchors.CheckStateIs0.Set(OpCodes.Ldloc, vState));
                 instructions.Add(Create(OpCodes.Brtrue, nopStateNotZero));
                 // -if (state == 0)
                 {
@@ -207,8 +209,8 @@ namespace Rougamo.Fody
                 instructions.Add(Create(OpCodes.Call, getResultMethodRef));
                 instructions.Add(Create(OpCodes.Stloc, vHasNext));
 
-                instructions.Add(Create(OpCodes.Ldloc, vHasNext));
-                instructions.Add(Create(OpCodes.Brfalse, nopNoNext));
+                instructions.Add(anchors.CheckHasNext.Set(OpCodes.Ldloc, vHasNext));
+                instructions.Add(Create(OpCodes.Brfalse, anchors.SetDisposedToTrue));
                 // -if (hasNext)
                 {
                     // _current = _iterator.Current;
@@ -219,7 +221,7 @@ namespace Rougamo.Fody
                     instructions.Add(Create(OpCodes.Stfld, fields.Current));
 
                     // _state = -4;
-                    instructions.Add(Create(OpCodes.Ldarg_0));
+                    instructions.Add(anchors.SetStateToM4.Set(OpCodes.Ldarg_0));
                     instructions.Add(Create(OpCodes.Ldc_I4, -4));
                     instructions.Add(Create(OpCodes.Stfld, fields.State));
 
@@ -227,7 +229,7 @@ namespace Rougamo.Fody
                 }
 
                 // _disposed = true;
-                instructions.Add(nopNoNext.Set(OpCodes.Ldarg_0));
+                instructions.Add(anchors.SetDisposedToTrue.Set(OpCodes.Ldarg_0));
                 instructions.Add(Create(OpCodes.Ldc_I4_1));
                 instructions.Add(Create(OpCodes.Stfld, fields.Disposed));
 
@@ -318,6 +320,85 @@ namespace Rougamo.Fody
                 HandlerEnd = nopDone,
                 CatchType = _typeExceptionRef
             });
+
+            return new(fields, anchors);
+        }
+
+        private void StrictAiteratorWeave(RouMethod rouMethod, MethodDefinition proxyMoveNextDef, StrictAiteratorContext context)
+        {
+            var instructions = proxyMoveNextDef.Body.Instructions;
+
+            var vInnerException = proxyMoveNextDef.Body.CreateVariable(_typeExceptionRef);
+
+            var catchStart = Create(OpCodes.Stloc, vInnerException);
+
+            /**
+             * _items = new List<>(); // record return value only
+             * _mo1 = new Mo1Attribute();
+             * _context = new MethodContext(...);
+             * if (_context.RewriteArguments)
+             * {
+             *     arg1 = (int)_context.Argument[0];
+             * }
+             */
+            var anchorReadyProxyCall = context.Anchors.ReadyProxyCall;
+            instructions.InsertBefore(anchorReadyProxyCall, StrictIteratorInitRecordedReturn(rouMethod, context.Fields));
+            instructions.InsertBefore(anchorReadyProxyCall, StrictStateMachineInitMos(proxyMoveNextDef, rouMethod.Mos, context.Fields));
+            instructions.InsertBefore(anchorReadyProxyCall, StrictStateMachineInitMethodContext(rouMethod, proxyMoveNextDef, context.Fields));
+            instructions.InsertBefore(anchorReadyProxyCall, StateMachineOnEntry(rouMethod, proxyMoveNextDef, null, context.Fields));
+            instructions.InsertBefore(anchorReadyProxyCall, StateMachineRewriteArguments(rouMethod, anchorReadyProxyCall, context.Fields));
+
+            /**
+             * try
+             * {
+             *     ...
+             * }
+             * catch (Exception e)
+             * {
+             *     _context.Exception = e;
+             *     _mo1.OnException(_context);
+             *     _mo1.OnExit(_context);
+             *     throw;
+             * }
+             */
+            var anchorCheckHasNext = context.Anchors.CheckHasNext;
+            if ((rouMethod.Features & (int)(Feature.OnException | Feature.OnExit)) != 0)
+            {
+                instructions.InsertBefore(anchorCheckHasNext, Create(OpCodes.Leave, anchorCheckHasNext));
+                instructions.InsertBefore(anchorCheckHasNext, catchStart);
+                instructions.InsertBefore(anchorCheckHasNext, StrictStateMachineSaveException(rouMethod, context.Fields, vInnerException));
+                instructions.InsertBefore(anchorCheckHasNext, StateMachineOnException(rouMethod, proxyMoveNextDef, null, context.Fields));
+                instructions.InsertBefore(anchorCheckHasNext, StateMachineOnExit(rouMethod, proxyMoveNextDef, null, context.Fields));
+                instructions.InsertBefore(anchorCheckHasNext, Create(OpCodes.Rethrow));
+            }
+
+            /**
+			 * _items.Add(_current);
+			 */
+            var anchorSetStateToM4 = context.Anchors.SetStateToM4;
+            instructions.InsertBefore(anchorSetStateToM4, IteratorSaveYeildReturn(rouMethod, context.Fields));
+
+            /**
+             * _context.ReturnValue = _items;
+             * _mo1.OnSuccess(_context);
+             * _mo1.OnExit(_context);
+             */
+            var anchorSetDisposedToTrue = context.Anchors.SetDisposedToTrue;
+            instructions.InsertBefore(anchorSetDisposedToTrue, IteratorSaveReturnValue(rouMethod, context.Fields));
+            instructions.InsertBefore(anchorSetDisposedToTrue, StateMachineOnSuccess(rouMethod, proxyMoveNextDef, null, context.Fields));
+            instructions.InsertBefore(anchorSetDisposedToTrue, StateMachineOnExit(rouMethod, proxyMoveNextDef, anchorSetDisposedToTrue, context.Fields));
+
+            if ((rouMethod.Features & (int)(Feature.OnException | Feature.OnExit)) != 0)
+            {
+                proxyMoveNextDef.Body.ExceptionHandlers.Insert(0, new ExceptionHandler(ExceptionHandlerType.Catch)
+                {
+                    TryStart = context.Anchors.CheckStateIs0,
+                    TryEnd = catchStart,
+                    HandlerStart = catchStart,
+                    HandlerEnd = anchorCheckHasNext,
+                    CatchType = _typeExceptionRef
+                });
+            }
         }
     }
 }

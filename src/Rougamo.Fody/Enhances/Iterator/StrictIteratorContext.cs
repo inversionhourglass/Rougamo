@@ -2,7 +2,7 @@
 {
     internal class StrictIteratorContext
     {
-        public StrictIteratorContext(IteratorFields fields, StrictIteratorAnchor anchors)
+        public StrictIteratorContext(IteratorFields fields, StrictIteratorAnchors anchors)
         {
             Fields = fields;
             Anchors = anchors;
@@ -10,6 +10,6 @@
 
         public IteratorFields Fields { get; }
 
-        public StrictIteratorAnchor Anchors { get; }
+        public StrictIteratorAnchors Anchors { get; }
     }
 }

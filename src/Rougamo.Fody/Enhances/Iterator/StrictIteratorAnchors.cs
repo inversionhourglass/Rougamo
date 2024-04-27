@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace Rougamo.Fody.Enhances.Iterator
 {
-    internal class StrictIteratorAnchor : IAnchors
+    internal class StrictIteratorAnchors : IAnchors
     {
         public Instruction StateIs0 { get; } = Nop();
 

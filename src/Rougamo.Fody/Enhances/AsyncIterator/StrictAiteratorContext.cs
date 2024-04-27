@@ -1,10 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace Rougamo.Fody.Enhances.AsyncIterator
+﻿namespace Rougamo.Fody.Enhances.AsyncIterator
 {
     internal class StrictAiteratorContext
     {
+        public StrictAiteratorContext(AiteratorFields fields, StrictAiteratorAnchors anchors)
+        {
+            Fields = fields;
+            Anchors = anchors;
+        }
+
+        public AiteratorFields Fields { get; }
+
+        public StrictAiteratorAnchors Anchors { get; }
     }
 }

@@ -58,7 +58,7 @@ namespace Rougamo.Fody
 
             var instructions = proxyMoveNextDef.Body.Instructions;
 
-            var anchor = new StrictIteratorAnchor();
+            var anchor = new StrictIteratorAnchors();
             var nopHasNext = Create(OpCodes.Nop);
 
             instructions.Add(Create(OpCodes.Ldarg_0));
