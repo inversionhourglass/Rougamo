@@ -260,6 +260,10 @@ namespace Rougamo.Fody
                 clonedMethodDef.DebugInformation.SequencePoints.Add(clonedPoint);
             }
             clonedMethodDef.DebugInformation.Scope = methodDef.DebugInformation.Scope.Clone(offsetMap, map);
+            foreach (var debugInfo in methodDef.CustomDebugInformations)
+            {
+                clonedMethodDef.CustomDebugInformations.Add(debugInfo.Clone(offsetMap, map));
+            }
         }
 
         public static ParameterDefinition Clone(this ParameterDefinition parameterDef, Dictionary<object, object> map)
@@ -306,6 +310,51 @@ namespace Rougamo.Fody
             }
 
             return clonedScope;
+        }
+
+        public static CustomDebugInformation? Clone(this CustomDebugInformation? debugInfo, Dictionary<int, Instruction> offsetMap, Dictionary<object, object> compositeMap)
+        {
+            if (debugInfo == null) return null;
+
+            if (debugInfo is BinaryCustomDebugInformation) return debugInfo;
+
+            if (debugInfo is AsyncMethodBodyDebugInformation ambdi)
+            {
+                var offset = ambdi.CatchHandler.Offset;
+                var asyncDebugInfo = offset == -1 ? new AsyncMethodBodyDebugInformation() : new AsyncMethodBodyDebugInformation(offsetMap[offset]);
+                foreach (var rm in ambdi.ResumeMethods)
+                {
+                    if (!compositeMap.TryGetValue(rm, out var value) || value is not MethodDefinition mm)
+                    {
+                        mm = rm;
+                    }
+                    asyncDebugInfo.ResumeMethods.Add(mm);
+                }
+                foreach (var resume in ambdi.Resumes)
+                {
+                    asyncDebugInfo.Resumes.Add(new InstructionOffset(offsetMap[resume.Offset]));
+                }
+                foreach (var @yield in ambdi.Yields)
+                {
+                    asyncDebugInfo.Yields.Add(new InstructionOffset(offsetMap[yield.Offset]));
+                }
+
+                return asyncDebugInfo;
+            }
+
+            if (debugInfo is StateMachineScopeDebugInformation smsdi)
+            {
+                var stateMachineDebugInfo = new StateMachineScopeDebugInformation();
+
+                foreach (var scope in smsdi.Scopes)
+                {
+                    stateMachineDebugInfo.Scopes.Add(new StateMachineScope(offsetMap[scope.Start.Offset], scope.End.IsEndOfMethod ? null : offsetMap[scope.End.Offset]));
+                }
+
+                return stateMachineDebugInfo;
+            }
+
+            throw new NotImplementedException($"Unrecognized CustomeDebugInformation type -> {debugInfo.GetType()}");
         }
     }
 }
