@@ -12,8 +12,8 @@ namespace Rougamo.Fody.Enhances.AsyncIterator
             FieldDefinition state, FieldDefinition current,
             FieldDefinition initialThreadId, FieldDefinition disposed,
             FieldDefinition builder, FieldDefinition promise,
-            FieldDefinition? recordedReturn, FieldDefinition?[] transitParameters,
-            FieldDefinition?[] parameters) : base(stateMachineTypeDef)
+            FieldDefinition? recordedReturn, FieldDefinition? declaringThis,
+            FieldDefinition?[] transitParameters, FieldDefinition?[] parameters) : base(stateMachineTypeDef)
         {
             MoArray = MakeReference(moArray);
             Mos = mos.Select(x => MakeReference(x)!).ToArray();
@@ -25,6 +25,7 @@ namespace Rougamo.Fody.Enhances.AsyncIterator
             Builder = MakeReference(builder)!;
             Promise = MakeReference(promise)!;
             RecordedReturn = MakeReference(recordedReturn);
+            DeclaringThis = MakeReference(declaringThis);
             TransitParameters = transitParameters.Select(MakeReference).ToArray();
             Parameters = parameters.Select(MakeReference).ToArray();
         }

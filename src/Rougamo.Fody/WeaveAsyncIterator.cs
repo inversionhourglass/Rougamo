@@ -82,6 +82,7 @@ namespace Rougamo.Fody
             var disposed = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_Disposed);
             var builder = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_Builder);
             var promise = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_Promise);
+            var declaringThis = stateMachineTypeDef.Fields.SingleOrDefault(x => x.FieldType.Resolve() == stateMachineTypeDef.DeclaringType);
             FieldDefinition? recordedReturn = null;
             var transitParameters = StateMachineParameterFields(rouMethod);
             var parameters = IteratorGetPrivateParameterFields(getEnumeratorMethodDef, transitParameters);
@@ -95,7 +96,7 @@ namespace Rougamo.Fody
 
             stateMachineTypeDef.Fields.Add(methodContext);
 
-            return new AiteratorFields(stateMachineTypeDef, moArray, mos, methodContext, state, current, initialThreadId, disposed, builder, promise, recordedReturn, transitParameters, parameters);
+            return new AiteratorFields(stateMachineTypeDef, moArray, mos, methodContext, state, current, initialThreadId, disposed, builder, promise, recordedReturn, declaringThis, transitParameters, parameters);
         }
 
         private AiteratorVariables AiteratorResolveVariables(RouMethod rouMethod, MethodDefinition moveNextMethodDef, TypeDefinition stateMachineTypeDef)
