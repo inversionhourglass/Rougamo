@@ -162,6 +162,8 @@ namespace Rougamo.Fody
                     instructions.Add(Create(OpCodes.Ldarg_0));
                     instructions.Add(Create(OpCodes.Ldflda, fields.Awaiter));
                     instructions.Add(Create(OpCodes.Initobj, awaiterTypeRef));
+
+                    instructions.Add(Create(OpCodes.Br, nopGetResult));
                 }
                 // -else (state != 0)
                 {
