@@ -17,11 +17,15 @@ namespace Rougamo.Fody
             var actualMethodDef = StrictStateMachineSetupMethodClone(rouMethod.MethodDef, stateMachineTypeDef, actualStateMachineTypeDef, Constants.TYPE_AsyncIteratorStateMachineAttribute);
             rouMethod.MethodDef.DeclaringType.Methods.Add(actualMethodDef);
 
+            var actualMoveNextDef = actualStateMachineTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
+            actualMoveNextDef.DebugInformation.StateMachineKickOffMethod = actualMethodDef;
+
             var moveNextDef = stateMachineTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
             moveNextDef.Clear();
             var context = StrictAiteratorProxyCall(rouMethod, stateMachineTypeDef, moveNextDef, actualMethodDef);
             StrictAiteratorWeave(rouMethod, moveNextDef, context);
 
+            moveNextDef.DebuggerStepThrough(_methodDebuggerStepThroughCtorRef);
             moveNextDef.Body.OptimizePlus(EmptyInstructions);
         }
 

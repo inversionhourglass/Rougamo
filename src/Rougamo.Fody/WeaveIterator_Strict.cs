@@ -19,11 +19,15 @@ namespace Rougamo.Fody
             var actualMethodDef = StrictStateMachineSetupMethodClone(rouMethod.MethodDef, stateMachineTypeDef, actualStateMachineTypeDef, Constants.TYPE_IteratorStateMachineAttribute);
             rouMethod.MethodDef.DeclaringType.Methods.Add(actualMethodDef);
 
+            var actualMoveNextDef = actualStateMachineTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
+            actualMoveNextDef.DebugInformation.StateMachineKickOffMethod = actualMethodDef;
+
             var moveNextDef = stateMachineTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
             moveNextDef.Clear();
             var context = StrictIteratorProxyCall(rouMethod, stateMachineTypeDef, moveNextDef, actualMethodDef);
             StrictIteratorWeave(rouMethod, moveNextDef, context);
 
+            moveNextDef.DebuggerStepThrough(_methodDebuggerStepThroughCtorRef);
             moveNextDef.Body.OptimizePlus(EmptyInstructions);
         }
 
@@ -281,7 +285,7 @@ namespace Rougamo.Fody
                 {
                     stloc = instruction.Next;
                 }
-                else if (instruction.OpCode.Code == Code.Ldfld && instruction.Operand is FieldReference fr && fr.Resolve() == fields.DeclaringThis?.Resolve())
+                else if (instruction.OpCode.Code == Code.Ldfld && instruction.Operand is FieldReference fr && fr.Resolve() == fields.DeclaringThis.Resolve())
                 {
                     return;
                 }
@@ -294,7 +298,7 @@ namespace Rougamo.Fody
             instructions.InsertAfter(stloc, [
                 Create(OpCodes.Ldloc, vStateMachine),
                 Create(OpCodes.Ldarg_0),
-                Create(OpCodes.Ldfld, fields.DeclaringThis!),
+                Create(OpCodes.Ldfld, fields.DeclaringThis),
                 Create(OpCodes.Stfld, new FieldReference(fields.DeclaringThis!.Name, fields.DeclaringThis!.FieldType, vStateMachine.VariableType))
             ]);
         }
