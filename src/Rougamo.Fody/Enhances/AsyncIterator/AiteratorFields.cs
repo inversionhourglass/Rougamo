@@ -76,7 +76,7 @@ namespace Rougamo.Fody.Enhances.AsyncIterator
 
         public void SetParameter(int index, FieldDefinition fieldDef)
         {
-            throw new System.NotImplementedException();
+            Parameters[index] = MakeReference(fieldDef);
         }
     }
 }
