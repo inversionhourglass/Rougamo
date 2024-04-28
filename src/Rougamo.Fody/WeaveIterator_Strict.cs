@@ -270,6 +270,8 @@ namespace Rougamo.Fody
 
         private void StrictIteratorSetAbsentFieldThis(TypeDefinition stateMachineTypeDef, MethodDefinition getEnumeratorMethodDef, IIteratorFields fields)
         {
+            if (fields.DeclaringThis == null) return;
+
             var instructions = getEnumeratorMethodDef.Body.Instructions;
 
             Instruction? stloc = null;
