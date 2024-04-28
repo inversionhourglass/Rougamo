@@ -231,7 +231,8 @@ namespace Rougamo.Fody
                 }
 
                 // _disposed = true;
-                instructions.Add(anchors.SetDisposedToTrue.Set(OpCodes.Ldarg_0));
+                instructions.Add(anchors.SetDisposedToTrue);
+                instructions.Add(Create(OpCodes.Ldarg_0));
                 instructions.Add(Create(OpCodes.Ldc_I4_1));
                 instructions.Add(Create(OpCodes.Stfld, fields.Disposed));
 
@@ -385,7 +386,7 @@ namespace Rougamo.Fody
              * _mo1.OnSuccess(_context);
              * _mo1.OnExit(_context);
              */
-            var anchorSetDisposedToTrue = context.Anchors.SetDisposedToTrue;
+            var anchorSetDisposedToTrue = context.Anchors.SetDisposedToTrue.Next;
             instructions.InsertBefore(anchorSetDisposedToTrue, IteratorSaveReturnValue(rouMethod, context.Fields));
             instructions.InsertBefore(anchorSetDisposedToTrue, StateMachineOnSuccess(rouMethod, proxyMoveNextDef, null, context.Fields));
             instructions.InsertBefore(anchorSetDisposedToTrue, StateMachineOnExit(rouMethod, proxyMoveNextDef, anchorSetDisposedToTrue, context.Fields));
