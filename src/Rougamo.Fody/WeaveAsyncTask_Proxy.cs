@@ -205,7 +205,7 @@ namespace Rougamo.Fody
                     else
                     {
                         instructions.Add(Create(OpCodes.Ldnull));
-                        instructions.Add(Create(OpCodes.Stfld));
+                        instructions.Add(Create(OpCodes.Stfld, fields.Awaiter));
                     }
 
                     // state = (this._state = -1);
