@@ -175,6 +175,25 @@ namespace Rougamo.Fody.Tests
         }
 
         [Fact]
+        public async void Issue63Test()
+        {
+            var instance = GetInstance(nameof(Issue63));
+            var sInstance = GetStaticInstance(nameof(Issue63));
+
+            var iIn = 1;
+            var iOut = instance.WillBeReplaced(iIn);
+            Assert.NotEqual(iIn, iOut);
+
+            var fIn = 1f;
+            var fOut = await (ValueTask<float>)instance.WontBeReplaced(fIn);
+            Assert.Equal(fIn, fOut);
+
+            var sIn = string.Empty;
+            var sOut = sInstance.WillBeReplaced(sIn);
+            Assert.NotEqual(sIn, sOut);
+        }
+
+        [Fact]
         public void Issue66Test()
         {
             var instance = GetInstance("Issue66`2", false, t => t.MakeGenericType(typeof(int), typeof(int)));
