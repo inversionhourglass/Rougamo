@@ -9,7 +9,4 @@
 2. `void async`方法无法确保方法切实执行完毕后再执行`OnSuccess`，也无法确保异常一定会进`OnException`
 3. `ExMoAttribute`弃用，代理调用的方式不再区分是否使用`async / await`语法
 
-# todo
-1. 检查RewriteArguements功能在对值类型参数设置为`null`时表现是否正常
-
 ---

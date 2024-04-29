@@ -34,6 +34,7 @@ namespace Rougamo
     /// public Task&lt;double&gt; M3();
     /// </code>
     /// </summary>
+    [Obsolete("Now, since version 3.0, you can use MoAttribute in the ExMoAttribute scenario in proxy-calling mode. ExMoAttribute will be deprecated in version 4.0.")]
     public class ExMoAttribute : MoAttribute
     {
         //private const string EX_MOS_DATA_KEY = "rougamo.ex.mos";
