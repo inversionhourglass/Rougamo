@@ -104,10 +104,10 @@ namespace Rougamo.Fody
             var recordingIteratorReturns = "true".Equals(GetConfigValue("false", "iterator-returns", "enumerable-returns"), StringComparison.OrdinalIgnoreCase);
 #endif
             var reverseCallNonEntry = "true".Equals(GetConfigValue("true", "reverse-call-nonentry", "reverse-call-ending"), StringComparison.OrdinalIgnoreCase);
-            var strict = "true".Equals(GetConfigValue("true", "strict"), StringComparison.OrdinalIgnoreCase);
+            var proxyCalling = "true".Equals(GetConfigValue("true", "proxy-calling"), StringComparison.OrdinalIgnoreCase);
             var exceptTypePatterns = GetConfigValue(string.Empty, "except-type-patterns").Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
 
-            _config = new Config(enabled, compositeAccessibility, moArrayThreshold, recordingIteratorReturns, reverseCallNonEntry, strict, exceptTypePatterns);
+            _config = new Config(enabled, compositeAccessibility, moArrayThreshold, recordingIteratorReturns, reverseCallNonEntry, proxyCalling, exceptTypePatterns);
         }
 
         private string GetConfigValue(string defaultValue, params string[] configKeys)

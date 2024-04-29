@@ -13,7 +13,7 @@ namespace Rougamo.Fody
     {
         private void SyncMethodWeave(RouMethod rouMethod)
         {
-            if (!rouMethod.MethodDef.IsConstructor && _config.Strict)
+            if (!rouMethod.MethodDef.IsConstructor && _config.ProxyCalling)
             {
                 ProxySyncMethodWeave(rouMethod);
             }

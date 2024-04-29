@@ -15,7 +15,7 @@ namespace Rougamo.Fody
         {
             var stateMachineTypeDef = rouMethod.MethodDef.ResolveStateMachine(Constants.TYPE_AsyncStateMachineAttribute);
 
-            if (_config.Strict)
+            if (_config.ProxyCalling)
             {
                 ProxyAsyncTaskMethodWeave(rouMethod, stateMachineTypeDef);
                 return;

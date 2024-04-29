@@ -14,7 +14,7 @@ namespace Rougamo.Fody
         {
             var stateMachineTypeDef = rouMethod.MethodDef.ResolveStateMachine(Constants.TYPE_IteratorStateMachineAttribute);
 
-            if (_config.Strict)
+            if (_config.ProxyCalling)
             {
                 ProxyIteratorMethodWeave(rouMethod, stateMachineTypeDef);
                 return;
