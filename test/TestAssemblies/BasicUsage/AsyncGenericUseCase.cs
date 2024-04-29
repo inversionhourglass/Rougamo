@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace BasicUsage
 {
-    public class Strict_AsyncGenericUseCase<T>
+    public class Proxy_AsyncGenericUseCase<T>
     {
         [Async]
         public async Task<T> First(List<T> items)
@@ -24,7 +24,7 @@ namespace BasicUsage
     }
 
     [Async]
-    public class Strict_Cls
+    public class Proxy_Cls
     {
         public async Task<int> M1(string s1, string s2)
         {
@@ -51,7 +51,7 @@ namespace BasicUsage
     }
 
     [Async]
-    public struct Strict_St
+    public struct Proxy_St
     {
         public async Task<int> M1(string s1, string s2)
         {
@@ -78,7 +78,7 @@ namespace BasicUsage
     }
 
     [Async]
-    public class Strict_Class53<T1, T2>
+    public class Proxy_Class53<T1, T2>
     {
         public async Task<int> M1(T1 s1, T2 s2)
         {
@@ -113,7 +113,7 @@ namespace BasicUsage
     }
 
     [Async]
-    public class Strict_Class54<T1, T3>
+    public class Proxy_Class54<T1, T3>
     {
         public async Task<T3> M1<T2>(T1 s1, T2 s2)
         {
