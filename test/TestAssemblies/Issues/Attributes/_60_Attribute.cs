@@ -9,14 +9,13 @@ namespace Issues.Attributes
         public static readonly string[] SUCCEED = [nameof(OnEntry), nameof(OnSuccess), nameof(OnExit)];
         public static readonly string[] FAILED = [nameof(OnEntry), nameof(OnException), nameof(OnExit)];
 
-        private readonly List<string> _executed = [];
+        private List<string> _executed;
 
         public override void OnEntry(MethodContext context)
         {
-            if (context.Arguments.Length == 1 && context.Arguments[0] is List<string>)
+            if (context.Arguments.Length == 1 && context.Arguments[0] is List<string> executed)
             {
-                context.Arguments[0] = _executed;
-                context.RewriteArguments = true;
+                _executed = executed;
 
                 _executed.Add(nameof(OnEntry));
             }

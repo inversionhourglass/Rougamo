@@ -2,29 +2,34 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
 
 namespace Issues
 {
     public class Issue60
     {
         [_60_]
-        public async CompletedTask Async(List<string> items)
+        public async ValueTask Async(List<string> items)
         {
-            await default(CompletedTask);
+            await new CompletedTask();
         }
 
         [_60_]
-        public async CompletedTask AsyncException(List<string> items)
+        public async ValueTask AsyncException(List<string> items)
         {
-            await default(CompletedTask);
+            await new CompletedTask();
             throw new Exception();
         }
 
+#if NET48 || NET7_0_OR_GREATER
         public class MethodBuilder
+#else
+        public struct MethodBuilder
+#endif
         {
-            public CompletedTask Task => default;
+            public CompletedTask Task => new();
 
-            public static MethodBuilder Create() => default;
+            public static MethodBuilder Create() => new();
 
             public void Start<TStateMachine>(ref TStateMachine stateMachine) where TStateMachine : IAsyncStateMachine => stateMachine.MoveNext();
 
@@ -40,18 +45,28 @@ namespace Issues
         }
 
         [AsyncMethodBuilder(typeof(MethodBuilder))]
+#if NET461 || NETCOREAPP3_1 || NET8_0_OR_GREATER
+        public class CompletedTask
+#else
         public struct CompletedTask
+#endif
         {
-            public CompletedTaskAwaiter GetAwaiter() => default;
+            public CompletedTaskAwaiter GetAwaiter() => new ();
         }
 
-        public class CompletedTaskAwaiter : INotifyCompletion
+#if NET6_0_OR_GREATER
+        public class CompletedTaskAwaiter : ICriticalNotifyCompletion
+#else
+        public struct CompletedTaskAwaiter : ICriticalNotifyCompletion
+#endif
         {
             public bool IsCompleted => true;
 
             public void GetResult() { }
 
             public void OnCompleted(Action continuation) { }
+
+            public void UnsafeOnCompleted(Action continuation) { }
         }
     }
 }

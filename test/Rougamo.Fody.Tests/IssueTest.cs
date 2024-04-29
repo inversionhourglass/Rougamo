@@ -145,6 +145,20 @@ namespace Rougamo.Fody.Tests
         }
 
         [Fact]
+        public async Task Issue60Test()
+        {
+            var instance = GetInstance(nameof(Issue60), false);
+
+            var items = new List<string>();
+            await (ValueTask)instance.Async(items);
+            Assert.Equal(_60_Attribute.SUCCEED, items);
+
+            items.Clear();
+            await Assert.ThrowsAsync<Exception>(async () => await (ValueTask)instance.AsyncException(items));
+            Assert.Equal(_60_Attribute.FAILED, items);
+        }
+
+        [Fact]
         public void Issue61Test()
         {
             object instance = GetInstance(nameof(Issue61), false);
