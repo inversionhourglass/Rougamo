@@ -17,7 +17,7 @@ namespace Rougamo.Fody
 
             if (_config.Strict)
             {
-                StrictAsyncTaskMethodWeave(rouMethod, stateMachineTypeDef);
+                ProxyAsyncTaskMethodWeave(rouMethod, stateMachineTypeDef);
                 return;
             }
 

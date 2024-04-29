@@ -10,12 +10,12 @@ namespace Rougamo.Fody
 {
     partial class ModuleWeaver
     {
-        private void StrictAsyncTaskMethodWeave(RouMethod rouMethod, TypeDefinition stateMachineTypeDef)
+        private void ProxyAsyncTaskMethodWeave(RouMethod rouMethod, TypeDefinition stateMachineTypeDef)
         {
-            var actualStateMachineTypeDef = StrictStateMachineClone(stateMachineTypeDef);
+            var actualStateMachineTypeDef = ProxyStateMachineClone(stateMachineTypeDef);
             if (actualStateMachineTypeDef == null) return;
 
-            var actualMethodDef = StrictStateMachineSetupMethodClone(rouMethod.MethodDef, stateMachineTypeDef, actualStateMachineTypeDef, Constants.TYPE_AsyncStateMachineAttribute);
+            var actualMethodDef = ProxyStateMachineSetupMethodClone(rouMethod.MethodDef, stateMachineTypeDef, actualStateMachineTypeDef, Constants.TYPE_AsyncStateMachineAttribute);
             rouMethod.MethodDef.DeclaringType.Methods.Add(actualMethodDef);
 
             var actualMoveNextDef = actualStateMachineTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
@@ -23,14 +23,14 @@ namespace Rougamo.Fody
 
             var moveNextDef = stateMachineTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
             moveNextDef.Clear();
-            var context = StrictAsyncProxyCall(rouMethod, stateMachineTypeDef, moveNextDef, actualMethodDef);
-            StrictAsyncWeave(rouMethod, context, moveNextDef);
+            var context = ProxyCallAsync(rouMethod, stateMachineTypeDef, moveNextDef, actualMethodDef);
+            ProxyAsyncWeave(rouMethod, context, moveNextDef);
 
             moveNextDef.DebuggerStepThrough(_methodDebuggerStepThroughCtorRef);
             moveNextDef.Body.OptimizePlus(EmptyInstructions);
         }
 
-        private StrictAsyncContext StrictAsyncProxyCall(RouMethod rouMethod, TypeDefinition proxyStateMachineTypeDef, MethodDefinition proxyMoveNextDef, MethodDefinition actualMethodDef)
+        private ProxyAsyncContext ProxyCallAsync(RouMethod rouMethod, TypeDefinition proxyStateMachineTypeDef, MethodDefinition proxyMoveNextDef, MethodDefinition actualMethodDef)
         {
             var genericMap = proxyStateMachineTypeDef.GenericParameters.ToDictionary(x => x.Name, x => x);
 
@@ -66,7 +66,7 @@ namespace Rougamo.Fody
             }
 
             var fields = AsyncResolveFields(rouMethod, proxyStateMachineTypeDef);
-            StrictAsyncSetAbsentFields(rouMethod, proxyStateMachineTypeDef, fields);
+            ProxyAsyncSetAbsentFields(rouMethod, proxyStateMachineTypeDef, fields);
 
             var builderTypeRef = fields.Builder.FieldType;
             var builderTypeDef = builderTypeRef.Resolve();
@@ -75,7 +75,7 @@ namespace Rougamo.Fody
             var setExceptionMethodRef = builderTypeDef.Methods.Single(x => x.Name == Constants.METHOD_SetException && x.IsPublic).WithGenericDeclaringType(builderTypeRef);
             var setResultMethodRef = builderTypeDef.Methods.Single(x => x.Name == Constants.METHOD_SetResult && x.IsPublic).WithGenericDeclaringType(builderTypeRef);
 
-            StrictFieldCleanup(proxyStateMachineTypeDef, fields);
+            ProxyFieldCleanup(proxyStateMachineTypeDef, fields);
             var fAwaiter = new FieldDefinition(Constants.FIELD_Awaiter, FieldAttributes.Private, awaiterTypeRef);
             proxyStateMachineTypeDef.Fields.Add(fAwaiter);
             fields.Awaiter = fAwaiter;
@@ -234,7 +234,7 @@ namespace Rougamo.Fody
                 instructions.Add(Create(OpCodes.Ldc_I4, -2));
                 instructions.Add(Create(OpCodes.Stfld, fields.State));
 
-                StrictAsyncDefaultMoContext(instructions, fields);
+                ProxyAsyncDefaultMoContext(instructions, fields);
 
                 // this._builder.SetException(ex);
                 instructions.Add(Create(OpCodes.Ldarg_0));
@@ -250,7 +250,7 @@ namespace Rougamo.Fody
             instructions.Add(Create(OpCodes.Ldc_I4, -2));
             instructions.Add(Create(OpCodes.Stfld, fields.State));
 
-            StrictAsyncDefaultMoContext(instructions, fields);
+            ProxyAsyncDefaultMoContext(instructions, fields);
 
             // this._builder.SetResult(result); <--> this._builder.SetResult();
             instructions.Add(Create(OpCodes.Ldarg_0));
@@ -276,7 +276,7 @@ namespace Rougamo.Fody
             return new(fields, new(vState, vThis, vResult));
         }
 
-        private void StrictAsyncWeave(RouMethod rouMethod, StrictAsyncContext context, MethodDefinition proxyMoveNextDef)
+        private void ProxyAsyncWeave(RouMethod rouMethod, ProxyAsyncContext context, MethodDefinition proxyMoveNextDef)
         {
             var outerHandler = proxyMoveNextDef.Body.ExceptionHandlers.Single();
             var tryStart = outerHandler.TryStart;
@@ -322,10 +322,10 @@ namespace Rougamo.Fody
             instructions.InsertBefore(oldTryStart, Create(OpCodes.Brfalse, nopRetryLoopStart));
             // -if (state != 0)
             {
-                instructions.InsertBefore(oldTryStart, StrictStateMachineInitMos(proxyMoveNextDef, rouMethod.Mos, context.Fields));
-                instructions.InsertBefore(oldTryStart, StrictStateMachineInitMethodContext(rouMethod, proxyMoveNextDef, context.Fields));
+                instructions.InsertBefore(oldTryStart, ProxyStateMachineInitMos(proxyMoveNextDef, rouMethod.Mos, context.Fields));
+                instructions.InsertBefore(oldTryStart, ProxyStateMachineInitMethodContext(rouMethod, proxyMoveNextDef, context.Fields));
                 instructions.InsertBefore(oldTryStart, StateMachineOnEntry(rouMethod, proxyMoveNextDef, null, context.Fields));
-                instructions.InsertBefore(oldTryStart, StrictAsyncIfOnEntryReplacedReturn(rouMethod, proxyMoveNextDef, null, outerCatchEnd, context));
+                instructions.InsertBefore(oldTryStart, ProxyAsyncIfOnEntryReplacedReturn(rouMethod, proxyMoveNextDef, null, outerCatchEnd, context));
                 instructions.InsertBefore(oldTryStart, StateMachineRewriteArguments(rouMethod, nopRetryLoopStart, context.Fields));
             }
             instructions.InsertBefore(oldTryStart, nopRetryLoopStart);
@@ -346,10 +346,10 @@ namespace Rougamo.Fody
              *     
              *     break;
              */
-            instructions.InsertBefore(tryLastLeave, StrictAsyncSaveReturnValue(rouMethod, context));
+            instructions.InsertBefore(tryLastLeave, ProxyAsyncSaveReturnValue(rouMethod, context));
             instructions.InsertBefore(tryLastLeave, StateMachineOnSuccess(rouMethod, proxyMoveNextDef, null, context.Fields));
-            instructions.InsertBefore(tryLastLeave, StrictAsyncIfSuccessRetry(rouMethod, nopRetryLoopStart, null, context));
-            instructions.InsertBefore(tryLastLeave, StrictAsyncIfSuccessReplacedReturn(rouMethod, null, context));
+            instructions.InsertBefore(tryLastLeave, ProxyAsyncIfSuccessRetry(rouMethod, nopRetryLoopStart, null, context));
+            instructions.InsertBefore(tryLastLeave, ProxyAsyncIfSuccessReplacedReturn(rouMethod, null, context));
             instructions.InsertBefore(tryLastLeave, StateMachineOnExit(rouMethod, proxyMoveNextDef, tryLastLeave, context.Fields));
 
             /**
@@ -376,12 +376,12 @@ namespace Rougamo.Fody
             if ((rouMethod.Features & (int)(Feature.OnException | Feature.OnExit)) != 0)
             {
                 instructions.InsertBefore(outerCatchStart, innerCatchStart);
-                instructions.InsertBefore(outerCatchStart, StrictStateMachineSaveException(rouMethod, context.Fields, vInnerException));
+                instructions.InsertBefore(outerCatchStart, ProxyStateMachineSaveException(rouMethod, context.Fields, vInnerException));
                 instructions.InsertBefore(outerCatchStart, StateMachineOnException(rouMethod, proxyMoveNextDef, null, context.Fields));
-                instructions.InsertBefore(outerCatchStart, StrictAsyncIfExceptionRetry(rouMethod, nopRetryLoopStart, null, context));
-                instructions.InsertBefore(outerCatchStart, StrictAsyncSaveExceptionHandledResult(rouMethod, context));
+                instructions.InsertBefore(outerCatchStart, ProxyAsyncIfExceptionRetry(rouMethod, nopRetryLoopStart, null, context));
+                instructions.InsertBefore(outerCatchStart, ProxyAsyncSaveExceptionHandledResult(rouMethod, context));
                 instructions.InsertBefore(outerCatchStart, StateMachineOnExit(rouMethod, proxyMoveNextDef, null, context.Fields));
-                instructions.InsertBefore(outerCatchStart, StrictAsyncCheckExceptionHandled(rouMethod, outerCatchEnd, context.Fields));
+                instructions.InsertBefore(outerCatchStart, ProxyAsyncCheckExceptionHandled(rouMethod, outerCatchEnd, context.Fields));
             }
 
             outerHandler.TryStart = tryStart;
@@ -402,7 +402,7 @@ namespace Rougamo.Fody
             }
         }
 
-        private TypeDefinition? StrictStateMachineClone(TypeDefinition stateMachineTypeDef)
+        private TypeDefinition? ProxyStateMachineClone(TypeDefinition stateMachineTypeDef)
         {
             var typeName = $"$Rougamo_{stateMachineTypeDef.Name}";
             if (stateMachineTypeDef.DeclaringType.NestedTypes.Any(x => x.Name == typeName)) return null;
@@ -413,11 +413,11 @@ namespace Rougamo.Fody
             return actualTypeDef;
         }
 
-        private MethodDefinition StrictStateMachineSetupMethodClone(MethodDefinition methodDef, TypeDefinition stateMachineTypeDef, TypeDefinition clonedStateMachineTypeDef, string stateMachineAttributeTypeName)
+        private MethodDefinition ProxyStateMachineSetupMethodClone(MethodDefinition methodDef, TypeDefinition stateMachineTypeDef, TypeDefinition clonedStateMachineTypeDef, string stateMachineAttributeTypeName)
         {
             var clonedMethodDef = methodDef.Clone($"$Rougamo_{methodDef.Name}");
 
-            StrictStateMachineAttributeClone(clonedMethodDef, clonedStateMachineTypeDef, stateMachineAttributeTypeName);
+            ProxyStateMachineAttributeClone(clonedMethodDef, clonedStateMachineTypeDef, stateMachineAttributeTypeName);
 
             var genericMap = methodDef.DeclaringType.GenericParameters.ToDictionary(x => x.Name, x => x);
             genericMap.AddRange(clonedMethodDef.GenericParameters.ToDictionary(x => x.Name, x => x));
@@ -484,7 +484,7 @@ namespace Rougamo.Fody
             return clonedMethodDef;
         }
 
-        private void StrictStateMachineAttributeClone(MethodDefinition clonedMethodDef, TypeDefinition clonedStateMachineTypeDef, string stateMachineAttributeTypeName)
+        private void ProxyStateMachineAttributeClone(MethodDefinition clonedMethodDef, TypeDefinition clonedStateMachineTypeDef, string stateMachineAttributeTypeName)
         {
             var stateMachineAttribute = clonedMethodDef.CustomAttributes.Single(x => x.Is(stateMachineAttributeTypeName));
             clonedMethodDef.CustomAttributes.Remove(stateMachineAttribute);
@@ -499,7 +499,7 @@ namespace Rougamo.Fody
             clonedMethodDef.CustomAttributes.Add(stateMachineAttribute);
         }
 
-        private void StrictFieldCleanup(TypeDefinition stateMachineTypeDef, IStateMachineFields fields)
+        private void ProxyFieldCleanup(TypeDefinition stateMachineTypeDef, IStateMachineFields fields)
         {
             var fieldNames = new Dictionary<string, object?>();
             foreach (var prop in fields.GetType().GetProperties())
@@ -524,19 +524,19 @@ namespace Rougamo.Fody
             }
         }
 
-        private void StrictAsyncSetAbsentFields(RouMethod rouMethod, TypeDefinition stateMachineTypeDef, AsyncFields fields)
+        private void ProxyAsyncSetAbsentFields(RouMethod rouMethod, TypeDefinition stateMachineTypeDef, AsyncFields fields)
         {
             var instructions = rouMethod.MethodDef.Body.Instructions;
             var setState = instructions.Single(x => x.OpCode.Code == Code.Ldc_I4_M1 && x.Next.OpCode.Code == Code.Stfld && x.Next.Operand is FieldReference fr && fr.Resolve() == fields.State.Resolve());
             var vStateMachine = rouMethod.MethodDef.Body.Variables.Single(x => x.VariableType.Resolve() == stateMachineTypeDef);
             var genericMap = stateMachineTypeDef.GenericParameters.ToDictionary(x => x.Name, x => x);
 
-            StrictAddAbsentField(stateMachineTypeDef, StrictSetAbsentFieldThis(rouMethod, fields, vStateMachine.VariableType, vStateMachine.LdlocOrA(), setState, genericMap));
+            ProxyAddAbsentField(stateMachineTypeDef, ProxySetAbsentFieldThis(rouMethod, fields, vStateMachine.VariableType, vStateMachine.LdlocOrA(), setState, genericMap));
 
-            StrictAddAbsentField(stateMachineTypeDef, StrictSetAbsentFieldParameters(rouMethod, fields, vStateMachine.VariableType, vStateMachine.LdlocOrA(), setState, genericMap));
+            ProxyAddAbsentField(stateMachineTypeDef, ProxySetAbsentFieldParameters(rouMethod, fields, vStateMachine.VariableType, vStateMachine.LdlocOrA(), setState, genericMap));
         }
 
-        private IEnumerable<FieldDefinition> StrictSetAbsentFieldThis(RouMethod rouMethod, IStateMachineFields fields, TypeReference stateMachineTypeRef, Instruction loadStateMachine, Instruction anchor, Dictionary<string, GenericParameter> genericMap)
+        private IEnumerable<FieldDefinition> ProxySetAbsentFieldThis(RouMethod rouMethod, IStateMachineFields fields, TypeReference stateMachineTypeRef, Instruction loadStateMachine, Instruction anchor, Dictionary<string, GenericParameter> genericMap)
         {
             if (rouMethod.MethodDef.IsStatic || fields.DeclaringThis != null) yield break;
 
@@ -555,7 +555,7 @@ namespace Rougamo.Fody
             yield return thisFieldDef;
         }
 
-        private IEnumerable<FieldDefinition> StrictSetAbsentFieldParameters(RouMethod rouMethod, IStateMachineFields fields, TypeReference stateMachineTypeRef, Instruction loadStateMachine, Instruction anchor, Dictionary<string, GenericParameter> genericMap)
+        private IEnumerable<FieldDefinition> ProxySetAbsentFieldParameters(RouMethod rouMethod, IStateMachineFields fields, TypeReference stateMachineTypeRef, Instruction loadStateMachine, Instruction anchor, Dictionary<string, GenericParameter> genericMap)
         {
             if (fields.Parameters.All(x => x != null)) yield break;
 
@@ -584,7 +584,7 @@ namespace Rougamo.Fody
             }
         }
 
-        private void StrictAddAbsentField(TypeDefinition typeDef, IEnumerable<FieldDefinition> fieldDefs)
+        private void ProxyAddAbsentField(TypeDefinition typeDef, IEnumerable<FieldDefinition> fieldDefs)
         {
             foreach (var fieldDef in fieldDefs)
             {
@@ -592,7 +592,7 @@ namespace Rougamo.Fody
             }
         }
 
-        private IList<Instruction> StrictStateMachineInitMos(MethodDefinition moveNextMethodDef, Mo[] mos, IStateMachineFields fields)
+        private IList<Instruction> ProxyStateMachineInitMos(MethodDefinition moveNextMethodDef, Mo[] mos, IStateMachineFields fields)
         {
             if (fields.MoArray != null)
             {
@@ -603,10 +603,10 @@ namespace Rougamo.Fody
                 return instructions;
             }
 
-            return StrictStateMachineInitMoFields(moveNextMethodDef, mos, fields.Mos);
+            return ProxyStateMachineInitMoFields(moveNextMethodDef, mos, fields.Mos);
         }
 
-        private IList<Instruction> StrictStateMachineInitMoFields(MethodDefinition methodDef, Mo[] mos, FieldReference[] moFields)
+        private IList<Instruction> ProxyStateMachineInitMoFields(MethodDefinition methodDef, Mo[] mos, FieldReference[] moFields)
         {
             var instructions = new List<Instruction>();
 
@@ -623,7 +623,7 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private IList<Instruction> StrictStateMachineInitMethodContext(RouMethod rouMethod, MethodDefinition moveNextMethodDef, IStateMachineFields fields)
+        private IList<Instruction> ProxyStateMachineInitMethodContext(RouMethod rouMethod, MethodDefinition moveNextMethodDef, IStateMachineFields fields)
         {
             var instructions = new List<Instruction>();
             VariableDefinition? moArray = null;
@@ -635,13 +635,13 @@ namespace Rougamo.Fody
             }
 
             instructions.Add(Create(OpCodes.Ldarg_0));
-            instructions.AddRange(StrictStateMachineInitMethodContext(rouMethod.MethodDef, moArray, fields, rouMethod.MethodContextOmits));
+            instructions.AddRange(ProxyStateMachineInitMethodContext(rouMethod.MethodDef, moArray, fields, rouMethod.MethodContextOmits));
             instructions.Add(Create(OpCodes.Stfld, fields.MethodContext));
 
             return instructions;
         }
 
-        private List<Instruction> StrictStateMachineInitMethodContext(MethodDefinition methodDef, VariableDefinition? moArrayVariable, IStateMachineFields fields, Omit omit)
+        private List<Instruction> ProxyStateMachineInitMethodContext(MethodDefinition methodDef, VariableDefinition? moArrayVariable, IStateMachineFields fields, Omit omit)
         {
             var instructions = new List<Instruction>();
 
@@ -680,14 +680,14 @@ namespace Rougamo.Fody
             }
             else
             {
-                instructions.AddRange(StrictAsyncLoadArguments(fields.Parameters));
+                instructions.AddRange(ProxyAsyncLoadArguments(fields.Parameters));
             }
             instructions.Add(Create(OpCodes.Newobj, _methodMethodContext3CtorRef));
 
             return instructions;
         }
 
-        private IList<Instruction>? StrictAsyncIfOnEntryReplacedReturn(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction? endAnchor, Instruction tailAnchor, StrictAsyncContext context)
+        private IList<Instruction>? ProxyAsyncIfOnEntryReplacedReturn(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction? endAnchor, Instruction tailAnchor, ProxyAsyncContext context)
         {
             if (!Feature.EntryReplace.IsMatch(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return null;
 
@@ -714,7 +714,7 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private IList<Instruction>? StrictAsyncSaveReturnValue(RouMethod rouMethod, StrictAsyncContext context)
+        private IList<Instruction>? ProxyAsyncSaveReturnValue(RouMethod rouMethod, ProxyAsyncContext context)
         {
             if (context.Variables.Result == null || (rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) == 0 || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return null;
 
@@ -733,17 +733,17 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private IList<Instruction>? StrictAsyncIfSuccessRetry(RouMethod rouMethod, Instruction loopStartAnchor, Instruction? endAnchor, StrictAsyncContext context)
+        private IList<Instruction>? ProxyAsyncIfSuccessRetry(RouMethod rouMethod, Instruction loopStartAnchor, Instruction? endAnchor, ProxyAsyncContext context)
         {
-            return !Feature.SuccessRetry.IsMatch(rouMethod.Features) ? null : StrictAsyncIfRetry(rouMethod, loopStartAnchor, endAnchor, context);
+            return !Feature.SuccessRetry.IsMatch(rouMethod.Features) ? null : ProxyAsyncIfRetry(rouMethod, loopStartAnchor, endAnchor, context);
         }
 
-        private IList<Instruction>? StrictAsyncIfExceptionRetry(RouMethod rouMethod, Instruction loopStartAnchor, Instruction? endAnchor, StrictAsyncContext context)
+        private IList<Instruction>? ProxyAsyncIfExceptionRetry(RouMethod rouMethod, Instruction loopStartAnchor, Instruction? endAnchor, ProxyAsyncContext context)
         {
-            return !Feature.ExceptionRetry.IsMatch(rouMethod.Features) ? null : StrictAsyncIfRetry(rouMethod, loopStartAnchor, endAnchor, context);
+            return !Feature.ExceptionRetry.IsMatch(rouMethod.Features) ? null : ProxyAsyncIfRetry(rouMethod, loopStartAnchor, endAnchor, context);
         }
 
-        private IList<Instruction> StrictAsyncIfRetry(RouMethod rouMethod, Instruction loopStartAnchor, Instruction? endAnchor, StrictAsyncContext context)
+        private IList<Instruction> ProxyAsyncIfRetry(RouMethod rouMethod, Instruction loopStartAnchor, Instruction? endAnchor, ProxyAsyncContext context)
         {
             var managedAnchor = endAnchor == null;
             if (managedAnchor) endAnchor = Create(OpCodes.Nop);
@@ -762,7 +762,7 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private IList<Instruction>? StrictAsyncIfSuccessReplacedReturn(RouMethod rouMethod, Instruction? endAnchor, StrictAsyncContext context)
+        private IList<Instruction>? ProxyAsyncIfSuccessReplacedReturn(RouMethod rouMethod, Instruction? endAnchor, ProxyAsyncContext context)
         {
             if (context.Variables.Result == null || !Feature.SuccessReplace.IsMatch(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return EmptyInstructions;
 
@@ -791,7 +791,7 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private IList<Instruction>? StrictStateMachineSaveException(RouMethod rouMethod, IStateMachineFields fields, VariableDefinition vException)
+        private IList<Instruction>? ProxyStateMachineSaveException(RouMethod rouMethod, IStateMachineFields fields, VariableDefinition vException)
         {
             if ((rouMethod.Features & (int)(Feature.OnException | Feature.OnSuccess | Feature.OnExit)) == 0) return null;
 
@@ -803,7 +803,7 @@ namespace Rougamo.Fody
             ];
         }
 
-        private IList<Instruction>? StrictAsyncSaveExceptionHandledResult(RouMethod rouMethod, StrictAsyncContext context)
+        private IList<Instruction>? ProxyAsyncSaveExceptionHandledResult(RouMethod rouMethod, ProxyAsyncContext context)
         {
             if (!Feature.ExceptionHandle.IsMatch(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return null;
 
@@ -825,7 +825,7 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private IList<Instruction> StrictAsyncCheckExceptionHandled(RouMethod rouMethod, Instruction tailAnchor, IStateMachineFields fields)
+        private IList<Instruction> ProxyAsyncCheckExceptionHandled(RouMethod rouMethod, Instruction tailAnchor, IStateMachineFields fields)
         {
             if (!Feature.ExceptionHandle.IsMatch(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return [Create(OpCodes.Rethrow)];
 
@@ -841,7 +841,7 @@ namespace Rougamo.Fody
             ];
         }
 
-        private IList<Instruction> StrictAsyncLoadArguments(FieldReference?[] parameters)
+        private IList<Instruction> ProxyAsyncLoadArguments(FieldReference?[] parameters)
         {
             var instructions = new List<Instruction>
             {
@@ -874,7 +874,7 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private IList<Instruction> AssignResultFromContext(StrictAsyncContext context)
+        private IList<Instruction> AssignResultFromContext(ProxyAsyncContext context)
         {
             var instructions = new List<Instruction>
             {
@@ -892,27 +892,27 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private void StrictAsyncDefaultMoContext(Mono.Collections.Generic.Collection<Instruction> instructions, AsyncFields fields)
+        private void ProxyAsyncDefaultMoContext(Mono.Collections.Generic.Collection<Instruction> instructions, AsyncFields fields)
         {
             if (fields.MoArray != null)
             {
                 // this._mos = null;
-                instructions.Add(StrictAsyncFieldDefault(fields.MoArray));
+                instructions.Add(ProxyAsyncFieldDefault(fields.MoArray));
             }
             else
             {
                 foreach (var mo in fields.Mos)
                 {
                     // this._mo = null;
-                    instructions.Add(StrictAsyncFieldDefault(mo));
+                    instructions.Add(ProxyAsyncFieldDefault(mo));
                 }
             }
 
             // this._context = null;
-            instructions.Add(StrictAsyncFieldDefault(fields.MethodContext));
+            instructions.Add(ProxyAsyncFieldDefault(fields.MethodContext));
         }
 
-        private IList<Instruction> StrictAsyncFieldDefault(FieldReference fieldRef)
+        private IList<Instruction> ProxyAsyncFieldDefault(FieldReference fieldRef)
         {
             var fieldType = fieldRef.FieldType;
             if (fieldType.IsValueType || fieldType.IsGenericParameter)

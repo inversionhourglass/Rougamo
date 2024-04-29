@@ -15,7 +15,7 @@ namespace Rougamo.Fody
         {
             if (!rouMethod.MethodDef.IsConstructor && _config.Strict)
             {
-                StrictSyncMethodWeave(rouMethod);
+                ProxySyncMethodWeave(rouMethod);
             }
 
             var instructions = rouMethod.MethodDef.Body.Instructions;

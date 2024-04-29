@@ -8,7 +8,7 @@ namespace Rougamo.Fody
 {
     partial class ModuleWeaver
     {
-        private void StrictSyncMethodWeave(RouMethod rouMethod)
+        private void ProxySyncMethodWeave(RouMethod rouMethod)
         {
             var actualMethodDef = rouMethod.MethodDef.Clone($"$Rougamo_{rouMethod.MethodDef.Name}");
             rouMethod.MethodDef.DeclaringType.Methods.Add(actualMethodDef);
@@ -16,10 +16,10 @@ namespace Rougamo.Fody
             rouMethod.MethodDef.DebuggerStepThrough(_methodDebuggerStepThroughCtorRef);
             rouMethod.MethodDef.Clear();
 
-            StrictSyncAdaptedCall(rouMethod, actualMethodDef);
+            ProxyCallSync(rouMethod, actualMethodDef);
         }
 
-        private void StrictSyncAdaptedCall(RouMethod rouMethod, MethodDefinition methodDef)
+        private void ProxyCallSync(RouMethod rouMethod, MethodDefinition methodDef)
         {
             var instructions = rouMethod.MethodDef.Body.Instructions;
 

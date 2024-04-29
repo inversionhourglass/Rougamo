@@ -1,8 +1,8 @@
 ﻿namespace Rougamo.Fody.Enhances.Async
 {
-    internal class StrictAsyncContext
+    internal class ProxyAsyncContext
     {
-        public StrictAsyncContext(AsyncFields fields, StrictAsyncVariables variables)
+        public ProxyAsyncContext(AsyncFields fields, ProxyAsyncVariables variables)
         {
             Fields = fields;
             Variables = variables;
@@ -10,6 +10,6 @@
 
         public AsyncFields Fields { get; }
 
-        public StrictAsyncVariables Variables { get; }
+        public ProxyAsyncVariables Variables { get; }
     }
 }

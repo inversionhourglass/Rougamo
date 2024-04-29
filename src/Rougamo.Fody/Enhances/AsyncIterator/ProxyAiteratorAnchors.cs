@@ -3,7 +3,7 @@ using System.Runtime.CompilerServices;
 
 namespace Rougamo.Fody.Enhances.AsyncIterator
 {
-    internal class StrictAiteratorAnchors : IAnchors
+    internal class ProxyAiteratorAnchors : IAnchors
     {
         public Instruction ReadyProxyCall { get; } = Nop();
 

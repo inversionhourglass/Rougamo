@@ -9,12 +9,12 @@ namespace Rougamo.Fody
 {
     partial class ModuleWeaver
     {
-        private void StrictAiteratorTaskMethodWeave(RouMethod rouMethod, TypeDefinition stateMachineTypeDef)
+        private void ProxyAiteratorTaskMethodWeave(RouMethod rouMethod, TypeDefinition stateMachineTypeDef)
         {
-            var actualStateMachineTypeDef = StrictStateMachineClone(stateMachineTypeDef);
+            var actualStateMachineTypeDef = ProxyStateMachineClone(stateMachineTypeDef);
             if (actualStateMachineTypeDef == null) return;
 
-            var actualMethodDef = StrictStateMachineSetupMethodClone(rouMethod.MethodDef, stateMachineTypeDef, actualStateMachineTypeDef, Constants.TYPE_AsyncIteratorStateMachineAttribute);
+            var actualMethodDef = ProxyStateMachineSetupMethodClone(rouMethod.MethodDef, stateMachineTypeDef, actualStateMachineTypeDef, Constants.TYPE_AsyncIteratorStateMachineAttribute);
             rouMethod.MethodDef.DeclaringType.Methods.Add(actualMethodDef);
 
             var actualMoveNextDef = actualStateMachineTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
@@ -22,14 +22,14 @@ namespace Rougamo.Fody
 
             var moveNextDef = stateMachineTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
             moveNextDef.Clear();
-            var context = StrictAiteratorProxyCall(rouMethod, stateMachineTypeDef, moveNextDef, actualMethodDef);
-            StrictAiteratorWeave(rouMethod, moveNextDef, context);
+            var context = ProxyCallAiterator(rouMethod, stateMachineTypeDef, moveNextDef, actualMethodDef);
+            ProxyAiteratorWeave(rouMethod, moveNextDef, context);
 
             moveNextDef.DebuggerStepThrough(_methodDebuggerStepThroughCtorRef);
             moveNextDef.Body.OptimizePlus(EmptyInstructions);
         }
 
-        private StrictAiteratorContext StrictAiteratorProxyCall(RouMethod rouMethod, TypeDefinition proxyStateMachineTypeDef, MethodDefinition proxyMoveNextDef, MethodDefinition actualMethodDef)
+        private ProxyAiteratorContext ProxyCallAiterator(RouMethod rouMethod, TypeDefinition proxyStateMachineTypeDef, MethodDefinition proxyMoveNextDef, MethodDefinition actualMethodDef)
         {
             var genericMap = proxyStateMachineTypeDef.GenericParameters.ToDictionary(x => x.Name, x => x);
 
@@ -59,8 +59,8 @@ namespace Rougamo.Fody
             }
 
             var fields = AiteratorResolveFields(rouMethod, proxyStateMachineTypeDef);
-            StrictIteratorSetAbsentFields(rouMethod, proxyStateMachineTypeDef, fields, Constants.GenericPrefix(Constants.TYPE_IAsyncEnumerable), Constants.GenericSuffix(Constants.METHOD_GetAsyncEnumerator));
-            StrictFieldCleanup(proxyStateMachineTypeDef, fields);
+            ProxyIteratorSetAbsentFields(rouMethod, proxyStateMachineTypeDef, fields, Constants.GenericPrefix(Constants.TYPE_IAsyncEnumerable), Constants.GenericSuffix(Constants.METHOD_GetAsyncEnumerator));
+            ProxyFieldCleanup(proxyStateMachineTypeDef, fields);
 
             var builderTypeRef = fields.Builder.FieldType;
             var builderTypeDef = builderTypeRef.Resolve();
@@ -89,7 +89,7 @@ namespace Rougamo.Fody
 
             var instructions = proxyMoveNextDef.Body.Instructions;
 
-            var anchors = new StrictAiteratorAnchors();
+            var anchors = new ProxyAiteratorAnchors();
             var nopDone = Create(OpCodes.Nop);
             var nopYield = Create(OpCodes.Nop);
             var nopNotDisposed = Create(OpCodes.Nop);
@@ -331,7 +331,7 @@ namespace Rougamo.Fody
             return new(fields, anchors);
         }
 
-        private void StrictAiteratorWeave(RouMethod rouMethod, MethodDefinition proxyMoveNextDef, StrictAiteratorContext context)
+        private void ProxyAiteratorWeave(RouMethod rouMethod, MethodDefinition proxyMoveNextDef, ProxyAiteratorContext context)
         {
             var instructions = proxyMoveNextDef.Body.Instructions;
 
@@ -349,9 +349,9 @@ namespace Rougamo.Fody
              * }
              */
             var anchorReadyProxyCall = context.Anchors.ReadyProxyCall;
-            instructions.InsertBefore(anchorReadyProxyCall, StrictIteratorInitRecordedReturn(rouMethod, context.Fields));
-            instructions.InsertBefore(anchorReadyProxyCall, StrictStateMachineInitMos(proxyMoveNextDef, rouMethod.Mos, context.Fields));
-            instructions.InsertBefore(anchorReadyProxyCall, StrictStateMachineInitMethodContext(rouMethod, proxyMoveNextDef, context.Fields));
+            instructions.InsertBefore(anchorReadyProxyCall, ProxyIteratorInitRecordedReturn(rouMethod, context.Fields));
+            instructions.InsertBefore(anchorReadyProxyCall, ProxyStateMachineInitMos(proxyMoveNextDef, rouMethod.Mos, context.Fields));
+            instructions.InsertBefore(anchorReadyProxyCall, ProxyStateMachineInitMethodContext(rouMethod, proxyMoveNextDef, context.Fields));
             instructions.InsertBefore(anchorReadyProxyCall, StateMachineOnEntry(rouMethod, proxyMoveNextDef, null, context.Fields));
             instructions.InsertBefore(anchorReadyProxyCall, StateMachineRewriteArguments(rouMethod, anchorReadyProxyCall, context.Fields));
 
@@ -373,7 +373,7 @@ namespace Rougamo.Fody
             {
                 instructions.InsertBefore(anchorCheckHasNext, Create(OpCodes.Leave, anchorCheckHasNext));
                 instructions.InsertBefore(anchorCheckHasNext, catchStart);
-                instructions.InsertBefore(anchorCheckHasNext, StrictStateMachineSaveException(rouMethod, context.Fields, vInnerException));
+                instructions.InsertBefore(anchorCheckHasNext, ProxyStateMachineSaveException(rouMethod, context.Fields, vInnerException));
                 instructions.InsertBefore(anchorCheckHasNext, StateMachineOnException(rouMethod, proxyMoveNextDef, null, context.Fields));
                 instructions.InsertBefore(anchorCheckHasNext, StateMachineOnExit(rouMethod, proxyMoveNextDef, null, context.Fields));
                 instructions.InsertBefore(anchorCheckHasNext, Create(OpCodes.Rethrow));

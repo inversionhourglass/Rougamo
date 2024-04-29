@@ -16,7 +16,7 @@ namespace Rougamo.Fody
 
             if (_config.Strict)
             {
-                StrictIteratorMethodWeave(rouMethod, stateMachineTypeDef);
+                ProxyIteratorMethodWeave(rouMethod, stateMachineTypeDef);
                 return;
             }
 

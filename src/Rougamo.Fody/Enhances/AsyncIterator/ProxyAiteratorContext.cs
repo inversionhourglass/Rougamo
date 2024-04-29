@@ -1,8 +1,8 @@
 ﻿namespace Rougamo.Fody.Enhances.AsyncIterator
 {
-    internal class StrictAiteratorContext
+    internal class ProxyAiteratorContext
     {
-        public StrictAiteratorContext(AiteratorFields fields, StrictAiteratorAnchors anchors)
+        public ProxyAiteratorContext(AiteratorFields fields, ProxyAiteratorAnchors anchors)
         {
             Fields = fields;
             Anchors = anchors;
@@ -10,6 +10,6 @@
 
         public AiteratorFields Fields { get; }
 
-        public StrictAiteratorAnchors Anchors { get; }
+        public ProxyAiteratorAnchors Anchors { get; }
     }
 }

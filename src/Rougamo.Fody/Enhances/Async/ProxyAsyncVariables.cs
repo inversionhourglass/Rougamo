@@ -2,9 +2,9 @@
 
 namespace Rougamo.Fody.Enhances.Async
 {
-    internal class StrictAsyncVariables
+    internal class ProxyAsyncVariables
     {
-        public StrictAsyncVariables(VariableDefinition state, VariableDefinition? @this, VariableDefinition? result)
+        public ProxyAsyncVariables(VariableDefinition state, VariableDefinition? @this, VariableDefinition? result)
         {
             State = state;
             This = @this;

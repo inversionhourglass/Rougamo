@@ -11,12 +11,12 @@ namespace Rougamo.Fody
 {
     partial class ModuleWeaver
     {
-        private void StrictIteratorMethodWeave(RouMethod rouMethod, TypeDefinition stateMachineTypeDef)
+        private void ProxyIteratorMethodWeave(RouMethod rouMethod, TypeDefinition stateMachineTypeDef)
         {
-            var actualStateMachineTypeDef = StrictStateMachineClone(stateMachineTypeDef);
+            var actualStateMachineTypeDef = ProxyStateMachineClone(stateMachineTypeDef);
             if (actualStateMachineTypeDef == null) return;
 
-            var actualMethodDef = StrictStateMachineSetupMethodClone(rouMethod.MethodDef, stateMachineTypeDef, actualStateMachineTypeDef, Constants.TYPE_IteratorStateMachineAttribute);
+            var actualMethodDef = ProxyStateMachineSetupMethodClone(rouMethod.MethodDef, stateMachineTypeDef, actualStateMachineTypeDef, Constants.TYPE_IteratorStateMachineAttribute);
             rouMethod.MethodDef.DeclaringType.Methods.Add(actualMethodDef);
 
             var actualMoveNextDef = actualStateMachineTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
@@ -24,14 +24,14 @@ namespace Rougamo.Fody
 
             var moveNextDef = stateMachineTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
             moveNextDef.Clear();
-            var context = StrictIteratorProxyCall(rouMethod, stateMachineTypeDef, moveNextDef, actualMethodDef);
-            StrictIteratorWeave(rouMethod, moveNextDef, context);
+            var context = ProxyCallIterator(rouMethod, stateMachineTypeDef, moveNextDef, actualMethodDef);
+            ProxyIteratorWeave(rouMethod, moveNextDef, context);
 
             moveNextDef.DebuggerStepThrough(_methodDebuggerStepThroughCtorRef);
             moveNextDef.Body.OptimizePlus(EmptyInstructions);
         }
 
-        private StrictIteratorContext StrictIteratorProxyCall(RouMethod rouMethod, TypeDefinition proxyStateMachineTypeDef, MethodDefinition proxyMoveNextDef, MethodDefinition actualMethodDef)
+        private ProxyIteratorContext ProxyCallIterator(RouMethod rouMethod, TypeDefinition proxyStateMachineTypeDef, MethodDefinition proxyMoveNextDef, MethodDefinition actualMethodDef)
         {
             var genericMap = proxyStateMachineTypeDef.GenericParameters.ToDictionary(x => x.Name, x => x);
 
@@ -51,8 +51,8 @@ namespace Rougamo.Fody
             }
 
             var fields = IteratorResolveFields(rouMethod, proxyStateMachineTypeDef);
-            StrictIteratorSetAbsentFields(rouMethod, proxyStateMachineTypeDef, fields, Constants.GenericPrefix(Constants.TYPE_IEnumerable), Constants.GenericSuffix(Constants.METHOD_GetEnumerator));
-            StrictFieldCleanup(proxyStateMachineTypeDef, fields);
+            ProxyIteratorSetAbsentFields(rouMethod, proxyStateMachineTypeDef, fields, Constants.GenericPrefix(Constants.TYPE_IEnumerable), Constants.GenericSuffix(Constants.METHOD_GetEnumerator));
+            ProxyFieldCleanup(proxyStateMachineTypeDef, fields);
 
             var fIterator = new FieldDefinition(Constants.FIELD_Iterator, FieldAttributes.Private, enumeratorTypeRef);
             proxyStateMachineTypeDef.Fields.Add(fIterator);
@@ -62,7 +62,7 @@ namespace Rougamo.Fody
 
             var instructions = proxyMoveNextDef.Body.Instructions;
 
-            var anchor = new StrictIteratorAnchors();
+            var anchor = new ProxyIteratorAnchors();
             var nopHasNext = Create(OpCodes.Nop);
 
             instructions.Add(Create(OpCodes.Ldarg_0));
@@ -140,7 +140,7 @@ namespace Rougamo.Fody
             return new(fields, anchor);
         }
 
-        private void StrictIteratorWeave(RouMethod rouMethod, MethodDefinition proxyMoveNextDef, StrictIteratorContext context)
+        private void ProxyIteratorWeave(RouMethod rouMethod, MethodDefinition proxyMoveNextDef, ProxyIteratorContext context)
         {
             var instructions = proxyMoveNextDef.Body.Instructions;
 
@@ -159,9 +159,9 @@ namespace Rougamo.Fody
              * }
              */
             var anchorStateIs0 = context.Anchors.StateIs0.Next;
-            instructions.InsertBefore(anchorStateIs0, StrictIteratorInitRecordedReturn(rouMethod, context.Fields));
-            instructions.InsertBefore(anchorStateIs0, StrictStateMachineInitMos(proxyMoveNextDef, rouMethod.Mos, context.Fields));
-            instructions.InsertBefore(anchorStateIs0, StrictStateMachineInitMethodContext(rouMethod, proxyMoveNextDef, context.Fields));
+            instructions.InsertBefore(anchorStateIs0, ProxyIteratorInitRecordedReturn(rouMethod, context.Fields));
+            instructions.InsertBefore(anchorStateIs0, ProxyStateMachineInitMos(proxyMoveNextDef, rouMethod.Mos, context.Fields));
+            instructions.InsertBefore(anchorStateIs0, ProxyStateMachineInitMethodContext(rouMethod, proxyMoveNextDef, context.Fields));
             instructions.InsertBefore(anchorStateIs0, StateMachineOnEntry(rouMethod, proxyMoveNextDef, null, context.Fields));
             instructions.InsertBefore(anchorStateIs0, StateMachineRewriteArguments(rouMethod, anchorStateIs0, context.Fields));
 
@@ -185,7 +185,7 @@ namespace Rougamo.Fody
             {
                 instructions.InsertBefore(anchorHasNextBrTo, Create(OpCodes.Leave, anchorCheckHasNext));
                 instructions.InsertBefore(anchorHasNextBrTo, catchStart);
-                instructions.InsertBefore(anchorHasNextBrTo, StrictStateMachineSaveException(rouMethod, context.Fields, vException));
+                instructions.InsertBefore(anchorHasNextBrTo, ProxyStateMachineSaveException(rouMethod, context.Fields, vException));
                 instructions.InsertBefore(anchorHasNextBrTo, StateMachineOnException(rouMethod, proxyMoveNextDef, null, context.Fields));
                 instructions.InsertBefore(anchorHasNextBrTo, StateMachineOnExit(rouMethod, proxyMoveNextDef, null, context.Fields));
                 instructions.InsertBefore(anchorHasNextBrTo, Create(OpCodes.Rethrow));
@@ -221,7 +221,7 @@ namespace Rougamo.Fody
             }
         }
 
-        private IList<Instruction>? StrictIteratorInitRecordedReturn(RouMethod rouMethod, IIteratorFields fields)
+        private IList<Instruction>? ProxyIteratorInitRecordedReturn(RouMethod rouMethod, IIteratorFields fields)
         {
             if (fields.RecordedReturn == null || (rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) == 0 || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return null;
 
@@ -235,27 +235,27 @@ namespace Rougamo.Fody
             ];
         }
 
-        private void StrictIteratorSetAbsentFields(RouMethod rouMethod, TypeDefinition stateMachineTypeDef, IIteratorFields fields, string mGetEnumeratorPrefix, string mGetEnumeratorSuffix)
+        private void ProxyIteratorSetAbsentFields(RouMethod rouMethod, TypeDefinition stateMachineTypeDef, IIteratorFields fields, string mGetEnumeratorPrefix, string mGetEnumeratorSuffix)
         {
             var instructions = rouMethod.MethodDef.Body.Instructions;
             var vStateMachine = rouMethod.MethodDef.Body.Variables.SingleOrDefault(x => x.VariableType.Resolve() == stateMachineTypeDef);
             var loadStateMachine = vStateMachine == null ? Create(OpCodes.Dup) : vStateMachine.LdlocOrA();
-            var stateMachineTypeRef = vStateMachine == null ? StrictIteratorResolveStateMachineType(stateMachineTypeDef, rouMethod.MethodDef) : vStateMachine.VariableType;
+            var stateMachineTypeRef = vStateMachine == null ? ProxyIteratorResolveStateMachineType(stateMachineTypeDef, rouMethod.MethodDef) : vStateMachine.VariableType;
             var ret = instructions.Last();
             var genericMap = stateMachineTypeDef.GenericParameters.ToDictionary(x => x.Name, x => x);
             
             var getEnumeratorMethodDef = stateMachineTypeDef.Methods.Single(x => x.Name.StartsWith(mGetEnumeratorPrefix) && x.Name.EndsWith(mGetEnumeratorSuffix));
 
-            StrictAddAbsentField(stateMachineTypeDef, StrictSetAbsentFieldThis(rouMethod, fields, stateMachineTypeRef, loadStateMachine, ret, genericMap));
+            ProxyAddAbsentField(stateMachineTypeDef, ProxySetAbsentFieldThis(rouMethod, fields, stateMachineTypeRef, loadStateMachine, ret, genericMap));
 
-            StrictAddAbsentField(stateMachineTypeDef, StrictSetAbsentFieldParameters(rouMethod, fields, stateMachineTypeRef, loadStateMachine, ret, genericMap));
+            ProxyAddAbsentField(stateMachineTypeDef, ProxySetAbsentFieldParameters(rouMethod, fields, stateMachineTypeRef, loadStateMachine, ret, genericMap));
 
-            StrictIteratorSetAbsentFieldThis(stateMachineTypeDef, getEnumeratorMethodDef, fields);
+            ProxyIteratorSetAbsentFieldThis(stateMachineTypeDef, getEnumeratorMethodDef, fields);
 
-            StrictAddAbsentField(stateMachineTypeDef, StrictIteratorSetAbsentFieldParameters(getEnumeratorMethodDef, fields));
+            ProxyAddAbsentField(stateMachineTypeDef, ProxyIteratorSetAbsentFieldParameters(getEnumeratorMethodDef, fields));
         }
 
-        private TypeReference StrictIteratorResolveStateMachineType(TypeDefinition stateMachineTypeDef, MethodDefinition methodDef)
+        private TypeReference ProxyIteratorResolveStateMachineType(TypeDefinition stateMachineTypeDef, MethodDefinition methodDef)
         {
             foreach (var instruction in methodDef.Body.Instructions)
             {
@@ -272,7 +272,7 @@ namespace Rougamo.Fody
             throw new RougamoException($"Cannot find {stateMachineTypeDef} init instruction from {methodDef}");
         }
 
-        private void StrictIteratorSetAbsentFieldThis(TypeDefinition stateMachineTypeDef, MethodDefinition getEnumeratorMethodDef, IIteratorFields fields)
+        private void ProxyIteratorSetAbsentFieldThis(TypeDefinition stateMachineTypeDef, MethodDefinition getEnumeratorMethodDef, IIteratorFields fields)
         {
             if (fields.DeclaringThis == null) return;
 
@@ -303,7 +303,7 @@ namespace Rougamo.Fody
             ]);
         }
 
-        private IEnumerable<FieldDefinition> StrictIteratorSetAbsentFieldParameters(MethodDefinition getEnumeratorMethodDef, IIteratorFields fields)
+        private IEnumerable<FieldDefinition> ProxyIteratorSetAbsentFieldParameters(MethodDefinition getEnumeratorMethodDef, IIteratorFields fields)
         {
             if (fields.TransitParameters.All(x => x != null)) yield break;
 

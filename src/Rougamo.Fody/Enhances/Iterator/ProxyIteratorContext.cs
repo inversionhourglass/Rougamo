@@ -1,8 +1,8 @@
 ﻿namespace Rougamo.Fody.Enhances.Iterator
 {
-    internal class StrictIteratorContext
+    internal class ProxyIteratorContext
     {
-        public StrictIteratorContext(IteratorFields fields, StrictIteratorAnchors anchors)
+        public ProxyIteratorContext(IteratorFields fields, ProxyIteratorAnchors anchors)
         {
             Fields = fields;
             Anchors = anchors;
@@ -10,6 +10,6 @@
 
         public IteratorFields Fields { get; }
 
-        public StrictIteratorAnchors Anchors { get; }
+        public ProxyIteratorAnchors Anchors { get; }
     }
 }
