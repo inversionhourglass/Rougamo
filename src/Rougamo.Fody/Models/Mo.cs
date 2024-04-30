@@ -13,6 +13,7 @@ namespace Rougamo.Fody
         private int? _features;
         private double? _order;
         private Omit? _omit;
+        private TypeReference? _moTypeRef;
 
         public Mo(CustomAttribute attribute, MoFrom from)
         {
@@ -101,9 +102,38 @@ namespace Rougamo.Fody
 
         public TypeDefinition MoTypeDef => TypeDef ?? Attribute!.AttributeType.Resolve();
 
+        public TypeReference GetMoTypeRef(ModuleDefinition moduleDef)
+        {
+            if (_moTypeRef == null)
+            {
+                if (TypeDef != null)
+                {
+                    _moTypeRef = TypeDef.ImportInto(moduleDef);
+                }
+                else if (Attribute!.AttributeType is GenericInstanceType git)
+                {
+                    _moTypeRef = git.ImportInto(moduleDef);
+                }
+                else
+                {
+                    _moTypeRef = Attribute!.AttributeType.Resolve().ImportInto(moduleDef);
+                }
+            }
+
+            return _moTypeRef;
+        }
+
         public MethodReference? On(string methodName, ModuleDefinition moduleDef)
         {
-            return MoTypeDef.Methods.FirstOrDefault(x => x.Name == methodName)?.ImportInto(moduleDef);
+            var methodRef = MoTypeDef.Methods.FirstOrDefault(x => x.Name == methodName)?.ImportInto(moduleDef);
+            if (methodRef == null) return null;
+
+            var moTypeRef = GetMoTypeRef(moduleDef);
+            if (moTypeRef is GenericInstanceType git)
+            {
+                methodRef = methodRef.WithGenericDeclaringType(git);
+            }
+            return methodRef;
         }
 
         public string FullName => Attribute?.AttributeType?.FullName ?? TypeDef!.FullName;

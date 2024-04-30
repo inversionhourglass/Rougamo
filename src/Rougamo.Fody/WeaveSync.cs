@@ -97,7 +97,7 @@ namespace Rougamo.Fody
             }
             else
             {
-                mos = rouMethod.Mos.Select(x => rouMethod.MethodDef.Body.CreateVariable(x.MoTypeDef.ImportInto(ModuleDefinition))).ToArray();
+                mos = rouMethod.Mos.Select(x => rouMethod.MethodDef.Body.CreateVariable(x.GetMoTypeRef(ModuleDefinition))).ToArray();
             }
             var methodContext = rouMethod.MethodDef.Body.CreateVariable(_typeMethodContextRef);
             var isRetry = rouMethod.MethodDef.Body.CreateVariable(_typeBoolRef);
