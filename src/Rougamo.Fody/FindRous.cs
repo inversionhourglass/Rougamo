@@ -45,7 +45,7 @@ namespace Rougamo.Fody
 
                 var rouType = new RouType(typeDef);
                 var implementations = ExtractClassImplementations(typeDef);
-                var classExtracts = ExtractAttributes(typeDef.CustomAttributes, globalMos.Proxies!, $"class[{typeDef.FullName}]");
+                var classExtracts = ExtractAttributes(typeDef.CustomAttributes, globalMos.Proxies!);
 
                 foreach (var methodDef in typeDef.Methods)
                 {
@@ -64,7 +64,7 @@ namespace Rougamo.Fody
                     var methodIgnores = ExtractIgnores(attributes);
                     if (methodIgnores == null) continue;
 
-                    var methodExtracts = ExtractAttributes(attributes, globalMos.Proxies!, $"method[{methodDef.FullName}]");
+                    var methodExtracts = ExtractAttributes(attributes, globalMos.Proxies!);
                     rouType.Initialize(methodDef, globalMos.Directs!, globalMos.Generics, implementations, classExtracts.Mos, classExtracts.GenericMos, classExtracts.Proxied, methodExtracts.Mos, methodExtracts.GenericMos, methodExtracts.Proxied, globalMos.Ignores!, typeIgnores, methodIgnores, _config.CompositeAccessibility);
                 }
                 if (rouType.HasMo)
@@ -82,8 +82,7 @@ namespace Rougamo.Fody
             if(_rouTypes.Count > 0)
             {
                 var sampleMo = _rouTypes.First().Methods.First().Mos.First();
-                var typeDef = sampleMo.Attribute == null ? sampleMo.TypeDef! : sampleMo.Attribute.AttributeType.Resolve();
-                var imoTypeDef = typeDef.GetInterfaceDefinition(Constants.TYPE_IMo);
+                var imoTypeDef = sampleMo.MoTypeDef.GetInterfaceDefinition(Constants.TYPE_IMo);
                 _methodIMosRef = new Dictionary<string, MethodReference>(4);
                 foreach (var methodDef in imoTypeDef!.Methods)
                 {
@@ -191,16 +190,17 @@ namespace Rougamo.Fody
         /// <param name="attributes">给定查找范围</param>
         /// <param name="locationName">全局范围名称</param>
         /// <returns>
-        /// directs: 继承自MoAttribute的类型
-        /// proxies: 通过MoProxyAttribute代理的类型
-        /// ignores: 需要忽略的实现了IMo的织入类型
+        ///  directs: 继承自MoAttribute的类型
+        /// generics: 使用RougamoAttribute的类型
+        ///  proxies: 通过MoProxyAttribute代理的类型
+        ///  ignores: 需要忽略的实现了IMo的织入类型
         /// </returns>
         private GlobalMos FindGlobalAttributes(Collection<CustomAttribute> attributes, string locationName)
         {
             var directs = new Dictionary<string, List<CustomAttribute>>();
-            var generics = new Dictionary<string, TypeDefinition>();
+            var generics = new Dictionary<string, TypeReference>();
             var proxies = new Dictionary<string, ProxyReleation>();
-            var ignores = new Dictionary<string, TypeDefinition>();
+            var ignores = new Dictionary<string, TypeReference>();
 
             foreach (var attribute in attributes)
             {
@@ -211,20 +211,18 @@ namespace Rougamo.Fody
                 }
                 else if (attribute.AttributeType.IsGeneric(Constants.TYPE_RougamoAttribute_1, out var genericTypeRefs))
                 {
-                    var moTypeDef = genericTypeRefs![0].Resolve();
-                    generics.TryAdd(moTypeDef.FullName, moTypeDef);
+                    var moTypeRef = genericTypeRefs![0];
+                    generics.TryAdd(moTypeRef.FullName, moTypeRef);
                 }
                 else if (attrType.Is(Constants.TYPE_MoProxyAttribute))
                 {
-                    var arg1 = attribute.ConstructorArguments[0].Value;
-                    var arg2 = attribute.ConstructorArguments[1].Value;
-                    var origin = arg1 is TypeDefinition ? (TypeDefinition)arg1 : ((TypeReference)arg1).Resolve();
-                    var proxy = arg2 is TypeDefinition ? (TypeDefinition)arg2 : ((TypeReference)arg2).Resolve();
+                    var origin = (TypeReference)attribute.ConstructorArguments[0].Value;
+                    var proxy = (TypeReference)attribute.ConstructorArguments[1].Value;
                     if (!proxy.DerivesFrom(Constants.TYPE_MoAttribute))
                     {
                         WriteError($"Mo proxy type({proxy.FullName}) must inherit from Rougamo.MoAttribute");
                     }
-                    else if (!proxy.GetConstructors().Any(ctor => !ctor.HasParameters))
+                    else if (!proxy.Resolve().GetConstructors().Any(ctor => !ctor.HasParameters))
                     {
                         WriteError($"Mo proxy type({proxy.FullName}) must contains non-parameters constructor");
                     }
@@ -269,9 +267,9 @@ namespace Rougamo.Fody
             var repMosInterfaces = typeDef.GetGenericInterfaces(Constants.TYPE_IRougamo_2);
             var multiRepMosInterfaces = typeDef.GetGenericInterfaces(Constants.TYPE_IRepulsionsRougamo);
 
-            mos.AddRange(mosInterfaces.Select(x => new RepulsionMo(x.GenericArguments[0].Resolve(), new TypeDefinition[0])));
-            mos.AddRange(repMosInterfaces.Select(x => new RepulsionMo(x.GenericArguments[0].Resolve(), new TypeDefinition[] { x.GenericArguments[1].Resolve() })));
-            mos.AddRange(multiRepMosInterfaces.Select(x => new RepulsionMo(x.GenericArguments[0].Resolve(), ExtractRepulsionFromIl(x.GenericArguments[1].Resolve()))));
+            mos.AddRange(mosInterfaces.Select(x => new RepulsionMo(x.GenericArguments[0], [])));
+            mos.AddRange(repMosInterfaces.Select(x => new RepulsionMo(x.GenericArguments[0], [x.GenericArguments[1]])));
+            mos.AddRange(multiRepMosInterfaces.Select(x => new RepulsionMo(x.GenericArguments[0], ExtractRepulsionFromIl(x.GenericArguments[1]))));
 
             return mos.ToArray();
         }
@@ -279,69 +277,69 @@ namespace Rougamo.Fody
         /// <summary>
         /// 从IRepulsionsRougamo的泛型类型IL代码中提取互斥类型
         /// </summary>
-        /// <param name="typeDef">IRepulsionsRougamo</param>
+        /// <param name="typeRef">IRepulsionsRougamo</param>
         /// <returns>互斥类型</returns>
-        private TypeDefinition[] ExtractRepulsionFromIl(TypeDefinition typeDef)
+        private TypeReference[] ExtractRepulsionFromIl(TypeReference typeRef)
         {
-            return ExtractRepulsionFromProp(typeDef) ?? ExtractRepulsionFromCtor(typeDef) ?? new TypeDefinition[0];
+            return ExtractRepulsionFromProp(typeRef) ?? ExtractRepulsionFromCtor(typeRef) ?? [];
         }
 
         /// <summary>
         /// 从IRepulsionsRougamo泛型类型的属性Get方法中提取互斥类型
         /// </summary>
-        /// <param name="typeDef">IRepulsionsRougamo</param>
+        /// <param name="typeRef">IRepulsionsRougamo</param>
         /// <returns>互斥类型</returns>
-        private TypeDefinition[]? ExtractRepulsionFromProp(TypeDefinition typeDef)
+        private TypeReference[]? ExtractRepulsionFromProp(TypeReference typeRef)
         {
-            do
+            var typeDef = typeRef.Resolve();
+            while (typeDef != null)
             {
                 var property = typeDef.Properties.FirstOrDefault(prop => prop.Name == Constants.PROP_Repulsions);
                 if(property != null)
                 {
-                    Dictionary<string, TypeDefinition>? repulsions = null;
+                    Dictionary<string, TypeReference>? repulsions = null;
                     foreach (var instruction in property.GetMethod.Body.Instructions)
                     {
                         if(instruction.OpCode == OpCodes.Newarr)
                         {
-                            repulsions = new Dictionary<string, TypeDefinition>();
+                            repulsions = [];
                         }
-                        else if(repulsions != null && instruction.IsLdtoken(Constants.TYPE_IMo, out var def) && !repulsions.ContainsKey(def!.FullName))
+                        else if(repulsions != null && instruction.IsLdtoken(Constants.TYPE_IMo, out var @ref) && !repulsions.ContainsKey(@ref!.FullName))
                         {
-                            repulsions.Add(def.FullName, def);
+                            repulsions.Add(@ref.FullName, @ref);
                         }
                     }
-                    return repulsions == null ? null : repulsions.Values.ToArray();
+                    return repulsions?.Values.ToArray();
                 }
-#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
                 typeDef = typeDef.BaseType?.Resolve();
-#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
-            } while (typeDef != null);
+            }
             return null;
         }
 
         /// <summary>
         /// 从IRepulsionsRougamo泛型类型的构造方法中提取互斥类型
         /// </summary>
-        /// <param name="typeDef">IRepulsionsRougamo</param>
+        /// <param name="typeRef">IRepulsionsRougamo</param>
         /// <returns>互斥类型</returns>
-        private TypeDefinition[]? ExtractRepulsionFromCtor(TypeDefinition typeDef)
+        private TypeReference[]? ExtractRepulsionFromCtor(TypeReference typeRef)
         {
-            do
+            var typeDef = typeRef.Resolve();
+            while (typeDef != null)
             {
                 var nonCtor = typeDef.GetConstructors().FirstOrDefault(ctor => !ctor.HasParameters);
                 if (nonCtor != null)
                 {
-                    Dictionary<string, TypeDefinition>? repulsions = null;
+                    Dictionary<string, TypeReference>? repulsions = null;
                     var instructions = nonCtor.Body.Instructions;
                     for (int i = instructions.Count - 1; i >= 0; i--)
                     {
                         if (instructions[i].IsStfld(Constants.FIELD_Repulsions, Constants.TYPE_ARRAY_Type))
                         {
-                            repulsions = new Dictionary<string, TypeDefinition>();
+                            repulsions = [];
                         }
-                        else if(repulsions != null && instructions[i].IsLdtoken(Constants.TYPE_IMo, out var def) && !repulsions.ContainsKey(def!.FullName))
+                        else if(repulsions != null && instructions[i].IsLdtoken(Constants.TYPE_IMo, out var @ref) && !repulsions.ContainsKey(@ref!.FullName))
                         {
-                            repulsions.Add(def.FullName, def);
+                            repulsions.Add(@ref.FullName, @ref);
                         }
                         else if(instructions[i].OpCode == OpCodes.Newarr && repulsions != null)
                         {
@@ -349,10 +347,8 @@ namespace Rougamo.Fody
                         }
                     }
                 }
-#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
                 typeDef = typeDef.BaseType?.Resolve();
-#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
-            } while (typeDef != null);
+            }
             return null;
         }
 
@@ -361,16 +357,15 @@ namespace Rougamo.Fody
         /// </summary>
         /// <param name="attributes">一堆CustomAttribute</param>
         /// <param name="proxies">代理声明</param>
-        /// <param name="locationName">CustomAttribute的来源</param>
         /// <returns>
         ///     mos: 继承自MoAttribute的类型
         /// proxied: 通过代理设置的实现IMo接口的类型
         /// </returns>
-        private ExtractMos ExtractAttributes(Collection<CustomAttribute> attributes, Dictionary<string, TypeDefinition> proxies, string locationName, params string[][] ignores)
+        private ExtractMos ExtractAttributes(Collection<CustomAttribute> attributes, Dictionary<string, TypeReference> proxies)
         {
             var mos = new Dictionary<string, List<CustomAttribute>>();
-            var genericMos = new Dictionary<string, TypeDefinition>();
-            var proxied = new Dictionary<string, TypeDefinition>();
+            var genericMos = new Dictionary<string, TypeReference>();
+            var proxied = new Dictionary<string, TypeReference>();
             foreach (var attribute in attributes)
             {
                 if (attribute.AttributeType.DerivesFrom(Constants.TYPE_MoAttribute))
@@ -379,13 +374,13 @@ namespace Rougamo.Fody
                 }
                 else if (attribute.AttributeType.IsGeneric(Constants.TYPE_RougamoAttribute_1, out var genericTypeRefs))
                 {
-                    var moTypeDef = genericTypeRefs![0].Resolve();
-                    genericMos.TryAdd(moTypeDef.FullName, moTypeDef);
+                    var moTypeRef = genericTypeRefs![0];
+                    genericMos.TryAdd(moTypeRef.FullName, moTypeRef);
                 }
                 else if (attribute.AttributeType.Is(Constants.TYPE_RougamoAttribute))
                 {
-                    var moTypeDef = (TypeDefinition)attribute.ConstructorArguments[0].Value;
-                    genericMos.TryAdd(moTypeDef.FullName, moTypeDef);
+                    var moTypeRef = (TypeReference)attribute.ConstructorArguments[0].Value;
+                    genericMos.TryAdd(moTypeRef.FullName, moTypeRef);
                 }
                 else if (proxies.TryGetValue(attribute.AttributeType.FullName, out var proxy))
                 {
@@ -402,7 +397,6 @@ namespace Rougamo.Fody
         /// </summary>
         /// <param name="mos">已有的MoAttribute子类</param>
         /// <param name="attribute">CustomAttribute</param>
-        /// <param name="locationName">CustomAttribute的来源</param>
         private void ExtractMoAttributeUniq(Dictionary<string, List<CustomAttribute>> mos, CustomAttribute attribute)
         {
             if (!mos.TryGetValue(attribute.AttributeType.FullName, out var list))
@@ -420,7 +414,7 @@ namespace Rougamo.Fody
         /// <returns>忽略的织入类型，如果返回null表示忽略全部</returns>
         private string[]? ExtractIgnores(Collection<CustomAttribute> attributes)
         {
-            var ignores = new Dictionary<string, TypeDefinition>();
+            var ignores = new Dictionary<string, TypeReference>();
             foreach (var attribute in attributes)
             {
                 if (attribute.AttributeType.Is(Constants.TYPE_IgnoreMoAttribute) && !ExtractIgnores(ignores, attribute)) return null;
@@ -434,9 +428,9 @@ namespace Rougamo.Fody
         /// <param name="ignores">已有的忽略类型</param>
         /// <param name="attribute">IgnoreAttribute</param>
         /// <returns>如果忽略全部返回false，否则返回true</returns>
-        private bool ExtractIgnores(Dictionary<string, TypeDefinition>? ignores, CustomAttribute attribute)
+        private bool ExtractIgnores(Dictionary<string, TypeReference>? ignores, CustomAttribute attribute)
         {
-            if (!attribute.HasProperties || !attribute.Properties.TryGet(Constants.PROP_MoTypes, out var property))
+            if (ignores == null || !attribute.HasProperties || !attribute.Properties.TryGet(Constants.PROP_MoTypes, out var property))
             {
                 return false;
             }
@@ -445,14 +439,10 @@ namespace Rougamo.Fody
             foreach (CustomAttributeArgument item in enumerable)
             {
                 var value = item.Value;
-                var def = value as TypeDefinition;
-                if (def == null && value is TypeReference @ref)
+                var typeRef = value as TypeReference;
+                if (typeRef != null && typeRef.Implement(Constants.TYPE_IMo))
                 {
-                    def = @ref.Resolve();
-                }
-                if (def != null && def.Implement(Constants.TYPE_IMo))
-                {
-                    ignores!.TryAdd(def.FullName, def);
+                    ignores.TryAdd(typeRef.FullName, typeRef);
                 }
             }
             return true;

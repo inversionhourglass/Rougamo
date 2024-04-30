@@ -13,19 +13,14 @@ namespace Rougamo.Fody
             return instruction.OpCode.Code == Code.Ret;
         }
 
-        public static bool IsLdtoken(this Instruction instruction, string @interface, out TypeDefinition? typeDef)
+        public static bool IsLdtoken(this Instruction instruction, string @interface, out TypeReference? typeRef)
         {
-            typeDef = null;
+            typeRef = null;
             if (instruction.OpCode != OpCodes.Ldtoken) return false;
 
-            typeDef = instruction.Operand as TypeDefinition;
-            if (typeDef == null && instruction.Operand is TypeReference typeRef)
-            {
-                typeDef = typeRef.Resolve();
-            }
+            typeRef = instruction.Operand as TypeReference;
 
-            if (typeDef == null) return false;
-            return typeDef.Implement(@interface);
+            return typeRef != null && typeRef.Implement(@interface);
         }
 
         public static bool IsStfld(this Instruction instruction, string fieldName, string fieldType)

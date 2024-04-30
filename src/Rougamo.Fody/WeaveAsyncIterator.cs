@@ -71,7 +71,7 @@ namespace Rougamo.Fody
                 mos = new FieldDefinition[rouMethod.Mos.Length];
                 for (int i = 0; i < rouMethod.Mos.Length; i++)
                 {
-                    mos[i] = new FieldDefinition(Constants.FIELD_RougamoMo_Prefix + i, FieldAttributes.Public, rouMethod.Mos[i].GetMoTypeRef(ModuleDefinition));
+                    mos[i] = new FieldDefinition(Constants.FIELD_RougamoMo_Prefix + i, FieldAttributes.Public, rouMethod.Mos[i].MoTypeRef.ImportInto(ModuleDefinition));
                     stateMachineTypeDef.Fields.Add(mos[i]);
                 }
             }

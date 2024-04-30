@@ -13,7 +13,7 @@ namespace Rougamo.Fody
         private int? _features;
         private double? _order;
         private Omit? _omit;
-        private TypeReference? _moTypeRef;
+        private TypeDefinition? _moTypeDef;
 
         public Mo(CustomAttribute attribute, MoFrom from)
         {
@@ -22,18 +22,18 @@ namespace Rougamo.Fody
             IsStruct = false;
         }
 
-        public Mo(TypeDefinition typeDef, MoFrom from)
+        public Mo(TypeReference typeRef, MoFrom from)
         {
-            TypeDef = typeDef;
+            TypeRef = typeRef;
             From = from;
-            IsStruct = TypeDef.IsValueType;
+            IsStruct = TypeRef.IsValueType;
         }
 
         public static IEqualityComparer<Mo> Comparer { get; } = new EqualityComparer();
 
         public CustomAttribute? Attribute { get; }
 
-        public TypeDefinition? TypeDef { get; }
+        public TypeReference? TypeRef { get; }
 
         public MoFrom From { get; }
 
@@ -100,35 +100,23 @@ namespace Rougamo.Fody
             }
         }
 
-        public TypeDefinition MoTypeDef => TypeDef ?? Attribute!.AttributeType.Resolve();
-
-        public TypeReference GetMoTypeRef(ModuleDefinition moduleDef)
+        public TypeDefinition MoTypeDef
         {
-            if (_moTypeRef == null)
+            get
             {
-                if (TypeDef != null)
-                {
-                    _moTypeRef = TypeDef.ImportInto(moduleDef);
-                }
-                else if (Attribute!.AttributeType is GenericInstanceType git)
-                {
-                    _moTypeRef = git.ImportInto(moduleDef);
-                }
-                else
-                {
-                    _moTypeRef = Attribute!.AttributeType.Resolve().ImportInto(moduleDef);
-                }
+                _moTypeDef ??= MoTypeRef.Resolve();
+                return _moTypeDef;
             }
-
-            return _moTypeRef;
         }
+
+        public TypeReference MoTypeRef => TypeRef ?? Attribute!.AttributeType;
 
         public MethodReference? On(string methodName, ModuleDefinition moduleDef)
         {
             var methodRef = MoTypeDef.Methods.FirstOrDefault(x => x.Name == methodName)?.ImportInto(moduleDef);
             if (methodRef == null) return null;
 
-            var moTypeRef = GetMoTypeRef(moduleDef);
+            var moTypeRef = MoTypeRef.ImportInto(moduleDef);
             if (moTypeRef is GenericInstanceType git)
             {
                 methodRef = methodRef.WithGenericDeclaringType(git);
@@ -136,7 +124,7 @@ namespace Rougamo.Fody
             return methodRef;
         }
 
-        public string FullName => Attribute?.AttributeType?.FullName ?? TypeDef!.FullName;
+        public string FullName => Attribute?.AttributeType?.FullName ?? TypeRef!.FullName;
 
         class EqualityComparer : IEqualityComparer<Mo>
         {
@@ -185,15 +173,15 @@ namespace Rougamo.Fody
                 return hash;
             }
 
-            private Collection<CustomAttributeArgument> ExtractTypeArgs(Mo mo, out TypeDefinition typeDef)
+            private Collection<CustomAttributeArgument> ExtractTypeArgs(Mo mo, out TypeReference typeRef)
             {
                 if (mo.Attribute != null)
                 {
-                    typeDef = mo.Attribute.AttributeType.Resolve();
+                    typeRef = mo.Attribute.AttributeType;
                     return mo.Attribute.ConstructorArguments;
                 }
-                typeDef = mo.TypeDef!;
-                return new Collection<CustomAttributeArgument>();
+                typeRef = mo.TypeRef!;
+                return [];
             }
 
             private bool Equals(CustomAttributeArgument arg1, CustomAttributeArgument arg2)

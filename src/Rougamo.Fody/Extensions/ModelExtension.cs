@@ -16,16 +16,16 @@ namespace Rougamo.Fody
 
         public static AccessFlags ExtractFlags(this Mo mo)
         {
-            var typeDef = mo.TypeDef;
+            var typeRef = mo.TypeRef;
             if (mo.Attribute != null)
             {
                 if (mo.Attribute.Properties.TryGet(Constants.PROP_Flags, out var property))
                 {
                     return (AccessFlags)Convert.ToInt32(property!.Value.Argument.Value);
                 }
-                typeDef = mo.Attribute.AttributeType.Resolve();
+                typeRef = mo.Attribute.AttributeType;
             }
-            var flags = ExtractFromIl(typeDef!, Constants.PROP_Flags, Constants.TYPE_AccessFlags, ParseFlags);
+            var flags = ExtractFromIl(typeRef!, Constants.PROP_Flags, Constants.TYPE_AccessFlags, ParseFlags);
             return flags ?? AccessFlags.InstancePublic;
         }
 
@@ -45,16 +45,16 @@ namespace Rougamo.Fody
 
         public static string? ExtractPattern(this Mo mo)
         {
-            var typeDef = mo.TypeDef;
+            var typeRef = mo.TypeRef;
             if (mo.Attribute != null)
             {
                 if (mo.Attribute.Properties.TryGet(Constants.PROP_Pattern, out var property))
                 {
                     return (string)property!.Value.Argument.Value;
                 }
-                typeDef = mo.Attribute.AttributeType.Resolve();
+                typeRef = mo.Attribute.AttributeType;
             }
-            return ExtractFromIl(typeDef!, Constants.PROP_Pattern, Constants.TYPE_String, ParsePattern);
+            return ExtractFromIl(typeRef!, Constants.PROP_Pattern, Constants.TYPE_String, ParsePattern);
         }
 
         private static string? ParsePattern(Instruction instruction)
@@ -68,7 +68,7 @@ namespace Rougamo.Fody
 
         public static int ExtractFeatures(this Mo mo)
         {
-            var typeDef = mo.TypeDef;
+            var typeDef = mo.TypeRef;
             if (mo.Attribute != null)
             {
                 if (mo.Attribute.Properties.TryGet(Constants.PROP_Features, out var property))
@@ -89,7 +89,7 @@ namespace Rougamo.Fody
 
         public static double ExtractOrder(this Mo mo)
         {
-            var typeDef = mo.TypeDef;
+            var typeDef = mo.TypeRef;
             if (mo.Attribute != null)
             {
                 if (mo.Attribute.Properties.TryGet(Constants.PROP_Order, out var property))
@@ -113,7 +113,7 @@ namespace Rougamo.Fody
 
         public static Omit ExtractOmits(this Mo mo)
         {
-            var typeDef = mo.TypeDef;
+            var typeDef = mo.TypeRef;
             if (mo.Attribute != null)
             {
                 if (mo.Attribute.Properties.TryGet(Constants.PROP_MethodContextOmits, out var property))
@@ -144,15 +144,16 @@ namespace Rougamo.Fody
 
         #region Extract-Property-Value
 
-        private static T? ExtractFromIl<T>(TypeDefinition typeDef, string propertyName, string propertyTypeFullName, Func<Instruction, T?> tryResolve) where T : struct
+        private static T? ExtractFromIl<T>(TypeReference typeRef, string propertyName, string propertyTypeFullName, Func<Instruction, T?> tryResolve) where T : struct
         {
-            return ExtractFromProp(typeDef, propertyName, tryResolve) ??
-                ExtractFromCtor(typeDef, propertyTypeFullName, propertyName, tryResolve);
+            return ExtractFromProp(typeRef, propertyName, tryResolve) ??
+                ExtractFromCtor(typeRef, propertyTypeFullName, propertyName, tryResolve);
         }
 
-        private static T? ExtractFromProp<T>(TypeDefinition typeDef, string propName, Func<Instruction, T?> tryResolve) where T : struct
+        private static T? ExtractFromProp<T>(TypeReference typeRef, string propName, Func<Instruction, T?> tryResolve) where T : struct
         {
-            do
+            var typeDef = typeRef.Resolve();
+            while (typeDef != null)
             {
                 var property = typeDef.Properties.FirstOrDefault(prop => prop.Name == propName);
                 if (property != null)
@@ -167,18 +168,17 @@ namespace Rougamo.Fody
                     // 因为已经override的属性，父类的赋值操作没有意义，直接进行后续的构造方法查找即可
                     return null;
                 }
-#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
                 typeDef = typeDef.BaseType?.Resolve();
-#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
-            } while (typeDef != null);
+            }
             return null;
         }
 
-        private static T? ExtractFromCtor<T>(TypeDefinition typeDef, string propTypeFullName, string propertyName, Func<Instruction, T?> tryResolve) where T : struct
+        private static T? ExtractFromCtor<T>(TypeReference typeRef, string propTypeFullName, string propertyName, Func<Instruction, T?> tryResolve) where T : struct
         {
             var propFieldName = string.Format(Constants.FIELD_Format, propertyName);
             var setterName = Constants.Setter(propertyName);
-            do
+            var typeDef = typeRef.Resolve();
+            while (typeDef != null)
             {
                 var nonCtor = typeDef.GetConstructors().FirstOrDefault(ctor => !ctor.HasParameters);
                 if (nonCtor != null)
@@ -191,22 +191,21 @@ namespace Rougamo.Fody
                         }
                     }
                 }
-#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
                 typeDef = typeDef.BaseType?.Resolve();
-#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
-            } while (typeDef != null);
+            }
             return null;
         }
 
-        private static T? ExtractFromIl<T>(TypeDefinition typeDef, string propertyName, string propertyTypeFullName, Func<Instruction, T?> tryResolve) where T : class
+        private static T? ExtractFromIl<T>(TypeReference typeRef, string propertyName, string propertyTypeFullName, Func<Instruction, T?> tryResolve) where T : class
         {
-            return ExtractFromProp(typeDef, propertyName, tryResolve) ??
-                ExtractFromCtor(typeDef, propertyTypeFullName, propertyName, tryResolve);
+            return ExtractFromProp(typeRef, propertyName, tryResolve) ??
+                ExtractFromCtor(typeRef, propertyTypeFullName, propertyName, tryResolve);
         }
 
-        private static T? ExtractFromProp<T>(TypeDefinition typeDef, string propName, Func<Instruction, T?> tryResolve) where T : class
+        private static T? ExtractFromProp<T>(TypeReference typeRef, string propName, Func<Instruction, T?> tryResolve) where T : class
         {
-            do
+            var typeDef = typeRef.Resolve();
+            while (typeDef != null)
             {
                 var property = typeDef.Properties.FirstOrDefault(prop => prop.Name == propName);
                 if (property != null)
@@ -221,18 +220,17 @@ namespace Rougamo.Fody
                     // 因为已经override的属性，父类的赋值操作没有意义，直接进行后续的构造方法查找即可
                     return null;
                 }
-#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
                 typeDef = typeDef.BaseType?.Resolve();
-#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
-            } while (typeDef != null);
+            }
             return null;
         }
 
-        private static T? ExtractFromCtor<T>(TypeDefinition typeDef, string propTypeFullName, string propertyName, Func<Instruction, T?> tryResolve) where T : class
+        private static T? ExtractFromCtor<T>(TypeReference typeRef, string propTypeFullName, string propertyName, Func<Instruction, T?> tryResolve) where T : class
         {
             var propFieldName = string.Format(Constants.FIELD_Format, propertyName);
             var setterName = Constants.Setter(propertyName);
-            do
+            var typeDef = typeRef.Resolve();
+            while (typeDef != null)
             {
                 var nonCtor = typeDef.GetConstructors().FirstOrDefault(ctor => !ctor.HasParameters);
                 if (nonCtor != null)
@@ -245,10 +243,8 @@ namespace Rougamo.Fody
                         }
                     }
                 }
-#pragma warning disable CS8600 // Converting null literal or possible null value to non-nullable type.
                 typeDef = typeDef.BaseType?.Resolve();
-#pragma warning restore CS8600 // Converting null literal or possible null value to non-nullable type.
-            } while (typeDef != null);
+            }
             return null;
         }
 
@@ -260,9 +256,9 @@ namespace Rougamo.Fody
         }
 
         public static void Initialize(this RouType rouType, MethodDefinition methdDef,
-            CustomAttribute[] assemblyAttributes, TypeDefinition[] assemblyGenerics,
-            RepulsionMo[] typeImplements, CustomAttribute[] typeAttributes, TypeDefinition[] typeGenerics, TypeDefinition[] typeProxies,
-            CustomAttribute[] methodAttributes, TypeDefinition[] methodGenerics, TypeDefinition[] methodProxies,
+            CustomAttribute[] assemblyAttributes, TypeReference[] assemblyGenerics,
+            RepulsionMo[] typeImplements, CustomAttribute[] typeAttributes, TypeReference[] typeGenerics, TypeReference[] typeProxies,
+            CustomAttribute[] methodAttributes, TypeReference[] methodGenerics, TypeReference[] methodProxies,
             string[] assemblyIgnores, string[] typeIgnores, string[] methodIgnores, bool compositeAccessibility)
         {
             var ignores = new HashSet<string>(assemblyIgnores);
@@ -296,7 +292,7 @@ namespace Rougamo.Fody
             }
         }
 
-        public static void AddMo(this RouMethod method, TypeDefinition typeDef, MoFrom from, bool compositeAccessibility) => AddMo(method, new[] { typeDef }, from, compositeAccessibility);
+        public static void AddMo(this RouMethod method, TypeReference typeRef, MoFrom from, bool compositeAccessibility) => AddMo(method, new[] { typeRef }, from, compositeAccessibility);
 
         public static void AddMo(this RouMethod method, IEnumerable<CustomAttribute> attributes, MoFrom from, bool compositeAccessibility)
         {
@@ -304,9 +300,9 @@ namespace Rougamo.Fody
             method.AddMo(mos);
         }
 
-        public static void AddMo(this RouMethod method, IEnumerable<TypeDefinition> typeDefs, MoFrom from, bool compositeAccessibility)
+        public static void AddMo(this RouMethod method, IEnumerable<TypeReference> typeRefs, MoFrom from, bool compositeAccessibility)
         {
-            var mos = typeDefs.Select(x => new Mo(x, from)).Where(x => MatchMo(method, x, from, compositeAccessibility));
+            var mos = typeRefs.Select(x => new Mo(x, from)).Where(x => MatchMo(method, x, from, compositeAccessibility));
             method.AddMo(mos);
         }
 
@@ -338,14 +334,14 @@ namespace Rougamo.Fody
             return pattern.IsMatch(signature);
         }
 
-        public static bool Any(this RouMethod method, TypeDefinition typeDef)
+        public static bool Any(this RouMethod method, TypeReference typeRef)
         {
-            return method.MosAny(mo => mo.FullName == typeDef.FullName);
+            return method.MosAny(mo => mo.FullName == typeRef.FullName);
         }
 
-        public static bool Any(this RouMethod method, TypeDefinition[] typeDefs)
+        public static bool Any(this RouMethod method, TypeReference[] typeRefs)
         {
-            return typeDefs.Any(method.Any);
+            return typeRefs.Any(method.Any);
         }
 
         #endregion Mo

@@ -12,7 +12,7 @@ namespace Rougamo.Fody
         public SimplifyGlobalMos() { }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
-        public SimplifyGlobalMos(CustomAttribute[] directs, TypeDefinition[] generics, Dictionary<string, TypeDefinition> proxies, string[] ignores)
+        public SimplifyGlobalMos(CustomAttribute[] directs, TypeReference[] generics, Dictionary<string, TypeReference> proxies, string[] ignores)
         {
             Directs = directs;
             Generics = generics;
@@ -22,9 +22,9 @@ namespace Rougamo.Fody
 
         public CustomAttribute[]? Directs { get; }
 
-        public TypeDefinition[] Generics { get; }
+        public TypeReference[] Generics { get; }
 
-        public Dictionary<string, TypeDefinition>? Proxies { get; }
+        public Dictionary<string, TypeReference>? Proxies { get; }
 
         public string[]? Ignores { get; }
 
@@ -33,7 +33,7 @@ namespace Rougamo.Fody
 
     internal sealed class GlobalMos
     {
-        public GlobalMos(Dictionary<string, List<CustomAttribute>> directs, Dictionary<string, TypeDefinition> generics, Dictionary<string, TypeDefinition> proxies, Dictionary<string, TypeDefinition>? ignores)
+        public GlobalMos(Dictionary<string, List<CustomAttribute>> directs, Dictionary<string, TypeReference> generics, Dictionary<string, TypeReference> proxies, Dictionary<string, TypeReference>? ignores)
         {
             Directs = directs;
             Generics = generics;
@@ -43,31 +43,31 @@ namespace Rougamo.Fody
 
         public Dictionary<string, List<CustomAttribute>> Directs { get; }
 
-        public Dictionary<string, TypeDefinition> Generics { get; set; }
+        public Dictionary<string, TypeReference> Generics { get; set; }
 
-        public Dictionary<string, TypeDefinition> Proxies { get; }
+        public Dictionary<string, TypeReference> Proxies { get; }
 
-        public Dictionary<string, TypeDefinition>? Ignores { get; }
+        public Dictionary<string, TypeReference>? Ignores { get; }
 
         public bool GlobalIgnore => Ignores == null;
     }
 
     internal sealed class RepulsionMo
     {
-        public RepulsionMo(TypeDefinition mo, TypeDefinition[] repulsions)
+        public RepulsionMo(TypeReference mo, TypeReference[] repulsions)
         {
             Mo = mo;
             Repulsions = repulsions;
         }
 
-        public TypeDefinition Mo { get; }
+        public TypeReference Mo { get; }
         
-        public TypeDefinition[] Repulsions { get; }
+        public TypeReference[] Repulsions { get; }
     }
 
     internal sealed class ExtractMos
     {
-        public ExtractMos(CustomAttribute[] mos, TypeDefinition[] genericMos,  TypeDefinition[] proxied)
+        public ExtractMos(CustomAttribute[] mos, TypeReference[] genericMos,  TypeReference[] proxied)
         {
             Mos = mos;
             GenericMos = genericMos;
@@ -76,21 +76,21 @@ namespace Rougamo.Fody
 
         public CustomAttribute[] Mos { get; }
 
-        public TypeDefinition[] GenericMos { get; set; }
+        public TypeReference[] GenericMos { get; set; }
 
-        public TypeDefinition[] Proxied { get; }
+        public TypeReference[] Proxied { get; }
     }
 
     internal sealed class ProxyReleation
     {
-        public ProxyReleation(TypeDefinition origin, TypeDefinition proxy)
+        public ProxyReleation(TypeReference origin, TypeReference proxy)
         {
             Origin = origin;
             Proxy = proxy;
         }
 
-        public TypeDefinition Origin { get; }
+        public TypeReference Origin { get; }
         
-        public TypeDefinition Proxy { get; }
+        public TypeReference Proxy { get; }
     }
 }

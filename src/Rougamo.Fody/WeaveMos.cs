@@ -133,16 +133,18 @@ namespace Rougamo.Fody
 
             if (mo.IsStruct)
             {
-                var typeRef = Import(mo.TypeDef!);
+                var typeRef = Import(mo.TypeRef!);
                 var moVariable = methodDef.Body.CreateVariable(typeRef);
                 Instruction[] ins = [
-                        Create(OpCodes.Ldloca, moVariable),
+                    Create(OpCodes.Ldloca, moVariable),
                     Create(OpCodes.Initobj, typeRef),
                     Create(OpCodes.Ldloc, moVariable)
-                    ];
+                ];
                 return boxing ? [.. ins, Create(OpCodes.Box, typeRef)] : ins;
             }
-            return [Create(OpCodes.Newobj, Import(mo.TypeDef!.GetZeroArgsCtor()))];
+            var ctorDef = mo.MoTypeDef.GetZeroArgsCtor();
+            var ctorRef = Import(ctorDef).WithGenericDeclaringType(mo.MoTypeRef);
+            return [Create(OpCodes.Newobj, ctorRef)];
         }
 
         private Collection<Instruction> LoadAttributeArgumentIns(Collection<CustomAttributeArgument> arguments)
