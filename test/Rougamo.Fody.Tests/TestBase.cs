@@ -18,7 +18,7 @@ namespace Rougamo.Fody.Tests
 
         protected void WeaveAssembly(string assemblyPath)
         {
-            var weaver = new ModuleWeaver();
+            var weaver = new ModuleWeaver(true);
             var result = weaver.ExecuteTestRun(assemblyPath, false);
             Assembly = result.Assembly;
         }

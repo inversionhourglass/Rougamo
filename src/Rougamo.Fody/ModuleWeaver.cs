@@ -11,7 +11,8 @@ namespace Rougamo.Fody
 {
     public partial class ModuleWeaver : BaseModuleWeaver
     {
-#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+        private readonly bool _testRun;
+
         private TypeDefinition _typeListDef;
 
         private TypeReference _typeVoidRef;
@@ -55,9 +56,17 @@ namespace Rougamo.Fody
 
         private List<RouType> _rouTypes;
         private Config _config;
-#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
-        private readonly Instruction[] EmptyInstructions = Array.Empty<Instruction>();
+        private readonly Instruction[] EmptyInstructions = [];
+
+        public ModuleWeaver() : this(false) { }
+
+#pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+        public ModuleWeaver(bool testRun)
+#pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+        {
+            _testRun = testRun;
+        }
 
         public override void Execute()
         {
@@ -73,6 +82,8 @@ namespace Rougamo.Fody
             }
             catch (RougamoException e)
             {
+                if (_testRun) throw;
+
                 if (e.MethodDef == null)
                 {
                     WriteError(e.Message);
