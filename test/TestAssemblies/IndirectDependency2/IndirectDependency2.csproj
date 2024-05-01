@@ -13,7 +13,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\..\src\Rougamo\Rougamo.csproj" />
-    <ProjectReference Include="..\IndirectDependency1\IndirectDependency1.csproj" />
   </ItemGroup>
 
 </Project>
