@@ -13,11 +13,11 @@ namespace Rougamo.Fody
         private int? _features;
         private double? _order;
         private Omit? _omit;
-        private TypeDefinition? _moTypeDef;
 
         public Mo(CustomAttribute attribute, MoFrom from)
         {
             Attribute = attribute;
+            MoTypeDef = attribute.AttributeType.Resolve();
             From = from;
             IsStruct = false;
         }
@@ -25,8 +25,9 @@ namespace Rougamo.Fody
         public Mo(TypeReference typeRef, MoFrom from)
         {
             TypeRef = typeRef;
+            MoTypeDef = typeRef.Resolve();
             From = from;
-            IsStruct = TypeRef.IsValueType;
+            IsStruct = MoTypeDef.IsValueType;
         }
 
         public static IEqualityComparer<Mo> Comparer { get; } = new EqualityComparer();
@@ -100,14 +101,7 @@ namespace Rougamo.Fody
             }
         }
 
-        public TypeDefinition MoTypeDef
-        {
-            get
-            {
-                _moTypeDef ??= MoTypeRef.Resolve();
-                return _moTypeDef;
-            }
-        }
+        public TypeDefinition MoTypeDef { get; }
 
         public TypeReference MoTypeRef => TypeRef ?? Attribute!.AttributeType;
 
