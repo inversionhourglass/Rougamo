@@ -640,5 +640,22 @@ namespace Rougamo.Fody.Tests
             Assert.DoesNotContain(nameof(BasicUsage.Mos.ValueOmitAll), executedMos);
             Assert.Contains(nameof(BasicUsage.Mos.ClassOmitMos), executedMos);
         }
+
+        [Fact]
+        public async Task IndirectDependencyTes()
+        {
+            var instance = GetInstance(nameof(IndirectDependencyUseCase));
+            var sInstance = GetStaticInstance(nameof(IndirectDependencyUseCase));
+
+            var mos = new List<string>();
+
+            mos.Clear();
+            var syncResult = (string[])instance.Sync(mos);
+            Assert.Equal(syncResult, mos);
+
+            mos.Clear();
+            var asyncResult = await (Task<string[]>)sInstance.Async(mos);
+            Assert.Equal(asyncResult, mos);
+        }
     }
 }

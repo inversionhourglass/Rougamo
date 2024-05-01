@@ -5,10 +5,7 @@ using IndirectDependency2;
 using IndirectDependency2.Attributes;
 using IndirectDependency2.Mos;
 using Rougamo;
-using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using System.Threading.Tasks;
 
 namespace BasicUsage
@@ -31,7 +28,22 @@ namespace BasicUsage
         [Rougamo(typeof(Id2ValueMo<Id1Struct<Id2Cls>>))]
         public string[] Sync(List<string> mos)
         {
-            return GetMos(MethodBase.GetCurrentMethod()).ToArray();
+            return [
+                typeof(Id1MoAttribute).FullName,
+                typeof(Id1MoAttribute<Id2Cls>).FullName,
+                typeof(Id1MoAttribute<Id2Cls<Id1Struct>>).FullName,
+                typeof(Id1MoAttribute<Id2Struct>).FullName,
+                typeof(Id1MoAttribute<Id2Struct<Id1Cls>>).FullName,
+                typeof(Id2MoAttribute).FullName,
+                typeof(Id2MoAttribute<Id1Cls>).FullName,
+                typeof(Id2MoAttribute<Id1Cls<Id2Struct>>).FullName,
+                typeof(Id2MoAttribute<Id1Struct>).FullName,
+                typeof(Id2MoAttribute<Id1Struct<Id2Cls>>).FullName,
+                typeof(Id1ValueMo).FullName,
+                typeof(Id2ValueMo<Id1Cls>).FullName,
+                typeof(Id1ValueMo<Id2Cls<int>>).FullName,
+                typeof(Id2ValueMo<Id1Struct<Id2Cls>>).FullName
+                ];
         }
 
         [Id1Mo]
@@ -51,27 +63,22 @@ namespace BasicUsage
         public static async Task<string[]> Async(List<string> mos)
         {
             await Task.Yield();
-            return GetMos(MethodBase.GetCurrentMethod()).ToArray();
-        }
-
-        private static IEnumerable<string> GetMos(MethodBase method)
-        {
-            foreach(var attribute in method.CustomAttributes)
-            {
-                var attributeType = attribute.AttributeType;
-                if (typeof(IMo).IsAssignableFrom(attributeType))
-                {
-                    yield return attributeType.FullName;
-                }
-                else if (attributeType == typeof(RougamoAttribute))
-                {
-                    yield return ((Type)attribute.ConstructorArguments[0].Value).FullName;
-                }
-                else if (attributeType.IsGenericType && attributeType.GetGenericTypeDefinition() == typeof(RougamoAttribute<>))
-                {
-                    yield return attributeType.GetGenericArguments()[0].FullName;
-                }
-            }
+            return [
+                typeof(Id1MoAttribute).FullName,
+                typeof(Id1MoAttribute<Id2Cls>).FullName,
+                typeof(Id1MoAttribute<Id2Cls<Id1Struct>>).FullName,
+                typeof(Id1MoAttribute<Id2Struct>).FullName,
+                typeof(Id1MoAttribute<Id2Struct<Id1Cls>>).FullName,
+                typeof(Id2MoAttribute).FullName,
+                typeof(Id2MoAttribute<Id1Cls>).FullName,
+                typeof(Id2MoAttribute<Id1Cls<Id2Struct>>).FullName,
+                typeof(Id2MoAttribute<Id1Struct>).FullName,
+                typeof(Id2MoAttribute<Id1Struct<Id2Cls>>).FullName,
+                typeof(Id1ValueMo).FullName,
+                typeof(Id2ValueMo<Id1Cls>).FullName,
+                typeof(Id1ValueMo<Id2Cls<int>>).FullName,
+                typeof(Id2ValueMo<Id1Struct<Id2Cls>>).FullName
+            ];
         }
     }
 }
