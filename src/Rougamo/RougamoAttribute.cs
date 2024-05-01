@@ -3,7 +3,7 @@
 namespace Rougamo
 {
     /// <inheritdoc/>
-    [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Module | AttributeTargets.Class | AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Constructor)]
+    [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Module | AttributeTargets.Class | AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Constructor, AllowMultiple = true)]
     public class RougamoAttribute : Attribute
     {
         /// <summary>
@@ -20,7 +20,7 @@ namespace Rougamo
 
 
     /// <inheritdoc/>
-    [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Module | AttributeTargets.Class | AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Constructor)]
+    [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Module | AttributeTargets.Class | AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Constructor, AllowMultiple = true)]
     public class RougamoAttribute<T> : RougamoAttribute where T : IMo
     {
         /// <summary>
