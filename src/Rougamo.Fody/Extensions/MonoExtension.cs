@@ -263,8 +263,26 @@ namespace Rougamo.Fody
 
         #region Import
 
-        public static TypeReference ImportInto(this TypeReference typeRef, ModuleDefinition moduleDef) =>
-            moduleDef.ImportReference(typeRef);
+        public static TypeReference ImportInto(this TypeReference typeRef, ModuleDefinition moduleDef)
+        {
+            var byRef = typeRef.IsByReference;
+            if (byRef) typeRef = typeRef.GetElementType();
+            if (typeRef is GenericParameter) return byRef ? new ByReferenceType(typeRef) : typeRef;
+
+            var iTypeRef = moduleDef.ImportReference(typeRef.Resolve());
+            if (typeRef is GenericInstanceType git)
+            {
+                var igas = new List<TypeReference>(git.GenericArguments.Count);
+                foreach (var ga in git.GenericArguments)
+                {
+                    var iga = ga.ImportInto(moduleDef);
+                    igas.Add(iga);
+                }
+                iTypeRef = iTypeRef.MakeGenericInstanceType(igas.ToArray());
+            }
+
+            return byRef ? new ByReferenceType(iTypeRef) : iTypeRef;
+        }
 
         public static FieldReference ImportInto(this FieldReference fieldRef, ModuleDefinition moduleDef) =>
             moduleDef.ImportReference(fieldRef);
