@@ -265,9 +265,9 @@ namespace Rougamo.Fody
 
         public static TypeReference ImportInto(this TypeReference typeRef, ModuleDefinition moduleDef)
         {
-            var byRef = typeRef.IsByReference;
-            if (byRef) typeRef = typeRef.GetElementType();
-            if (typeRef is GenericParameter) return byRef ? new ByReferenceType(typeRef) : typeRef;
+            if (typeRef.IsByReference) return new ByReferenceType(typeRef.GetElementType().ImportInto(moduleDef));
+            if (typeRef.IsArray) return new ArrayType(typeRef.GetElementType().ImportInto(moduleDef));
+            if (typeRef is GenericParameter) return typeRef;
 
             var iTypeRef = moduleDef.ImportReference(typeRef.Resolve());
             if (typeRef is GenericInstanceType git)
@@ -281,7 +281,7 @@ namespace Rougamo.Fody
                 iTypeRef = iTypeRef.MakeGenericInstanceType(igas.ToArray());
             }
 
-            return byRef ? new ByReferenceType(iTypeRef) : iTypeRef;
+            return iTypeRef;
         }
 
         public static FieldReference ImportInto(this FieldReference fieldRef, ModuleDefinition moduleDef) =>

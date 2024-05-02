@@ -133,17 +133,5 @@ namespace Rougamo.Fody
 
             return defaultValue;
         }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private TypeReference Import(TypeReference typeRef)
-        {
-            return ModuleDefinition.ImportReference(typeRef);
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private MethodReference Import(MethodReference methodRef)
-        {
-            return ModuleDefinition.ImportReference(methodRef);
-        }
     }
 }

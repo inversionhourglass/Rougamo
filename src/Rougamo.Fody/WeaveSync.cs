@@ -115,7 +115,7 @@ namespace Rougamo.Fody
         {
             var instructions = rouMethod.MethodDef.Body.Instructions;
 
-            variables.Return = rouMethod.MethodDef.ReturnType.IsVoid() ? null : rouMethod.MethodDef.Body.CreateVariable(Import(rouMethod.MethodDef.ReturnType));
+            variables.Return = rouMethod.MethodDef.ReturnType.IsVoid() ? null : rouMethod.MethodDef.Body.CreateVariable(rouMethod.MethodDef.ReturnType.ImportInto(ModuleDefinition));
 
             instructions.InsertBefore(anchors.HostsStart, new[]
             {

@@ -39,7 +39,7 @@ namespace Rougamo.Fody
             {
                 return new List<Instruction>
                 {
-                    Instruction.Create(OpCodes.Ldtoken, typeRefValue),
+                    Instruction.Create(OpCodes.Ldtoken, typeRefValue.ImportInto(ModuleDefinition)),
                     Instruction.Create(OpCodes.Call, _methodGetTypeFromHandleRef)
                 };
             }
