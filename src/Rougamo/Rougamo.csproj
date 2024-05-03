@@ -25,8 +25,8 @@
     <None Include="..\..\CHANGELOG.md" Pack="true" PackagePath="\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Fody" Version="6.2.5" PrivateAssets="none" />
-    <PackageReference Include="FodyPackaging" Version="6.2.5" PrivateAssets="All" />
+    <PackageReference Include="Fody" Version="6.8.0" PrivateAssets="none" />
+    <PackageReference Include="FodyPackaging" Version="6.8.0" PrivateAssets="All" />
     <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
   </ItemGroup>
 </Project>
