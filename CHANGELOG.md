@@ -1,4 +1,5 @@
 - [#36](https://github.com/inversionhourglass/Rougamo/issues/36) 应用Rougamo的方法支持步入调试
+- [#54](https://github.com/inversionhourglass/Rougamo/issues/54) 解决snupkg报checksum错误的问题，需直接依赖Fody，详见issue回复
 - [#60](https://github.com/inversionhourglass/Rougamo/issues/60) 支持自定义`AsyncMethodBuilder`
 - [#63](https://github.com/inversionhourglass/Rougamo/issues/63) 支持泛型`Attribute<T>`
 - [#65](https://github.com/inversionhourglass/Rougamo/issues/65) 修复特定`Type`类型无法作为`MoAttribute`构造方法参数
