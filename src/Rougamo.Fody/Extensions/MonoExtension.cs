@@ -491,10 +491,21 @@ namespace Rougamo.Fody
 
         public static void Clear(this MethodDefinition methodDef)
         {
-            methodDef.DebugInformation = null;
             methodDef.Body.Instructions.Clear();
             methodDef.Body.Variables.Clear();
             methodDef.Body.ExceptionHandlers.Clear();
+            methodDef.CustomDebugInformations.Clear();
+            methodDef.DebugInformation.Clear();
+        }
+
+        public static void Clear(this MethodDebugInformation debugInformation)
+        {
+            debugInformation.CustomDebugInformations.Clear();
+            debugInformation.SequencePoints.Clear();
+            debugInformation.Scope.Constants.Clear();
+            debugInformation.Scope.Variables.Clear();
+            debugInformation.Scope.Scopes.Clear();
+            debugInformation.Scope.CustomDebugInformations.Clear();
         }
 
         private static Code[] _EmptyCodes = new[] { Code.Nop, Code.Ret };
@@ -518,8 +529,10 @@ namespace Rougamo.Fody
             { Code.Bge_Un_S, OpCodes.Bge_Un }, { Code.Bgt_Un_S, OpCodes.Bgt_Un },
             { Code.Ble_Un_S, OpCodes.Ble_Un }, { Code.Blt_Un_S, OpCodes.Blt_Un }
         };
-        public static void OptimizePlus(this MethodBody body, Instruction[] nops)
+        public static void OptimizePlus(this MethodBody body, Instruction[]? nops = null)
         {
+            nops ??= [];
+
             body.OptimizeShort();
             body.OptimizeUselessBr();
             body.OptimizeNops(nops);
