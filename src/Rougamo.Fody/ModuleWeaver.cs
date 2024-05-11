@@ -14,6 +14,8 @@ namespace Rougamo.Fody
         private readonly bool _testRun;
 
         private TypeDefinition _typeListDef;
+        private TypeDefinition _typeSystemDef;
+        private TypeDefinition _typeMethodBaseDef;
 
         private TypeReference _typeVoidRef;
         private TypeReference _typeSystemRef;

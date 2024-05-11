@@ -15,10 +15,12 @@ namespace Rougamo.Fody
         void LoadBasicReference()
         {
             _typeListDef = FindTypeDefinition(typeof(List<>).FullName);
+            _typeSystemDef = FindTypeDefinition(typeof(Type).FullName);
+            _typeMethodBaseDef = FindTypeDefinition(typeof(MethodBase).FullName);
 
             _typeVoidRef = FindTypeDefinition(typeof(void).FullName).ImportInto(ModuleDefinition);
-            _typeSystemRef = FindTypeDefinition(typeof(Type).FullName).ImportInto(ModuleDefinition);
-            _typeMethodBaseRef = FindTypeDefinition(typeof(MethodBase).FullName).ImportInto(ModuleDefinition);
+            _typeSystemRef = _typeSystemDef.ImportInto(ModuleDefinition);
+            _typeMethodBaseRef = _typeMethodBaseDef.ImportInto(ModuleDefinition);
             _typeIntRef = FindTypeDefinition(typeof(int).FullName).ImportInto(ModuleDefinition);
             _typeBoolRef = FindTypeDefinition(typeof(bool).FullName).ImportInto(ModuleDefinition);
             _typeObjectRef = FindTypeDefinition(typeof(object).FullName).ImportInto(ModuleDefinition);
@@ -29,10 +31,10 @@ namespace Rougamo.Fody
             var typeAsyncStateMachineAttributeRef = FindTypeDefinition(typeof(AsyncStateMachineAttribute).FullName).ImportInto(ModuleDefinition);
             var typeIteratorStateMachineAttributeRef = FindTypeDefinition(typeof(IteratorStateMachineAttribute).FullName).ImportInto(ModuleDefinition);
 
-            _methodGetTypeFromHandleRef = typeof(Type).GetMethod("GetTypeFromHandle", new[] { typeof(RuntimeTypeHandle) }).ImportInto(ModuleDefinition);
-            _methodGetMethodFromHandleRef = typeof(MethodBase).GetMethod("GetMethodFromHandle", new[] { typeof(RuntimeMethodHandle), typeof(RuntimeTypeHandle) }).ImportInto(ModuleDefinition);
-            _methodListAddRef = _typeListDef.Methods.Single(x => x.Name == "Add" && x.Parameters.Count == 1 && x.Parameters[0].ParameterType == _typeListDef.GenericParameters[0]);
-            _methodListToArrayRef = _typeListDef.Methods.Single(x => x.Name == "ToArray" && !x.HasParameters);
+            _methodGetTypeFromHandleRef = _typeSystemDef.Methods.Single(x => x.Name == Constants.METHOD_GetTypeFromHandle).ImportInto(ModuleDefinition);
+            _methodGetMethodFromHandleRef = _typeMethodBaseDef.Methods.Single(x => x.Name == Constants.METHOD_GetMethodFromHandle && x.Parameters.Count == 2).ImportInto(ModuleDefinition);
+            _methodListAddRef = _typeListDef.Methods.Single(x => x.Name == Constants.METHOD_Add && x.Parameters.Count == 1 && x.Parameters[0].ParameterType == _typeListDef.GenericParameters[0]);
+            _methodListToArrayRef = _typeListDef.Methods.Single(x => x.Name == Constants.METHOD_ToArray && !x.HasParameters);
             _methodIEnumeratorMoveNextRef = FindTypeDefinition(typeof(IEnumerator).FullName).Methods.Single(x => x.Name == Constants.METHOD_MoveNext).ImportInto(ModuleDefinition);
             _methodDebuggerStepThroughCtorRef = _typeDebuggerStepThroughAttributeRef.Resolve().Methods.Single(x => x.IsConstructor && !x.IsStatic && !x.Parameters.Any()).ImportInto(ModuleDefinition);
             var asyncStateMachineAttributeCtorRef = typeAsyncStateMachineAttributeRef.Resolve().Methods.Single(x => x.IsConstructor && !x.IsStatic && x.Parameters.Single().ParameterType.Is(Constants.TYPE_Type)).ImportInto(ModuleDefinition);

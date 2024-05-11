@@ -105,6 +105,10 @@
         public const string METHOD_GetEnumerator = "GetEnumerator";
         public const string METHOD_GetAsyncEnumerator = "GetAsyncEnumerator";
         public const string METHOD_MoveNextAsync = "MoveNextAsync";
+        public const string METHOD_GetTypeFromHandle = "GetTypeFromHandle";
+        public const string METHOD_GetMethodFromHandle = "GetMethodFromHandle";
+        public const string METHOD_Add = "Add";
+        public const string METHOD_ToArray = "ToArray";
 
         public static string GenericPrefix(string name) => $"{name}<";
         public static string GenericSuffix(string name) => $">.{name}";
