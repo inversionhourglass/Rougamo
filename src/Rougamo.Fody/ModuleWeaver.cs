@@ -19,11 +19,9 @@ namespace Rougamo.Fody
 
         private TypeReference _typeVoidRef;
         private TypeReference _typeSystemRef;
-        private TypeReference _typeMethodBaseRef;
         private TypeReference _typeIntRef;
         private TypeReference _typeBoolRef;
         private TypeReference _typeObjectRef;
-        private TypeReference _typeObjectArrayRef;
         private TypeReference _typeExceptionRef;
         private TypeReference _typeCancellationToken;
         private TypeReference _typeListRef;
@@ -38,10 +36,6 @@ namespace Rougamo.Fody
         private MethodReference _methodListToArrayRef;
         private MethodReference _methodIEnumeratorMoveNextRef;
         private MethodReference _methodDebuggerStepThroughCtorRef;
-        private MethodReference _methodAsyncTaskMethodBuilderCreateref;
-        private MethodReference _methodAsyncValueTaskMethodBuilderCreateRef;
-        private MethodReference _methodGenericAsyncTaskMethodBuilderCreateRef;
-        private MethodReference _methodGenericAsyncValueTaskMethodBuilderCreateRef;
         private MethodReference _methodMethodContextCtorRef;
         private MethodReference _methodMethodContext3CtorRef;
         private MethodReference _methodMethodContextSetExceptionRef;

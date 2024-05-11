@@ -115,7 +115,6 @@ namespace Rougamo.Fody
                 //_fieldMethodContextExceptionRef = typeMethodContextDef.Fields.Single(x => x.Name == Constants.FIELD_Exception).ImportInto(ModuleDefinition);
                 //_fieldMethodContextReturnValueRef = typeMethodContextDef.Fields.Single(x => x.Name == Constants.FIELD_ReturnValue).ImportInto(ModuleDefinition);
                 _methodMethodContextGetHasExceptionRef = typeMethodContextDef.RecursionImportPropertyGet(ModuleDefinition, Constants.PROP_HasException);
-                _typeObjectArrayRef = _methodMethodContextCtorRef.Parameters.Last().ParameterType;
             }
         }
 
