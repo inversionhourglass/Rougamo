@@ -5,13 +5,14 @@ using Rougamo.Fody.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 
 namespace Rougamo.Fody
 {
     public partial class ModuleWeaver : BaseModuleWeaver
     {
         private readonly bool _testRun;
+
+        private RougamoRefImporter _importer;
 
         private TypeDefinition _typeListDef;
         private TypeDefinition _typeSystemDef;
@@ -66,6 +67,8 @@ namespace Rougamo.Fody
 
         public override void Execute()
         {
+            _importer = new(this);
+
             try
             {
                 ReadConfig();

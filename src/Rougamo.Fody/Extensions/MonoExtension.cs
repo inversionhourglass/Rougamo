@@ -225,6 +225,28 @@ namespace Rougamo.Fody
             return RecursionImportMethod(baseTypeDef, moduleDef, methodName, predicate);
         }
 
+        public static MethodDefinition GetPropertySetterDef(this TypeDefinition typeDef, string propertyName)
+        {
+            var propertyDef = typeDef.Properties.FirstOrDefault(pd => pd.Name == propertyName);
+            if (propertyDef != null) return propertyDef.SetMethod ?? throw new RougamoException($"{typeDef.FullName} has property({propertyName}) but this property does not contain set method.");
+
+            var baseTypeDef = typeDef.BaseType.Resolve();
+            if (baseTypeDef.FullName == typeof(object).FullName)
+                throw new RougamoException($"can not find property({propertyName}) from {typeDef.FullName}");
+            return GetPropertySetterDef(baseTypeDef, propertyName);
+        }
+
+        public static MethodDefinition GetPropertyGetterDef(this TypeDefinition typeDef, string propertyName)
+        {
+            var propertyDef = typeDef.Properties.FirstOrDefault(pd => pd.Name == propertyName);
+            if (propertyDef != null) return propertyDef.GetMethod ?? throw new RougamoException($"{typeDef.FullName} has property({propertyName}) but this property does not contain get method.");
+
+            var baseTypeDef = typeDef.BaseType.Resolve();
+            if (baseTypeDef.FullName == typeof(object).FullName)
+                throw new RougamoException($"can not find property({propertyName}) from {typeDef.FullName}");
+            return GetPropertyGetterDef(baseTypeDef, propertyName);
+        }
+
         public static VariableDefinition CreateVariable(this MethodBody body, TypeReference variableTypeReference)
         {
             var variable = new VariableDefinition(variableTypeReference);
