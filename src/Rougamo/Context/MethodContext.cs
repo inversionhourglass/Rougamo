@@ -1,5 +1,4 @@
-﻿using Rougamo.Threading;
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -18,7 +17,6 @@ namespace Rougamo.Context
         private readonly static object[] _EmptyArgs = [];
         
         private Type? _realReturnType;
-        private Type? _exReturnType;
         private IDictionary? _datas;
 
         /// <summary>
@@ -50,26 +48,12 @@ namespace Rougamo.Context
             Target = target;
             TargetType = targetType;
             Method = method;
-#pragma warning disable CS0612 // Type or member is obsolete
             IsAsync = true;
             IsIterator = false;
             MosNonEntryFIFO = false;
-#pragma warning restore CS0612 // Type or member is obsolete
             Mos = mos ?? _EmptyMos;
             Arguments = args ?? _EmptyArgs;
         }
-
-        /// <summary>
-        /// When exmode is true, the return value type needs to match <see cref="ExReturnType"/>, otherwise it matches <see cref="RealReturnType"/>.
-        /// </summary>
-        internal bool ExMode { get; set; }
-
-        internal SpinLocker ExLocker = new(3);
-
-        /// <summary>
-        /// ContinueWith executes only once.
-        /// </summary>
-        internal bool ExContinueOnce { get; set; }
 
         /// <summary>
         /// Array of IMos to which the current method applies.
@@ -79,35 +63,34 @@ namespace Rougamo.Context
         /// <summary>
         /// Whether the execution order of multiple IMo non-OnEntry methods is consistent with OnEntry, the default false indicates that the execution order is opposite to OnEntry.
         /// </summary>
-        [Obsolete]
         public bool MosNonEntryFIFO { get; }
 
         /// <summary>
-        /// user defined state data
+        /// User defined state data
         /// </summary>
         [Obsolete("The Dictionary type is more suitable for multi-developer scenarios, use Datas property instead")]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public object? Data { get; set; }
 
         /// <summary>
-        /// user defined state datas
+        /// User defined state datas
         /// </summary>
         public IDictionary Datas => _datas ??= new Dictionary<object, object>();
 
         /// <summary>
-        /// Method' declaring type instance, null if method is a static method
+        /// Instance of declaring type, return null if current method is static
         /// </summary>
-        public object Target { get; private set; }
+        public object? Target { get; private set; }
 
         /// <summary>
-        /// Method' declaring type
+        /// Declaring type of current method
         /// </summary>
         public Type TargetType { get; set; }
 
         /// <summary>
-        /// Method arguments
+        /// Arguments of current method
         /// </summary>
-        public object[] Arguments { get; private set; }
+        public object?[] Arguments { get; private set; }
 
         /// <summary>
         /// When set to true, <see cref="Arguments"/> will rewrite method parameter values after <see cref="IMo.OnEntry(MethodContext)"/> is executed
@@ -120,26 +103,23 @@ namespace Rougamo.Context
         public MethodBase Method { get; private set; }
 
         /// <summary>
-        /// Is method run in async
+        /// Return true if method use async/await syntax
         /// </summary>
-        [Obsolete]
         public bool IsAsync { get; }
 
         /// <summary>
-        /// return true if method use yield return syntax
+        /// Return true if method use yield return syntax
         /// </summary>
-        [Obsolete]
         public bool IsIterator { get; }
 
         /// <summary>
-        /// Method decleard return type, return <see cref="Task"/>/<see cref="Task{TResult}"/>/<see cref="ValueTask"/>/<see cref="ValueTask{TResult}"/> even if method run in async
+        /// Method decleard return type, return <see cref="Task"/>/<see cref="Task{TResult}"/>/ValueTask/ValueTask&lt;TResult&gt; even if method run in async
         /// </summary>
-        [Obsolete("use RealReturnType to instead")]
         public Type? ReturnType => (Method as MethodInfo)?.ReturnType;
 
         /// <summary>
-        /// Method real return type, return first generic argument if current method is an async <see cref="Task{TResult}"/>/<see cref="ValueTask{TResult}"/> method, 
-        /// or return typeof(void) if method is an async <see cref="Task"/>/<see cref="ValueTask"/> method
+        /// Method real return type, return first generic argument if current method is an async <see cref="Task{TResult}"/>/ValueTask&lt;TResult&gt; method, 
+        /// or return typeof(void) if method is an async <see cref="Task"/>/ValueTask method
         /// </summary>
         public Type? RealReturnType
         {
@@ -150,7 +130,7 @@ namespace Rougamo.Context
                     var returnType = methodInfo.ReturnType;
                     if (IsAsync)
                     {
-                        if (returnType == typeof(void) || returnType == typeof(Task) || returnType == typeof(ValueTask))
+                        if (returnType == typeof(void) || returnType == typeof(Task) || returnType.FullName == Constants.FULLNAME_ValueTask)
                         {
                             _realReturnType = typeof(void);
                         }
@@ -165,34 +145,6 @@ namespace Rougamo.Context
                     }
                 }
                 return _realReturnType;
-            }
-        }
-
-        /// <summary>
-        /// <see cref="Task"/> and <see cref="ValueTask"/> return typeof(void), and <see cref="Task{TResult}"/> and <see cref="ValueTask{TResult}"/> return typeof(T),
-        /// whether or not the async syntax is used. Others return the actual method return value type.
-        /// </summary>
-        public Type? ExReturnType
-        {
-            get
-            {
-                if (_exReturnType == null && Method is MethodInfo methodInfo)
-                {
-                    var returnType = methodInfo.ReturnType;
-                    if (returnType == typeof(Task) || returnType == typeof(ValueTask))
-                    {
-                        _exReturnType = typeof(void);
-                    }
-                    else if (typeof(Task).IsAssignableFrom(returnType) || !returnType.IsGenericParameter && returnType.FullName != null && returnType.FullName.StartsWith(Constants.FULLNAME_ValueTask))
-                    {
-                        _exReturnType = returnType.GetGenericArguments().Single();
-                    }
-                    else
-                    {
-                        _exReturnType = returnType;
-                    }
-                }
-                return _exReturnType;
             }
         }
 
@@ -216,16 +168,6 @@ namespace Rougamo.Context
         /// When multiple <see cref="IMo"/> applied to the method, you will know who replace the return value
         /// </summary>
         public IMo? ReturnValueModifier { get; private set; }
-
-        /// <summary>
-        /// The return value set by <see cref="ExMoAttribute"/>, the type of this value is equals to <see cref="ExReturnType"/>
-        /// </summary>
-        public object? ExReturnValue { get; set; }
-
-        /// <summary>
-        /// Is <see cref="ExReturnValue"/> has been set
-        /// </summary>
-        public bool ExReturnValueReplaced { get; private set; }
 
         /// <summary>
         /// Exception throws by method, if you want to prevent exception, you'd better use <see cref="HandledException(IMo, object)"/>
@@ -272,35 +214,11 @@ namespace Rougamo.Context
         /// </summary>
         public void ReplaceReturnValue(IMo modifier, object returnValue)
         {
-            var exReplace = ExMode && modifier is ExMoAttribute;
-            ReplaceReturnValue(modifier, returnValue, exReplace);
-        }
-
-        /// <summary>
-        /// Replace return value, if the return type is void, <paramref name="returnValue"/> is ignored.
-        /// <see cref="ReturnValueReplaced"/> will be set to true
-        /// </summary>
-        internal void ReplaceReturnValue(IMo modifier, object returnValue, bool exMode)
-        {
             if (HasReturnValue)
             {
-                if (exMode)        
-                {
-                    ExReturnValue = returnValue;
-                }
-                else
-                {
-                    ReturnValue = returnValue;
-                }
+                ReturnValue = returnValue;
             }
-            if (exMode)
-            {
-                ExReturnValueReplaced = true;
-            }
-            else
-            {
-                ReturnValueReplaced = true;
-            }
+            ReturnValueReplaced = true;
             ReturnValueModifier = modifier;
             RetryCount = 0;
         }
