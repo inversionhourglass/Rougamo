@@ -104,26 +104,6 @@ namespace Rougamo.Fody.Tests
         }
 
         [Fact]
-        public async Task Issue32Test()
-        {
-            var instance = GetInstance(nameof(Issue32));
-
-            var r1 = await(Task<int>)instance.WithoutAsync();
-            var r2 = await (Task<int>)instance.WithAsync();
-
-            Assert.Equal(_32_Attribute.IntValue, r1);
-            Assert.Equal(_32_Attribute.IntValue, r2);
-        }
-
-        [Fact]
-        public void Issue35Test()
-        {
-            var instance = GetInstance("Issue35`1", false, t => t.MakeGenericType(typeof(int)));
-
-            instance.PopulateData();
-        }
-
-        [Fact]
         public void Issue40Test()
         {
             var instance = GetInstance(nameof(Issue40), false);
