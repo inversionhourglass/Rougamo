@@ -23,12 +23,12 @@ namespace Rougamo.Context
         /// Compatibility with versions prior to 1.2.0
         /// </summary>
         [Obsolete]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public MethodContext(object target, Type targetType, MethodBase method, bool isAsync, bool isIterator, object[] args)
             : this(target, targetType, method, isAsync, isIterator, false, null, args) { }
 
         /// <summary>
         /// </summary>
-        [Obsolete]
         public MethodContext(object target, Type targetType, MethodBase method, bool isAsync, bool isIterator, bool mosNonEntryFIFO, IMo[]? mos, object[]? args)
         {
             Target = target;
@@ -43,6 +43,8 @@ namespace Rougamo.Context
 
         /// <summary>
         /// </summary>
+        [Obsolete]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public MethodContext(object target, Type targetType, MethodBase method, IMo[]? mos, object[]? args)
         {
             Target = target;

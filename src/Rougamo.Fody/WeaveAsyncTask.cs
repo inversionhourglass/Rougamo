@@ -297,7 +297,7 @@ namespace Rougamo.Fody
             var contextFieldRef = new FieldReference(fields.MethodContext.Name, fields.MethodContext.FieldType, variables.StateMachine.VariableType);
 
             instructions.Add(variables.StateMachine.LdlocOrA());
-            instructions.AddRange(InitMethodContext(rouMethod.MethodDef, true, false, moArray, variables.StateMachine, mosFieldRef, rouMethod.MethodContextOmits));
+            instructions.AddRange(InitMethodContext(rouMethod.MethodDef, rouMethod.IsAsyncTaskOrValueTask || rouMethod.IsAsyncIterator, rouMethod.IsIterator || rouMethod.IsAsyncIterator, moArray, variables.StateMachine, mosFieldRef, rouMethod.MethodContextOmits));
             instructions.Add(Create(OpCodes.Stfld, contextFieldRef));
 
             return instructions;

@@ -635,16 +635,19 @@ namespace Rougamo.Fody
             }
 
             instructions.Add(Create(OpCodes.Ldarg_0));
-            instructions.AddRange(ProxyStateMachineInitMethodContext(rouMethod.MethodDef, moArray, fields, rouMethod.MethodContextOmits));
+            instructions.AddRange(ProxyStateMachineInitMethodContext(rouMethod.MethodDef, rouMethod.IsAsyncTaskOrValueTask || rouMethod.IsAsyncIterator, rouMethod.IsIterator || rouMethod.IsAsyncIterator, moArray, fields, rouMethod.MethodContextOmits));
             instructions.Add(Create(OpCodes.Stfld, fields.MethodContext));
 
             return instructions;
         }
 
-        private List<Instruction> ProxyStateMachineInitMethodContext(MethodDefinition methodDef, VariableDefinition? moArrayVariable, IStateMachineFields fields, Omit omit)
+        private List<Instruction> ProxyStateMachineInitMethodContext(MethodDefinition methodDef, bool isAsync, bool isIterator, VariableDefinition? moArrayVariable, IStateMachineFields fields, Omit omit)
         {
             var instructions = new List<Instruction>();
 
+            var isAsyncCode = isAsync ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0;
+            var isIteratorCode = isIterator ? OpCodes.Ldc_I4_1 : OpCodes.Ldc_I4_0;
+            var mosNonEntryFIFO = _config.ReverseCallNonEntry ? OpCodes.Ldc_I4_0 : OpCodes.Ldc_I4_1;
             if (fields.DeclaringThis != null)
             {
                 instructions.Add(Create(OpCodes.Ldarg_0));
@@ -661,6 +664,9 @@ namespace Rougamo.Fody
             instructions.Add(Create(OpCodes.Ldtoken, methodDef.DeclaringType));
             instructions.Add(Create(OpCodes.Call, _methodGetTypeFromHandleRef));
             instructions.AddRange(LoadMethodBaseOnStack(methodDef));
+            instructions.Add(Create(isAsyncCode));
+            instructions.Add(Create(isIteratorCode));
+            instructions.Add(Create(mosNonEntryFIFO));
             if ((omit & Omit.Mos) != 0)
             {
                 instructions.Add(Create(OpCodes.Ldnull));
@@ -682,7 +688,7 @@ namespace Rougamo.Fody
             {
                 instructions.AddRange(ProxyAsyncLoadArguments(fields.Parameters));
             }
-            instructions.Add(Create(OpCodes.Newobj, _methodMethodContext3CtorRef));
+            instructions.Add(Create(OpCodes.Newobj, _methodMethodContextCtorRef));
 
             return instructions;
         }

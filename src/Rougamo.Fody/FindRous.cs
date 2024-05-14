@@ -102,7 +102,6 @@ namespace Rougamo.Fody
                 _typeIMoArrayRef = new ArrayType(_typeIMoRef);
                 var typeMethodContextDef = _typeMethodContextRef.Resolve();
                 _methodMethodContextCtorRef = _importer.Import(typeMethodContextDef.GetConstructors().First(x => x.Parameters.Count == 8));
-                _methodMethodContext3CtorRef = _importer.Import(typeMethodContextDef.GetConstructors().First(x => x.Parameters.Count == 5));
                 _methodMethodContextSetExceptionRef = _importer.Import(typeMethodContextDef.GetPropertySetterDef(Constants.PROP_Exception));
                 _methodMethodContextSetReturnValueRef = _importer.Import(typeMethodContextDef.GetPropertySetterDef(Constants.PROP_ReturnValue));
                 _methodMethodContextGetReturnValueRef = _importer.Import(typeMethodContextDef.GetPropertyGetterDef(Constants.PROP_ReturnValue));

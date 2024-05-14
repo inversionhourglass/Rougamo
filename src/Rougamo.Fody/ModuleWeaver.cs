@@ -38,7 +38,6 @@ namespace Rougamo.Fody
         private MethodReference _methodIEnumeratorMoveNextRef;
         private MethodReference _methodDebuggerStepThroughCtorRef;
         private MethodReference _methodMethodContextCtorRef;
-        private MethodReference _methodMethodContext3CtorRef;
         private MethodReference _methodMethodContextSetExceptionRef;
         private MethodReference _methodMethodContextSetReturnValueRef;
         private MethodReference _methodMethodContextGetReturnValueRef;
