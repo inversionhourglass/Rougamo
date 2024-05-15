@@ -13,7 +13,7 @@ namespace BasicUsage
         [Rougamo<ValueMo2>]
         public void M(List<string> executedMos) { }
 
-        [Rougamo<Mo>]
+        [Rougamo<BasicUsage.Mos.Mo>]
         public async ValueTask MAsync(List<string> executedMos) => await Task.Yield();
     }
 }

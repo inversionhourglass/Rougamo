@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace BasicUsage
 {
-    public class RougamoUsage : IRougamo<Mo>, IRougamo<ValueMo>
+    public class RougamoUsage : IRougamo<Mos.Mo>, IRougamo<ValueMo>
     {
         public void M(List<string> executedMos) { }
 
