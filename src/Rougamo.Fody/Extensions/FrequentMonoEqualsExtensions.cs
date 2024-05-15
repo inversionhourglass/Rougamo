@@ -39,6 +39,14 @@ namespace Rougamo.Fody
             return fullName.StartsWith(Constants.TYPE_ValueTask) && fullName.Length != Constants.TYPE_ValueTask.Length;
         }
 
+        public static bool IsAsyncMethodType(this TypeReference typeRef)
+        {
+            var typeName = typeRef.FullName;
+            if (typeName == Constants.TYPE_Task || typeName == Constants.TYPE_ValueTask || typeName.StartsWith($"{Constants.TYPE_Task}`1") || typeName.StartsWith($"{Constants.TYPE_ValueTask}`1")) return true;
+
+            return typeRef.Resolve().CustomAttributes.Any(x => x.Is(Constants.TYPE_AsyncMethodBuilder));
+        }
+
         public static bool IsLdarg(this OpCode opCode)
         {
             var code = opCode.Code;
