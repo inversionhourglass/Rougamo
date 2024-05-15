@@ -7,6 +7,18 @@ namespace Rougamo
     public abstract class Mo : RawMo
     {
         /// <inheritdoc/>
+        public override void OnEntry(MethodContext context) { }
+
+        /// <inheritdoc/>
+        public override void OnException(MethodContext context) { }
+
+        /// <inheritdoc/>
+        public override void OnSuccess(MethodContext context) { }
+
+        /// <inheritdoc/>
+        public override void OnExit(MethodContext context) { }
+
+        /// <inheritdoc/>
         public sealed override ValueTask OnEntryAsync(MethodContext context)
         {
             OnEntry(context);

@@ -1,5 +1,6 @@
 ﻿using Rougamo.Context;
 using System;
+using System.Threading.Tasks;
 
 namespace Rougamo
 {
@@ -7,6 +8,18 @@ namespace Rougamo
     [AttributeUsage(AttributeTargets.Assembly | AttributeTargets.Module | AttributeTargets.Class | AttributeTargets.Struct | AttributeTargets.Method | AttributeTargets.Property | AttributeTargets.Constructor)]
     public abstract class AsyncMoAttribute : RawMoAttribute
     {
+        /// <inheritdoc/>
+        public override ValueTask OnEntryAsync(MethodContext context) => default;
+
+        /// <inheritdoc/>
+        public override ValueTask OnExceptionAsync(MethodContext context) => default;
+
+        /// <inheritdoc/>
+        public override ValueTask OnSuccessAsync(MethodContext context) => default;
+
+        /// <inheritdoc/>
+        public override ValueTask OnExitAsync(MethodContext context) => default;
+
         /// <inheritdoc/>
         public sealed override void OnEntry(MethodContext context)
         {
