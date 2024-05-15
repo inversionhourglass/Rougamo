@@ -1,12 +1,10 @@
 ﻿using Rougamo.Context;
-using System;
 using System.Threading.Tasks;
 
 namespace Rougamo
 {
     /// <inheritdoc/>
-    [AttributeUsage(AttributeTargets.Assembly|AttributeTargets.Module|AttributeTargets.Class|AttributeTargets.Struct|AttributeTargets.Method|AttributeTargets.Property|AttributeTargets.Constructor)]
-    public abstract class MoAttribute : RawMoAttribute
+    public abstract class Mo : RawMo
     {
         /// <inheritdoc/>
         public sealed override ValueTask OnEntryAsync(MethodContext context)

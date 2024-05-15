@@ -1,4 +1,5 @@
 ﻿using Rougamo.Context;
+using System.Threading.Tasks;
 
 namespace Rougamo
 {
@@ -50,5 +51,25 @@ namespace Rougamo
         /// After the method is executed, whether it succeeds or an exception occurs.
         /// </summary>
         void OnExit(MethodContext context);
+
+        /// <summary>
+        /// Before the method executing.
+        /// </summary>
+        ValueTask OnEntryAsync(MethodContext context);
+
+        /// <summary>
+        /// After the method executes successfully
+        /// </summary>
+        ValueTask OnSuccessAsync(MethodContext context);
+
+        /// <summary>
+        /// When an exception occurs when the method is executed.
+        /// </summary>
+        ValueTask OnExceptionAsync(MethodContext context);
+
+        /// <summary>
+        /// After the method is executed, whether it succeeds or an exception occurs.
+        /// </summary>
+        ValueTask OnExitAsync(MethodContext context);
     }
 }
