@@ -13,7 +13,7 @@ namespace Rougamo.Fody
     {
         private void SyncMethodWeave(RouMethod rouMethod)
         {
-            if (_config.ForceAsyncSyntax && rouMethod.MethodDef.ReturnType.IsAsyncMethodType())
+            if (_config.ForceAsyncSyntax && !_config.ProxyCalling && rouMethod.MethodDef.ReturnType.IsAsyncMethodType())
             {
                 throw new RougamoException($"{rouMethod.MethodDef} does not use the async/await syntax. The async/await syntax is needed for inline mode.");
             }
