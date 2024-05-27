@@ -33,6 +33,11 @@ namespace Rougamo
         Omit MethodContextOmits { get; }
 
         /// <summary>
+        /// Which methods should be executed synchronously in an async method
+        /// </summary>
+        ForceSync ForceSync { get; }
+
+        /// <summary>
         /// Before the method executing.
         /// </summary>
         void OnEntry(MethodContext context);

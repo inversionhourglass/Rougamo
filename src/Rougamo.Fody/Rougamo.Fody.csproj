@@ -12,6 +12,7 @@
     <Compile Include="..\Rougamo\AccessFlags.cs" Link="Models\AccessFlags.cs" />
     <Compile Include="..\Rougamo\Context\Omit.cs" Link="Models\Omit.cs" />
     <Compile Include="..\Rougamo\Feature.cs" Link="Models\Feature.cs" />
+    <Compile Include="..\Rougamo\ForceSync.cs" Link="Models\ForceSync.cs" />
   </ItemGroup>
 
   <ItemGroup>
