@@ -16,6 +16,8 @@ namespace BasicUsage.Mos
 
         public Omit MethodContextOmits => Omit.All;
 
+        public ForceSync ForceSync => ForceSync.None;
+
         public void OnEntry(MethodContext context)
         {
             if (context.Arguments.Length == 0 && context.Mos.Count == 0)

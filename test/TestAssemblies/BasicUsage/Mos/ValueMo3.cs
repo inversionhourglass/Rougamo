@@ -16,6 +16,8 @@ namespace BasicUsage.Mos
 
         public Omit MethodContextOmits => Omit.None;
 
+        public ForceSync ForceSync => ForceSync.None;
+
         public void OnEntry(MethodContext context)
         {
             this.SetOnEntry(context);

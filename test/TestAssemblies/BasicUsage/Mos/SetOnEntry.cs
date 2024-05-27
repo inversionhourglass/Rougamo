@@ -23,6 +23,8 @@ namespace BasicUsage.Mos
 
         public Omit MethodContextOmits => Omit.None;
 
+        public ForceSync ForceSync => ForceSync.None;
+
         public virtual string Name => GetType().Name;
 
         public void OnEntry(MethodContext context)
