@@ -5,22 +5,25 @@ namespace Rougamo.Fody.Simulations
     /// <summary>
     /// Any type which is the return type of <see cref="TsAsyncable"/>'s GetAwaiter method
     /// </summary>
-    internal class TsAwaiter : TypeSimulation
+    internal class TsAwaiter(TypeReference typeRef, ModuleDefinition moduleDef) : TypeSimulation(typeRef, moduleDef)
     {
-        public TsAwaiter(TypeReference typeRef, GenericParameter[]? generics, ModuleDefinition moduleDef) : base(typeRef, generics, moduleDef) { }
+        private PropertySimulations? _properties;
+        private MethodSimulations? _methods;
 
-        public MsGetterIsCompleted PGIsCompleted => MethodSimulate<MsGetterIsCompleted>(nameof(PGIsCompleted), Constants.Getter(Constants.PROP_IsCompleted));
+        public PropertySimulations Properties => _properties ??= new(this);
 
-        public MsGetResult MGetResult => MethodSimulate<MsGetResult>(nameof(MGetResult), Constants.METHOD_GetResult);
+        public MethodSimulations Methods => _methods ??= new(this);
 
-        public class MsGetterIsCompleted : MethodSimulation
+        public class MethodSimulations(TsAwaiter declaringType)
         {
-            public MsGetterIsCompleted(TypeSimulation declaringType, MethodDefinition methodDef) : base(declaringType, methodDef) { }
+            private readonly TsAwaiter _declaringType = declaringType;
+
+            public MethodSimulation<TypeSimulation> GetResult => _declaringType.MethodSimulate<TypeSimulation>(Constants.METHOD_GetResult);
         }
 
-        public class MsGetResult : MethodSimulation
+        public class PropertySimulations(TsAwaiter declaringType)
         {
-            public MsGetResult(TypeSimulation declaringType, MethodDefinition methodDef) : base(declaringType, methodDef) { }
+            public PropertySimulation<TypeSimulation> IsCompleted { get; } = new(Constants.PROP_IsCompleted, declaringType);
         }
     }
 }

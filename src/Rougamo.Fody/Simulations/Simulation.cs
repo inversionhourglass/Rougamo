@@ -2,13 +2,8 @@
 
 namespace Rougamo.Fody.Simulations
 {
-    internal abstract class Simulation
+    internal abstract class Simulation(ModuleDefinition moduleDef)
     {
-        protected Simulation(ModuleDefinition moduleDef)
-        {
-            Module = moduleDef;
-        }
-
-        public ModuleDefinition Module { get; }
+        public ModuleDefinition Module { get; } = moduleDef;
     }
 }

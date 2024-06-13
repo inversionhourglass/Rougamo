@@ -6,64 +6,49 @@ using System;
 
 namespace Rougamo.Fody.Simulations
 {
-    /**
-     * Prefix naming rules:
-     * 
-     *  M: Method
-     *  F: Field
-     * PG: Property getter
-     * PS: Property setter
-     */
-    internal abstract class TypeSimulation : Simulation
+    internal class TypeSimulation : Simulation
     {
         private readonly Dictionary<string, FieldSimulation> _fieldSimulations = [];
         private readonly Dictionary<string, MethodSimulation> _methodSimulations = [];
 
-        protected TypeSimulation(TypeReference typeRef, Dictionary<string, GenericParameter>? genericMap, ModuleDefinition moduleDef) : base(moduleDef)
+        protected TypeSimulation(TypeReference typeRef, ModuleDefinition moduleDef) : base(moduleDef)
         {
-            if (typeRef is GenericInstanceType && genericMap != null)
-            {
-                typeRef.GetElementType().ImportInto(moduleDef);
-                Ref = typeRef.ReplaceGenericArgs(genericMap);
-            }
-            else
-            {
-                Ref = typeRef.ImportInto(moduleDef);
-            }
+            Ref = typeRef.GetElementType().ImportInto(moduleDef);
             Def = typeRef.Resolve();
         }
 
-        protected TypeSimulation(TypeReference typeRef, TypeReference[]? generics, ModuleDefinition moduleDef) : base(moduleDef)
-        {
-            if (typeRef is GenericInstanceType git && generics != null)
-            {
-                if (git.GenericArguments.Count != generics.Length) throw new RougamoException($"Cannot set generic parameters for {typeRef}, given generic parameters [{string.Join(",", generics.Select(x => x.ToString()))}]");
-
-                git = new GenericInstanceType(typeRef.GetElementType().ImportInto(moduleDef));
-                git.GenericArguments.Add(generics);
-                Ref = git;
-            }
-            else
-            {
-                Ref = typeRef.ImportInto(moduleDef);
-            }
-            Def = typeRef.Resolve();
-        }
-
-        public TypeReference Ref { get; }
-
+        public TypeReference Ref { get; private set; }
         public TypeDefinition Def { get; }
 
-        protected T MethodSimulate<T>(string id, string methodName) where T : MethodSimulation => MethodSimulate<T>(id, x => x.Name == methodName);
+        public TypeSimulation ReplaceGenerics(Dictionary<string, GenericParameter> genericMap)
+        {
+            Ref = Ref.ReplaceGenericArgs(genericMap);
 
-        protected T MethodSimulate<T>(string id, Func<MethodDefinition, bool> predicate) where T : MethodSimulation
+            return this;
+        }
+
+        public TypeSimulation SetGenerics(TypeReference[] generics)
+        {
+            if (Ref is not GenericInstanceType git) throw new RougamoException($"Cannot set generic parameters for {Ref}, it is not a generic type.");
+            if (git.GenericArguments.Count != generics.Length) throw new RougamoException($"Cannot set generic parameters for {Ref}, given generic parameters [{string.Join(",", generics.Select(x => x.ToString()))}]");
+
+            git = new GenericInstanceType(Ref.GetElementType());
+            git.GenericArguments.Add(generics);
+            Ref = git;
+
+            return this;
+        }
+
+        protected MethodSimulation<TRet> MethodSimulate<TRet>(string methodName) where TRet : TypeSimulation => MethodSimulate<TRet>(methodName, x => x.Name == methodName);
+
+        protected MethodSimulation<TRet> MethodSimulate<TRet>(string id, Func<MethodDefinition, bool> predicate) where TRet : TypeSimulation
         {
             if (!_methodSimulations.TryGetValue(id, out var simulation))
             {
-                simulation = Def.Methods.Single(predicate).Simulate<T>(this);
+                simulation = Def.Methods.Single(predicate).Simulate<MethodSimulation<TRet>>(this);
                 _methodSimulations[id] = simulation;
             }
-            return (T)simulation;
+            return (MethodSimulation<TRet>)simulation;
         }
 
         protected T FieldSimulate<T>(string id, string methodName) where T : FieldSimulation => FieldSimulate<T>(id, x => x.Name == methodName);
@@ -79,45 +64,38 @@ namespace Rougamo.Fody.Simulations
         }
 
         public static implicit operator TypeReference(TypeSimulation value) => value.Ref;
+
+        public class PropertySimulation<T>(string propertyName, TypeSimulation declaringType) where T : TypeSimulation
+        {
+            protected readonly TypeSimulation _declaringType = declaringType;
+
+            public string Name { get; } = propertyName;
+
+            public MethodSimulation<T> Getter => _declaringType.MethodSimulate<T>(Constants.Getter(Name));
+
+            public MethodSimulation<TypeSimulation> Setter => _declaringType.MethodSimulate<TypeSimulation>(Constants.Setter(Name));
+        }
     }
 
     internal static class TypeSimulationExtensions
     {
-        private static readonly Dictionary<Type, Func<TypeReference, Dictionary<string, GenericParameter>?, ModuleDefinition, object>> _CacheMap = [];
-        private static readonly Dictionary<Type, Func<TypeReference, TypeReference[]?, ModuleDefinition, object>> _CacheArray = [];
+        private static readonly Dictionary<Type, Func<TypeReference, ModuleDefinition, object>> _Cache = [];
 
-        public static T Simulate<T>(this TypeReference typeRef, ModuleDefinition moduleDef, Dictionary<string, GenericParameter>? genericMap = null) where T : TypeSimulation
+        public static T Simulate<T>(this TypeReference typeRef, ModuleDefinition moduleDef) where T : TypeSimulation
         {
             var type = typeof(T);
 
-            if (!_CacheMap.TryGetValue(type, out var ctor))
+            if (!_Cache.TryGetValue(type, out var ctor))
             {
-                var ctorInfo = type.GetConstructor([typeof(TypeReference), typeof(Dictionary<string, GenericParameter>), typeof(ModuleDefinition)]);
+                var ctorInfo = type.GetConstructor([typeof(TypeReference), typeof(ModuleDefinition)]);
                 var psExp = ctorInfo.GetParameters().Select(x => Expression.Parameter(x.ParameterType, x.Name));
                 var ctorExp = Expression.New(ctorInfo, psExp);
-                ctor = Expression.Lambda<Func<TypeReference, Dictionary<string, GenericParameter>?, ModuleDefinition, object>>(ctorExp, psExp).Compile();
+                ctor = Expression.Lambda<Func<TypeReference, ModuleDefinition, object>>(ctorExp, psExp).Compile();
 
-                _CacheMap[type] = ctor;
+                _Cache[type] = ctor;
             }
 
-            return (T)ctor(typeRef, genericMap, moduleDef);
-        }
-
-        public static T Simulate<T>(this TypeReference typeRef, ModuleDefinition moduleDef, TypeReference[] generics) where T : TypeSimulation
-        {
-            var type = typeof(T);
-
-            if (!_CacheArray.TryGetValue(type, out var ctor))
-            {
-                var ctorInfo = type.GetConstructor([typeof(TypeReference), typeof(TypeReference[]), typeof(ModuleDefinition)]);
-                var psExp = ctorInfo.GetParameters().Select(x => Expression.Parameter(x.ParameterType, x.Name));
-                var ctorExp = Expression.New(ctorInfo, psExp);
-                ctor = Expression.Lambda<Func<TypeReference, TypeReference[]?, ModuleDefinition, object>>(ctorExp, psExp).Compile();
-
-                _CacheArray[type] = ctor;
-            }
-
-            return (T)ctor(typeRef, generics, moduleDef);
+            return (T)ctor(typeRef, moduleDef);
         }
     }
 }

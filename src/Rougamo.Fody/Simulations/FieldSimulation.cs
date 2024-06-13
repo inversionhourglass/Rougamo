@@ -21,7 +21,7 @@ namespace Rougamo.Fody.Simulations
 
         public FieldReference Ref { get; }
 
-        public static implicit operator FieldReference(FieldSimulation value) => value.Ref;
+        public static implicit operator FieldDefinition(FieldSimulation value) => value.Def;
     }
 
     internal static class FieldSimulationExtensions
