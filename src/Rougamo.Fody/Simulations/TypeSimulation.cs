@@ -1,8 +1,8 @@
 ﻿using Mono.Cecil;
 using System.Collections.Generic;
-using System.Linq.Expressions;
 using System.Linq;
 using System;
+using System.Collections.Concurrent;
 
 namespace Rougamo.Fody.Simulations
 {
@@ -13,7 +13,7 @@ namespace Rougamo.Fody.Simulations
 
         protected TypeSimulation(TypeReference typeRef, ModuleDefinition moduleDef) : base(moduleDef)
         {
-            Ref = typeRef.GetElementType().ImportInto(moduleDef);
+            Ref = typeRef.ImportInto(moduleDef);
             Def = typeRef.Resolve();
         }
 
@@ -31,6 +31,9 @@ namespace Rougamo.Fody.Simulations
             }
             return (MethodSimulation<TRet>)simulation;
         }
+
+        protected MethodSimulation<TRet> PublicMethodSimulate<TRet>(string methodName) where TRet : TypeSimulation => MethodSimulate<TRet>(methodName, x => x.Name == methodName && x.IsPublic);
+
 
         protected T FieldSimulate<T>(string id, string methodName) where T : FieldSimulation => FieldSimulate<T>(id, x => x.Name == methodName);
 
@@ -60,21 +63,15 @@ namespace Rougamo.Fody.Simulations
 
     internal static class TypeSimulationExtensions
     {
-        private static readonly Dictionary<Type, Func<TypeReference, ModuleDefinition, object>> _Cache = [];
+        private static readonly ConcurrentDictionary<Type, Func<TypeReference, ModuleDefinition, object>> _Cache = [];
 
         public static T Simulate<T>(this TypeReference typeRef, ModuleDefinition moduleDef) where T : TypeSimulation
         {
-            var type = typeof(T);
-
-            if (!_Cache.TryGetValue(type, out var ctor))
+            var ctor = _Cache.GetOrAdd(typeof(T), t =>
             {
-                var ctorInfo = type.GetConstructor([typeof(TypeReference), typeof(ModuleDefinition)]);
-                var psExp = ctorInfo.GetParameters().Select(x => Expression.Parameter(x.ParameterType, x.Name));
-                var ctorExp = Expression.New(ctorInfo, psExp);
-                ctor = Expression.Lambda<Func<TypeReference, ModuleDefinition, object>>(ctorExp, psExp).Compile();
-
-                _Cache[type] = ctor;
-            }
+                var ctorInfo = t.GetConstructor([typeof(TypeReference), typeof(ModuleDefinition)]);
+                return (tr, md) => ctorInfo.Invoke([tr, md]);
+            });
 
             return (T)ctor(typeRef, moduleDef);
         }
