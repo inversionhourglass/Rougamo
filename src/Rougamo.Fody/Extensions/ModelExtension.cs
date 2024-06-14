@@ -142,6 +142,41 @@ namespace Rougamo.Fody
 
         #endregion Extract-Mo-MethodContextOmits
 
+        #region Extract-Mo-ForceSync
+
+        public static ForceSync ExtractForceSync(this Mo mo)
+        {
+            var typeRef = mo.TypeRef;
+            if (mo.Attribute != null)
+            {
+                if (mo.Attribute.Properties.TryGet(Constants.PROP_ForceSync, out var property))
+                {
+                    return (ForceSync)Convert.ToInt32(property!.Value.Argument.Value);
+                }
+                typeRef = mo.Attribute.AttributeType;
+            }
+            var flags = ExtractFromIl(typeRef!, Constants.PROP_ForceSync, Constants.TYPE_ForceSync, ParseForceSync);
+            return flags ?? ForceSync.None;
+        }
+
+        private static ForceSync? ParseForceSync(Instruction instruction)
+        {
+            var opCode = instruction.OpCode;
+            if (opCode == OpCodes.Ldc_I4_0) return ForceSync.None;
+            if (opCode == OpCodes.Ldc_I4_1) return ForceSync.OnEntry;
+            if (opCode == OpCodes.Ldc_I4_2) return ForceSync.OnSuccess;
+            if (opCode == OpCodes.Ldc_I4_3) return ForceSync.OnEntry | ForceSync.OnSuccess;
+            if (opCode == OpCodes.Ldc_I4_4) return ForceSync.OnException;
+            if (opCode == OpCodes.Ldc_I4_5) return ForceSync.OnEntry | ForceSync.OnException;
+            if (opCode == OpCodes.Ldc_I4_6) return ForceSync.OnSuccess | ForceSync.OnException;
+            if (opCode == OpCodes.Ldc_I4_7) return ForceSync.OnEntry | ForceSync.OnSuccess | ForceSync.OnException;
+            if (opCode == OpCodes.Ldc_I4_8) return ForceSync.OnExit;
+            if (opCode == OpCodes.Ldc_I4_S || opCode == OpCodes.Ldc_I4) return (ForceSync)Convert.ToInt32(instruction.Operand);
+            return null;
+        }
+
+        #endregion Extract-Mo-ForceSync
+
         #region Extract-Property-Value
 
         private static T? ExtractFromIl<T>(TypeReference typeRef, string propertyName, string propertyTypeFullName, Func<Instruction, T?> tryResolve) where T : struct
@@ -253,6 +288,16 @@ namespace Rougamo.Fody
         public static bool IsMatch(this Feature matchWith, int value)
         {
             return ((int)matchWith & value) == (int)matchWith;
+        }
+
+        public static bool MatchAny(this Feature matchWith, int value)
+        {
+            return ((int)matchWith & value) != 0;
+        }
+
+        public static bool IsMatch(this ForceSync forceSync, ForceSync value)
+        {
+            return (forceSync & value) == forceSync;
         }
 
         public static void Initialize(this RouType rouType, MethodDefinition methdDef,

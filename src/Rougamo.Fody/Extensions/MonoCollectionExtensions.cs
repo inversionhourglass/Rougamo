@@ -181,8 +181,10 @@ namespace Rougamo.Fody
         /// <summary>
         /// add <paramref name="items"/> into <paramref name="collection"/>
         /// </summary>
-        public static void Add<T>(this Collection<T> collection, IList<T> items)
+        public static void Add<T>(this Collection<T> collection, IList<T>? items)
         {
+            if (items == null) return;
+
             foreach (var item in items)
             {
                 collection.Add(item);

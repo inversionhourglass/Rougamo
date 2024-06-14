@@ -11,6 +11,7 @@
         public const string TYPE_MoRepulsion = "Rougamo.MoRepulsion";
         public const string TYPE_AccessFlags = "Rougamo.AccessFlags";
         public const string TYPE_Omit = "Rougamo.Context.Omit";
+        public const string TYPE_ForceSync = "Rougamo.ForceSync";
         public const string TYPE_IRougamo_1 = "Rougamo.IRougamo`1";
         public const string TYPE_IRougamo_2 = "Rougamo.IRougamo`2";
         public const string TYPE_IRepulsionsRougamo = "Rougamo.IRepulsionsRougamo`2";
@@ -56,6 +57,7 @@
         public const string PROP_Flags = "Flags";
         public const string PROP_Pattern = "Pattern";
         public const string PROP_Features = "Features";
+        public const string PROP_ForceSync = "ForceSync";
         public const string PROP_Order = "Order";
         public const string PROP_Repulsions = "Repulsions";
         public const string PROP_MoTypes = "MoTypes";
@@ -84,6 +86,7 @@
         public const string FIELD_State = "<>1__state";
         public const string FIELD_This = "<>4__this";
         public const string FIELD_Awaiter = "<>u__1";
+        public const string FIELD_Result = ">_<result";
         public const string FIELD_Current_Suffix = "current";
         public const string FIELD_Iterator = ">_<iterator";
         public const string FIELD_IteratorReturnList = ">_<returns";

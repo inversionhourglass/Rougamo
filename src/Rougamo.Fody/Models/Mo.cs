@@ -13,6 +13,7 @@ namespace Rougamo.Fody
         private int? _features;
         private double? _order;
         private Omit? _omit;
+        private ForceSync? _forceSync;
 
         public Mo(CustomAttribute attribute, MoFrom from)
         {
@@ -98,6 +99,18 @@ namespace Rougamo.Fody
                     _omit = this.ExtractOmits();
                 }
                 return _omit.Value;
+            }
+        }
+
+        public ForceSync ForceSync
+        {
+            get
+            {
+                if (!_forceSync.HasValue)
+                {
+                    _forceSync = this.ExtractForceSync();
+                }
+                return _forceSync.Value;
             }
         }
 

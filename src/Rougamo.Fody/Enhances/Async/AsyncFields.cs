@@ -53,6 +53,13 @@ namespace Rougamo.Fody.Enhances.Async
             }
         }
 
+        private FieldReference? _result;
+        public FieldReference? Result
+        {
+            get => _result;
+            set => _result = value is FieldDefinition fd ? MakeReference(fd) : value;
+        }
+
         public void SetParameter(int index, FieldDefinition fieldDef)
         {
             Parameters[index] = MakeReference(fieldDef);
