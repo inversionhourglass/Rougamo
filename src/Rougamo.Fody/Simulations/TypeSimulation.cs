@@ -17,27 +17,8 @@ namespace Rougamo.Fody.Simulations
             Def = typeRef.Resolve();
         }
 
-        public TypeReference Ref { get; private set; }
+        public TypeReference Ref { get; set; }
         public TypeDefinition Def { get; }
-
-        public TypeSimulation ReplaceGenerics(Dictionary<string, GenericParameter> genericMap)
-        {
-            Ref = Ref.ReplaceGenericArgs(genericMap);
-
-            return this;
-        }
-
-        public TypeSimulation SetGenerics(TypeReference[] generics)
-        {
-            if (Ref is not GenericInstanceType git) throw new RougamoException($"Cannot set generic parameters for {Ref}, it is not a generic type.");
-            if (git.GenericArguments.Count != generics.Length) throw new RougamoException($"Cannot set generic parameters for {Ref}, given generic parameters [{string.Join(",", generics.Select(x => x.ToString()))}]");
-
-            git = new GenericInstanceType(Ref.GetElementType());
-            git.GenericArguments.Add(generics);
-            Ref = git;
-
-            return this;
-        }
 
         protected MethodSimulation<TRet> MethodSimulate<TRet>(string methodName) where TRet : TypeSimulation => MethodSimulate<TRet>(methodName, x => x.Name == methodName);
 
@@ -96,6 +77,25 @@ namespace Rougamo.Fody.Simulations
             }
 
             return (T)ctor(typeRef, moduleDef);
+        }
+
+        public static T ReplaceGenerics<T>(this T simulation, Dictionary<string, GenericParameter> genericMap) where T : TypeSimulation
+        {
+            simulation.Ref = simulation.Ref.ReplaceGenericArgs(genericMap);
+
+            return simulation;
+        }
+
+        public static T SetGenerics<T>(this T simulation, TypeReference[] generics) where T : TypeSimulation
+        {
+            if (simulation.Ref is not GenericInstanceType git) throw new RougamoException($"Cannot set generic parameters for {simulation.Ref}, it is not a generic type.");
+            if (git.GenericArguments.Count != generics.Length) throw new RougamoException($"Cannot set generic parameters for {simulation.Ref}, given generic parameters [{string.Join(",", generics.Select(x => x.ToString()))}]");
+
+            git = new GenericInstanceType(simulation.Ref.GetElementType());
+            git.GenericArguments.Add(generics);
+            simulation.Ref = git;
+
+            return simulation;
         }
     }
 }
