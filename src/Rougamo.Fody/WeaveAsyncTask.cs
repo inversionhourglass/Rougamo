@@ -305,7 +305,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction> StateMachineIfFirstTimeEntry(RouMethod rouMethod, int initialState, Instruction ifNotFirstTimeGoto, IStateMachineFields fields)
         {
-            if (!Feature.OnEntry.IsMatch(rouMethod.Features)) return EmptyInstructions;
+            if (!Feature.OnEntry.SubsetOf(rouMethod.Features)) return EmptyInstructions;
 
             return new[]
             {
@@ -318,7 +318,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction> StateMachineOnEntry(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction? endAnchor, IStateMachineFields fields)
         {
-            if (rouMethod.Mos.All(x => !Feature.OnEntry.IsMatch(x.Features))) return EmptyInstructions;
+            if (rouMethod.Mos.All(x => !Feature.OnEntry.SubsetOf(x.Features))) return EmptyInstructions;
 
             if (fields.MoArray != null)
             {
@@ -329,7 +329,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction> AsyncIfOnEntryReplacedReturn(RouMethod rouMethod, MethodDefinition moveNextMethodDef, BoxTypeReference returnBoxTypeRef, MethodReference setResultMethodRef, Instruction endAnchor, AsyncFields fields, AsyncVariables variables)
         {
-            if (!Feature.EntryReplace.IsMatch(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return EmptyInstructions;
+            if (!Feature.EntryReplace.SubsetOf(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return EmptyInstructions;
 
             var instructions = new List<Instruction>
             {
@@ -374,7 +374,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction> StateMachineRewriteArguments(RouMethod rouMethod, Instruction endAnchor, IStateMachineFields fields)
         {
-            if (rouMethod.MethodDef.Parameters.Count == 0 || !Feature.RewriteArgs.IsMatch(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.Arguments) != 0) return EmptyInstructions;
+            if (rouMethod.MethodDef.Parameters.Count == 0 || !Feature.RewriteArgs.SubsetOf(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.Arguments) != 0) return EmptyInstructions;
 
             var instructions = new List<Instruction>
             {
@@ -472,7 +472,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction> StateMachineOnException(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction? endAnchor, IStateMachineFields fields)
         {
-            if (rouMethod.Mos.All(x => !Feature.OnException.IsMatch(x.Features))) return EmptyInstructions;
+            if (rouMethod.Mos.All(x => !Feature.OnException.SubsetOf(x.Features))) return EmptyInstructions;
 
             if (fields.MoArray != null)
             {
@@ -483,7 +483,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction> AsyncIfExceptionRetry(RouMethod rouMethod, Instruction retryStart, Instruction endAnchor, AsyncFields fields)
         {
-            if (!Feature.ExceptionRetry.IsMatch(rouMethod.Features)) return EmptyInstructions;
+            if (!Feature.ExceptionRetry.SubsetOf(rouMethod.Features)) return EmptyInstructions;
 
             return new[]
             {
@@ -502,7 +502,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction> AsyncExceptionContextStash(RouMethod rouMethod, AsyncFields fields, AsyncVariables variables)
         {
-            if (!Feature.ExceptionHandle.IsMatch(rouMethod.Features)) return EmptyInstructions;
+            if (!Feature.ExceptionHandle.SubsetOf(rouMethod.Features)) return EmptyInstructions;
 
             var instructions = new List<Instruction>
             {
@@ -527,7 +527,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction> StateMachineOnExit(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction? endAnchor, IStateMachineFields fields)
         {
-            if (rouMethod.Mos.All(x => !Feature.OnExit.IsMatch(x.Features))) return EmptyInstructions;
+            if (rouMethod.Mos.All(x => !Feature.OnExit.SubsetOf(x.Features))) return EmptyInstructions;
 
             if (fields.MoArray != null)
             {
@@ -538,7 +538,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction> AsyncIfExceptionHandled(RouMethod rouMethod, BoxTypeReference returnBoxTypeRef, MethodReference setResultMethodRef, Instruction ifUnhandledBrTo, Instruction ifHandledBrTo, AsyncFields fields, AsyncVariables variables)
         {
-            if (!Feature.ExceptionHandle.IsMatch(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return EmptyInstructions;
+            if (!Feature.ExceptionHandle.SubsetOf(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return EmptyInstructions;
 
             var instructions = new List<Instruction>
             {
@@ -589,7 +589,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction> StateMachineOnSuccess(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction? endAnchor, IStateMachineFields fields)
         {
-            if (rouMethod.Mos.All(x => !Feature.OnSuccess.IsMatch(x.Features))) return EmptyInstructions;
+            if (rouMethod.Mos.All(x => !Feature.OnSuccess.SubsetOf(x.Features))) return EmptyInstructions;
 
             if (fields.MoArray != null)
             {
@@ -600,7 +600,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction> AsyncIfSuccessRetry(RouMethod rouMethod, Instruction ifRetryGoTo, Instruction ifNotRetryGoTo, AsyncFields fields)
         {
-            if (!Feature.SuccessRetry.IsMatch(rouMethod.Features)) return EmptyInstructions;
+            if (!Feature.SuccessRetry.SubsetOf(rouMethod.Features)) return EmptyInstructions;
 
             return new[]
             {
@@ -619,7 +619,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction> AsyncIfSuccessReplacedReturn(RouMethod rouMethod, string methodName, BoxTypeReference returnBoxTypeRef, Instruction? ldlocReturn, Instruction ifNotReplacedGoTo, AsyncFields fields)
         {
-            if (ldlocReturn == null || !Feature.SuccessReplace.IsMatch(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return EmptyInstructions;
+            if (ldlocReturn == null || !Feature.SuccessReplace.SubsetOf(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return EmptyInstructions;
 
             var instructions = new List<Instruction>
             {

@@ -79,7 +79,7 @@ namespace Rougamo.Fody
                 instructions.Add(Create(OpCodes.Ldc_I4, i));
                 if (stateMachineVariable != null)
                 {
-                    instructions.Add(stateMachineVariable.LdlocOrA());
+                    instructions.Add(stateMachineVariable.LdlocAny());
                 }
                 else
                 {
@@ -213,7 +213,7 @@ namespace Rougamo.Fody
             }
             else
             {
-                instructions.Add(stateMachineVariable!.LdlocOrA());
+                instructions.Add(stateMachineVariable!.LdlocAny());
                 instructions.Add(Create(OpCodes.Ldfld, mosFieldRef));
             }
             if ((omit & Omit.Arguments) != 0)
@@ -267,7 +267,7 @@ namespace Rougamo.Fody
             var matches = new bool[mos.Length];
             for (var i = 0; i < mos.Length; i++)
             {
-                var isMatch = ((Feature)Enum.Parse(typeof(Feature), methodName)).IsMatch(mos[i].Features);
+                var isMatch = ((Feature)Enum.Parse(typeof(Feature), methodName)).SubsetOf(mos[i].Features);
                 if (isMatch) matchCount++;
                 matches[i] = isMatch;
             }

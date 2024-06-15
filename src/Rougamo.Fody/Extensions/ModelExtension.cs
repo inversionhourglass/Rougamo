@@ -285,17 +285,17 @@ namespace Rougamo.Fody
 
         #endregion Extract-Property-Value
 
-        public static bool IsMatch(this Feature matchWith, int value)
+        public static bool SubsetOf(this Feature matchWith, int value)
         {
             return ((int)matchWith & value) == (int)matchWith;
         }
 
-        public static bool MatchAny(this Feature matchWith, int value)
+        public static bool HasIntersection(this Feature matchWith, int value)
         {
             return ((int)matchWith & value) != 0;
         }
 
-        public static bool IsMatch(this ForceSync forceSync, ForceSync value)
+        public static bool SubsetOf(this ForceSync forceSync, ForceSync value)
         {
             return (forceSync & value) == forceSync;
         }

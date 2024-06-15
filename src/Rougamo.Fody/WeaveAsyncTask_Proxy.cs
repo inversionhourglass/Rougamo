@@ -915,7 +915,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction>? ProxyAsyncIfOnEntryReplacedReturn(RouMethod rouMethod, MethodDefinition moveNextMethodDef, Instruction? endAnchor, Instruction tailAnchor, ProxyAsyncContext context)
         {
-            if (!Feature.EntryReplace.IsMatch(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return null;
+            if (!Feature.EntryReplace.SubsetOf(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return null;
 
             var managedEndAnchor = endAnchor == null;
             if (managedEndAnchor) endAnchor = Create(OpCodes.Nop);
@@ -981,12 +981,12 @@ namespace Rougamo.Fody
 
         private IList<Instruction>? ProxyAsyncIfSuccessRetry(RouMethod rouMethod, Instruction loopStartAnchor, Instruction? endAnchor, AsyncFields fields)
         {
-            return !Feature.SuccessRetry.IsMatch(rouMethod.Features) ? null : ProxyAsyncIfRetry(rouMethod, loopStartAnchor, endAnchor, fields);
+            return !Feature.SuccessRetry.SubsetOf(rouMethod.Features) ? null : ProxyAsyncIfRetry(rouMethod, loopStartAnchor, endAnchor, fields);
         }
 
         private IList<Instruction>? ProxyAsyncIfExceptionRetry(RouMethod rouMethod, Instruction loopStartAnchor, Instruction? endAnchor, AsyncFields fields)
         {
-            return !Feature.ExceptionRetry.IsMatch(rouMethod.Features) ? null : ProxyAsyncIfRetry(rouMethod, loopStartAnchor, endAnchor, fields);
+            return !Feature.ExceptionRetry.SubsetOf(rouMethod.Features) ? null : ProxyAsyncIfRetry(rouMethod, loopStartAnchor, endAnchor, fields);
         }
 
         private IList<Instruction> ProxyAsyncIfRetry(RouMethod rouMethod, Instruction loopStartAnchor, Instruction? endAnchor, AsyncFields fields)
@@ -1010,7 +1010,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction>? ProxyAsyncIfSuccessReplacedReturn(RouMethod rouMethod, Instruction? endAnchor, ProxyAsyncContext context)
         {
-            if (context.Variables.Result == null || !Feature.SuccessReplace.IsMatch(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return EmptyInstructions;
+            if (context.Variables.Result == null || !Feature.SuccessReplace.SubsetOf(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return EmptyInstructions;
 
             var managedAnchor = endAnchor == null;
             if (managedAnchor) endAnchor = Create(OpCodes.Nop);
@@ -1051,7 +1051,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction>? ProxyAsyncSaveExceptionHandledResult(RouMethod rouMethod, AsyncFields fields, VariableDefinition? vResult)
         {
-            if (!Feature.ExceptionHandle.IsMatch(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return null;
+            if (!Feature.ExceptionHandle.SubsetOf(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return null;
 
             if (vResult == null && fields.Result == null) return null;
 
@@ -1080,7 +1080,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction> ProxyAsyncCheckExceptionHandled(RouMethod rouMethod, Instruction tailAnchor, IStateMachineFields fields)
         {
-            if (!Feature.ExceptionHandle.IsMatch(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return [Create(OpCodes.Rethrow)];
+            if (!Feature.ExceptionHandle.SubsetOf(rouMethod.Features) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return [Create(OpCodes.Rethrow)];
 
             var rethrow = Create(OpCodes.Rethrow);
 
