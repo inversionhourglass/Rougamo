@@ -349,29 +349,11 @@ namespace Rougamo.Fody
                 var j = reverseCall ? mos.Length - i - 1 : i;
                 var mo = mos[j];
 
-                if (!((Feature)Enum.Parse(typeof(Feature), methodName)).IsMatch(mo.Features)) continue;
+                if (!((Feature)Enum.Parse(typeof(Feature), methodName)).SubsetOf(mo.Features)) continue;
 
                 if (moVariables == null)
                 {
-                    OpCode ldfldoa;
-                    OpCode callov;
-                    var methodRef = mo.On(methodName, ModuleDefinition) ?? _methodIMosRef[methodName];
-                    if (mo.IsStruct)
-                    {
-                        ldfldoa = OpCodes.Ldflda;
-                        callov = OpCodes.Call;
-                    }
-                    else
-                    {
-                        ldfldoa = OpCodes.Ldfld;
-                        callov = OpCodes.Callvirt;
-                    }
-
-                    instructions.Add(Create(OpCodes.Ldarg_0));
-                    instructions.Add(Create(ldfldoa, moFields![j]));
-                    instructions.Add(Create(OpCodes.Ldarg_0));
-                    instructions.Add(Create(OpCodes.Ldfld, contextField));
-                    instructions.Add(Create(callov, methodRef));
+                    ExecuteMoMethod(methodName, mo, moFields![j], contextField!);
                 }
                 else
                 {
@@ -394,6 +376,35 @@ namespace Rougamo.Fody
                     instructions.Add(Create(callov, methodRef));
                 }
             }
+
+            return instructions;
+        }
+
+        private List<Instruction>? ExecuteMoMethod(string methodName, Mo mo, FieldReference moField, FieldReference contextField)
+        {
+            if (!((Feature)Enum.Parse(typeof(Feature), methodName)).SubsetOf(mo.Features)) return null;
+
+            var instructions = new List<Instruction>();
+
+            OpCode ldfldoa;
+            OpCode callov;
+            var methodRef = mo.On(methodName, ModuleDefinition) ?? _methodIMosRef[methodName];
+            if (mo.IsStruct)
+            {
+                ldfldoa = OpCodes.Ldflda;
+                callov = OpCodes.Call;
+            }
+            else
+            {
+                ldfldoa = OpCodes.Ldfld;
+                callov = OpCodes.Callvirt;
+            }
+
+            instructions.Add(Create(OpCodes.Ldarg_0));
+            instructions.Add(Create(ldfldoa, moField));
+            instructions.Add(Create(OpCodes.Ldarg_0));
+            instructions.Add(Create(OpCodes.Ldfld, contextField));
+            instructions.Add(Create(callov, methodRef));
 
             return instructions;
         }
@@ -475,7 +486,7 @@ namespace Rougamo.Fody
                 }
                 builder.Length -= 2;
                 builder.Append("]. For more information: https://github.com/inversionhourglass/Rougamo/issues/61");
-                
+
                 throw new RougamoException(builder.ToString(), rouMethod.MethodDef);
             }
         }
