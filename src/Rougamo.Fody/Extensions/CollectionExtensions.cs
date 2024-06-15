@@ -13,6 +13,16 @@ namespace Rougamo.Fody
             return true;
         }
 
+        public static List<T> Add<T>(this List<T> list, IEnumerable<T>? items)
+        {
+            if (items != null)
+            {
+                list.AddRange(items);
+            }
+
+            return list;
+        }
+
         public static void AddRange<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, IDictionary<TKey, TValue> more)
         {
             foreach (var item in more)
