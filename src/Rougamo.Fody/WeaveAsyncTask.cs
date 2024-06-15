@@ -246,7 +246,7 @@ namespace Rougamo.Fody
 
                 var instructions = new List<Instruction>
                 {
-                    variables.StateMachine.LdlocOrA()
+                    variables.StateMachine.LdlocAny()
                 };
                 instructions.AddRange(InitMoArray(rouMethod.MethodDef, rouMethod.Mos));
                 instructions.Add(Create(OpCodes.Stfld, mosFieldRef));
@@ -265,7 +265,7 @@ namespace Rougamo.Fody
             var i = 0;
             foreach (var mo in mos)
             {
-                instructions.Add(stateMachineVariable.LdlocOrA());
+                instructions.Add(stateMachineVariable.LdlocAny());
                 instructions.AddRange(InitMo(methodDef, mo, false));
                 instructions.Add(Create(OpCodes.Stfld, moFields[i]));
 
@@ -296,7 +296,7 @@ namespace Rougamo.Fody
             }
             var contextFieldRef = new FieldReference(fields.MethodContext.Name, fields.MethodContext.FieldType, variables.StateMachine.VariableType);
 
-            instructions.Add(variables.StateMachine.LdlocOrA());
+            instructions.Add(variables.StateMachine.LdlocAny());
             instructions.AddRange(InitMethodContext(rouMethod.MethodDef, rouMethod.IsAsyncTaskOrValueTask || rouMethod.IsAsyncIterator, rouMethod.IsIterator || rouMethod.IsAsyncIterator, moArray, variables.StateMachine, mosFieldRef, rouMethod.MethodContextOmits));
             instructions.Add(Create(OpCodes.Stfld, contextFieldRef));
 

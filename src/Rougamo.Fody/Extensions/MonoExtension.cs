@@ -338,10 +338,22 @@ namespace Rougamo.Fody
             return Instruction.Create(OpCodes.Ldloc, variable);
         }
 
-        public static Instruction LdlocOrA(this VariableDefinition variable)
+        public static Instruction LdlocAny(this VariableDefinition variable)
         {
-            var variableTypeDef = variable.VariableType.Resolve();
-            return variable.VariableType.IsGenericParameter || variableTypeDef.IsValueType && !variableTypeDef.IsEnum && !variableTypeDef.IsPrimitive ? Instruction.Create(OpCodes.Ldloca, variable) : Instruction.Create(OpCodes.Ldloc, variable);
+            var typeRef = variable.VariableType;
+            return typeRef.IsGenericParameter || typeRef.IsValueType ? Instruction.Create(OpCodes.Ldloca, variable) : Instruction.Create(OpCodes.Ldloc, variable);
+        }
+
+        public static Instruction LdfldAny(this FieldReference fieldRef)
+        {
+            var opLdfld = fieldRef.FieldType.IsValueType ? OpCodes.Ldflda : OpCodes.Ldfld;
+            return Instruction.Create(opLdfld, fieldRef);
+        }
+
+        public static Instruction CallAny(this MethodReference methodRef)
+        {
+            var opCall = methodRef.DeclaringType.IsValueType ? OpCodes.Call : OpCodes.Callvirt;
+            return Instruction.Create(opCall, methodRef);
         }
 
         public static Instruction Ldind(this TypeReference typeRef)

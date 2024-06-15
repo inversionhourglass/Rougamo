@@ -200,7 +200,7 @@ namespace Rougamo.Fody
 
             return new[]
             {
-                variables.StateMachine.LdlocOrA(),
+                variables.StateMachine.LdlocAny(),
                 Create(OpCodes.Newobj, returnsTypeCtorRef),
                 Create(OpCodes.Stfld, returnsFieldRef)
             };

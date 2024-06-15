@@ -751,9 +751,9 @@ namespace Rougamo.Fody
             var vStateMachine = rouMethod.MethodDef.Body.Variables.Single(x => x.VariableType.Resolve() == stateMachineTypeDef);
             var genericMap = stateMachineTypeDef.GenericParameters.ToDictionary(x => x.Name, x => x);
 
-            ProxyAddAbsentField(stateMachineTypeDef, ProxySetAbsentFieldThis(rouMethod, fields, vStateMachine.VariableType, vStateMachine.LdlocOrA(), setState, genericMap));
+            ProxyAddAbsentField(stateMachineTypeDef, ProxySetAbsentFieldThis(rouMethod, fields, vStateMachine.VariableType, vStateMachine.LdlocAny(), setState, genericMap));
 
-            ProxyAddAbsentField(stateMachineTypeDef, ProxySetAbsentFieldParameters(rouMethod, fields, vStateMachine.VariableType, vStateMachine.LdlocOrA(), setState, genericMap));
+            ProxyAddAbsentField(stateMachineTypeDef, ProxySetAbsentFieldParameters(rouMethod, fields, vStateMachine.VariableType, vStateMachine.LdlocAny(), setState, genericMap));
         }
 
         private IEnumerable<FieldDefinition> ProxySetAbsentFieldThis(RouMethod rouMethod, IStateMachineFields fields, TypeReference stateMachineTypeRef, Instruction loadStateMachine, Instruction anchor, Dictionary<string, GenericParameter> genericMap)
