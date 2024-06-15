@@ -24,7 +24,7 @@ namespace Rougamo.Fody
             _typeBoolRef = FindTypeDefinition(typeof(bool).FullName).ImportInto(ModuleDefinition);
             _typeObjectRef = FindTypeDefinition(typeof(object).FullName).ImportInto(ModuleDefinition);
             _typeExceptionRef = FindTypeDefinition(typeof(Exception).FullName).ImportInto(ModuleDefinition);
-            _typeCancellationToken = FindTypeDefinition(typeof(CancellationToken).FullName).ImportInto(ModuleDefinition);
+            _typeCancellationTokenRef = FindTypeDefinition(typeof(CancellationToken).FullName).ImportInto(ModuleDefinition);
             _typeDebuggerStepThroughAttributeRef = FindTypeDefinition(typeof(DebuggerStepThroughAttribute).FullName).ImportInto(ModuleDefinition);
             _typeListRef = _typeListDef.ImportInto(ModuleDefinition);
             var typeAsyncStateMachineAttributeRef = FindTypeDefinition(typeof(AsyncStateMachineAttribute).FullName).ImportInto(ModuleDefinition);

@@ -82,7 +82,7 @@ namespace Rougamo.Fody
             var vState = proxyMoveNextDef.Body.CreateVariable(_typeIntRef);
             var vValueTask = proxyMoveNextDef.Body.CreateVariable(valueTaskTypeRef);
             var vAwaiter = proxyMoveNextDef.Body.CreateVariable(awaiterTypeRef);
-            var vToken = proxyMoveNextDef.Body.CreateVariable(_typeCancellationToken);
+            var vToken = proxyMoveNextDef.Body.CreateVariable(_typeCancellationTokenRef);
             var vThis = proxyMoveNextDef.Body.CreateVariable(proxyStateMachineTypeRef);
             var vHasNext = proxyMoveNextDef.Body.CreateVariable(_typeBoolRef);
             var vException = proxyMoveNextDef.Body.CreateVariable(_typeExceptionRef);
@@ -141,7 +141,7 @@ namespace Rougamo.Fody
                         }
                         instructions.Add(Create(OpCodes.Call, actualMethodRef));
                         instructions.Add(Create(OpCodes.Ldloca, vToken));
-                        instructions.Add(Create(OpCodes.Initobj, _typeCancellationToken));
+                        instructions.Add(Create(OpCodes.Initobj, _typeCancellationTokenRef));
                         instructions.Add(Create(OpCodes.Ldloc, vToken));
                         instructions.Add(Create(OpCodes.Callvirt, getAsyncEnumeratorMethodRef));
                         instructions.Add(Create(OpCodes.Stfld, fields.Iterator));

@@ -24,7 +24,7 @@ namespace Rougamo.Fody
         private TypeReference _typeBoolRef;
         private TypeReference _typeObjectRef;
         private TypeReference _typeExceptionRef;
-        private TypeReference _typeCancellationToken;
+        private TypeReference _typeCancellationTokenRef;
         private TypeReference _typeListRef;
         private TypeReference _typeIMoRef;
         private TypeReference _typeMethodContextRef;
