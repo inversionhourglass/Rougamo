@@ -2,6 +2,7 @@
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
 using Mono.Collections.Generic;
+using Rougamo.Fody.Simulations;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -89,12 +90,20 @@ namespace Rougamo.Fody
                     if(methodDef.Name == Constants.METHOD_OnEntry ||
                         methodDef.Name == Constants.METHOD_OnSuccess ||
                         methodDef.Name == Constants.METHOD_OnException ||
-                        methodDef.Name == Constants.METHOD_OnExit)
+                        methodDef.Name == Constants.METHOD_OnExit ||
+                        methodDef.Name == Constants.METHOD_OnEntryAsync ||
+                        methodDef.Name == Constants.METHOD_OnSuccessAsync ||
+                        methodDef.Name == Constants.METHOD_OnExceptionAsync ||
+                        methodDef.Name == Constants.METHOD_OnExitAsync)
                     {
                         _methodIMosRef.Add(methodDef.Name, _importer.Import(methodDef));
                         if (_typeMethodContextRef == null)
                         {
                             _typeMethodContextRef = _importer.Import(methodDef.Parameters.First().ParameterType);
+                        }
+                        if (_typeValuetask == null && methodDef.ReturnType.Is(Constants.TYPE_ValueTask))
+                        {
+                            _typeValuetask = _importer.Import(methodDef.ReturnType).Simulate<TsAsyncable>(ModuleDefinition);
                         }
                     }
                 }

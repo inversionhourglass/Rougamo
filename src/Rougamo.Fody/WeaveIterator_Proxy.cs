@@ -239,7 +239,7 @@ namespace Rougamo.Fody
         {
             var instructions = rouMethod.MethodDef.Body.Instructions;
             var vStateMachine = rouMethod.MethodDef.Body.Variables.SingleOrDefault(x => x.VariableType.Resolve() == stateMachineTypeDef);
-            var loadStateMachine = vStateMachine == null ? Create(OpCodes.Dup) : vStateMachine.LdlocOrA();
+            var loadStateMachine = vStateMachine == null ? Create(OpCodes.Dup) : vStateMachine.LdlocAny();
             var stateMachineTypeRef = vStateMachine == null ? ProxyIteratorResolveStateMachineType(stateMachineTypeDef, rouMethod.MethodDef) : vStateMachine.VariableType;
             var ret = instructions.Last();
             var genericMap = stateMachineTypeDef.GenericParameters.ToDictionary(x => x.Name, x => x);

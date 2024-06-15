@@ -2,6 +2,7 @@
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Rougamo.Fody.Models;
+using Rougamo.Fody.Simulations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -30,6 +31,8 @@ namespace Rougamo.Fody
         private TypeReference _typeMethodContextRef;
         private TypeReference _typeIMoArrayRef;
         private TypeReference _typeDebuggerStepThroughAttributeRef;
+
+        private TsAsyncable _typeValuetask;
 
         private MethodReference _methodGetTypeFromHandleRef;
         private MethodReference _methodGetMethodFromHandleRef;

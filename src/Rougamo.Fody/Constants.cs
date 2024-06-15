@@ -90,6 +90,7 @@
         public const string FIELD_Current_Suffix = "current";
         public const string FIELD_Iterator = ">_<iterator";
         public const string FIELD_IteratorReturnList = ">_<returns";
+        public const string FIELD_MoAwaiter = ">_<moAwaiter";
         public const string FIELD_InitialThreadId = "<>l__initialThreadId";
         public const string FIELD_Disposed = "<>w__disposeMode";
 
@@ -97,6 +98,10 @@
         public const string METHOD_OnSuccess = "OnSuccess";
         public const string METHOD_OnException = "OnException";
         public const string METHOD_OnExit = "OnExit";
+        public const string METHOD_OnEntryAsync = "OnEntryAsync";
+        public const string METHOD_OnSuccessAsync = "OnSuccessAsync";
+        public const string METHOD_OnExceptionAsync = "OnExceptionAsync";
+        public const string METHOD_OnExitAsync = "OnExitAsync";
         public const string METHOD_IsMatch = "IsMatch";
         public const string METHOD_Create = "Create";
         public const string METHOD_MoveNext = "MoveNext";
