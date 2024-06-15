@@ -7,15 +7,6 @@ namespace Rougamo.Fody.Simulations
     /// </summary>
     internal class TsAsyncable(TypeReference typeRef, ModuleDefinition moduldeDef) : TypeSimulation(typeRef, moduldeDef)
     {
-        private MethodSimulations? _methods;
-
-        public MethodSimulations Methods => _methods ??= new(this);
-
-        public class MethodSimulations(TsAsyncable declaringType)
-        {
-            private readonly TsAsyncable _declaringType = declaringType;
-
-            public MethodSimulation<TsAwaiter> GetAwaiter => _declaringType.MethodSimulate<TsAwaiter>(Constants.METHOD_GetAwaiter);
-        }
+        public MethodSimulation<TsAwaiter> MGetAwaiter => MethodSimulate<TsAwaiter>(Constants.METHOD_GetAwaiter);
     }
 }

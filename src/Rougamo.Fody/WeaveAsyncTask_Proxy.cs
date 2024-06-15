@@ -274,7 +274,7 @@ namespace Rougamo.Fody
 
             var proxyStateMachineTypeRef = proxyStateMachineTypeDef.MakeReference();
             var returnType = actualMethodDef.ReturnType.Simulate<TsAsyncable>(ModuleDefinition);
-            var awaiterType = returnType.Methods.GetAwaiter.ReturnType;
+            var awaiterType = returnType.MGetAwaiter.ReturnType;
             if (returnType.Ref is GenericInstanceType)
             {
                 returnType.ReplaceGenerics(genericMap);
@@ -293,7 +293,7 @@ namespace Rougamo.Fody
             ProxyAsyncSetAbsentFields(rouMethod, proxyStateMachineTypeDef, fields);
 
             var builderType = fields.Builder.FieldType.Simulate<TsAsyncBuilder>(ModuleDefinition);
-            builderType.Methods.AwaitUnsafeOnCompleted.SetGenerics(awaiterType, proxyStateMachineTypeRef);
+            builderType.MAwaitUnsafeOnCompleted.SetGenerics(awaiterType, proxyStateMachineTypeRef);
 
             ProxyFieldCleanup(proxyStateMachineTypeDef, fields);
             var fAwaiter = new FieldDefinition(Constants.FIELD_Awaiter, FieldAttributes.Private, awaiterType);
@@ -364,11 +364,11 @@ namespace Rougamo.Fody
                         instructions.Add(Create(OpCodes.Stloc, vTargetReturn));
                         instructions.Add(Create(OpCodes.Ldloca, vTargetReturn));
                     }
-                    instructions.Add(Create(opGetAwaiterCall, returnType.Methods.GetAwaiter));
+                    instructions.Add(Create(opGetAwaiterCall, returnType.MGetAwaiter));
                     instructions.Add(Create(OpCodes.Stloc, vAwaiter));
 
                     instructions.Add(Create(opAwaiterLdloc, vAwaiter));
-                    instructions.Add(Create(opAwaiterCall, awaiterType.Properties.IsCompleted.Getter));
+                    instructions.Add(Create(opAwaiterCall, awaiterType.PIsCompleted.Getter));
                     instructions.Add(Create(OpCodes.Brtrue, nopIfStateEqZeroEnd));
                     // -if (!awaiter.IsCompleted)
                     {
@@ -402,7 +402,7 @@ namespace Rougamo.Fody
                         {
                             instructions.Add(Create(OpCodes.Ldarg_0));
                         }
-                        instructions.Add(Create(opBuilderCall, builderType.Methods.AwaitUnsafeOnCompleted));
+                        instructions.Add(Create(opBuilderCall, builderType.MAwaitUnsafeOnCompleted));
 
                         // return;
                         instructions.Add(Create(OpCodes.Leave, ret));
@@ -437,7 +437,7 @@ namespace Rougamo.Fody
                 }
                 // var result = awaiter.GetResult(); <--> awaiter.GetResult();
                 instructions.Add(nopIfStateEqZeroEnd.Set(opAwaiterLdloc, vAwaiter));
-                instructions.Add(Create(opAwaiterCall, awaiterType.Methods.GetResult));
+                instructions.Add(Create(opAwaiterCall, awaiterType.MGetResult));
                 if (vResult != null)
                 {
                     instructions.Add(Create(OpCodes.Stloc, vResult));
@@ -460,7 +460,7 @@ namespace Rougamo.Fody
                 instructions.Add(Create(OpCodes.Ldarg_0));
                 instructions.Add(Create(opBuilderLdfld, fields.Builder));
                 instructions.Add(Create(OpCodes.Ldloc, vException));
-                instructions.Add(Create(opBuilderCall, builderType.Methods.SetException));
+                instructions.Add(Create(opBuilderCall, builderType.MSetException));
 
                 // return;
                 instructions.Add(Create(OpCodes.Leave, ret));
@@ -479,7 +479,7 @@ namespace Rougamo.Fody
             {
                 instructions.Add(Create(OpCodes.Ldloc, vResult));
             }
-            instructions.Add(Create(opBuilderCall, builderType.Methods.SetResult));
+            instructions.Add(Create(opBuilderCall, builderType.MSetResult));
 
             // return;
             instructions.Add(ret);
