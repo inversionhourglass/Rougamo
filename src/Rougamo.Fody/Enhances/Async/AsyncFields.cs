@@ -37,20 +37,21 @@ namespace Rougamo.Fody.Enhances.Async
         public FieldReference? DeclaringThis
         {
             get => _declaringThis;
-            set
-            {
-                _declaringThis = value is FieldDefinition fd ? MakeReference(fd) : value;
-            }
+            set => _declaringThis = value is FieldDefinition fd ? MakeReference(fd) : value;
         }
 
         private FieldReference? _awaiter;
         public FieldReference? Awaiter
         {
             get => _awaiter;
-            set
-            {
-                _awaiter = value is FieldDefinition fd ? MakeReference(fd) : value;
-            }
+            set => _awaiter = value is FieldDefinition fd ? MakeReference(fd) : value;
+        }
+
+        private FieldReference? _moAwaiter;
+        public FieldReference? MoAwaiter
+        {
+            get => _moAwaiter;
+            set => _moAwaiter = value is FieldDefinition fd ? MakeReference(fd) : value;
         }
 
         private FieldReference? _result;
