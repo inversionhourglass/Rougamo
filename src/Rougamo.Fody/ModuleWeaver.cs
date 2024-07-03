@@ -2,7 +2,7 @@
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Rougamo.Fody.Models;
-using Rougamo.Fody.Simulations;
+using Rougamo.Fody.Simulations.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;

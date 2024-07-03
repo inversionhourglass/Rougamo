@@ -3,6 +3,7 @@ using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
 using Mono.Collections.Generic;
 using Rougamo.Fody.Simulations;
+using Rougamo.Fody.Simulations.Types;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
