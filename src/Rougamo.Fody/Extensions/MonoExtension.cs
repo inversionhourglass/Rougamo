@@ -4,6 +4,7 @@ using Mono.Cecil.Rocks;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace Rougamo.Fody
 {
@@ -333,15 +334,34 @@ namespace Rougamo.Fody
             return obj as TypeDefinition ?? ((TypeReference)obj).Resolve();
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Instruction Ldloc(this VariableDefinition variable)
         {
             return Instruction.Create(OpCodes.Ldloc, variable);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Instruction Ldloca(this VariableDefinition variable)
+        {
+            return Instruction.Create(OpCodes.Ldloca, variable);
+        }
+
         public static Instruction LdlocAny(this VariableDefinition variable)
         {
-            var typeRef = variable.VariableType;
-            return typeRef.IsGenericParameter || typeRef.IsValueType ? Instruction.Create(OpCodes.Ldloca, variable) : Instruction.Create(OpCodes.Ldloc, variable);
+            var opLdloc = variable.VariableType.IsValueType ? OpCodes.Ldloca : OpCodes.Ldloc;
+            return Instruction.Create(opLdloc, variable);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Instruction Ldfld(this FieldReference fieldRef)
+        {
+            return Instruction.Create(OpCodes.Ldfld, fieldRef);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Instruction Ldflda(this FieldReference fieldRef)
+        {
+            return Instruction.Create(OpCodes.Ldflda, fieldRef);
         }
 
         public static Instruction LdfldAny(this FieldReference fieldRef)
