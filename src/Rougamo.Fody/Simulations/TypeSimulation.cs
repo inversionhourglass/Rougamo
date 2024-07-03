@@ -18,7 +18,10 @@ namespace Rougamo.Fody.Simulations
         }
 
         public TypeReference Ref { get; set; }
+
         public TypeDefinition Def { get; }
+
+        public bool IsValueType => Ref.IsValueType;
 
         protected MethodSimulation<TRet> MethodSimulate<TRet>(string methodName) where TRet : TypeSimulation => MethodSimulate<TRet>(methodName, x => x.Name == methodName);
 

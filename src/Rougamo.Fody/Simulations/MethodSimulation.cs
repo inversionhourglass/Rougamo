@@ -1,19 +1,35 @@
 ﻿using Mono.Cecil;
+using Mono.Cecil.Cil;
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Rougamo.Fody.Simulations
 {
     internal abstract class MethodSimulation(TypeSimulation declaringType, MethodDefinition methodDef) : Simulation(declaringType.Module)
     {
-        protected MethodReference? _ref;
-
         public TypeSimulation DeclaringType { get; } = declaringType;
 
         public MethodDefinition Def { get; } = methodDef;
 
-        public MethodReference Ref => _ref ??= Def.WithGenericDeclaringType(DeclaringType);
+        public MethodReference Ref { get; } = methodDef.WithGenericDeclaringType(declaringType);
+
+        public virtual IList<Instruction> Call(ILoadable target, TypeSimulation[]? generics, params ParameterSimulation[] parameters)
+        {
+            var instructions = new List<Instruction>();
+
+            var methodRef = generics == null ? Ref : Ref.WithGenerics(generics.Select(x => x.Ref).ToArray());
+
+            instructions.Add(target.LoadForCallingMethod());
+            foreach (var parameter in parameters)
+            {
+                instructions.Add(parameter.Load());
+            }
+            instructions.Add(methodRef.CallAny());
+
+            return instructions;
+        }
 
         public static implicit operator MethodReference(MethodSimulation value) => value.Ref;
     }
@@ -23,13 +39,6 @@ namespace Rougamo.Fody.Simulations
         private T? _returnType;
 
         public T ReturnType => _returnType ??= Def.ReturnType.Simulate<T>(Module);
-
-        public MethodSimulation<T> SetGenerics(params TypeReference[] generics)
-        {
-            _ref = Ref.WithGenerics(generics);
-
-            return this;
-        }
     }
 
     internal static class MethodSimulationExtensions
