@@ -285,21 +285,6 @@ namespace Rougamo.Fody
 
         #endregion Extract-Property-Value
 
-        public static bool SubsetOf(this Feature matchWith, int value)
-        {
-            return ((int)matchWith & value) == (int)matchWith;
-        }
-
-        public static bool HasIntersection(this Feature matchWith, int value)
-        {
-            return ((int)matchWith & value) != 0;
-        }
-
-        public static bool SubsetOf(this ForceSync forceSync, ForceSync value)
-        {
-            return (forceSync & value) == forceSync;
-        }
-
         public static void Initialize(this RouType rouType, MethodDefinition methdDef,
             CustomAttribute[] assemblyAttributes, TypeReference[] assemblyGenerics,
             RepulsionMo[] typeImplements, CustomAttribute[] typeAttributes, TypeReference[] typeGenerics, TypeReference[] typeProxies,
