@@ -1,6 +1,6 @@
 ﻿using Mono.Cecil;
 
-namespace Rougamo.Fody.Simulations
+namespace Rougamo.Fody.Simulations.Types
 {
     /// <summary>
     /// Any type which is the return type of <see cref="TsAsyncable"/>'s GetAwaiter method

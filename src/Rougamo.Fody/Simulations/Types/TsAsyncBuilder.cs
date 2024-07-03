@@ -1,6 +1,6 @@
 ﻿using Mono.Cecil;
 
-namespace Rougamo.Fody.Simulations
+namespace Rougamo.Fody.Simulations.Types
 {
     internal class TsAsyncBuilder(TypeReference typeRef, ModuleDefinition moduleDef) : TypeSimulation(typeRef, moduleDef)
     {
