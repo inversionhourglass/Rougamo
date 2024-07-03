@@ -15,16 +15,39 @@ namespace Rougamo.Fody.Simulations
 
         public MethodReference Ref { get; } = methodDef.WithGenericDeclaringType(declaringType);
 
-        public virtual IList<Instruction> Call(ILoadable target, TypeSimulation[]? generics, params ParameterSimulation[] parameters)
+        public VariableDefinition? TempThis { get; set; }
+
+        public virtual IList<Instruction> Call(TypeSimulation[]? generics, params IParameterSimulation[] parameters)
         {
+            if (Def.Parameters.Count != parameters.Length) throw new RougamoException($"Parameters count not match of method {Def}, need {Def.Parameters.Count} gave {parameters.Length}");
+
             var instructions = new List<Instruction>();
 
             var methodRef = generics == null ? Ref : Ref.WithGenerics(generics.Select(x => x.Ref).ToArray());
 
-            instructions.Add(target.LoadForCallingMethod());
-            foreach (var parameter in parameters)
+            for (var i = 0; i < parameters.Length; i++)
             {
-                instructions.Add(parameter.Load());
+                if (Def.Parameters[i].ParameterType is ByReferenceType)
+                {
+                    instructions.Add(parameters[i].PrepareLoadAddress(this));
+                }
+                else
+                {
+                    instructions.Add(parameters[i].PrepareLoad(this));
+                }
+            }
+
+            instructions.Add(DeclaringType.LoadForCallingMethod());
+            for (var i = 0; i < parameters.Length; i++)
+            {
+                if (Def.Parameters[i].ParameterType is ByReferenceType)
+                {
+                    instructions.Add(parameters[i].LoadAddress(this));
+                }
+                else
+                {
+                    instructions.Add(parameters[i].Load(this));
+                }
             }
             instructions.Add(methodRef.CallAny());
 

@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System;
 using System.Collections.Concurrent;
+using Mono.Cecil.Cil;
 
 namespace Rougamo.Fody.Simulations
 {
-    internal class TypeSimulation : Simulation
+    internal class TypeSimulation : Simulation, IParameterSimulation
     {
         private readonly Dictionary<string, FieldSimulation> _fieldSimulations = [];
         private readonly Dictionary<string, MethodSimulation> _methodSimulations = [];
@@ -37,7 +38,6 @@ namespace Rougamo.Fody.Simulations
 
         protected MethodSimulation<TRet> PublicMethodSimulate<TRet>(string methodName) where TRet : TypeSimulation => MethodSimulate<TRet>(methodName, x => x.Name == methodName && x.IsPublic);
 
-
         protected T FieldSimulate<T>(string id, string methodName) where T : FieldSimulation => FieldSimulate<T>(id, x => x.Name == methodName);
 
         protected T FieldSimulate<T>(string id, Func<FieldDefinition, bool> predicate) where T : FieldSimulation
@@ -48,6 +48,31 @@ namespace Rougamo.Fody.Simulations
                 _fieldSimulations[id] = simulation;
             }
             return (T)simulation;
+        }
+
+        public virtual Instruction[]? LoadForCallingMethod()
+        {
+            return [Instruction.Create(OpCodes.Ldarg_0)];
+        }
+
+        public virtual Instruction[]? PrepareLoad(MethodSimulation method) => null;
+
+        public virtual Instruction[]? PrepareLoadAddress(MethodSimulation method)
+        {
+            if (IsValueType) return null;
+
+            method.TempThis ??= method.Def.Body.CreateVariable(Ref);
+            return [Instruction.Create(OpCodes.Ldarg_0), Instruction.Create(OpCodes.Stloc, method.TempThis)];
+        }
+
+        public virtual Instruction[] Load(MethodSimulation method)
+        {
+            return [Instruction.Create(OpCodes.Ldarg_0)];
+        }
+
+        public virtual Instruction[] LoadAddress(MethodSimulation method)
+        {
+            return IsValueType ? [Instruction.Create(OpCodes.Ldarg_0)] : [Instruction.Create(OpCodes.Ldloca, method.TempThis)];
         }
 
         public static implicit operator TypeReference(TypeSimulation value) => value.Ref;
