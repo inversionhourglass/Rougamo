@@ -10,6 +10,7 @@
         public const string TYPE_IgnoreMoAttribute = "Rougamo.IgnoreMoAttribute";
         public const string TYPE_MoRepulsion = "Rougamo.MoRepulsion";
         public const string TYPE_AccessFlags = "Rougamo.AccessFlags";
+        public const string TYPE_Feature = "Rougamo.Feature";
         public const string TYPE_Omit = "Rougamo.Context.Omit";
         public const string TYPE_IRougamo_1 = "Rougamo.IRougamo`1";
         public const string TYPE_IRougamo_2 = "Rougamo.IRougamo`2";
