@@ -1,14 +1,4 @@
-- [#36](https://github.com/inversionhourglass/Rougamo/issues/36) 应用Rougamo的方法支持步入调试
-- [#54](https://github.com/inversionhourglass/Rougamo/issues/54) 解决snupkg报checksum错误的问题，需直接依赖Fody，详见issue回复
-- [#60](https://github.com/inversionhourglass/Rougamo/issues/60) 支持自定义`AsyncMethodBuilder`
-- [#63](https://github.com/inversionhourglass/Rougamo/issues/63) 支持泛型`Attribute<T>`
-- [#65](https://github.com/inversionhourglass/Rougamo/issues/65) 修复特定`Type`类型无法作为`MoAttribute`构造方法参数
-
-# 3.0版本对比之前版本差异
-3.0版本在代码织入的方式上进行了改变，从原方法内部进行代码织入的方式改为代理方法织入，这样的改变会使Rougamo之前提供的部分功能发生变化：
-
-1. 在 [#53](https://github.com/inversionhourglass/Rougamo/issues/53) 中支持的功能“刷新参数值”现在仅对`out / ref`参数有效
-2. `void async`方法无法确保方法切实执行完毕后再执行`OnSuccess`，也无法确保异常一定会进`OnException`
-3. `ExMoAttribute`弃用，代理调用的方式不再区分是否使用`async / await`语法
+- [[#71](https://github.com/inversionhourglass/Rougamo/issues/71)] 修复blazor项目在发布时illink对程序集做裁减优化时产生的异常
+  > 程序集主要描述信息基本存储在ModuleDefinition的MetadataSystem字段中，各类型的原数据也基本从该对象中读取。然而通过删除/清空MethodDefinition的CustomDebugInformation并不会影响MetadataSystem中的数据，同时，在将修改写入程序集时，MetadataSystem中绝大部分数据都将直接清空后重新写入，然而CustomDebugInformation是个例外，这就导致MethodDefinition上对CustomDebugInformations的删除/清空操作无效。所以对CustomDebugInformation的删除操作还需要从MetadataSystem中的删除。参考 [MetadataSystem.Clear()](https://github.com/jbevain/cecil/blob/8e1ae7b4ea67ccc38cb8db3ded6802643109ffd7/Mono.Cecil/MetadataSystem.cs#L137)
 
 ---
