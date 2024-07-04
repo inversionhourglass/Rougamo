@@ -2,9 +2,11 @@
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using BindingFlags = System.Reflection.BindingFlags;
 
 namespace Rougamo.Fody
 {
@@ -548,7 +550,7 @@ namespace Rougamo.Fody
             methodDef.Body.Instructions.Clear();
             methodDef.Body.Variables.Clear();
             methodDef.Body.ExceptionHandlers.Clear();
-            methodDef.CustomDebugInformations.Clear();
+            methodDef.HardClearCustomDebugInformation();
             methodDef.DebugInformation.Clear();
         }
 
@@ -560,6 +562,16 @@ namespace Rougamo.Fody
             debugInformation.Scope.Variables.Clear();
             debugInformation.Scope.Scopes.Clear();
             debugInformation.Scope.CustomDebugInformations.Clear();
+        }
+
+        public static void HardClearCustomDebugInformation(this MethodDefinition methodDef)
+        {
+            methodDef.CustomDebugInformations.Clear();
+
+            var module = methodDef.Module;
+            var metadata = module.GetType().GetField("MetadataSystem", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(module);
+            var customDebugInformations = (IDictionary)metadata.GetType().GetField("CustomDebugInformations", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(metadata);
+            customDebugInformations.Remove(methodDef.MetadataToken);
         }
 
         private static Code[] _EmptyCodes = new[] { Code.Nop, Code.Ret };

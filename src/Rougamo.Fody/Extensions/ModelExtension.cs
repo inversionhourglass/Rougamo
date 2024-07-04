@@ -77,7 +77,7 @@ namespace Rougamo.Fody
                 }
                 typeDef = mo.Attribute.AttributeType.Resolve();
             }
-            var features = ExtractFromIl(typeDef!, Constants.PROP_Features, Constants.TYPE_Int32, ParseFeatures);
+            var features = ExtractFromIl(typeDef!, Constants.PROP_Features, Constants.TYPE_Feature, ParseFeatures);
             return features ?? (int)Feature.All;
         }
 

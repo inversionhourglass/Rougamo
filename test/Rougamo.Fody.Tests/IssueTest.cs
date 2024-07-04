@@ -25,7 +25,7 @@ namespace Rougamo.Fody.Tests
             instance.Command1();
 
             instance.Execute();
-            
+
             await Task.Delay(1000);
         }
 
@@ -178,6 +178,16 @@ namespace Rougamo.Fody.Tests
         {
             var instance = GetInstance("Issue66`2", false, t => t.MakeGenericType(typeof(int), typeof(int)));
             instance.M();
+        }
+
+        [Fact]
+        public void Issue72Test()
+        {
+            var instance = GetInstance(nameof(Issue72));
+            var logs = new List<string>();
+            instance.Plus(logs, 1, 2);
+
+            Assert.Equal(["OnEntry"], logs);
         }
     }
 }
