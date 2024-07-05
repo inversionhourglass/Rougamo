@@ -2,6 +2,7 @@
 using Issues.Attributes;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using Xunit;
 
@@ -208,6 +209,18 @@ namespace Rougamo.Fody.Tests
             instance.Plus(logs, 1, 2);
 
             Assert.Equal(["OnEntry"], logs);
+        }
+
+        [Fact]
+        public async Task Issue73Test()
+        {
+            var instance = GetInstance("Issue73", false, t =>
+            {
+                var nt = t.GetNestedTypes().Single(x => x.Name == "Cls`1");
+                return nt.MakeGenericType(typeof(int));
+            });
+
+            await (Task)instance.MAsync();
         }
     }
 }
