@@ -281,7 +281,10 @@ namespace Rougamo.Fody
 
         public static GenericParameter Clone(this GenericParameter genericParameter, IGenericParameterProvider provider)
         {
-            var cloned = new GenericParameter(genericParameter.Name, provider);
+            var cloned = new GenericParameter(genericParameter.Name, provider)
+            {
+                Attributes = genericParameter.Attributes
+            };
 
             if (genericParameter.HasCustomAttributes)
             {
