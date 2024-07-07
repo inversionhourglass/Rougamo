@@ -14,7 +14,7 @@ namespace Issues
             }
         }
 
-        public class Cls<T> : Base<T> where T : IComparable
+        public class Cls<T> : Base<T> where T : IComparable, new()
         {
             [_73_]
             public override async Task MAsync()
