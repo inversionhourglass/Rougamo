@@ -18,23 +18,30 @@ namespace Rougamo.Fody
             {
                 foreach (var rouMethod in rouType.Methods)
                 {
-                    CheckRefStruct(rouMethod);
+                    try
+                    {
+                        CheckRefStruct(rouMethod);
 
-                    if (rouMethod.IsIterator)
-                    {
-                        IteratorMethodWeave(rouMethod);
+                        if (rouMethod.IsIterator)
+                        {
+                            IteratorMethodWeave(rouMethod);
+                        }
+                        else if (rouMethod.IsAsyncIterator)
+                        {
+                            AiteratorMethodWeave(rouMethod);
+                        }
+                        else if (rouMethod.IsAsyncTaskOrValueTask && (!_config.ProxyCalling || !rouMethod.MethodDef.ReturnType.Is(Constants.TYPE_Void)))
+                        {
+                            AsyncTaskMethodWeave(rouMethod);
+                        }
+                        else
+                        {
+                            SyncMethodWeave(rouMethod);
+                        }
                     }
-                    else if (rouMethod.IsAsyncIterator)
+                    catch (Exception ex) when (ex is not RougamoException)
                     {
-                        AiteratorMethodWeave(rouMethod);
-                    }
-                    else if (rouMethod.IsAsyncTaskOrValueTask && (!_config.ProxyCalling || !rouMethod.MethodDef.ReturnType.Is(Constants.TYPE_Void)))
-                    {
-                        AsyncTaskMethodWeave(rouMethod);
-                    }
-                    else
-                    {
-                        SyncMethodWeave(rouMethod);
+                        throw new RougamoException($"[{rouMethod.MethodDef.FullName}] {ex}");
                     }
                 }
             }

@@ -570,7 +570,11 @@ namespace Rougamo.Fody
 
             var module = methodDef.Module;
             var metadata = module.GetType().GetField("MetadataSystem", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(module);
+            if (metadata == null) return;
+
             var customDebugInformations = (IDictionary)metadata.GetType().GetField("CustomDebugInformations", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(metadata);
+            if (customDebugInformations == null) return;
+
             customDebugInformations.Remove(methodDef.MetadataToken);
         }
 

@@ -38,7 +38,7 @@ namespace Rougamo.Fody
                 var genericTypeRef = new GenericInstanceType(clonedTypeDef);
                 foreach (var generic in typeDef.GenericParameters)
                 {
-                    var clonedGeneric = new GenericParameter(generic.Name, clonedTypeDef);
+                    var clonedGeneric = generic.Clone(clonedTypeDef);
                     clonedTypeDef.GenericParameters.Add(clonedGeneric);
 
                     map[generic] = clonedGeneric;
@@ -141,7 +141,7 @@ namespace Rougamo.Fody
             {
                 foreach (var generic in methodDef.GenericParameters)
                 {
-                    var clonedGeneric = new GenericParameter(generic.Name, clonedMethodDef);
+                    var clonedGeneric = generic.Clone(clonedMethodDef);
                     clonedMethodDef.GenericParameters.Add(clonedGeneric);
 
                     map[generic] = clonedGeneric;
@@ -224,6 +224,19 @@ namespace Rougamo.Fody
                         }
                         cloned.Operand = mr.WithGenerics(generics);
                     }
+                    //else if (mr.DeclaringType is GenericInstanceType git && git.GenericArguments.Any(x => map.ContainsKey(x)))
+                    //{
+                    //    var gitt = new GenericInstanceType(git.ElementType);
+                    //    foreach (var ga in git.GenericArguments)
+                    //    {
+                    //        if (!map.TryGetValue(ga, out var obj))
+                    //        {
+                    //            obj = ga;
+                    //        }
+                    //        gitt.GenericArguments.Add((TypeReference)obj);
+                    //    }
+                    //    cloned.Operand = mr.WithGenericDeclaringType(gitt);
+                    //}
                 }
             }
             foreach (var br in brs)
@@ -264,6 +277,25 @@ namespace Rougamo.Fody
             {
                 clonedMethodDef.CustomDebugInformations.Add(debugInfo.Clone(offsetMap, map));
             }
+        }
+
+        public static GenericParameter Clone(this GenericParameter genericParameter, IGenericParameterProvider provider)
+        {
+            var cloned = new GenericParameter(genericParameter.Name, provider)
+            {
+                Attributes = genericParameter.Attributes
+            };
+
+            if (genericParameter.HasCustomAttributes)
+            {
+                cloned.CustomAttributes.Add(genericParameter.CustomAttributes);
+            }
+            if (genericParameter.HasConstraints)
+            {
+                cloned.Constraints.Add(genericParameter.Constraints);
+            }
+
+            return cloned;
         }
 
         public static ParameterDefinition Clone(this ParameterDefinition parameterDef, Dictionary<object, object> map)
