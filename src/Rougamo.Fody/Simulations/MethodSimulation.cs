@@ -7,7 +7,7 @@ using System.Linq;
 
 namespace Rougamo.Fody.Simulations
 {
-    internal abstract class MethodSimulation(TypeSimulation declaringType, MethodDefinition methodDef) : Simulation(declaringType.Module)
+    internal class MethodSimulation(TypeSimulation declaringType, MethodDefinition methodDef) : Simulation(declaringType.Module)
     {
         public TypeSimulation DeclaringType { get; } = declaringType;
 

@@ -7,41 +7,41 @@ using Mono.Cecil.Cil;
 
 namespace Rougamo.Fody.Simulations
 {
-    internal class FieldSimulation : TypeSimulation
+    internal class FieldSimulation(TypeSimulation declaringType, FieldDefinition fieldDef) : Simulation(declaringType.Module), IHost
     {
-        protected readonly TypeSimulation _declaringType;
+        protected readonly TypeSimulation _declaringType = declaringType;
 
-        protected FieldSimulation(TypeSimulation declaringType, FieldDefinition fieldDef) : base(fieldDef.FieldType, declaringType.Module)
-        {
-            _declaringType = declaringType;
-            FieldDef = fieldDef;
-            FieldRef = new FieldReference(fieldDef.Name, fieldDef.FieldType, declaringType);
-        }
+        public FieldDefinition FieldDef { get; } = fieldDef;
 
-        public FieldDefinition FieldDef { get; }
+        public FieldReference FieldRef { get; } = new FieldReference(fieldDef.Name, fieldDef.FieldType, declaringType);
 
-        public FieldReference FieldRef { get; }
-
-        public override Instruction[]? LoadForCallingMethod()
+        public Instruction[]? LoadForCallingMethod()
         {
             return [.. _declaringType.LoadForCallingMethod(), FieldRef.LdfldAny()];
         }
 
-        public override Instruction[]? PrepareLoad(MethodSimulation method) => null;
+        public Instruction[]? PrepareLoad(MethodSimulation method) => null;
 
-        public override Instruction[]? PrepareLoadAddress(MethodSimulation method) => null;
+        public Instruction[]? PrepareLoadAddress(MethodSimulation method) => null;
 
-        public override Instruction[] Load(MethodSimulation method)
+        public Instruction[] Load(MethodSimulation method)
         {
             return [.. _declaringType.Load(method), FieldRef.Ldfld()];
         }
 
-        public override Instruction[] LoadAddress(MethodSimulation method)
+        public Instruction[] LoadAddress(MethodSimulation method)
         {
             return [.. _declaringType.Load(method), FieldRef.Ldflda()];
         }
 
         public static implicit operator FieldDefinition(FieldSimulation value) => value.FieldDef;
+    }
+
+    internal class FieldSimulation<T>(TypeSimulation declaringType, FieldDefinition fieldDef) : FieldSimulation(declaringType, fieldDef) where T : TypeSimulation
+    {
+        private T? _value;
+
+        public T Value => _value ??= FieldRef.FieldType.Simulate<T>(this, Module);
     }
 
     internal static class FieldSimulationExtensions

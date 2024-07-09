@@ -5,35 +5,28 @@ using System;
 
 namespace Rougamo.Fody.Simulations
 {
-    internal class VariableSimulation : TypeSimulation
+    internal class VariableSimulation(VariableDefinition variableDef, ModuleDefinition moduleDef) : Simulation(moduleDef), IHost
     {
-        protected VariableSimulation(VariableDefinition variableDef, ModuleDefinition moduleDef) : base(variableDef.VariableType, moduleDef)
-        {
-            VariableDef = variableDef;
-        }
+        public VariableDefinition VariableDef { get; } = variableDef;
 
-        public VariableDefinition VariableDef { get; }
+        public Instruction[]? LoadForCallingMethod() => [VariableDef.LdlocAny()];
 
-        public override Instruction[]? LoadForCallingMethod()
-        {
-            return [VariableDef.LdlocAny()];
-        }
+        public Instruction[]? PrepareLoad(MethodSimulation method) => null;
 
-        public override Instruction[]? PrepareLoad(MethodSimulation method) => null;
+        public Instruction[]? PrepareLoadAddress(MethodSimulation method) => null;
 
-        public override Instruction[]? PrepareLoadAddress(MethodSimulation method) => null;
+        public Instruction[] Load(MethodSimulation method) => [VariableDef.Ldloc()];
 
-        public override Instruction[] Load(MethodSimulation method)
-        {
-            return [VariableDef.Ldloc()];
-        }
-
-        public override Instruction[] LoadAddress(MethodSimulation method)
-        {
-            return [VariableDef.Ldloca()];
-        }
+        public Instruction[] LoadAddress(MethodSimulation method) => [VariableDef.Ldloca()];
 
         public static implicit operator VariableDefinition(VariableSimulation value) => value.VariableDef;
+    }
+
+    internal class VariableSimulation<T>(VariableDefinition variableDef, ModuleDefinition moduleDef) : VariableSimulation(variableDef, moduleDef) where T : TypeSimulation
+    {
+        private T? _value;
+
+        public T Value => _value ??= VariableDef.VariableType.Simulate<T>(this, Module);
     }
 
     internal static class VariableSimulationExtensions
