@@ -66,22 +66,22 @@ namespace Rougamo.Fody
 
         #region Extract-Mo-Features
 
-        public static int ExtractFeatures(this Mo mo)
+        public static Feature ExtractFeatures(this Mo mo)
         {
             var typeDef = mo.TypeRef;
             if (mo.Attribute != null)
             {
                 if (mo.Attribute.Properties.TryGet(Constants.PROP_Features, out var property))
                 {
-                    return Convert.ToInt32(property!.Value.Argument.Value);
+                    return (Feature)Convert.ToInt32(property!.Value.Argument.Value);
                 }
                 typeDef = mo.Attribute.AttributeType.Resolve();
             }
             var features = ExtractFromIl(typeDef!, Constants.PROP_Features, Constants.TYPE_Feature, ParseFeatures);
-            return features ?? (int)Feature.All;
+            return features ?? Feature.All;
         }
 
-        private static int? ParseFeatures(Instruction instruction) => instruction.TryResolveInt32();
+        private static Feature? ParseFeatures(Instruction instruction) => (Feature?)instruction.TryResolveInt32();
 
         #endregion Extract-Mo-Features
 
