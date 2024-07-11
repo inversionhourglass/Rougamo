@@ -12,7 +12,21 @@ namespace Rougamo.Fody.Simulations.Types
     {
         public PropertySimulation P_IsCompleted => PropertySimulate(Constants.PROP_IsCompleted, true);
 
-        public MethodSimulation M_GetResult => MethodSimulate(Constants.METHOD_GetResult);
+        public MethodSimulation M_OnEntry => MethodSimulate(Constants.METHOD_OnEntry);
+
+        public MethodSimulation M_OnException => MethodSimulate(Constants.METHOD_OnException);
+
+        public MethodSimulation M_OnSuccess => MethodSimulate(Constants.METHOD_OnSuccess);
+
+        public MethodSimulation M_OnExit => MethodSimulate(Constants.METHOD_OnExit);
+
+        public MethodSimulation<TsAsyncable> M_OnEntryAsync => MethodSimulate<TsAsyncable>(Constants.METHOD_OnEntryAsync);
+
+        public MethodSimulation<TsAsyncable> M_OnExceptionAsync => MethodSimulate<TsAsyncable>(Constants.METHOD_OnExceptionAsync);
+
+        public MethodSimulation<TsAsyncable> M_OnSuccessAsync => MethodSimulate<TsAsyncable>(Constants.METHOD_OnSuccessAsync);
+
+        public MethodSimulation<TsAsyncable> M_OnExitAsync => MethodSimulate<TsAsyncable>(Constants.METHOD_OnExitAsync);
 
         public IList<Instruction> New(Mo mo, MethodSimulation executingMethod)
         {

@@ -9,11 +9,11 @@ namespace Rougamo.Fody.Simulations
     {
         public TypeReference TypeRef => typeRef;
 
-        public IList<Instruction>? LoadForCallingMethod() => [Create(OpCodes.Ldarg_0)];
+        public IList<Instruction> LoadForCallingMethod() => [Create(OpCodes.Ldarg_0)];
 
-        public IList<Instruction>? PrepareLoadAddress(MethodSimulation method)
+        public IList<Instruction> PrepareLoadAddress(MethodSimulation method)
         {
-            if (typeRef.IsValueType) return null;
+            if (typeRef.IsValueType) return [];
 
             method.TempThis ??= method.Def.Body.CreateVariable(typeRef);
             return [Create(OpCodes.Ldarg_0), Create(OpCodes.Stloc, method.TempThis)];

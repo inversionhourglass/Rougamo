@@ -15,12 +15,12 @@ namespace Rougamo.Fody.Simulations
 
         public TypeReference TypeRef => FieldRef.FieldType;
 
-        public IList<Instruction>? LoadForCallingMethod()
+        public IList<Instruction> LoadForCallingMethod()
         {
             return [.. _declaringType.LoadForCallingMethod(), FieldRef.LdfldAny()];
         }
 
-        public IList<Instruction>? PrepareLoadAddress(MethodSimulation method) => null;
+        public IList<Instruction> PrepareLoadAddress(MethodSimulation method) => [];
 
         public IList<Instruction> LoadAddress(MethodSimulation method)
         {

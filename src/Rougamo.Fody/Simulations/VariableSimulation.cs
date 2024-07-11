@@ -1,11 +1,7 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
-using Mono.Cecil.Rocks;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Security.Cryptography;
-using static Mono.Cecil.Cil.Instruction;
 
 namespace Rougamo.Fody.Simulations
 {
@@ -17,9 +13,9 @@ namespace Rougamo.Fody.Simulations
 
         public TypeReference TypeRef => VariableDef.VariableType;
 
-        public IList<Instruction>? LoadForCallingMethod() => [VariableDef.LdlocAny()];
+        public IList<Instruction> LoadForCallingMethod() => [VariableDef.LdlocAny()];
 
-        public IList<Instruction>? PrepareLoadAddress(MethodSimulation method) => null;
+        public IList<Instruction> PrepareLoadAddress(MethodSimulation method) => [];
 
         public IList<Instruction> LoadAddress(MethodSimulation method) => [VariableDef.Ldloca()];
 

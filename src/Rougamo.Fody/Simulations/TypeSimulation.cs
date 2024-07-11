@@ -44,9 +44,9 @@ namespace Rougamo.Fody.Simulations
             return ctorDef.Simulate(this).Call(null, arguments);
         }
 
-        public virtual IList<Instruction>? LoadForCallingMethod() => Host.LoadForCallingMethod();
+        public virtual IList<Instruction> LoadForCallingMethod() => Host.LoadForCallingMethod();
 
-        public virtual IList<Instruction>? PrepareLoadAddress(MethodSimulation method) => Host.PrepareLoadAddress(method);
+        public virtual IList<Instruction> PrepareLoadAddress(MethodSimulation method) => Host.PrepareLoadAddress(method);
 
         public virtual IList<Instruction> LoadAddress(MethodSimulation method) => Host.LoadAddress(method);
 

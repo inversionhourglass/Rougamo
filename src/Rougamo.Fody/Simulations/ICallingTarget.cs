@@ -5,6 +5,6 @@ namespace Rougamo.Fody.Simulations
 {
     internal interface ICallingTarget
     {
-        IList<Instruction>? LoadForCallingMethod();
+        IList<Instruction> LoadForCallingMethod();
     }
 }
