@@ -10,7 +10,7 @@ namespace Rougamo.Fody
         private AccessFlags? _flags;
         private string? _pattern;
         private bool _patternSet;
-        private int? _features;
+        private Feature? _features;
         private double? _order;
         private Omit? _omit;
         private ForceSync? _forceSync;
@@ -66,7 +66,7 @@ namespace Rougamo.Fody
             }
         }
 
-        public int Features
+        public Feature Features
         {
             get
             {
