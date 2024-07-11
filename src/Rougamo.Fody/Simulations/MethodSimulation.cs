@@ -1,52 +1,86 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
-using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Rougamo.Fody.Simulations
 {
-    internal class MethodSimulation(TypeSimulation declaringType, MethodDefinition methodDef) : Simulation(declaringType.Module)
+    internal class MethodSimulation : Simulation
     {
-        public TypeSimulation DeclaringType { get; } = declaringType;
+        public MethodSimulation(TypeSimulation declaringType, MethodDefinition methodDef) : base(declaringType.Module)
+        {
+            DeclaringType = declaringType;
+            Def = methodDef;
+            Ref = methodDef.WithGenericDeclaringType(declaringType);
+        }
 
-        public MethodDefinition Def { get; } = methodDef;
+        public MethodSimulation(TypeSimulation declaringType, MethodReference methodRef) : base(declaringType.Module)
+        {
+            DeclaringType = declaringType;
+            Def = methodRef.Resolve();
+            Ref = methodRef;
+        }
 
-        public MethodReference Ref { get; } = methodDef.WithGenericDeclaringType(declaringType);
+        public TypeSimulation DeclaringType { get; }
+
+        public MethodDefinition Def { get; }
+
+        public MethodReference Ref { get; }
 
         public VariableDefinition? TempThis { get; set; }
 
-        public virtual IList<Instruction> Call(TypeSimulation[]? generics, params IParameterSimulation[] parameters)
+        public virtual IList<Instruction> DupCall(TypeSimulation[]? generics, params IParameterSimulation?[] arguments)
         {
-            if (Def.Parameters.Count != parameters.Length) throw new RougamoException($"Parameters count not match of method {Def}, need {Def.Parameters.Count} gave {parameters.Length}");
+            return Call(true, generics, arguments);
+        }
+
+        public virtual IList<Instruction> Call(TypeSimulation[]? generics, params IParameterSimulation?[] arguments)
+        {
+            return Call(false, generics, arguments);
+        }
+
+        private IList<Instruction> Call(bool dupCalling, TypeSimulation[]? generics, params IParameterSimulation?[] arguments)
+        {
+            if (Def.Parameters.Count != arguments.Length) throw new RougamoException($"Parameters count not match of method {Def}, need {Def.Parameters.Count} gave {arguments.Length}");
 
             var instructions = new List<Instruction>();
 
             var methodRef = generics == null ? Ref : Ref.WithGenerics(generics.Select(x => x.Ref).ToArray());
 
-            for (var i = 0; i < parameters.Length; i++)
+            for (var i = 0; i < arguments.Length; i++)
             {
                 if (Def.Parameters[i].ParameterType is ByReferenceType)
                 {
-                    instructions.Add(parameters[i].PrepareLoadAddress(this));
-                }
-                else
-                {
-                    instructions.Add(parameters[i].PrepareLoad(this));
+                    var argument = arguments[i] ?? new Null();
+                    instructions.Add(argument.PrepareLoadAddress(this));
                 }
             }
 
-            instructions.Add(DeclaringType.LoadForCallingMethod());
-            for (var i = 0; i < parameters.Length; i++)
+            if (!Def.IsConstructor)
             {
-                if (Def.Parameters[i].ParameterType is ByReferenceType)
+                if (dupCalling)
                 {
-                    instructions.Add(parameters[i].LoadAddress(this));
+                    instructions.Add(Instruction.Create(OpCodes.Dup));
                 }
                 else
                 {
-                    instructions.Add(parameters[i].Load(this));
+                    instructions.Add(DeclaringType.LoadForCallingMethod());
+                }
+            }
+            for (var i = 0; i < arguments.Length; i++)
+            {
+                var argument = arguments[i] ?? new Null();
+                if (Def.Parameters[i].ParameterType is ByReferenceType)
+                {
+                    instructions.Add(argument.LoadAddress(this));
+                }
+                else
+                {
+                    instructions.Add(argument.Load());
+                    if (!Def.Parameters[i].ParameterType.IsValueType && argument.ParameterType.IsValueType)
+                    {
+                        instructions.Add(Instruction.Create(OpCodes.Box, argument.ParameterType));
+                    }
                 }
             }
             instructions.Add(methodRef.CallAny());
@@ -54,11 +88,25 @@ namespace Rougamo.Fody.Simulations
             return instructions;
         }
 
+        public VariableSimulation CreateVariable(TypeReference variableTypeRef)
+        {
+            return Def.Body.CreateVariable(variableTypeRef).Simulate(this);
+        }
+
+        public VariableSimulation<T> CreateVariable<T>(TypeReference variableTypeRef) where T : TypeSimulation
+        {
+            return Def.Body.CreateVariable(variableTypeRef).Simulate<T>(this);
+        }
+
         public static implicit operator MethodReference(MethodSimulation value) => value.Ref;
     }
 
-    internal class MethodSimulation<T>(TypeSimulation declaringType, MethodDefinition methodDef) : MethodSimulation(declaringType, methodDef) where T : TypeSimulation
+    internal class MethodSimulation<T> : MethodSimulation where T : TypeSimulation
     {
+        public MethodSimulation(TypeSimulation declaringType, MethodDefinition methodDef) : base(declaringType, methodDef) { }
+
+        public MethodSimulation(TypeSimulation declaringType, MethodReference methodRef) : base(declaringType, methodRef) { }
+
         private T? _returnType;
 
         public T ReturnType => _returnType ??= Def.ReturnType.Simulate<T>(Module);
@@ -66,17 +114,24 @@ namespace Rougamo.Fody.Simulations
 
     internal static class MethodSimulationExtensions
     {
-        private static readonly ConcurrentDictionary<Type, Func<TypeSimulation, MethodDefinition, object>> _Cache = [];
-
-        public static T Simulate<T>(this MethodDefinition methodDef, TypeSimulation declaringType) where T : MethodSimulation
+        public static MethodSimulation Simulate(this MethodDefinition methodDef, TypeSimulation declaringType)
         {
-            var ctor = _Cache.GetOrAdd(typeof(T), t =>
-            {
-                var ctorInfo = t.GetConstructor([typeof(TypeSimulation), typeof(MethodDefinition)]);
-                return (ts, md) => ctorInfo.Invoke([ts, md]);
-            });
+            return new MethodSimulation(declaringType, methodDef);
+        }
 
-            return (T)ctor(declaringType, methodDef);
+        public static MethodSimulation Simulate(this MethodReference methodRef, TypeSimulation declaringType)
+        {
+            return new MethodSimulation(declaringType, methodRef);
+        }
+
+        public static MethodSimulation<T> Simulate<T>(this MethodDefinition methodDef, TypeSimulation declaringType) where T : TypeSimulation
+        {
+            return new MethodSimulation<T>(declaringType, methodDef);
+        }
+
+        public static MethodSimulation<T> Simulate<T>(this MethodReference methodRef, TypeSimulation declaringType) where T : TypeSimulation
+        {
+            return new MethodSimulation<T>(declaringType, methodRef);
         }
     }
 }

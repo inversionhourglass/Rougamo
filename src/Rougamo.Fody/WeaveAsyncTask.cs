@@ -2,6 +2,9 @@
 using Mono.Cecil.Cil;
 using Rougamo.Fody.Enhances;
 using Rougamo.Fody.Enhances.Async;
+using Rougamo.Fody.Simulations;
+using Rougamo.Fody.Simulations.Parameters;
+using Rougamo.Fody.Simulations.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,6 +17,32 @@ namespace Rougamo.Fody
         private void AsyncTaskMethodWeave(RouMethod rouMethod)
         {
             var stateMachineTypeDef = rouMethod.MethodDef.ResolveStateMachine(Constants.TYPE_AsyncStateMachineAttribute);
+            var actualStateMachineTypeDef = ProxyStateMachineClone(stateMachineTypeDef);
+            if (actualStateMachineTypeDef == null) return;
+
+            var actualMethodDef = ProxyStateMachineSetupMethodClone(rouMethod.MethodDef, stateMachineTypeDef, actualStateMachineTypeDef, Constants.TYPE_AsyncStateMachineAttribute);
+            rouMethod.MethodDef.DeclaringType.Methods.Add(actualMethodDef);
+
+            var actualMoveNextDef = actualStateMachineTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
+            actualMoveNextDef.DebugInformation.StateMachineKickOffMethod = actualMethodDef;
+
+            var fields = AsyncResolveFields(rouMethod, stateMachineTypeDef);
+            ProxyAsyncSetAbsentFields(rouMethod, stateMachineTypeDef, fields);
+            ProxyFieldCleanup(stateMachineTypeDef, fields);
+
+            var stateMachine = stateMachineTypeDef.Simulate<TsAsyncStateMachine>(ModuleDefinition).SetFields(fields);
+            AsyncBuildMoveNext(stateMachine);
+
+
+            //var moveNextDef = stateMachineTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
+            //moveNextDef.Clear();
+            //var context = ProxyCallAsync(rouMethod, stateMachineTypeDef, moveNextDef, actualMethodDef);
+            //ProxyAsyncWeave(rouMethod, context, moveNextDef);
+
+            //moveNextDef.DebuggerStepThrough(_methodDebuggerStepThroughCtorRef);
+            //moveNextDef.Body.OptimizePlus(EmptyInstructions);
+
+            return;
 
             if (_config.ProxyCalling)
             {
@@ -62,6 +91,81 @@ namespace Rougamo.Fody
 
             moveNextMethodDef.Body.OptimizePlus(EmptyInstructions);
             rouMethod.MethodDef.Body.OptimizePlus(anchors.GetNops());
+        }
+
+        private void AsyncBuildMoveNext(RouMethod rouMethod, TsAsyncStateMachine stateMachine)
+        {
+            if (stateMachine.F_MoArray == null)
+            {
+                AsyncBuildMosMoveNext(rouMethod, stateMachine);
+            }
+            else
+            {
+                AsyncBuildMoArrayMoveNext(rouMethod, stateMachine);
+            }
+        }
+
+        private void AsyncBuildMosMoveNext(RouMethod rouMethod, TsAsyncStateMachine stateMachine)
+        {
+            var mMoveNext = stateMachine.M_MoveNext;
+            var instructions = mMoveNext.Def.Body.Instructions;
+
+            var vState = mMoveNext.CreateVariable(_typeIntRef);
+
+            var switchs = Create(OpCodes.Switch, []);
+
+            // var state = _state;
+            instructions.Add(vState.Assign(stateMachine.F_State));
+
+            // -try
+            {
+                instructions.Add(switchs);
+                // -switch (state)
+                {
+                    // -default:
+                    {
+                        instructions.Add(AsyncStateMachineInitMos(rouMethod, stateMachine));
+                        instructions.Add(AsyncStateMachineInitMethodContext(rouMethod, stateMachine));
+                    }
+                }
+            }
+
+            mMoveNext.Def.DebuggerStepThrough(_methodDebuggerStepThroughCtorRef);
+            mMoveNext.Def.Body.OptimizePlus(EmptyInstructions);
+        }
+
+        private void AsyncBuildMoArrayMoveNext(RouMethod rouMethod, TsAsyncStateMachine stateMachine)
+        {
+
+        }
+
+        private IList<Instruction> AsyncStateMachineInitMos(RouMethod rouMethod, TsAsyncStateMachine stateMachine)
+        {
+            var instructions = new List<Instruction>();
+
+            for (int i = 0; i < rouMethod.Mos.Length; i++)
+            {
+                var mo = rouMethod.Mos[i];
+                var fMo = stateMachine.F_Mos![i];
+                instructions.Add(fMo.Assign(target => fMo.Value.New(mo, stateMachine.M_MoveNext)));
+            }
+
+            return instructions;
+        }
+
+        private IList<Instruction> AsyncStateMachineInitMethodContext(RouMethod rouMethod, TsAsyncStateMachine stateMachine)
+        {
+            IParameterSimulation?[] arguments = [
+                stateMachine.F_DeclaringThis,
+                new SystemType(rouMethod.MethodDef.DeclaringType),
+                new SystemMethodBase(rouMethod.MethodDef),
+                new Bool(rouMethod.IsAsyncTaskOrValueTask || rouMethod.IsAsyncIterator),
+                new Bool(rouMethod.IsIterator || rouMethod.IsAsyncIterator),
+                new Bool(!_config.ReverseCallNonEntry),
+                rouMethod.MethodContextOmits.Contains(Omit.Mos) ? null : new RawArgument(_typeIMoRef.Simulate<TsArray>(ModuleDefinition).New(stateMachine.F_Mos!)),
+                rouMethod.MethodContextOmits.Contains(Omit.Arguments) ? null : new RawArgument(_typeObjectRef.Simulate<TsArray>(ModuleDefinition).New(stateMachine.F_Parameters))
+            ];
+            return stateMachine.F_MethodContext.AssignNew(arguments);
         }
 
         private AsyncFields AsyncResolveFields(RouMethod rouMethod, TypeDefinition stateMachineTypeDef)

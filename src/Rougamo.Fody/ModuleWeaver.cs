@@ -15,43 +15,43 @@ namespace Rougamo.Fody
 
         private RougamoRefImporter _importer;
 
-        private TypeDefinition _typeListDef;
-        private TypeDefinition _typeSystemDef;
-        private TypeDefinition _typeMethodBaseDef;
+        internal TypeDefinition _typeListDef;
+        internal TypeDefinition _typeSystemDef;
+        internal TypeDefinition _typeMethodBaseDef;
 
-        private TypeReference _typeVoidRef;
-        private TypeReference _typeSystemRef;
-        private TypeReference _typeIntRef;
-        private TypeReference _typeBoolRef;
-        private TypeReference _typeObjectRef;
-        private TypeReference _typeExceptionRef;
-        private TypeReference _typeCancellationTokenRef;
-        private TypeReference _typeListRef;
-        private TypeReference _typeIMoRef;
-        private TypeReference _typeMethodContextRef;
-        private TypeReference _typeIMoArrayRef;
-        private TypeReference _typeDebuggerStepThroughAttributeRef;
+        internal TypeReference _typeVoidRef;
+        internal TypeReference _typeSystemRef;
+        internal TypeReference _typeIntRef;
+        internal TypeReference _typeBoolRef;
+        internal TypeReference _typeObjectRef;
+        internal TypeReference _typeExceptionRef;
+        internal TypeReference _typeCancellationTokenRef;
+        internal TypeReference _typeListRef;
+        internal TypeReference _typeIMoRef;
+        internal TypeReference _typeMethodContextRef;
+        internal TypeReference _typeIMoArrayRef;
+        internal TypeReference _typeDebuggerStepThroughAttributeRef;
 
         private TsAsyncable _typeValuetask;
 
-        private MethodReference _methodGetTypeFromHandleRef;
-        private MethodReference _methodGetMethodFromHandleRef;
-        private MethodReference _methodListAddRef;
-        private MethodReference _methodListToArrayRef;
-        private MethodReference _methodIEnumeratorMoveNextRef;
-        private MethodReference _methodDebuggerStepThroughCtorRef;
-        private MethodReference _methodMethodContextCtorRef;
-        private MethodReference _methodMethodContextSetExceptionRef;
-        private MethodReference _methodMethodContextSetReturnValueRef;
-        private MethodReference _methodMethodContextGetReturnValueRef;
-        private MethodReference _methodMethodContextGetHasExceptionRef;
-        private MethodReference _methodMethodContextGetExceptionHandledRef;
-        private MethodReference _methodMethodContextGetReturnValueReplacedRef;
-        private MethodReference _methodMethodContextGetArgumentsRef;
-        private MethodReference _methodMethodContextGetRewriteArgumentsRef;
-        private MethodReference _methodMethodContextGetRetryCountRef;
-        private Dictionary<string, MethodReference> _methodIMosRef;
-        private Dictionary<string, MethodReference> _stateMachineCtorRefs;
+        internal MethodReference _methodGetTypeFromHandleRef;
+        internal MethodReference _methodGetMethodFromHandleRef;
+        internal MethodReference _methodListAddRef;
+        internal MethodReference _methodListToArrayRef;
+        internal MethodReference _methodIEnumeratorMoveNextRef;
+        internal MethodReference _methodDebuggerStepThroughCtorRef;
+        internal MethodReference _methodMethodContextCtorRef;
+        internal MethodReference _methodMethodContextSetExceptionRef;
+        internal MethodReference _methodMethodContextSetReturnValueRef;
+        internal MethodReference _methodMethodContextGetReturnValueRef;
+        internal MethodReference _methodMethodContextGetHasExceptionRef;
+        internal MethodReference _methodMethodContextGetExceptionHandledRef;
+        internal MethodReference _methodMethodContextGetReturnValueReplacedRef;
+        internal MethodReference _methodMethodContextGetArgumentsRef;
+        internal MethodReference _methodMethodContextGetRewriteArgumentsRef;
+        internal MethodReference _methodMethodContextGetRetryCountRef;
+        internal Dictionary<string, MethodReference> _methodIMosRef;
+        internal Dictionary<string, MethodReference> _stateMachineCtorRefs;
 
         private List<RouType> _rouTypes;
         private Config _config;
@@ -77,6 +77,7 @@ namespace Rougamo.Fody
                 if (!_config.Enabled) return;
 
                 LoadBasicReference();
+                CommonRefs.Init(this);
                 FindRous();
                 if (_rouTypes.Count == 0) return;
                 WeaveMos();

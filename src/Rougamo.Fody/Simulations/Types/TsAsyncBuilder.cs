@@ -2,12 +2,12 @@
 
 namespace Rougamo.Fody.Simulations.Types
 {
-    internal class TsAsyncBuilder(TypeReference typeRef, ModuleDefinition moduleDef) : TypeSimulation(typeRef, moduleDef)
+    internal class TsAsyncBuilder(TypeReference typeRef, IHost? host, ModuleDefinition moduleDef) : TypeSimulation(typeRef, host, moduleDef)
     {
-        public MethodSimulation<TypeSimulation> MAwaitUnsafeOnCompleted => PublicMethodSimulate<TypeSimulation>(Constants.METHOD_AwaitUnsafeOnCompleted);
+        public MethodSimulation M_AwaitUnsafeOnCompleted => PublicMethodSimulate(Constants.METHOD_AwaitUnsafeOnCompleted);
 
-        public MethodSimulation<TypeSimulation> MSetException => PublicMethodSimulate<TypeSimulation>(Constants.METHOD_SetException);
+        public MethodSimulation M_SetException => PublicMethodSimulate(Constants.METHOD_SetException);
 
-        public MethodSimulation<TypeSimulation> MSetResult => PublicMethodSimulate<TypeSimulation>(Constants.METHOD_SetResult);
+        public MethodSimulation M_SetResult => PublicMethodSimulate(Constants.METHOD_SetResult);
     }
 }

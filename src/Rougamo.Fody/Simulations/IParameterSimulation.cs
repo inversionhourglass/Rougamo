@@ -1,15 +1,12 @@
 ﻿using Mono.Cecil.Cil;
+using System.Collections.Generic;
 
 namespace Rougamo.Fody.Simulations
 {
-    internal interface IParameterSimulation
+    internal interface IParameterSimulation : ILoadable
     {
-        Instruction[]? PrepareLoad(MethodSimulation method);
+        IList<Instruction>? PrepareLoadAddress(MethodSimulation method);
 
-        Instruction[]? PrepareLoadAddress(MethodSimulation method);
-
-        Instruction[] Load(MethodSimulation method);
-
-        Instruction[] LoadAddress(MethodSimulation method);
+        IList<Instruction> LoadAddress(MethodSimulation method);
     }
 }

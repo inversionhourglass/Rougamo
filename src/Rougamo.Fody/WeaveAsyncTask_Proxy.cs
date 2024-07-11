@@ -3,6 +3,7 @@ using Mono.Cecil.Cil;
 using Rougamo.Fody.Enhances;
 using Rougamo.Fody.Enhances.Async;
 using Rougamo.Fody.Simulations;
+using Rougamo.Fody.Simulations.Types;
 using System.Collections.Generic;
 using System.Linq;
 using static Mono.Cecil.Cil.Instruction;
@@ -35,28 +36,18 @@ namespace Rougamo.Fody
         {
             var genericMap = proxyStateMachineTypeDef.GenericParameters.ToDictionary(x => x.Name, x => x);
 
+            var needInnerCatch = (Feature.OnException | Feature.OnExit).HasIntersection(rouMethod.Features);
+            var anyExceptionExitAsync = rouMethod.Mos.Any(x => !(ForceSync.OnException | ForceSync.OnExit).SubsetOf(x.ForceSync));
+            var anyAsync = rouMethod.Mos.Any(x => x.ForceSync != ForceSync.All);
+
             var proxyStateMachineTypeRef = proxyStateMachineTypeDef.MakeReference();
-            var returnTypeRef = actualMethodDef.ReturnType;
-            var getAwaiterMethodDef = returnTypeRef.Resolve().Methods.Single(x => x.Name == Constants.METHOD_GetAwaiter);
-            var awaiterTypeRef = getAwaiterMethodDef.ReturnType;
-            var awaiterTypeDef = awaiterTypeRef.Resolve();
-            var isCompletedMethodDef = awaiterTypeDef.Methods.Single(x => x.Name == Constants.Getter(Constants.PROP_IsCompleted));
-            var getResultMethodDef = awaiterTypeDef.Methods.Single(x => x.Name == Constants.METHOD_GetResult);
-            if (returnTypeRef is GenericInstanceType)
+            var returnType = actualMethodDef.ReturnType.Simulate<TsAsyncable>(ModuleDefinition);
+            var awaiterType = returnType.M_GetAwaiter.ReturnType;
+            if (returnType.Ref is GenericInstanceType)
             {
-                returnTypeRef = returnTypeRef.ReplaceGenericArgs(genericMap);
-                var git = new GenericInstanceType(awaiterTypeRef.GetElementType().ImportInto(ModuleDefinition));
-                git.GenericArguments.Add(((GenericInstanceType)returnTypeRef).GenericArguments);
-                awaiterTypeRef = git;
+                returnType.ReplaceGenerics(genericMap);
+                awaiterType.SetGenerics(((GenericInstanceType)returnType.Ref).GenericArguments.ToArray());
             }
-            else
-            {
-                returnTypeRef = returnTypeRef.ImportInto(ModuleDefinition);
-                awaiterTypeRef = awaiterTypeRef.ImportInto(ModuleDefinition);
-            }
-            var getAwaiterMethodRef = getAwaiterMethodDef.WithGenericDeclaringType(returnTypeRef);
-            var isCompletedMethodRef = isCompletedMethodDef.WithGenericDeclaringType(awaiterTypeRef);
-            var getResultMethodRef = getResultMethodDef.WithGenericDeclaringType(awaiterTypeRef);
             var declaringTypeRef = actualMethodDef.DeclaringType.MakeReference().ReplaceGenericArgs(genericMap);
             var actualMethodRef = actualMethodDef.WithGenericDeclaringType(declaringTypeRef);
             if (proxyStateMachineTypeDef.HasGenericParameters)
@@ -69,56 +60,61 @@ namespace Rougamo.Fody
             var fields = AsyncResolveFields(rouMethod, proxyStateMachineTypeDef);
             ProxyAsyncSetAbsentFields(rouMethod, proxyStateMachineTypeDef, fields);
 
-            var builderTypeRef = fields.Builder.FieldType;
-            var builderTypeDef = builderTypeRef.Resolve();
-            var awaitUnsafeOnCompletedMethodDef = builderTypeDef.Methods.Single(x => x.Name == Constants.METHOD_AwaitUnsafeOnCompleted && x.IsPublic);
-            var awaitUnsafeOnCompletedMethodRef = awaitUnsafeOnCompletedMethodDef.WithGenericDeclaringType(builderTypeRef).WithGenerics(awaiterTypeRef, proxyStateMachineTypeRef);
-            var setExceptionMethodRef = builderTypeDef.Methods.Single(x => x.Name == Constants.METHOD_SetException && x.IsPublic).WithGenericDeclaringType(builderTypeRef);
-            var setResultMethodRef = builderTypeDef.Methods.Single(x => x.Name == Constants.METHOD_SetResult && x.IsPublic).WithGenericDeclaringType(builderTypeRef);
+            var builderType = fields.Builder.FieldType.Simulate<TsAsyncBuilder>(ModuleDefinition);
+            //builderType.MAwaitUnsafeOnCompleted.SetGenerics(awaiterType, proxyStateMachineTypeRef);
 
             ProxyFieldCleanup(proxyStateMachineTypeDef, fields);
-            var fAwaiter = new FieldDefinition(Constants.FIELD_Awaiter, FieldAttributes.Private, awaiterTypeRef);
+            var fAwaiter = new FieldDefinition(Constants.FIELD_Awaiter, FieldAttributes.Private, awaiterType);
             proxyStateMachineTypeDef.Fields.Add(fAwaiter);
             fields.Awaiter = fAwaiter;
-            if (awaiterTypeRef is GenericInstanceType gitt)
+            if (awaiterType.Ref is GenericInstanceType gitt)
             {
                 var fResult = new FieldDefinition(Constants.FIELD_Result, FieldAttributes.Private, gitt.GenericArguments.Single());
                 proxyStateMachineTypeDef.Fields.Add(fResult);
                 fields.Result = fResult;
             }
-
-            var needInnerCatch = (Feature.OnException | Feature.OnExit).MatchAny(rouMethod.Features);
-            var anyExceptionExitAsync = rouMethod.Mos.Any(x => !(ForceSync.OnException | ForceSync.OnExit).IsMatch(x.ForceSync));
+            var diffTypeOfAwaiters = false;
+            var moAwaiterType = awaiterType;
+            if (anyAsync)
+            {
+                if (returnType.Ref.Is(Constants.TYPE_ValueTask))
+                {
+                    fields.MoAwaiter = fields.Awaiter;
+                }
+                else
+                {
+                    moAwaiterType = _typeValuetask.M_GetAwaiter.ReturnType;
+                    var fMoAwaiter = new FieldDefinition(Constants.FIELD_MoAwaiter, FieldAttributes.Private, moAwaiterType);
+                    proxyStateMachineTypeDef.Fields.Add(fMoAwaiter);
+                    fields.MoAwaiter = fMoAwaiter;
+                    diffTypeOfAwaiters = true;
+                }
+            }
 
             var vState = proxyMoveNextDef.Body.CreateVariable(_typeIntRef);
             var vException = proxyMoveNextDef.Body.CreateVariable(_typeExceptionRef);
             var vInnerException = needInnerCatch ? proxyMoveNextDef.Body.CreateVariable(_typeExceptionRef) : null;
             var vTempInnerException = needInnerCatch && anyExceptionExitAsync ? proxyMoveNextDef.Body.CreateVariable(_typeExceptionRef) : null;
-            var vAwaiter = proxyMoveNextDef.Body.CreateVariable(awaiterTypeRef);
-            VariableDefinition? vMoAwaiter = null;
+            var vAwaiter = proxyMoveNextDef.Body.CreateVariable(awaiterType);
+            var vMoAwaiter = diffTypeOfAwaiters ? proxyMoveNextDef.Body.CreateVariable(moAwaiterType) : vAwaiter;
             VariableDefinition? vThis = null;
             VariableDefinition? vTargetReturn = null;
-            //VariableDefinition? vResult = null;
             if (!proxyStateMachineTypeDef.IsValueType)
             {
                 vThis = proxyMoveNextDef.Body.CreateVariable(proxyStateMachineTypeRef);
             }
-            if (returnTypeRef.IsValueType)
+            if (returnType.IsValueType)
             {
-                vTargetReturn = proxyMoveNextDef.Body.CreateVariable(returnTypeRef);
+                vTargetReturn = proxyMoveNextDef.Body.CreateVariable(returnType);
             }
-            //if (awaiterTypeRef is GenericInstanceType gittt)
-            //{
-            //    vResult = proxyMoveNextDef.Body.CreateVariable(gittt.GenericArguments.Single());
-            //}
 
             var builderIsValueType = fields.Builder.FieldType.IsValueType;
             var opBuilderLdfld = builderIsValueType ? OpCodes.Ldflda : OpCodes.Ldfld;
             var opBuilderCall = builderIsValueType ? OpCodes.Call : OpCodes.Callvirt;
-            var awaiterIsValueType = awaiterTypeRef.IsValueType;
+            var awaiterIsValueType = awaiterType.IsValueType;
             var opAwaiterLdloc = awaiterIsValueType ? OpCodes.Ldloca : OpCodes.Ldloc;
             var opAwaiterCall = awaiterIsValueType ? OpCodes.Call : OpCodes.Callvirt;
-            var opGetAwaiterCall = returnTypeRef.IsValueType ? OpCodes.Call : OpCodes.Callvirt;
+            var opGetAwaiterCall = returnType.IsValueType ? OpCodes.Call : OpCodes.Callvirt;
 
             var switchs = Create(OpCodes.Switch, []);
             var nopCase0 = Create(OpCodes.Nop);
@@ -138,6 +134,25 @@ namespace Rougamo.Fody
                 instructions.Add(switchs);
                 // switch (state)
                 {
+                    // default:
+                    {
+                        instructions.Add(ProxyStateMachineInitMos(proxyMoveNextDef, rouMethod.Mos, fields));
+                        instructions.Add(ProxyStateMachineInitMethodContext(rouMethod, proxyMoveNextDef, fields));
+                        for (var i = 0; i < rouMethod.Mos.Length; i++)
+                        {
+                            var mo = rouMethod.Mos[i];
+                            if (mo.ForceSync.Contains(ForceSync.OnEntry))
+                            {
+                                instructions.Add(ExecuteMoMethod(Constants.METHOD_OnEntry, mo, fields.Mos[i], fields.MethodContext));
+                            }
+                            else
+                            {
+                                instructions.Add(ExecuteMoMethod(Constants.METHOD_OnEntryAsync, mo, fields.Mos[i], fields.MethodContext));
+                                //instructions.Add()
+                            }
+                        }
+                        //instructions.Add(StateMachineOnEntry(rouMethod, proxyMoveNextDef, null, context.Fields));
+                    }
                     // case 0:
                     // -try
                     {
@@ -165,11 +180,11 @@ namespace Rougamo.Fody
                                 instructions.Add(Create(OpCodes.Stloc, vTargetReturn));
                                 instructions.Add(Create(OpCodes.Ldloca, vTargetReturn));
                             }
-                            instructions.Add(Create(opGetAwaiterCall, getAwaiterMethodRef));
+                            instructions.Add(Create(opGetAwaiterCall, returnType.M_GetAwaiter));
                             instructions.Add(Create(OpCodes.Stloc, vAwaiter));
 
                             instructions.Add(Create(opAwaiterLdloc, vAwaiter));
-                            instructions.Add(Create(opAwaiterCall, isCompletedMethodRef));
+                            instructions.Add(Create(opAwaiterCall, awaiterType.P_IsCompleted.Getter));
                             instructions.Add(Create(OpCodes.Brtrue, nopAwiterGetResult));
                             // -if (!awaiter.IsCompleted)
                             {
@@ -201,7 +216,7 @@ namespace Rougamo.Fody
                                 {
                                     instructions.Add(Create(OpCodes.Ldarg_0));
                                 }
-                                instructions.Add(Create(opBuilderCall, awaitUnsafeOnCompletedMethodRef));
+                                instructions.Add(Create(opBuilderCall, builderType.M_AwaitUnsafeOnCompleted));
 
                                 // return;
                                 instructions.Add(Create(OpCodes.Leave, ret));
@@ -217,7 +232,7 @@ namespace Rougamo.Fody
                         // this._result = awaiter.GetResult(); <--> awaiter.GetResult();
                         if (fields.Result != null) instructions.Add(Create(OpCodes.Ldarg_0));
                         instructions.Add(nopAwiterGetResult.Set(opAwaiterLdloc, vAwaiter));
-                        instructions.Add(Create(opAwaiterCall, getResultMethodRef));
+                        instructions.Add(Create(opAwaiterCall, awaiterType.M_GetResult));
                         if (fields.Result != null) instructions.Add(Create(OpCodes.Stfld, fields.Result));
 
                         // this._context.ReturnValue = this._result;
@@ -274,7 +289,7 @@ namespace Rougamo.Fody
 
             var proxyStateMachineTypeRef = proxyStateMachineTypeDef.MakeReference();
             var returnType = actualMethodDef.ReturnType.Simulate<TsAsyncable>(ModuleDefinition);
-            var awaiterType = returnType.MGetAwaiter.ReturnType;
+            var awaiterType = returnType.M_GetAwaiter.ReturnType;
             if (returnType.Ref is GenericInstanceType)
             {
                 returnType.ReplaceGenerics(genericMap);
@@ -293,7 +308,6 @@ namespace Rougamo.Fody
             ProxyAsyncSetAbsentFields(rouMethod, proxyStateMachineTypeDef, fields);
 
             var builderType = fields.Builder.FieldType.Simulate<TsAsyncBuilder>(ModuleDefinition);
-            builderType.MAwaitUnsafeOnCompleted.SetGenerics(awaiterType, proxyStateMachineTypeRef);
 
             ProxyFieldCleanup(proxyStateMachineTypeDef, fields);
             var fAwaiter = new FieldDefinition(Constants.FIELD_Awaiter, FieldAttributes.Private, awaiterType);
@@ -310,7 +324,7 @@ namespace Rougamo.Fody
             {
                 vThis = proxyMoveNextDef.Body.CreateVariable(proxyStateMachineTypeRef);
             }
-            if (returnType.Ref.IsValueType)
+            if (returnType.IsValueType)
             {
                 vTargetReturn = proxyMoveNextDef.Body.CreateVariable(returnType);
             }
@@ -322,10 +336,10 @@ namespace Rougamo.Fody
             var builderIsValueType = fields.Builder.FieldType.IsValueType;
             var opBuilderLdfld = builderIsValueType ? OpCodes.Ldflda : OpCodes.Ldfld;
             var opBuilderCall = builderIsValueType ? OpCodes.Call : OpCodes.Callvirt;
-            var awaiterIsValueType = awaiterType.Ref.IsValueType;
+            var awaiterIsValueType = awaiterType.IsValueType;
             var opAwaiterLdloc = awaiterIsValueType ? OpCodes.Ldloca : OpCodes.Ldloc;
             var opAwaiterCall = awaiterIsValueType ? OpCodes.Call : OpCodes.Callvirt;
-            var opGetAwaiterCall = returnType.Ref.IsValueType ? OpCodes.Call : OpCodes.Callvirt;
+            var opGetAwaiterCall = returnType.IsValueType ? OpCodes.Call : OpCodes.Callvirt;
 
             var instructions = proxyMoveNextDef.Body.Instructions;
 
@@ -364,11 +378,11 @@ namespace Rougamo.Fody
                         instructions.Add(Create(OpCodes.Stloc, vTargetReturn));
                         instructions.Add(Create(OpCodes.Ldloca, vTargetReturn));
                     }
-                    instructions.Add(Create(opGetAwaiterCall, returnType.MGetAwaiter));
+                    instructions.Add(Create(opGetAwaiterCall, returnType.M_GetAwaiter));
                     instructions.Add(Create(OpCodes.Stloc, vAwaiter));
 
                     instructions.Add(Create(opAwaiterLdloc, vAwaiter));
-                    instructions.Add(Create(opAwaiterCall, awaiterType.PIsCompleted.Getter));
+                    instructions.Add(Create(opAwaiterCall, awaiterType.P_IsCompleted.Getter));
                     instructions.Add(Create(OpCodes.Brtrue, nopIfStateEqZeroEnd));
                     // -if (!awaiter.IsCompleted)
                     {
@@ -402,7 +416,7 @@ namespace Rougamo.Fody
                         {
                             instructions.Add(Create(OpCodes.Ldarg_0));
                         }
-                        instructions.Add(Create(opBuilderCall, builderType.MAwaitUnsafeOnCompleted));
+                        instructions.Add(Create(opBuilderCall, builderType.M_AwaitUnsafeOnCompleted.Ref.WithGenerics(awaiterType, proxyStateMachineTypeRef)));
 
                         // return;
                         instructions.Add(Create(OpCodes.Leave, ret));
@@ -437,7 +451,7 @@ namespace Rougamo.Fody
                 }
                 // var result = awaiter.GetResult(); <--> awaiter.GetResult();
                 instructions.Add(nopIfStateEqZeroEnd.Set(opAwaiterLdloc, vAwaiter));
-                instructions.Add(Create(opAwaiterCall, awaiterType.MGetResult));
+                instructions.Add(Create(opAwaiterCall, awaiterType.M_GetResult));
                 if (vResult != null)
                 {
                     instructions.Add(Create(OpCodes.Stloc, vResult));
@@ -460,7 +474,7 @@ namespace Rougamo.Fody
                 instructions.Add(Create(OpCodes.Ldarg_0));
                 instructions.Add(Create(opBuilderLdfld, fields.Builder));
                 instructions.Add(Create(OpCodes.Ldloc, vException));
-                instructions.Add(Create(opBuilderCall, builderType.MSetException));
+                instructions.Add(Create(opBuilderCall, builderType.M_SetException));
 
                 // return;
                 instructions.Add(Create(OpCodes.Leave, ret));
@@ -479,7 +493,7 @@ namespace Rougamo.Fody
             {
                 instructions.Add(Create(OpCodes.Ldloc, vResult));
             }
-            instructions.Add(Create(opBuilderCall, builderType.MSetResult));
+            instructions.Add(Create(opBuilderCall, builderType.M_SetResult));
 
             // return;
             instructions.Add(ret);

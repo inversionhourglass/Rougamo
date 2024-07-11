@@ -1,13 +1,11 @@
 ﻿using Mono.Cecil;
-using System.Collections.Generic;
-using System.Linq.Expressions;
-using System.Linq;
-using System;
 using Mono.Cecil.Cil;
+using System;
+using System.Collections.Generic;
 
 namespace Rougamo.Fody.Simulations
 {
-    internal class FieldSimulation(TypeSimulation declaringType, FieldDefinition fieldDef) : Simulation(declaringType.Module), IHost
+    internal class FieldSimulation(TypeSimulation declaringType, FieldDefinition fieldDef) : Simulation(declaringType.Module), IHost, IAssignable
     {
         protected readonly TypeSimulation _declaringType = declaringType;
 
@@ -15,26 +13,40 @@ namespace Rougamo.Fody.Simulations
 
         public FieldReference FieldRef { get; } = new FieldReference(fieldDef.Name, fieldDef.FieldType, declaringType);
 
-        public Instruction[]? LoadForCallingMethod()
+        public TypeReference TypeRef => FieldRef.FieldType;
+
+        public IList<Instruction>? LoadForCallingMethod()
         {
             return [.. _declaringType.LoadForCallingMethod(), FieldRef.LdfldAny()];
         }
 
-        public Instruction[]? PrepareLoad(MethodSimulation method) => null;
+        public IList<Instruction>? PrepareLoadAddress(MethodSimulation method) => null;
 
-        public Instruction[]? PrepareLoadAddress(MethodSimulation method) => null;
-
-        public Instruction[] Load(MethodSimulation method)
+        public IList<Instruction> LoadAddress(MethodSimulation method)
         {
-            return [.. _declaringType.Load(method), FieldRef.Ldfld()];
+            return [.. _declaringType.Load(), FieldRef.Ldflda()];
         }
 
-        public Instruction[] LoadAddress(MethodSimulation method)
+        public IList<Instruction> Load()
         {
-            return [.. _declaringType.Load(method), FieldRef.Ldflda()];
+            return [.. _declaringType.Load(), FieldRef.Ldfld()];
         }
 
-        public static implicit operator FieldDefinition(FieldSimulation value) => value.FieldDef;
+        public IList<Instruction> Assign(Func<IAssignable, IList<Instruction>> valueFactory)
+        {
+            return [.. _declaringType.Load(), .. valueFactory(this), FieldRef.Stfld()];
+        }
+
+        public IList<Instruction> AssignNew(TypeSimulation type, params IParameterSimulation?[] arguments)
+        {
+            if (FieldRef.FieldType.IsValueType)
+            {
+                return [.. _declaringType.Load(), FieldRef.Ldflda(), .. type.New(arguments)];
+            }
+            return Assign(target => type.New(arguments));
+        }
+
+        public static implicit operator FieldReference(FieldSimulation value) => value.FieldRef;
     }
 
     internal class FieldSimulation<T>(TypeSimulation declaringType, FieldDefinition fieldDef) : FieldSimulation(declaringType, fieldDef) where T : TypeSimulation
@@ -42,27 +54,23 @@ namespace Rougamo.Fody.Simulations
         private T? _value;
 
         public T Value => _value ??= FieldRef.FieldType.Simulate<T>(this, Module);
+
+        public IList<Instruction> AssignNew(params IParameterSimulation?[] arguments)
+        {
+            return AssignNew(Value, arguments);
+        }
     }
 
     internal static class FieldSimulationExtensions
     {
-        private static readonly Dictionary<Type, Func<TypeSimulation, FieldDefinition, object>> _Cache = [];
-
-        public static T Simulate<T>(this FieldDefinition fieldDef, TypeSimulation declaringType) where T : FieldSimulation
+        public static FieldSimulation Simulate(this FieldDefinition fieldDef, TypeSimulation declaringType)
         {
-            var type = typeof(T);
+            return new FieldSimulation(declaringType, fieldDef);
+        }
 
-            if (!_Cache.TryGetValue(type, out var ctor))
-            {
-                var ctorInfo = type.GetConstructor([typeof(TypeSimulation), typeof(FieldDefinition)]);
-                var psExp = ctorInfo.GetParameters().Select(x => Expression.Parameter(x.ParameterType, x.Name));
-                var ctorExp = Expression.New(ctorInfo, psExp);
-                ctor = Expression.Lambda<Func<TypeSimulation, FieldDefinition, object>>(ctorExp, psExp).Compile();
-
-                _Cache[type] = ctor;
-            }
-
-            return (T)ctor(declaringType, fieldDef);
+        public static FieldSimulation<T> Simulate<T>(this FieldDefinition fieldDef, TypeSimulation declaringType) where T : TypeSimulation
+        {
+            return new FieldSimulation<T>(declaringType, fieldDef);
         }
     }
 }

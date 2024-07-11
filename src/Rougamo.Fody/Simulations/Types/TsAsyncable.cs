@@ -5,8 +5,8 @@ namespace Rougamo.Fody.Simulations.Types
     /// <summary>
     /// Any type which support async syntax. etc: Task, ValueTask, Task&lt;T&gt;, ValueTask&lt;T&gt;
     /// </summary>
-    internal class TsAsyncable(TypeReference typeRef, ModuleDefinition moduldeDef) : TypeSimulation(typeRef, moduldeDef)
+    internal class TsAsyncable(TypeReference typeRef, IHost? host, ModuleDefinition moduldeDef) : TypeSimulation(typeRef, host, moduldeDef)
     {
-        public MethodSimulation<TsAwaiter> MGetAwaiter => MethodSimulate<TsAwaiter>(Constants.METHOD_GetAwaiter);
+        public MethodSimulation<TsAwaiter> M_GetAwaiter => MethodSimulate<TsAwaiter>(Constants.METHOD_GetAwaiter);
     }
 }

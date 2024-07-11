@@ -101,6 +101,12 @@ namespace Rougamo.Fody
             return true;
         }
 
+        public static bool IsEnum(this TypeReference typeRef)
+        {
+            var typeDef = typeRef.Resolve();
+            return typeDef != null && typeDef.IsEnum;
+        }
+
         public static bool IsEnum(this TypeReference typeRef, out TypeReference? underlyingType)
         {
             var typeDef = typeRef.Resolve();
@@ -355,6 +361,12 @@ namespace Rougamo.Fody
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Instruction Stloc(this VariableDefinition variable)
+        {
+            return Instruction.Create(OpCodes.Stloc, variable);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Instruction Ldfld(this FieldReference fieldRef)
         {
             return Instruction.Create(OpCodes.Ldfld, fieldRef);
@@ -372,9 +384,18 @@ namespace Rougamo.Fody
             return Instruction.Create(opLdfld, fieldRef);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Instruction Stfld(this FieldReference fieldRef)
+        {
+            return Instruction.Create(OpCodes.Stfld, fieldRef);
+        }
+
         public static Instruction CallAny(this MethodReference methodRef)
         {
-            var opCall = methodRef.DeclaringType.IsValueType ? OpCodes.Call : OpCodes.Callvirt;
+            var methodDef = methodRef.Resolve();
+            if (methodDef.IsConstructor) return Instruction.Create(OpCodes.Newobj, methodDef);
+
+            var opCall = methodDef.IsVirtual ? OpCodes.Callvirt : OpCodes.Call;
             return Instruction.Create(opCall, methodRef);
         }
 

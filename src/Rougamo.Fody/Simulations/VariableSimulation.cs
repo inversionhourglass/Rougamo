@@ -1,47 +1,69 @@
-﻿using Mono.Cecil.Cil;
-using Mono.Cecil;
-using System.Collections.Concurrent;
+﻿using Mono.Cecil;
+using Mono.Cecil.Cil;
+using Mono.Cecil.Rocks;
 using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Security.Cryptography;
+using static Mono.Cecil.Cil.Instruction;
 
 namespace Rougamo.Fody.Simulations
 {
-    internal class VariableSimulation(VariableDefinition variableDef, ModuleDefinition moduleDef) : Simulation(moduleDef), IHost
+    internal class VariableSimulation(VariableDefinition variableDef, MethodSimulation declaringMethod) : Simulation(declaringMethod.Module), IHost, IAssignable
     {
         public VariableDefinition VariableDef { get; } = variableDef;
 
-        public Instruction[]? LoadForCallingMethod() => [VariableDef.LdlocAny()];
+        public MethodSimulation DeclaringMethod { get; } = declaringMethod;
 
-        public Instruction[]? PrepareLoad(MethodSimulation method) => null;
+        public TypeReference TypeRef => VariableDef.VariableType;
 
-        public Instruction[]? PrepareLoadAddress(MethodSimulation method) => null;
+        public IList<Instruction>? LoadForCallingMethod() => [VariableDef.LdlocAny()];
 
-        public Instruction[] Load(MethodSimulation method) => [VariableDef.Ldloc()];
+        public IList<Instruction>? PrepareLoadAddress(MethodSimulation method) => null;
 
-        public Instruction[] LoadAddress(MethodSimulation method) => [VariableDef.Ldloca()];
+        public IList<Instruction> LoadAddress(MethodSimulation method) => [VariableDef.Ldloca()];
+
+        public IList<Instruction> Load() => [VariableDef.Ldloc()];
+
+        public IList<Instruction> Assign(Func<IAssignable, IList<Instruction>> valueFactory)
+        {
+            return [.. valueFactory(this), VariableDef.Stloc()];
+        }
+
+        public IList<Instruction> AssignNew(TypeSimulation type, params IParameterSimulation[] arguments)
+        {
+            if (VariableDef.VariableType.IsValueType)
+            {
+                return [VariableDef.Ldloca(), .. type.New(arguments)];
+            }
+            return Assign(target => type.New(arguments));
+        }
 
         public static implicit operator VariableDefinition(VariableSimulation value) => value.VariableDef;
     }
 
-    internal class VariableSimulation<T>(VariableDefinition variableDef, ModuleDefinition moduleDef) : VariableSimulation(variableDef, moduleDef) where T : TypeSimulation
+    internal class VariableSimulation<T>(VariableDefinition variableDef, MethodSimulation declaringMethod) : VariableSimulation(variableDef, declaringMethod) where T : TypeSimulation
     {
         private T? _value;
 
         public T Value => _value ??= VariableDef.VariableType.Simulate<T>(this, Module);
+
+        public IList<Instruction> AssignNew(params IParameterSimulation[] arguments)
+        {
+            return AssignNew(Value, arguments);
+        }
     }
 
     internal static class VariableSimulationExtensions
     {
-        private static readonly ConcurrentDictionary<Type, Func<VariableDefinition, ModuleDefinition, object>> _Cache = [];
-
-        public static T Simulate<T>(this VariableDefinition typeRef, ModuleDefinition moduleDef) where T : TypeSimulation
+        public static VariableSimulation Simulate(this VariableDefinition variableDef, MethodSimulation declaringMethod)
         {
-            var ctor = _Cache.GetOrAdd(typeof(T), t =>
-            {
-                var ctorInfo = t.GetConstructor([typeof(VariableDefinition), typeof(ModuleDefinition)]);
-                return (vd, md) => ctorInfo.Invoke([vd, md]);
-            });
+            return new VariableSimulation(variableDef, declaringMethod);
+        }
 
-            return (T)ctor(typeRef, moduleDef);
+        public static VariableSimulation<T> Simulate<T>(this VariableDefinition typeRef, MethodSimulation declaringMethod) where T : TypeSimulation
+        {
+            return new VariableSimulation<T>(typeRef, declaringMethod);
         }
     }
 }

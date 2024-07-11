@@ -5,12 +5,12 @@ namespace Rougamo.Fody.Simulations.Types
     /// <summary>
     /// Any type which is the return type of <see cref="TsAsyncable"/>'s GetAwaiter method
     /// </summary>
-    internal class TsAwaiter(TypeReference typeRef, ModuleDefinition moduleDef) : TypeSimulation(typeRef, moduleDef)
+    internal class TsAwaiter(TypeReference typeRef, IHost? host, ModuleDefinition moduleDef) : TypeSimulation(typeRef, host, moduleDef)
     {
-        private PropertySimulation<TypeSimulation>? _pIsCompleted;
+        private PropertySimulation? _pIsCompleted;
 
-        public PropertySimulation<TypeSimulation> PIsCompleted => _pIsCompleted ??= new(Constants.PROP_IsCompleted, this);
+        public PropertySimulation P_IsCompleted => _pIsCompleted ??= new(Constants.PROP_IsCompleted, this);
 
-        public MethodSimulation<TypeSimulation> MGetResult => MethodSimulate<TypeSimulation>(Constants.METHOD_GetResult);
+        public MethodSimulation M_GetResult => MethodSimulate(Constants.METHOD_GetResult);
     }
 }
