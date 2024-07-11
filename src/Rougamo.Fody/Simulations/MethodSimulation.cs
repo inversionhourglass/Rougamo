@@ -1,5 +1,6 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Rougamo.Fody.Simulations.Parameters;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -77,9 +78,9 @@ namespace Rougamo.Fody.Simulations
                 else
                 {
                     instructions.Add(argument.Load());
-                    if (!Def.Parameters[i].ParameterType.IsValueType && argument.ParameterType.IsValueType)
+                    if (!Def.Parameters[i].ParameterType.IsValueType && argument.TypeRef.IsValueType)
                     {
-                        instructions.Add(Instruction.Create(OpCodes.Box, argument.ParameterType));
+                        instructions.Add(Instruction.Create(OpCodes.Box, argument.TypeRef));
                     }
                 }
             }
