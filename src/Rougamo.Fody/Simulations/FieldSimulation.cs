@@ -8,12 +8,15 @@ namespace Rougamo.Fody.Simulations
     internal class FieldSimulation(TypeSimulation declaringType, FieldDefinition fieldDef) : Simulation(declaringType.Module), IHost, IAssignable
     {
         protected readonly TypeSimulation _declaringType = declaringType;
+        private TypeSimulation? _value;
 
         public FieldDefinition FieldDef { get; } = fieldDef;
 
         public FieldReference FieldRef { get; } = new FieldReference(fieldDef.Name, fieldDef.FieldType, declaringType);
 
         public TypeReference TypeRef => FieldRef.FieldType;
+
+        public TypeSimulation Value => _value ??= FieldRef.FieldType.Simulate(this, Module);
 
         public IList<Instruction> LoadForCallingMethod()
         {
@@ -63,7 +66,7 @@ namespace Rougamo.Fody.Simulations
     {
         private T? _value;
 
-        public T Value => _value ??= FieldRef.FieldType.Simulate<T>(this, Module);
+        public new T Value => _value ??= FieldRef.FieldType.Simulate<T>(this, Module);
 
         public IList<Instruction> AssignNew(params IParameterSimulation?[] arguments)
         {
@@ -82,5 +85,9 @@ namespace Rougamo.Fody.Simulations
         {
             return new FieldSimulation<T>(declaringType, fieldDef);
         }
+
+        public static IList<Instruction> AssignDefault(this FieldSimulation field) => field.AssignDefault(field.Value);
+
+        public static IList<Instruction> AssignDefault<T>(this FieldSimulation<T> field) where T : TypeSimulation => field.AssignDefault(field.Value);
     }
 }
