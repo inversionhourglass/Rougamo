@@ -7,9 +7,11 @@ namespace Rougamo.Fody.Simulations
 {
     internal interface ILoadable
     {
-        TypeReference TypeRef { get; }
+        TypeSimulation Type { get; }
 
         IList<Instruction> Load();
+
+        IList<Instruction> Cast(ILoadable to);
     }
 
     internal static class LoadableExtensions

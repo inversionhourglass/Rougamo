@@ -6,6 +6,7 @@ using System.Collections.Concurrent;
 using Mono.Cecil.Cil;
 using static Mono.Cecil.Cil.Instruction;
 using Mono.Cecil.Rocks;
+using Rougamo.Fody.Simulations.PlainValues;
 
 namespace Rougamo.Fody.Simulations
 {
@@ -30,7 +31,7 @@ namespace Rougamo.Fody.Simulations
 
         public bool IsValueType => Ref.IsValueType;
 
-        public TypeReference TypeRef => Ref;
+        public TypeSimulation Type => this;
 
         public virtual IList<Instruction> New(params IParameterSimulation?[] arguments)
         {
@@ -38,8 +39,9 @@ namespace Rougamo.Fody.Simulations
             {
                 return [Create(OpCodes.Initobj, Ref)];
             }
+            arguments = arguments.Select(x => x ?? new Null()).ToArray();
             // todo: 考虑泛型参数问题
-            var ctorDef = Def.GetConstructors().Single(x => x.Parameters.Count == arguments.Length && x.Parameters.Select(y => y.ParameterType.FullName).SequenceEqual(arguments.Select(y => y.TypeRef.FullName)));
+            var ctorDef = Def.GetConstructors().Single(x => x.Parameters.Count == arguments.Length && x.Parameters.Select(y => y.ParameterType.FullName).SequenceEqual(arguments.Select(y => y!.Type.Ref.FullName)));
             var ctorRef = ctorDef.ImportInto(Module).WithGenericDeclaringType(Ref);
             return ctorDef.Simulate(this).Call(null, arguments);
         }
@@ -60,6 +62,28 @@ namespace Rougamo.Fody.Simulations
         public virtual IList<Instruction> LoadAddress(MethodSimulation method) => Host.LoadAddress(method);
 
         public IList<Instruction> Load() => Host.Load();
+
+        public virtual IList<Instruction> Cast(ILoadable to)
+        {
+            var toRef = to.Type.Ref;
+            if (toRef.FullName == Ref.FullName) return [];
+
+            if (Ref.IsObject())
+            {
+                if (toRef.IsValueType || toRef.IsGenericParameter)
+                {
+                    return [Create(OpCodes.Unbox_Any, toRef)];
+                }
+                return [Create(OpCodes.Castclass, toRef)];
+            }
+
+            if (toRef.IsValueType || toRef.IsGenericParameter) throw new RougamoException($"Cannot convert {Ref} to {toRef}. Only object types can be converted to value types.");
+
+            var toDef = to.Type.Def;
+            if (toDef.IsInterface && Ref.Implement(toRef.FullName) || !toDef.IsInterface && Ref.IsOrDerivesFrom(toRef.FullName)) return [];
+
+            return [Create(OpCodes.Castclass, toRef)];
+        }
 
         #region Simulate
 
