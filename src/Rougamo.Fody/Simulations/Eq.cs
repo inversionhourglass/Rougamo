@@ -1,13 +1,14 @@
-﻿using Mono.Cecil;
-using Mono.Cecil.Cil;
-using Rougamo.Fody.Simulations.Parameters;
+﻿using Mono.Cecil.Cil;
+using Rougamo.Fody.Simulations.PlainValues;
 using System.Collections.Generic;
 
 namespace Rougamo.Fody.Simulations
 {
     internal class Eq(ILoadable value1, ILoadable value2) : ILoadable
     {
-        public TypeReference TypeRef => GlobalRefs.TrBool;
+        public TypeSimulation Type => GlobalSimulations.Bool;
+
+        public IList<Instruction> Cast(ILoadable to) => Type.Cast(to);
 
         public IList<Instruction> Load()
         {
