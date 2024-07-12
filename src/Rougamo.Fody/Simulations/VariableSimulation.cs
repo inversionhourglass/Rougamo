@@ -11,7 +11,7 @@ namespace Rougamo.Fody.Simulations
 
         public MethodSimulation DeclaringMethod { get; } = declaringMethod;
 
-        public TypeReference TypeRef => VariableDef.VariableType;
+        public TypeSimulation Type { get; } = variableDef.VariableType.Simulate(declaringMethod.Module);
 
         public IList<Instruction> LoadForCallingMethod() => [VariableDef.LdlocAny()];
 
@@ -44,6 +44,8 @@ namespace Rougamo.Fody.Simulations
             }
             return Assign(target => type.Default());
         }
+
+        public IList<Instruction> Cast(TypeReference to) => Type.Cast(to);
 
         public static implicit operator VariableDefinition(VariableSimulation value) => value.VariableDef;
     }

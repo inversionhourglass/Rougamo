@@ -1,4 +1,5 @@
-﻿using Mono.Cecil.Cil;
+﻿using Mono.Cecil;
+using Mono.Cecil.Cil;
 using System.Collections.Generic;
 
 namespace Rougamo.Fody.Simulations.PlainValues
@@ -11,6 +12,6 @@ namespace Rougamo.Fody.Simulations.PlainValues
 
         public override IList<Instruction> Load() => [Instruction.Create(OpCodes.Ldnull)];
 
-        public override IList<Instruction> Cast(ILoadable to) => [];
+        public override IList<Instruction> Cast(TypeReference to) => [];
     }
 }

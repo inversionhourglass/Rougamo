@@ -14,7 +14,7 @@ namespace Rougamo.Fody.Simulations
 
         public MethodSimulation? Setter { get; } = propertyDef.SetMethod?.Simulate(declaringType);
 
-        public TypeReference TypeRef => PropertyDef.PropertyType;
+        public TypeSimulation Type { get; } = propertyDef.PropertyType.Simulate(declaringType.Module);
 
         public IList<Instruction> Load() => Getter!.Call(null);
 

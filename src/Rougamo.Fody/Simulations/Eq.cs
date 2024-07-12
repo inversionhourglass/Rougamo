@@ -1,4 +1,5 @@
-﻿using Mono.Cecil.Cil;
+﻿using Mono.Cecil;
+using Mono.Cecil.Cil;
 using Rougamo.Fody.Simulations.PlainValues;
 using System.Collections.Generic;
 
@@ -8,7 +9,7 @@ namespace Rougamo.Fody.Simulations
     {
         public TypeSimulation Type => GlobalSimulations.Bool;
 
-        public IList<Instruction> Cast(ILoadable to) => Type.Cast(to);
+        public IList<Instruction> Cast(TypeReference to) => Type.Cast(to);
 
         public IList<Instruction> Load()
         {

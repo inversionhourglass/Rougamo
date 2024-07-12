@@ -14,7 +14,7 @@ namespace Rougamo.Fody.Simulations
 
         public FieldReference FieldRef { get; } = new FieldReference(fieldDef.Name, fieldDef.FieldType, declaringType);
 
-        public TypeReference TypeRef => FieldRef.FieldType;
+        public TypeSimulation Type => Value;
 
         public TypeSimulation Value => _value ??= FieldRef.FieldType.Simulate(this, Module);
 
@@ -58,6 +58,8 @@ namespace Rougamo.Fody.Simulations
             }
             return [.. _declaringType.Load(), .. type.Default(), FieldRef.Ldfld()];
         }
+
+        public IList<Instruction> Cast(TypeReference to) => Type.Cast(to);
 
         public static implicit operator FieldReference(FieldSimulation value) => value.FieldRef;
     }

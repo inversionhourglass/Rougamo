@@ -1,4 +1,5 @@
-﻿using Mono.Cecil.Cil;
+﻿using Mono.Cecil;
+using Mono.Cecil.Cil;
 using System;
 using System.Collections.Generic;
 
@@ -8,11 +9,13 @@ namespace Rougamo.Fody.Simulations
     {
         IList<Instruction> Load();
 
-        IList<Instruction> Cast(ILoadable to);
+        IList<Instruction> Cast(TypeReference to);
     }
 
     internal static class LoadableExtensions
     {
+        public static IList<Instruction> Cast(this ILoadable from, ILoadable to) => from.Cast(to.Type.Ref);
+
         public static IList<Instruction> If(this ILoadable loadable, Func<Instruction, IList<Instruction>> handle)
         {
             return If(loadable, null, handle);

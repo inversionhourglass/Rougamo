@@ -71,17 +71,15 @@ namespace Rougamo.Fody.Simulations
             for (var i = 0; i < arguments.Length; i++)
             {
                 var argument = arguments[i] ?? new Null();
-                if (Def.Parameters[i].ParameterType is ByReferenceType)
+                var parameterTypeRef = Def.Parameters[i].ParameterType;
+                if (parameterTypeRef is ByReferenceType)
                 {
                     instructions.Add(argument.LoadAddress(this));
                 }
                 else
                 {
                     instructions.Add(argument.Load());
-                    if (!Def.Parameters[i].ParameterType.IsValueType && argument.Type.IsValueType)
-                    {
-                        instructions.Add(Instruction.Create(OpCodes.Box, argument.Type));
-                    }
+                    instructions.Add(argument.Cast(parameterTypeRef));
                 }
             }
             instructions.Add(methodRef.CallAny());

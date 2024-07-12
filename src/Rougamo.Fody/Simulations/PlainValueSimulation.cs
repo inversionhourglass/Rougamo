@@ -10,7 +10,7 @@ namespace Rougamo.Fody.Simulations
 
         public abstract IList<Instruction> Load();
 
-        public virtual IList<Instruction> Cast(ILoadable to) => Type.Cast(to);
+        public virtual IList<Instruction> Cast(TypeReference to) => Type.Cast(to);
 
         public IList<Instruction> LoadAddress(MethodSimulation method) => throw new RougamoException($"Do not support load {GetType().Name} value by reference.");
 

@@ -20,7 +20,7 @@ namespace Rougamo.Fody.Simulations
         {
             Ref = typeRef.ImportInto(moduleDef);
             Def = typeRef.Resolve();
-            Host = host ?? new This(typeRef);
+            Host = host ?? new This(this);
         }
 
         public TypeReference Ref { get; set; }
@@ -63,26 +63,25 @@ namespace Rougamo.Fody.Simulations
 
         public IList<Instruction> Load() => Host.Load();
 
-        public virtual IList<Instruction> Cast(ILoadable to)
+        public virtual IList<Instruction> Cast(TypeReference to)
         {
-            var toRef = to.Type.Ref;
-            if (toRef.FullName == Ref.FullName) return [];
+            if (to.FullName == Ref.FullName) return [];
 
             if (Ref.IsObject())
             {
-                if (toRef.IsValueType || toRef.IsGenericParameter)
+                if (to.IsValueType || to.IsGenericParameter)
                 {
-                    return [Create(OpCodes.Unbox_Any, toRef)];
+                    return [Create(OpCodes.Unbox_Any, to)];
                 }
-                return [Create(OpCodes.Castclass, toRef)];
+                return [Create(OpCodes.Castclass, to)];
             }
 
-            if (toRef.IsValueType || toRef.IsGenericParameter) throw new RougamoException($"Cannot convert {Ref} to {toRef}. Only object types can be converted to value types.");
+            if (to.IsValueType || to.IsGenericParameter) throw new RougamoException($"Cannot convert {Ref} to {to}. Only object types can be converted to value types.");
 
-            var toDef = to.Type.Def;
-            if (toDef.IsInterface && Ref.Implement(toRef.FullName) || !toDef.IsInterface && Ref.IsOrDerivesFrom(toRef.FullName)) return [];
+            var toDef = to.Resolve();
+            if (toDef.IsInterface && Ref.Implement(to.FullName) || !toDef.IsInterface && Ref.IsOrDerivesFrom(to.FullName)) return [];
 
-            return [Create(OpCodes.Castclass, toRef)];
+            return [Create(OpCodes.Castclass, to)];
         }
 
         #region Simulate
