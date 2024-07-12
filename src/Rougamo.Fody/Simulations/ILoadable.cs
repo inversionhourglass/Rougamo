@@ -1,14 +1,11 @@
-﻿using Mono.Cecil;
-using Mono.Cecil.Cil;
+﻿using Mono.Cecil.Cil;
 using System;
 using System.Collections.Generic;
 
 namespace Rougamo.Fody.Simulations
 {
-    internal interface ILoadable
+    internal interface ILoadable : IAnalysable
     {
-        TypeSimulation Type { get; }
-
         IList<Instruction> Load();
 
         IList<Instruction> Cast(ILoadable to);
