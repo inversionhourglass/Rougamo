@@ -1,8 +1,10 @@
 ﻿using Mono.Cecil;
+using Mono.Cecil.Cil;
+using System.Collections.Generic;
 
 namespace Rougamo.Fody.Simulations
 {
-    internal class PropertySimulation(TypeSimulation declaringType, PropertyDefinition propertyDef) : Simulation(declaringType.Module)
+    internal class PropertySimulation(TypeSimulation declaringType, PropertyDefinition propertyDef) : Simulation(declaringType.Module), ILoadable
     {
         protected readonly TypeSimulation _declaringType = declaringType;
 
@@ -11,6 +13,10 @@ namespace Rougamo.Fody.Simulations
         public MethodSimulation? Getter { get; } = propertyDef.GetMethod?.Simulate(declaringType);
 
         public MethodSimulation? Setter { get; } = propertyDef.SetMethod?.Simulate(declaringType);
+
+        public TypeReference TypeRef => PropertyDef.PropertyType;
+
+        public IList<Instruction> Load() => Getter!.Call(null);
 
         public static implicit operator PropertyDefinition(PropertySimulation value) => value.PropertyDef;
     }
