@@ -108,9 +108,9 @@ namespace Rougamo.Fody.Simulations
 
         public MethodSimulation(TypeSimulation declaringType, MethodReference methodRef) : base(declaringType, methodRef) { }
 
-        private T? _returnType;
+        private T? _result;
 
-        public T ReturnType => _returnType ??= Def.ReturnType.Simulate<T>(new EmptyHost(), Module);
+        public T Result => _result ??= Def.ReturnType.Simulate<T>(new EmptyHost(), Module);
     }
 
     internal static class MethodSimulationExtensions
