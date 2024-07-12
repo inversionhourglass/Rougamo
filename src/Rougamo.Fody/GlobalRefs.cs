@@ -13,6 +13,8 @@ namespace Rougamo.Fody
 
         public static TypeReference TrType { get; private set; }
 
+        public static TypeReference TrMethodBase { get; private set; }
+
         public static MethodReference MrGetTypeFromHandle { get; private set; }
 
         public static MethodReference MrGetMethodFromHandle {  get; private set; }
@@ -23,6 +25,7 @@ namespace Rougamo.Fody
             TrBool = weaver._typeBoolRef;
             TrInt = weaver._typeIntRef;
             TrType = weaver._typeSystemRef;
+            TrMethodBase = weaver._typeMethodBaseRef;
 
             MrGetTypeFromHandle = weaver._methodGetTypeFromHandleRef;
             MrGetMethodFromHandle = weaver._methodGetMethodFromHandleRef;

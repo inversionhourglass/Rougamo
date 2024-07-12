@@ -20,6 +20,7 @@ namespace Rougamo.Fody
 
             _typeVoidRef = FindTypeDefinition(typeof(void).FullName).ImportInto(ModuleDefinition);
             _typeSystemRef = _typeSystemDef.ImportInto(ModuleDefinition);
+            _typeMethodBaseRef = _typeMethodBaseDef.ImportInto(ModuleDefinition);
             _typeIntRef = FindTypeDefinition(typeof(int).FullName).ImportInto(ModuleDefinition);
             _typeBoolRef = FindTypeDefinition(typeof(bool).FullName).ImportInto(ModuleDefinition);
             _typeObjectRef = FindTypeDefinition(typeof(object).FullName).ImportInto(ModuleDefinition);

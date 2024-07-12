@@ -21,6 +21,7 @@ namespace Rougamo.Fody
 
         internal TypeReference _typeVoidRef;
         internal TypeReference _typeSystemRef;
+        internal TypeReference _typeMethodBaseRef;
         internal TypeReference _typeIntRef;
         internal TypeReference _typeBoolRef;
         internal TypeReference _typeObjectRef;
