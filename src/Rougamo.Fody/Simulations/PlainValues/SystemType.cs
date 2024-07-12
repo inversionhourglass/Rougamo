@@ -2,11 +2,11 @@
 using Mono.Cecil.Cil;
 using System.Collections.Generic;
 
-namespace Rougamo.Fody.Simulations.Parameters
+namespace Rougamo.Fody.Simulations.PlainValues
 {
-    internal class SystemType(TypeReference typeRef) : UnableLoadAddress(null!)
+    internal class SystemType(TypeReference typeRef) : PlainValueSimulation(null!)
     {
-        public override TypeReference TypeRef => GlobalRefs.TrType;
+        public override TypeSimulation Type => GlobalSimulations.Type;
 
         public override IList<Instruction> Load()
         {
