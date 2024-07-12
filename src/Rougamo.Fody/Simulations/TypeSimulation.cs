@@ -15,7 +15,7 @@ namespace Rougamo.Fody.Simulations
         private readonly Dictionary<string, MethodSimulation> _methodSimulations = [];
         private readonly Dictionary<string, PropertySimulation?> _propertySimulations = [];
 
-        protected TypeSimulation(TypeReference typeRef, IHost? host, ModuleDefinition moduleDef) : base(moduleDef)
+        public TypeSimulation(TypeReference typeRef, IHost? host, ModuleDefinition moduleDef) : base(moduleDef)
         {
             Ref = typeRef.ImportInto(moduleDef);
             Def = typeRef.Resolve();
@@ -209,6 +209,10 @@ namespace Rougamo.Fody.Simulations
     internal static class TypeSimulationExtensions
     {
         private static readonly ConcurrentDictionary<Type, Func<TypeReference, IHost?, ModuleDefinition, object>> _Cache = [];
+
+        public static TypeSimulation Simulate(this TypeReference typeRef, ModuleDefinition moduleDef) => new(typeRef, null, moduleDef);
+
+        public static TypeSimulation Simulate(this TypeReference typeRef, IHost? host, ModuleDefinition moduleDef) => new(typeRef, host, moduleDef);
 
         public static T Simulate<T>(this TypeReference typeRef, ModuleDefinition moduleDef) where T : TypeSimulation => Simulate<T>(typeRef, null, moduleDef);
 
