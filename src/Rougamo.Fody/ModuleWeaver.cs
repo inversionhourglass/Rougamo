@@ -77,7 +77,7 @@ namespace Rougamo.Fody
                 if (!_config.Enabled) return;
 
                 LoadBasicReference();
-                CommonRefs.Init(this);
+                GlobalRefs.Init(this);
                 FindRous();
                 if (_rouTypes.Count == 0) return;
                 WeaveMos();

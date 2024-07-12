@@ -3,11 +3,13 @@
 namespace Rougamo.Fody
 {
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    internal static class CommonRefs
+    internal static class GlobalRefs
     {
         public static TypeReference TrObject { get; private set; }
 
         public static TypeReference TrBool { get; private set; }
+
+        public static TypeReference TrInt { get; private set; }
 
         public static TypeReference TrType { get; private set; }
 
@@ -19,6 +21,7 @@ namespace Rougamo.Fody
         {
             TrObject = weaver._typeObjectRef;
             TrBool = weaver._typeBoolRef;
+            TrInt = weaver._typeIntRef;
             TrType = weaver._typeSystemRef;
 
             MrGetTypeFromHandle = weaver._methodGetTypeFromHandleRef;

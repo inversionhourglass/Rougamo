@@ -6,7 +6,7 @@ namespace Rougamo.Fody.Simulations.Parameters
 {
     internal class RawArgument(IList<Instruction> instructions) : UnableLoadAddress(null!)
     {
-        public override TypeReference TypeRef => CommonRefs.TrObject;
+        public override TypeReference TypeRef => GlobalRefs.TrObject;
 
         public override IList<Instruction> Load() => instructions;
     }

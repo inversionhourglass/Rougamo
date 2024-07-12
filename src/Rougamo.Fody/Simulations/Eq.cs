@@ -7,7 +7,7 @@ namespace Rougamo.Fody.Simulations
 {
     internal class Eq(ILoadable value1, ILoadable value2) : ILoadable
     {
-        public TypeReference TypeRef => CommonRefs.TrBool;
+        public TypeReference TypeRef => GlobalRefs.TrBool;
 
         public IList<Instruction> Load()
         {

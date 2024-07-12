@@ -6,7 +6,7 @@ namespace Rougamo.Fody.Simulations
 {
     internal class EmptyHost: IHost
     {
-        public TypeReference TypeRef => CommonRefs.TrObject;
+        public TypeReference TypeRef => GlobalRefs.TrObject;
 
         public IList<Instruction> Load() => [];
 

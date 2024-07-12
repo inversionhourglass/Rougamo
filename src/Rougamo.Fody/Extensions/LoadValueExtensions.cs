@@ -39,7 +39,7 @@ namespace Rougamo.Fody
                 return
                 [
                     Instruction.Create(OpCodes.Ldtoken, typeRefValue.ImportInto(moduleDef)),
-                    Instruction.Create(OpCodes.Call, CommonRefs.MrGetTypeFromHandle)
+                    Instruction.Create(OpCodes.Call, GlobalRefs.MrGetTypeFromHandle)
                 ];
             }
 
@@ -47,7 +47,7 @@ namespace Rougamo.Fody
             {
                 var valueType = arg.Type;
                 if (arg.Value is TypeReference)
-                    valueType = CommonRefs.TrType;
+                    valueType = GlobalRefs.TrType;
                 bool isEnum = valueType.IsEnum();
                 var instructions = LoadValueOnStack(moduleDef, valueType, arg.Value);
                 if (valueType.IsValueType || (!valueType.IsArray && isEnum) || valueType.IsGenericParameter)
