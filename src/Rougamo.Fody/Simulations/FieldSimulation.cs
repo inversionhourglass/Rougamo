@@ -46,6 +46,16 @@ namespace Rougamo.Fody.Simulations
             return Assign(target => type.New(arguments));
         }
 
+        public IList<Instruction> AssignDefault(TypeSimulation type)
+        {
+            var filedTypeRef = FieldRef.FieldType;
+            if (filedTypeRef.IsValueType || filedTypeRef.IsGenericParameter)
+            {
+                return [.. _declaringType.Load(), FieldRef.Ldflda(), .. type.Default()];
+            }
+            return [.. _declaringType.Load(), .. type.Default(), FieldRef.Ldfld()];
+        }
+
         public static implicit operator FieldReference(FieldSimulation value) => value.FieldRef;
     }
 

@@ -35,6 +35,16 @@ namespace Rougamo.Fody.Simulations
             return Assign(target => type.New(arguments));
         }
 
+        public IList<Instruction> AssignDefault(TypeSimulation type)
+        {
+            var varTypeRef = VariableDef.VariableType;
+            if (varTypeRef.IsValueType || varTypeRef.IsGenericParameter)
+            {
+                return [VariableDef.Ldloca(), .. type.Default()];
+            }
+            return Assign(target => type.Default());
+        }
+
         public static implicit operator VariableDefinition(VariableSimulation value) => value.VariableDef;
     }
 

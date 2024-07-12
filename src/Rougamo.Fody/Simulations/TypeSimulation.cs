@@ -44,6 +44,15 @@ namespace Rougamo.Fody.Simulations
             return ctorDef.Simulate(this).Call(null, arguments);
         }
 
+        public virtual IList<Instruction> Default()
+        {
+            if (IsValueType || Ref.IsGenericParameter)
+            {
+                return [Create(OpCodes.Initobj, Ref)];
+            }
+            return [Create(OpCodes.Ldnull)];
+        }
+
         public virtual IList<Instruction> LoadForCallingMethod() => Host.LoadForCallingMethod();
 
         public virtual IList<Instruction> PrepareLoadAddress(MethodSimulation method) => Host.PrepareLoadAddress(method);
@@ -54,6 +63,7 @@ namespace Rougamo.Fody.Simulations
 
         #region Simulate
 
+        #region Simulate-Method
         protected MethodSimulation<TRet> MethodSimulate<TRet>(string methodName) where TRet : TypeSimulation => MethodSimulate<TRet>(methodName, x => x.Name == methodName);
 
         protected MethodSimulation<TRet> MethodSimulate<TRet>(string id, Func<MethodDefinition, bool> predicate) where TRet : TypeSimulation
@@ -81,7 +91,9 @@ namespace Rougamo.Fody.Simulations
         }
 
         protected MethodSimulation PublicMethodSimulate(string methodName) => MethodSimulate(methodName, x => x.Name == methodName && x.IsPublic);
+        #endregion Simulate-Method
 
+        #region Simulate-Field
         protected FieldSimulation<T> FieldSimulate<T>(string fieldName) where T : TypeSimulation => FieldSimulate<T>(fieldName, x => x.Name == fieldName);
 
         protected FieldSimulation<T> FieldSimulate<T>(string id, Func<FieldDefinition, bool> predicate) where T : TypeSimulation
@@ -127,7 +139,9 @@ namespace Rougamo.Fody.Simulations
             }
             return (FieldSimulation<T>[]?)simulation;
         }
+        #endregion Simulate-Field
 
+        #region Simulate-Property
         protected PropertySimulation PropertySimulate(string propertyName, bool recursion)
         {
             return PropertySimulateInner(propertyName, recursion, false)!;
@@ -185,6 +199,7 @@ namespace Rougamo.Fody.Simulations
 
             return (PropertySimulation<T>?)simulation;
         }
+        #endregion Simulate-Property
 
         #endregion Simulate
 
@@ -213,6 +228,13 @@ namespace Rougamo.Fody.Simulations
             simulation.Ref = simulation.Ref.ReplaceGenericArgs(genericMap);
 
             return simulation;
+        }
+
+        public static T ReplaceGenericsWith<T>(this T simulation, TypeSimulation baseSimulation) where T : TypeSimulation
+        {
+            if (baseSimulation.Ref is not GenericInstanceType git) return simulation;
+
+            return simulation.ReplaceGenerics(git.GenericArguments.Where(x => x is GenericParameter).ToDictionary(x => x.Name, x => (GenericParameter)x));
         }
 
         public static T SetGenerics<T>(this T simulation, TypeReference[] generics) where T : TypeSimulation
