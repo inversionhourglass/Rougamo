@@ -175,6 +175,43 @@ namespace Rougamo.Fody
             }
         }
 
+        public static OpCode GetLdElemCode(this TypeReference typeRef)
+        {
+            var typeDef = typeRef.Resolve();
+            if (typeDef.IsEnum(out TypeReference? underlying))
+                return underlying!.MetadataType.GetLdElemCode();
+            if (typeRef.IsValueType)
+                return typeRef.MetadataType.GetLdElemCode();
+            return OpCodes.Ldelem_Ref;
+        }
+
+        public static OpCode GetLdElemCode(this MetadataType type)
+        {
+            switch (type)
+            {
+                case MetadataType.Boolean:
+                case MetadataType.Int32:
+                case MetadataType.UInt32:
+                    return OpCodes.Ldelem_I4;
+                case MetadataType.Byte:
+                case MetadataType.SByte:
+                    return OpCodes.Ldelem_I1;
+                case MetadataType.Char:
+                case MetadataType.Int16:
+                case MetadataType.UInt16:
+                    return OpCodes.Ldelem_I2;
+                case MetadataType.Double:
+                    return OpCodes.Ldelem_R8;
+                case MetadataType.Int64:
+                case MetadataType.UInt64:
+                    return OpCodes.Ldelem_I8;
+                case MetadataType.Single:
+                    return OpCodes.Ldelem_R4;
+                default:
+                    return OpCodes.Ldelem_Ref;
+            }
+        }
+
         public static MethodDefinition GetZeroArgsCtor(this TypeDefinition typeDef)
         {
             var zeroCtor = typeDef.GetConstructors().FirstOrDefault(ctor => !ctor.HasParameters);
