@@ -13,6 +13,7 @@ namespace Rougamo.Fody
         private bool? _isAsync;
         private bool? _isIterator;
         private bool? _isAsyncIterator;
+        private Feature? _feature;
         private Omit? _omit;
         private readonly HashSet<Mo> _mos;
         private readonly RouType _rouType;
@@ -97,7 +98,7 @@ namespace Rougamo.Fody
             }
         }
 
-        public int Features => Mos.Aggregate(0, (v, m) => v | m.Features);
+        public Feature Features => _feature ??= Mos.Aggregate(Feature.None, (v, m) => v | m.Features);
 
         public bool IsIterator
         {
