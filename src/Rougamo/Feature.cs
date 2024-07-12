@@ -14,6 +14,11 @@ namespace Rougamo
 #endif
     {
         /// <summary>
+        /// None
+        /// </summary>
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        None = 0,
+        /// <summary>
         /// OnEntry
         /// </summary>
         OnEntry = 0x1,
