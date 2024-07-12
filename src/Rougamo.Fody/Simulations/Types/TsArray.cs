@@ -7,7 +7,15 @@ namespace Rougamo.Fody.Simulations.Types
 {
     internal class TsArray(TypeReference elementTypeRef, IHost? host, ModuleDefinition moduleDef) : TypeSimulation(new ArrayType(elementTypeRef), host, moduleDef)
     {
+        private readonly OpCode _ldCode = elementTypeRef.GetLdElemCode();
+        private readonly OpCode _stCode = elementTypeRef.GetStElemCode();
+
         public TypeReference ElementTypeRef => elementTypeRef;
+
+        public Element this[int index]
+        {
+            get => new(this, index, _ldCode);
+        } 
 
         public IList<Instruction> New(ILoadable[] items)
         {
@@ -26,10 +34,22 @@ namespace Rougamo.Fody.Simulations.Types
                 {
                     instructions.Add(Create(OpCodes.Box, item.TypeRef));
                 }
-                instructions.Add(Create(ElementTypeRef.GetStElemCode()));
+                instructions.Add(Create(_stCode));
             }
 
             return instructions;
+        }
+
+        public Element Get(int index) => this[index];
+
+        public class Element(TsArray array, int index, OpCode ldCode) : ILoadable
+        {
+            public TypeReference TypeRef => array.ElementTypeRef;
+
+            public IList<Instruction> Load()
+            {
+                return [.. array.Load(), Create(OpCodes.Ldc_I4, index), Create(ldCode)];
+            }
         }
     }
 }
