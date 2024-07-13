@@ -1,10 +1,12 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Rougamo.Fody.Simulations.PlainValues;
+using System;
 using System.Collections.Generic;
 
 namespace Rougamo.Fody.Simulations
 {
-    internal class PropertySimulation(TypeSimulation declaringType, PropertyDefinition propertyDef) : Simulation(declaringType.Module), ILoadable
+    internal class PropertySimulation(TypeSimulation declaringType, PropertyDefinition propertyDef) : Simulation(declaringType.Module), ILoadable, IAssignable
     {
         protected readonly TypeSimulation _declaringType = declaringType;
 
@@ -19,6 +21,11 @@ namespace Rougamo.Fody.Simulations
         public OpCode TrueToken => Type.TrueToken;
 
         public OpCode FalseToken => Type.FalseToken;
+
+        public IList<Instruction> Assign(Func<IAssignable, IList<Instruction>> valueFactory)
+        {
+            return Setter!.Call(new RawValue(Type, valueFactory(this)));
+        }
 
         public IList<Instruction> Cast(TypeReference to) => Type.Cast(to);
 
