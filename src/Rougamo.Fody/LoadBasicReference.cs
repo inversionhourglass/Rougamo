@@ -6,6 +6,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 
 namespace Rougamo.Fody
@@ -30,6 +31,7 @@ namespace Rougamo.Fody
             _typeListRef = _typeListDef.ImportInto(ModuleDefinition);
             var typeAsyncStateMachineAttributeRef = FindTypeDefinition(typeof(AsyncStateMachineAttribute).FullName).ImportInto(ModuleDefinition);
             var typeIteratorStateMachineAttributeRef = FindTypeDefinition(typeof(IteratorStateMachineAttribute).FullName).ImportInto(ModuleDefinition);
+            var typeExceptionDispatchInfoDef = FindTypeDefinition(typeof(ExceptionDispatchInfo).FullName);
 
             _methodGetTypeFromHandleRef = _typeSystemDef.Methods.Single(x => x.Name == Constants.METHOD_GetTypeFromHandle).ImportInto(ModuleDefinition);
             _methodGetMethodFromHandleRef = _typeMethodBaseDef.Methods.Single(x => x.Name == Constants.METHOD_GetMethodFromHandle && x.Parameters.Count == 2).ImportInto(ModuleDefinition);
@@ -37,6 +39,8 @@ namespace Rougamo.Fody
             _methodListToArrayRef = _typeListDef.Methods.Single(x => x.Name == Constants.METHOD_ToArray && !x.HasParameters);
             _methodIEnumeratorMoveNextRef = FindTypeDefinition(typeof(IEnumerator).FullName).Methods.Single(x => x.Name == Constants.METHOD_MoveNext).ImportInto(ModuleDefinition);
             _methodDebuggerStepThroughCtorRef = _typeDebuggerStepThroughAttributeRef.Resolve().Methods.Single(x => x.IsConstructor && !x.IsStatic && !x.Parameters.Any()).ImportInto(ModuleDefinition);
+            _methodExceptionDispatchInfoCaptureRef = typeExceptionDispatchInfoDef.Methods.Single(x => x.IsStatic && x.Name == Constants.METHOD_Capture).ImportInto(ModuleDefinition);
+            _methodExceptionDispatchInfoThrowRef = typeExceptionDispatchInfoDef.Methods.Single(x => x.Name == Constants.METHOD_Throw).ImportInto(ModuleDefinition);
             var asyncStateMachineAttributeCtorRef = typeAsyncStateMachineAttributeRef.Resolve().Methods.Single(x => x.IsConstructor && !x.IsStatic && x.Parameters.Single().ParameterType.Is(Constants.TYPE_Type)).ImportInto(ModuleDefinition);
             var iteratorStateMachineAttributeCtorRef = typeIteratorStateMachineAttributeRef.Resolve().Methods.Single(x => x.IsConstructor && !x.IsStatic && x.Parameters.Single().ParameterType.Is(Constants.TYPE_Type)).ImportInto(ModuleDefinition);
 

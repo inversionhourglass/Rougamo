@@ -41,6 +41,8 @@ namespace Rougamo.Fody
         internal MethodReference _methodListToArrayRef;
         internal MethodReference _methodIEnumeratorMoveNextRef;
         internal MethodReference _methodDebuggerStepThroughCtorRef;
+        internal MethodReference _methodExceptionDispatchInfoCaptureRef;
+        internal MethodReference _methodExceptionDispatchInfoThrowRef;
         internal MethodReference _methodMethodContextCtorRef;
         internal MethodReference _methodMethodContextSetExceptionRef;
         internal MethodReference _methodMethodContextSetReturnValueRef;

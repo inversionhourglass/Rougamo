@@ -119,6 +119,8 @@
         public const string METHOD_GetMethodFromHandle = "GetMethodFromHandle";
         public const string METHOD_Add = "Add";
         public const string METHOD_ToArray = "ToArray";
+        public const string METHOD_Capture = "Capture";
+        public const string METHOD_Throw = "Throw";
 
         public static string GenericPrefix(string name) => $"{name}<";
         public static string GenericSuffix(string name) => $">.{name}";
