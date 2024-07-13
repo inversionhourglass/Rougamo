@@ -1,6 +1,6 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
-using Rougamo.Fody.Simulations.Parameters;
+using Rougamo.Fody.Simulations.PlainValues;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -36,7 +36,7 @@ namespace Rougamo.Fody.Simulations.Types
                 var arguments = mo.Attribute.ConstructorArguments.Select(x => x.Simulate(Module)).ToArray();
                 var instructions = new List<Instruction>
                 {
-                    ctor.Call(null, arguments)
+                    ctor.Call(arguments)
                 };
                 if (mo.Attribute.HasProperties)
                 {
@@ -46,7 +46,7 @@ namespace Rougamo.Fody.Simulations.Types
                         if (propSimulation?.Setter != null)
                         {
                             var propValue = new ObjectValue(property.Argument.Value, property.Argument.Type, Module);
-                            instructions.Add(propSimulation.Setter.DupCall(null, propValue));
+                            instructions.Add(propSimulation.Setter.DupCall(propValue));
                         }
                     }
                 }

@@ -1,5 +1,6 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Rougamo.Fody.Simulations.PlainValues;
 using System.Collections.Generic;
 using static Mono.Cecil.Cil.Instruction;
 
@@ -10,7 +11,7 @@ namespace Rougamo.Fody.Simulations.Types
         private readonly OpCode _ldCode = elementTypeRef.GetLdElemCode();
         private readonly OpCode _stCode = elementTypeRef.GetStElemCode();
 
-        public TypeReference ElementTypeRef => elementTypeRef;
+        public TypeSimulation ElementType { get; } = elementTypeRef.Simulate(moduleDef);
 
         public Element this[int index]
         {
@@ -30,9 +31,9 @@ namespace Rougamo.Fody.Simulations.Types
                 instructions.Add(Create(OpCodes.Dup));
                 instructions.Add(Create(OpCodes.Ldc_I4, i));
                 instructions.Add(item.Load());
-                if (item.TypeRef.IsValueType && !ElementTypeRef.IsValueType)
+                if (item.Type.IsValueType && !ElementType.IsValueType)
                 {
-                    instructions.Add(Create(OpCodes.Box, item.TypeRef));
+                    instructions.Add(Create(OpCodes.Box, item.Type));
                 }
                 instructions.Add(Create(_stCode));
             }
@@ -44,12 +45,26 @@ namespace Rougamo.Fody.Simulations.Types
 
         public class Element(TsArray array, int index, OpCode ldCode) : ILoadable
         {
-            public TypeReference TypeRef => array.ElementTypeRef;
+            public TypeSimulation Type => array.ElementType;
+
+            public OpCode TrueToken => Type.TrueToken;
+
+            public OpCode FalseToken => Type.FalseToken;
 
             public IList<Instruction> Load()
             {
                 return [.. array.Load(), Create(OpCodes.Ldc_I4, index), Create(ldCode)];
             }
+
+            IList<Instruction> ILoadable.Cast(TypeReference to) => Type.Cast(to);
+        }
+    }
+
+    internal static class TsArrayExtensions
+    {
+        public static RawValue NewAsPlainValue(this TsArray array, ILoadable[] items)
+        {
+            return new(array.Type, array.New(items));
         }
     }
 }

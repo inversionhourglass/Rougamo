@@ -9,7 +9,7 @@ namespace Rougamo.Fody.Simulations.Types
     {
         private PropertySimulation? _pIsCompleted;
 
-        public PropertySimulation P_IsCompleted => _pIsCompleted ??= new(Constants.PROP_IsCompleted, this);
+        public PropertySimulation P_IsCompleted => PropertySimulate(Constants.PROP_IsCompleted, true);
 
         public MethodSimulation M_GetResult => MethodSimulate(Constants.METHOD_GetResult);
     }
