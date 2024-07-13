@@ -6,6 +6,10 @@ namespace Rougamo.Fody.Simulations
 {
     internal abstract class PlainValueSimulation(ModuleDefinition moduleDef) : Simulation(moduleDef), IParameterSimulation
     {
+        public OpCode TrueToken => OpCodes.Brtrue;
+
+        public OpCode FalseToken => OpCodes.Brfalse;
+
         public abstract TypeSimulation Type { get; }
 
         public abstract IList<Instruction> Load();

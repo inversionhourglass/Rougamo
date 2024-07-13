@@ -33,6 +33,10 @@ namespace Rougamo.Fody.Simulations
 
         public TypeSimulation Type => this;
 
+        public virtual OpCode TrueToken => OpCodes.Brtrue;
+
+        public virtual OpCode FalseToken => OpCodes.Brfalse;
+
         public virtual IList<Instruction> New(params IParameterSimulation?[] arguments)
         {
             if (IsValueType && arguments.Length == 0)

@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Rougamo.Fody.Simulations
 {
-    internal interface ILoadable : IAnalysable
+    internal interface ILoadable : IAnalysable, IAssertable
     {
         IList<Instruction> Load();
 
@@ -23,7 +23,7 @@ namespace Rougamo.Fody.Simulations
 
         public static IList<Instruction> If(this ILoadable loadable, Instruction? anchor, Func<Instruction, IList<Instruction>> handle)
         {
-            return If(OpCodes.Brfalse, loadable, anchor, handle);
+            return If(loadable.FalseToken, loadable, anchor, handle);
         }
 
         public static IList<Instruction> If(this ILoadable loadable, Func<Instruction, Instruction, IList<Instruction>> handleIf, Func<Instruction, Instruction, IList<Instruction>> handleElse)
@@ -33,7 +33,7 @@ namespace Rougamo.Fody.Simulations
 
         public static IList<Instruction> If(this ILoadable loadable, Instruction? anchorIfNot, Instruction? anchorEnd, Func<Instruction, Instruction, IList<Instruction>> handleIf, Func<Instruction, Instruction, IList<Instruction>> handleElse)
         {
-            return If(OpCodes.Brfalse, loadable, anchorIfNot, anchorEnd, handleIf, handleElse);
+            return If(loadable.FalseToken, loadable, anchorIfNot, anchorEnd, handleIf, handleElse);
         }
 
         public static IList<Instruction> IfNot(this ILoadable loadable, Func<Instruction, IList<Instruction>> handle)
@@ -43,7 +43,7 @@ namespace Rougamo.Fody.Simulations
 
         public static IList<Instruction> IfNot(this ILoadable loadable, Instruction? anchor, Func<Instruction, IList<Instruction>> handle)
         {
-            return If(OpCodes.Brtrue, loadable, anchor, handle);
+            return If(loadable.TrueToken, loadable, anchor, handle);
         }
 
         public static IList<Instruction> IfNot(this ILoadable loadable, Func<Instruction, Instruction, IList<Instruction>> handleIfNot, Func<Instruction, Instruction, IList<Instruction>> handleElse)
@@ -53,7 +53,7 @@ namespace Rougamo.Fody.Simulations
 
         public static IList<Instruction> IfNot(this ILoadable loadable, Instruction? anchorIf, Instruction? anchorEnd, Func<Instruction, Instruction, IList<Instruction>> handleIfNot, Func<Instruction, Instruction, IList<Instruction>> handleElse)
         {
-            return If(OpCodes.Brtrue, loadable, anchorIf, anchorEnd, handleIfNot, handleElse);
+            return If(loadable.TrueToken, loadable, anchorIf, anchorEnd, handleIfNot, handleElse);
         }
 
         private static IList<Instruction> If(OpCode brCode, ILoadable loadable, Instruction? anchor, Func<Instruction, IList<Instruction>> handle)

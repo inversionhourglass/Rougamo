@@ -7,9 +7,11 @@ namespace Rougamo.Fody.Simulations
 {
     internal class This(TypeSimulation type) : IHost
     {
-        public TypeSimulation TypeRef => type;
+        public TypeSimulation Type => type;
 
-        public TypeSimulation Type => throw new System.NotImplementedException();
+        public OpCode TrueToken => OpCodes.Brtrue;
+
+        public OpCode FalseToken => OpCodes.Brfalse;
 
         public IList<Instruction> LoadForCallingMethod() => [Create(OpCodes.Ldarg_0)];
 

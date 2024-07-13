@@ -13,6 +13,10 @@ namespace Rougamo.Fody.Simulations
 
         public TypeSimulation Type { get; } = variableDef.VariableType.Simulate(declaringMethod.Module);
 
+        public OpCode TrueToken => Type.TrueToken;
+
+        public OpCode FalseToken => Type.FalseToken;
+
         public IList<Instruction> LoadForCallingMethod() => [VariableDef.LdlocAny()];
 
         public IList<Instruction> PrepareLoadAddress(MethodSimulation method) => [];

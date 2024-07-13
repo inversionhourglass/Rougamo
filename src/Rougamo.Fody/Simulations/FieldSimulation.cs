@@ -18,6 +18,10 @@ namespace Rougamo.Fody.Simulations
 
         public TypeSimulation Value => _value ??= FieldRef.FieldType.Simulate(this, Module);
 
+        public OpCode TrueToken => Type.TrueToken;
+
+        public OpCode FalseToken => Type.FalseToken;
+
         public IList<Instruction> LoadForCallingMethod()
         {
             return [.. _declaringType.LoadForCallingMethod(), FieldRef.LdfldAny()];

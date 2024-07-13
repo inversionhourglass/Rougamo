@@ -4,11 +4,15 @@ using System.Collections.Generic;
 
 namespace Rougamo.Fody.Simulations
 {
-    internal class EmptyHost: IHost
+    internal class EmptyHost : IHost
     {
         public TypeSimulation TypeRef => GlobalSimulations.Object;
 
-        public TypeSimulation Type => throw new System.NotImplementedException();
+        public TypeSimulation Type => GlobalSimulations.Object;
+
+        public OpCode TrueToken => OpCodes.Brtrue;
+
+        public OpCode FalseToken => OpCodes.Brfalse;
 
         public IList<Instruction> Cast(TypeReference to) => [];
 
