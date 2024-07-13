@@ -134,7 +134,7 @@ namespace Rougamo.Fody
 
             var brCode = OpCodes.Br;
 
-            if ((rouMethod.Features & (int)(Feature.OnException | Feature.OnSuccess | Feature.OnExit)) != 0)
+            if (rouMethod.Features.HasIntersection(Feature.OnException | Feature.OnSuccess | Feature.OnExit))
             {
                 brCode = OpCodes.Leave;
                 instructions.Add(new[]
@@ -148,7 +148,7 @@ namespace Rougamo.Fody
                 });
             }
             instructions.Add(anchors.FinallyStart);
-            if ((rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) != 0)
+            if (rouMethod.Features.HasIntersection(Feature.OnSuccess | Feature.OnExit))
             {
                 brCode = OpCodes.Leave;
                 instructions.Add(new[]
@@ -400,7 +400,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction> SyncSaveException(RouMethod rouMethod, SyncVariables variables)
         {
-            if ((rouMethod.Features & (int)(Feature.OnException | Feature.OnSuccess | Feature.OnExit)) == 0) return EmptyInstructions;
+            if (!rouMethod.Features.HasIntersection(Feature.OnException | Feature.OnSuccess | Feature.OnExit)) return EmptyInstructions;
 
             return new[]
             {
@@ -412,7 +412,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction> SyncOnExceptionRefreshArgs(RouMethod rouMethod, SyncVariables variable)
         {
-            if ((rouMethod.Features & (int)(Feature.OnException | Feature.OnExit)) == 0 || (rouMethod.Features & (int)Feature.FreshArgs) == 0 || (rouMethod.MethodContextOmits & Omit.Arguments) != 0) return EmptyInstructions;
+            if (!rouMethod.Features.HasIntersection(Feature.OnException | Feature.OnExit) || !rouMethod.Features.Contains(Feature.FreshArgs) || (rouMethod.MethodContextOmits & Omit.Arguments) != 0) return EmptyInstructions;
 
             return UpdateMethodArguments(rouMethod.MethodDef, variable.MethodContext);
         }
@@ -464,7 +464,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction> SyncHasExceptionCheck(RouMethod rouMethod, Instruction onExitStart, SyncVariables variables)
         {
-            if ((rouMethod.Features & (int)(Feature.ExceptionHandle | Feature.OnSuccess | Feature.SuccessRetry | Feature.SuccessReplace | Feature.OnExit)) == 0) return EmptyInstructions;
+            if (!rouMethod.Features.HasIntersection(Feature.ExceptionHandle | Feature.OnSuccess | Feature.SuccessRetry | Feature.SuccessReplace | Feature.OnExit)) return EmptyInstructions;
 
             var instructions = new List<Instruction>();
 
@@ -487,7 +487,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction> SyncSaveReturnValue(RouMethod rouMethod, BoxTypeReference returnBoxTypeRef, SyncVariables variables)
         {
-            if (variables.Return == null || (rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) == 0 || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return EmptyInstructions;
+            if (variables.Return == null || !rouMethod.Features.HasIntersection(Feature.OnSuccess | Feature.OnExit) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return EmptyInstructions;
 
             var instructions = new List<Instruction>
             {
@@ -505,7 +505,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction> SyncOnSuccessRefreshArgs(RouMethod rouMethod, SyncVariables variable)
         {
-            if ((rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) == 0 || (rouMethod.Features & (int)Feature.FreshArgs) == 0 || (rouMethod.MethodContextOmits & Omit.Arguments) != 0) return EmptyInstructions;
+            if (!rouMethod.Features.HasIntersection(Feature.OnSuccess | Feature.OnExit) || !rouMethod.Features.Contains(Feature.FreshArgs) || (rouMethod.MethodContextOmits & Omit.Arguments) != 0) return EmptyInstructions;
 
             return UpdateMethodArguments(rouMethod.MethodDef, variable.MethodContext);
         }

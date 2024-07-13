@@ -607,7 +607,7 @@ namespace Rougamo.Fody
              *     }
              * } // while true end
              */
-            if ((rouMethod.Features & (int)(Feature.OnException | Feature.OnExit)) != 0)
+            if (rouMethod.Features.HasIntersection(Feature.OnException | Feature.OnExit))
             {
                 instructions.InsertBefore(outerCatchStart, innerCatchStart);
                 instructions.InsertBefore(outerCatchStart, ProxyStateMachineSaveException(rouMethod, context.Fields, vInnerException));
@@ -623,7 +623,7 @@ namespace Rougamo.Fody
             outerHandler.HandlerStart = outerCatchStart;
             outerHandler.HandlerEnd = outerCatchEnd;
 
-            if ((rouMethod.Features & (int)(Feature.OnException | Feature.OnExit)) != 0)
+            if (rouMethod.Features.HasIntersection(Feature.OnException | Feature.OnExit))
             {
                 proxyMoveNextDef.Body.ExceptionHandlers.Insert(0, new ExceptionHandler(ExceptionHandlerType.Catch)
                 {
@@ -956,7 +956,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction>? ProxyAsyncSaveReturnValue(RouMethod rouMethod, ProxyAsyncContext context)
         {
-            if (context.Variables.Result == null || (rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) == 0 || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return null;
+            if (context.Variables.Result == null || !rouMethod.Features.HasIntersection(Feature.OnSuccess | Feature.OnExit) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return null;
 
             var instructions = new List<Instruction>
             {
@@ -975,7 +975,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction>? ProxyAsyncSaveReturnValue(RouMethod rouMethod, AsyncFields fields)
         {
-            if (fields.Result == null || (rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) == 0 || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return null;
+            if (fields.Result == null || !rouMethod.Features.HasIntersection(Feature.OnSuccess | Feature.OnExit) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return null;
 
             var instructions = new List<Instruction>
             {
@@ -1053,7 +1053,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction>? ProxyStateMachineSaveException(RouMethod rouMethod, IStateMachineFields fields, VariableDefinition vException)
         {
-            if ((rouMethod.Features & (int)(Feature.OnException | Feature.OnSuccess | Feature.OnExit)) == 0) return null;
+            if (!rouMethod.Features.HasIntersection(Feature.OnException | Feature.OnSuccess | Feature.OnExit)) return null;
 
             return [
                 Create(OpCodes.Ldarg_0),

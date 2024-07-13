@@ -369,7 +369,7 @@ namespace Rougamo.Fody
              * }
              */
             var anchorCheckHasNext = context.Anchors.CheckHasNext;
-            if ((rouMethod.Features & (int)(Feature.OnException | Feature.OnExit)) != 0)
+            if (rouMethod.Features.HasIntersection(Feature.OnException | Feature.OnExit))
             {
                 instructions.InsertBefore(anchorCheckHasNext, Create(OpCodes.Leave, anchorCheckHasNext));
                 instructions.InsertBefore(anchorCheckHasNext, catchStart);
@@ -395,7 +395,7 @@ namespace Rougamo.Fody
             instructions.InsertBefore(anchorSetDisposedToTrue, StateMachineOnSuccess(rouMethod, proxyMoveNextDef, null, context.Fields));
             instructions.InsertBefore(anchorSetDisposedToTrue, StateMachineOnExit(rouMethod, proxyMoveNextDef, anchorSetDisposedToTrue, context.Fields));
 
-            if ((rouMethod.Features & (int)(Feature.OnException | Feature.OnExit)) != 0)
+            if (rouMethod.Features.HasIntersection(Feature.OnException | Feature.OnExit))
             {
                 proxyMoveNextDef.Body.ExceptionHandlers.Insert(0, new ExceptionHandler(ExceptionHandlerType.Catch)
                 {

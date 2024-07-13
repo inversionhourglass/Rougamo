@@ -432,9 +432,9 @@ namespace Rougamo.Fody
             return exceptionHandler ?? throw new RougamoException($"[{methodDef.FullName}] can not find outer exception handler");
         }
 
-        private void SetTryCatchFinally(int features, MethodDefinition methodDef, ITryCatchFinallyAnchors anchors)
+        private void SetTryCatchFinally(Feature features, MethodDefinition methodDef, ITryCatchFinallyAnchors anchors)
         {
-            if ((features & (int)(Feature.OnException | Feature.OnSuccess | Feature.OnExit)) != 0)
+            if (features.HasIntersection(Feature.OnException | Feature.OnSuccess | Feature.OnExit))
             {
                 var exceptionHandler = new ExceptionHandler(ExceptionHandlerType.Catch)
                 {
@@ -447,7 +447,7 @@ namespace Rougamo.Fody
                 methodDef.Body.ExceptionHandlers.Add(exceptionHandler);
             }
 
-            if ((features & (int)(Feature.OnSuccess | Feature.OnExit)) != 0)
+            if (features.HasIntersection(Feature.OnSuccess | Feature.OnExit))
             {
                 var finallyHandler = new ExceptionHandler(ExceptionHandlerType.Finally)
                 {

@@ -86,7 +86,7 @@ namespace Rougamo.Fody
             FieldDefinition? recordedReturn = null;
             var transitParameters = StateMachineParameterFields(rouMethod);
             var parameters = IteratorGetPrivateParameterFields(getEnumeratorMethodDef, transitParameters);
-            if (_config.RecordingIteratorReturns && (rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) != 0 && (rouMethod.MethodContextOmits & Omit.ReturnValue) == 0)
+            if (_config.RecordingIteratorReturns && rouMethod.Features.HasIntersection(Feature.OnSuccess | Feature.OnExit) && (rouMethod.MethodContextOmits & Omit.ReturnValue) == 0)
             {
                 var listReturnsRef = new GenericInstanceType(_typeListRef);
                 listReturnsRef.GenericArguments.Add(((GenericInstanceType)rouMethod.MethodDef.ReturnType).GenericArguments[0]);
@@ -149,7 +149,7 @@ namespace Rougamo.Fody
 
             var brCode = OpCodes.Br;
 
-            if ((rouMethod.Features & (int)(Feature.OnException | Feature.OnSuccess | Feature.OnExit)) != 0)
+            if (rouMethod.Features.HasIntersection(Feature.OnException | Feature.OnSuccess | Feature.OnExit))
             {
                 brCode = OpCodes.Leave;
                 instructions.Add(new[]
@@ -162,7 +162,7 @@ namespace Rougamo.Fody
                 });
             }
             instructions.Add(anchors.FinallyStart);
-            if ((rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) != 0)
+            if (rouMethod.Features.HasIntersection(Feature.OnSuccess | Feature.OnExit))
             {
                 brCode = OpCodes.Leave;
                 instructions.Add(new[]
@@ -208,7 +208,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction> IteratorSaveException(RouMethod rouMethod, IteratorFields fields, IteratorVariables variables)
         {
-            if ((rouMethod.Features & (int)(Feature.OnException | Feature.OnSuccess | Feature.OnExit)) == 0) return EmptyInstructions;
+            if (!rouMethod.Features.HasIntersection(Feature.OnException | Feature.OnSuccess | Feature.OnExit)) return EmptyInstructions;
 
             return new[]
             {
@@ -221,7 +221,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction>? IteratorSaveYeildReturn(RouMethod rouMethod, IIteratorFields fields)
         {
-            if (fields.RecordedReturn == null || (rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) == 0 || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return null;
+            if (fields.RecordedReturn == null || !rouMethod.Features.HasIntersection(Feature.OnSuccess | Feature.OnExit) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return null;
 
             var listAddMethodRef = _methodListAddRef.WithGenericDeclaringType(fields.RecordedReturn!.FieldType);
 
@@ -236,7 +236,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction> IteratorIfLastYeild(RouMethod rouMethod, Instruction ifNotLastYeildGoto, IteratorVariables variables)
         {
-            if ((rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) == 0) return EmptyInstructions;
+            if (!rouMethod.Features.HasIntersection(Feature.OnSuccess | Feature.OnExit)) return EmptyInstructions;
 
             return new[]
             {
@@ -247,7 +247,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction> IteratorIfHasException(RouMethod rouMethod, Instruction ifHasExceptionGoto, IteratorFields fields)
         {
-            if ((rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) == 0) return EmptyInstructions;
+            if (!rouMethod.Features.HasIntersection(Feature.OnSuccess | Feature.OnExit)) return EmptyInstructions;
 
             return new[]
             {
@@ -260,7 +260,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction>? IteratorSaveReturnValue(RouMethod rouMethod, IIteratorFields fields)
         {
-            if (fields.RecordedReturn == null || (rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) == 0 || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return null;
+            if (fields.RecordedReturn == null || !rouMethod.Features.HasIntersection(Feature.OnSuccess | Feature.OnExit) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return null;
 
             var listToArrayMethodRef = _methodListToArrayRef.WithGenericDeclaringType(fields.RecordedReturn!.FieldType);
 

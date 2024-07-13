@@ -181,7 +181,7 @@ namespace Rougamo.Fody
             var anchorCheckHasNext = Create(OpCodes.Ldloc, vHasNext);
             var anchorHasNextBrTo = context.Anchors.HasNextBrTo;
             instructions.InsertBefore(anchorHasNextBrTo, Create(OpCodes.Stloc, vHasNext));
-            if ((rouMethod.Features & (int)(Feature.OnException | Feature.OnExit)) != 0)
+            if (rouMethod.Features.HasIntersection(Feature.OnException | Feature.OnExit))
             {
                 instructions.InsertBefore(anchorHasNextBrTo, Create(OpCodes.Leave, anchorCheckHasNext));
                 instructions.InsertBefore(anchorHasNextBrTo, catchStart);
@@ -208,7 +208,7 @@ namespace Rougamo.Fody
             instructions.InsertBefore(anchorSetStateToM1, StateMachineOnSuccess(rouMethod, proxyMoveNextDef, null, context.Fields));
             instructions.InsertBefore(anchorSetStateToM1, StateMachineOnExit(rouMethod, proxyMoveNextDef, anchorSetStateToM1, context.Fields));
 
-            if ((rouMethod.Features & (int)(Feature.OnException | Feature.OnExit)) != 0)
+            if (rouMethod.Features.HasIntersection(Feature.OnException | Feature.OnExit))
             {
                 proxyMoveNextDef.Body.ExceptionHandlers.Add(new ExceptionHandler(ExceptionHandlerType.Catch)
                 {
@@ -223,7 +223,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction>? ProxyIteratorInitRecordedReturn(RouMethod rouMethod, IIteratorFields fields)
         {
-            if (fields.RecordedReturn == null || (rouMethod.Features & (int)(Feature.OnSuccess | Feature.OnExit)) == 0 || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return null;
+            if (fields.RecordedReturn == null || !rouMethod.Features.HasIntersection(Feature.OnSuccess | Feature.OnExit) || (rouMethod.MethodContextOmits & Omit.ReturnValue) != 0) return null;
 
             var returnsTypeCtorDef = _typeListDef.GetZeroArgsCtor();
             var returnsTypeCtorRef = returnsTypeCtorDef.WithGenericDeclaringType(fields.RecordedReturn.FieldType);
