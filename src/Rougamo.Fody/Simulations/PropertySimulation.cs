@@ -16,7 +16,7 @@ namespace Rougamo.Fody.Simulations
 
         public TypeSimulation Type { get; } = propertyDef.PropertyType.Simulate(declaringType.Module);
 
-        public IList<Instruction> Load() => Getter!.Call(null);
+        public IList<Instruction> Load() => Getter!.Call();
 
         public static implicit operator PropertyDefinition(PropertySimulation value) => value.PropertyDef;
     }

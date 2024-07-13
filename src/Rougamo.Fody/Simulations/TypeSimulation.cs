@@ -43,7 +43,7 @@ namespace Rougamo.Fody.Simulations
             // todo: 考虑泛型参数问题
             var ctorDef = Def.GetConstructors().Single(x => x.Parameters.Count == arguments.Length && x.Parameters.Select(y => y.ParameterType.FullName).SequenceEqual(arguments.Select(y => y!.Type.Ref.FullName)));
             var ctorRef = ctorDef.ImportInto(Module).WithGenericDeclaringType(Ref);
-            return ctorDef.Simulate(this).Call(null, arguments);
+            return ctorDef.Simulate(this).Call(arguments);
         }
 
         public virtual IList<Instruction> Default()
