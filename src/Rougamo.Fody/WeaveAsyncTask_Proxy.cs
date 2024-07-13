@@ -42,7 +42,7 @@ namespace Rougamo.Fody
 
             var proxyStateMachineTypeRef = proxyStateMachineTypeDef.MakeReference();
             var returnType = actualMethodDef.ReturnType.Simulate<TsAsyncable>(ModuleDefinition);
-            var awaiterType = returnType.M_GetAwaiter.ReturnType;
+            var awaiterType = returnType.M_GetAwaiter.Result;
             if (returnType.Ref is GenericInstanceType)
             {
                 returnType.ReplaceGenerics(genericMap);
@@ -83,7 +83,7 @@ namespace Rougamo.Fody
                 }
                 else
                 {
-                    moAwaiterType = _typeValuetask.M_GetAwaiter.ReturnType;
+                    moAwaiterType = _typeValuetask.M_GetAwaiter.Result;
                     var fMoAwaiter = new FieldDefinition(Constants.FIELD_MoAwaiter, FieldAttributes.Private, moAwaiterType);
                     proxyStateMachineTypeDef.Fields.Add(fMoAwaiter);
                     fields.MoAwaiter = fMoAwaiter;
@@ -289,7 +289,7 @@ namespace Rougamo.Fody
 
             var proxyStateMachineTypeRef = proxyStateMachineTypeDef.MakeReference();
             var returnType = actualMethodDef.ReturnType.Simulate<TsAsyncable>(ModuleDefinition);
-            var awaiterType = returnType.M_GetAwaiter.ReturnType;
+            var awaiterType = returnType.M_GetAwaiter.Result;
             if (returnType.Ref is GenericInstanceType)
             {
                 returnType.ReplaceGenerics(genericMap);
