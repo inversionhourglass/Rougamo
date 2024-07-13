@@ -1,6 +1,7 @@
 ﻿using Mono.Cecil;
 using Mono.Collections.Generic;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Rougamo.Fody
 {
@@ -189,6 +190,15 @@ namespace Rougamo.Fody
             {
                 collection.Add(item);
             }
+        }
+
+        public static T? AddGetFirst<T>(this Collection<T> collection, IList<T>? items) where T : class
+        {
+            var first = items?.FirstOrDefault();
+
+            Add(collection, items);
+
+            return first;
         }
     }
 }
