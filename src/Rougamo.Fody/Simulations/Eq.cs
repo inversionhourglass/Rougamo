@@ -19,7 +19,7 @@ namespace Rougamo.Fody.Simulations
 
     internal static class EqExtensions
     {
-        public static Eq Equals(this ILoadable value1, ILoadable value2) => new(value1, value2);
+        public static Eq IsEqual(this ILoadable value1, ILoadable value2) => new(value1, value2);
 
         public static Eq IsNull(this ILoadable value) => new(value, new Null());
     }
