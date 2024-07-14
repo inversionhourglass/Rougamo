@@ -40,7 +40,7 @@ namespace Rougamo.Fody
             _methodIEnumeratorMoveNextRef = FindTypeDefinition(typeof(IEnumerator).FullName).Methods.Single(x => x.Name == Constants.METHOD_MoveNext).ImportInto(ModuleDefinition);
             _methodDebuggerStepThroughCtorRef = _typeDebuggerStepThroughAttributeRef.Resolve().Methods.Single(x => x.IsConstructor && !x.IsStatic && !x.Parameters.Any()).ImportInto(ModuleDefinition);
             _methodExceptionDispatchInfoCaptureRef = typeExceptionDispatchInfoDef.Methods.Single(x => x.IsStatic && x.Name == Constants.METHOD_Capture).ImportInto(ModuleDefinition);
-            _methodExceptionDispatchInfoThrowRef = typeExceptionDispatchInfoDef.Methods.Single(x => x.Name == Constants.METHOD_Throw).ImportInto(ModuleDefinition);
+            _methodExceptionDispatchInfoThrowRef = typeExceptionDispatchInfoDef.Methods.Single(x => x.Parameters.Count == 0 && x.Name == Constants.METHOD_Throw).ImportInto(ModuleDefinition);
             var asyncStateMachineAttributeCtorRef = typeAsyncStateMachineAttributeRef.Resolve().Methods.Single(x => x.IsConstructor && !x.IsStatic && x.Parameters.Single().ParameterType.Is(Constants.TYPE_Type)).ImportInto(ModuleDefinition);
             var iteratorStateMachineAttributeCtorRef = typeIteratorStateMachineAttributeRef.Resolve().Methods.Single(x => x.IsConstructor && !x.IsStatic && x.Parameters.Single().ParameterType.Is(Constants.TYPE_Type)).ImportInto(ModuleDefinition);
 
