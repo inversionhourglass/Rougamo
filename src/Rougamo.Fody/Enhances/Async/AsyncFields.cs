@@ -8,9 +8,10 @@ namespace Rougamo.Fody.Enhances.Async
         public AsyncFields(
             TypeDefinition stateMachineTypeDef,
             FieldDefinition? moArray, FieldDefinition[] mos,
-            FieldDefinition methodContext,
-            FieldDefinition state, FieldDefinition builder,
-            FieldDefinition? declaringThis, FieldDefinition?[] parameters) : base(stateMachineTypeDef)
+            FieldDefinition methodContext, FieldDefinition state,
+            FieldDefinition builder, FieldDefinition? declaringThis,
+            FieldDefinition awaiter, FieldDefinition? moAwaiter,
+            FieldDefinition? result, FieldDefinition?[] parameters) : base(stateMachineTypeDef)
         {
             MoArray = MakeReference(moArray);
             Mos = mos.Select(x => MakeReference(x)!).ToArray();
@@ -19,6 +20,9 @@ namespace Rougamo.Fody.Enhances.Async
             Builder = MakeReference(builder)!;
             Parameters = parameters.Select(x => MakeReference(x)!).ToArray();
             DeclaringThis = MakeReference(declaringThis);
+            Awaiter = awaiter;
+            MoAwaiter = moAwaiter ?? Awaiter;
+            Result = result;
         }
 
         public FieldReference? MoArray { get; }
@@ -40,18 +44,18 @@ namespace Rougamo.Fody.Enhances.Async
             set => _declaringThis = value is FieldDefinition fd ? MakeReference(fd) : value;
         }
 
-        private FieldReference? _awaiter;
-        public FieldReference? Awaiter
+        private FieldReference _awaiter;
+        public FieldReference Awaiter
         {
             get => _awaiter;
-            set => _awaiter = value is FieldDefinition fd ? MakeReference(fd) : value;
+            set => _awaiter = value is FieldDefinition fd ? MakeReference(fd)! : value;
         }
 
-        private FieldReference? _moAwaiter;
-        public FieldReference? MoAwaiter
+        private FieldReference _moAwaiter;
+        public FieldReference MoAwaiter
         {
             get => _moAwaiter;
-            set => _moAwaiter = value is FieldDefinition fd ? MakeReference(fd) : value;
+            set => _moAwaiter = value is FieldDefinition fd ? MakeReference(fd)! : value;
         }
 
         private FieldReference? _result;

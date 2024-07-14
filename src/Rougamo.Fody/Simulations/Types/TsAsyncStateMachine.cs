@@ -1,9 +1,6 @@
 ﻿using Mono.Cecil;
 using Rougamo.Fody.Enhances.Async;
-using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 
 namespace Rougamo.Fody.Simulations.Types
 {
@@ -35,15 +32,15 @@ namespace Rougamo.Fody.Simulations.Types
 
         public TsAsyncStateMachine SetFields(AsyncFields fields)
         {
-            F_MoArray = fields.MoArray?.Resolve()?.Simulate(this);
+            F_MoArray = fields.MoArray?.Resolve().Simulate(this);
             F_Mos = fields.Mos.Select(x => x.Resolve().Simulate<TsMo>(this)).ToArray();
             F_MethodContext = fields.MethodContext.Resolve().Simulate<TsMethodContext>(this);
             F_State = fields.State.Resolve().Simulate(this);
             F_Builder = fields.Builder.Resolve().Simulate<TsAsyncBuilder>(this);
             F_Parameters = fields.Parameters.Select(x => x!.Resolve().Simulate(this)).ToArray();
             F_DeclaringThis = fields.DeclaringThis?.Resolve().Simulate<TsWeaveingTarget>(this);
-            F_Awaiter = fields.Awaiter!.Resolve().Simulate<TsAwaiter>(this);
-            F_MoAwaiter = fields.MoAwaiter!.Resolve().Simulate<TsAwaiter>(this);
+            F_Awaiter = fields.Awaiter.Resolve().Simulate<TsAwaiter>(this);
+            F_MoAwaiter = fields.MoAwaiter.Resolve().Simulate<TsAwaiter>(this);
             F_Result = fields.Result?.Resolve().Simulate(this);
 
             return this;
