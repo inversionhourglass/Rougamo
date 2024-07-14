@@ -372,7 +372,87 @@ namespace Rougamo.Fody
             return parameterTypeRef;
         }
 
+        public static TypeReference Import(this TypeReference typeRef, params TypeReference[] inferenceChain)
+        {
+            var chainLast = inferenceChain.Last();
+            var isGenericParameter = chainLast is GenericParameter;
+            if (chainLast is not GenericInstanceType importingTypeRef) return chainLast.ImportInto(typeRef.Module);
+
+            var genericArguments = isGenericParameter ? [chainLast] : importingTypeRef.GenericArguments.ToArray();
+            for (var i = inferenceChain.Length - 2; i >= 0; i--)
+            {
+                if (inferenceChain[i] is not GenericInstanceType preTypeRef) throw new RougamoException($"Item in inference chain must be GenericInstanceType, but {inferenceChain[i]} is not. Cannot import {importingTypeRef} into {typeRef}");
+
+                MappingGenerics(genericArguments, preTypeRef);
+            }
+
+            MappingGenerics(genericArguments, typeRef);
+
+            if (isGenericParameter) return genericArguments[0];
+
+            var git = new GenericInstanceType(importingTypeRef.ElementType.ImportInto(typeRef.Module));
+            git.GenericArguments.Add(genericArguments);
+            return git;
+        }
+
+        private static void MappingGenerics(TypeReference[] generics, TypeReference typeRef)
+        {
+            if (typeRef is GenericInstanceType git)
+            {
+                MappingGenerics(generics, git);
+            }
+            else if (typeRef is TypeDefinition typeDef)
+            {
+                MappingGenerics(generics, typeDef);
+            }
+        }
+
+        private static void MappingGenerics(TypeReference[] generics, GenericInstanceType git)
+        {
+            var typeDef = git.Resolve();
+            for (var j = 0; j < generics.Length; j++)
+            {
+                var generic = generics[j];
+                if (generic is GenericParameter gp)
+                {
+                    var gpIndex = typeDef.GetGenericParameterIndexByName(gp.Name);
+                    generics[j] = git.GenericArguments[gpIndex];
+                }
+                else
+                {
+                    generics[j] = generic;
+                }
+            }
+        }
+
+        private static void MappingGenerics(TypeReference[] generics, TypeDefinition typeDef)
+        {
+            for (var j = 0; j < generics.Length; j++)
+            {
+                var generic = generics[j];
+                if (generic is GenericParameter gp)
+                {
+                    var gpIndex = typeDef.GetGenericParameterIndexByName(gp.Name);
+                    generics[j] = typeDef.GenericParameters[gpIndex];
+                }
+                else
+                {
+                    generics[j] = generic;
+                }
+            }
+        }
+
         #endregion Import
+
+        public static int GetGenericParameterIndexByName(this TypeDefinition typeDef, string name)
+        {
+            for (var i = 0; i < typeDef.GenericParameters.Count; i++)
+            {
+                if (typeDef.GenericParameters[i].Name == name) return i;
+            }
+
+            throw new RougamoException($"Cannot find the generic parameter named {name} in the type {typeDef}");
+        }
 
         public static TypeDefinition ResolveStateMachine(this MethodDefinition methodDef, string stateMachineAttributeName)
         {
