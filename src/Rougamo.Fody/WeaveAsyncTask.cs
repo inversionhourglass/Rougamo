@@ -66,6 +66,12 @@ namespace Rougamo.Fody
 
         private AsyncFields AsyncResolveFields(RouMethod rouMethod, TypeDefinition stateMachineTypeDef)
         {
+            var asyncableTypeRef = rouMethod.MethodDef.ReturnType;
+            var awaiterTypeRef = asyncableTypeRef.Resolve().Methods.Single(x => x.Name == Constants.METHOD_GetAwaiter).ReturnType;
+            awaiterTypeRef = stateMachineTypeDef.Import(asyncableTypeRef, awaiterTypeRef);
+            var resultTypeRef = awaiterTypeRef.Resolve().Methods.Single(x => x.Name == Constants.METHOD_GetResult).ReturnType;
+            resultTypeRef = awaiterTypeRef.Import(resultTypeRef);
+
             FieldDefinition? moArray = null;
             var mos = new FieldDefinition[0];
             if (rouMethod.Mos.Length >= _config.MoArrayThreshold)
@@ -83,14 +89,19 @@ namespace Rougamo.Fody
                 }
             }
             var methodContext = new FieldDefinition(Constants.FIELD_RougamoContext, FieldAttributes.Public, _typeMethodContextRef);
+            var awaiter = new FieldDefinition(Constants.FIELD_Awaiter, FieldAttributes.Private, awaiterTypeRef);
+            var moAwaiter = asyncableTypeRef.Is(Constants.TYPE_ValueTask) ? null : new FieldDefinition(Constants.FIELD_MoAwaiter, FieldAttributes.Private, _typeValueTaskAwaiterRef);
+            var result = resultTypeRef.Is(Constants.TYPE_Void) ? null : new FieldDefinition(Constants.FIELD_Result, FieldAttributes.Private, resultTypeRef);
             var builder = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_Builder);
             var state = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_State);
             var declaringThis = stateMachineTypeDef.Fields.SingleOrDefault(x => x.FieldType.Resolve() == stateMachineTypeDef.DeclaringType);
             var parameters = StateMachineParameterFields(rouMethod);
 
             stateMachineTypeDef.Fields.Add(methodContext);
+            stateMachineTypeDef.Fields.Add(awaiter);
+            if (moAwaiter != null) stateMachineTypeDef.Fields.Add(moAwaiter);
 
-            return new AsyncFields(stateMachineTypeDef, moArray, mos, methodContext, state, builder, declaringThis, parameters);
+            return new AsyncFields(stateMachineTypeDef, moArray, mos, methodContext, state, builder, declaringThis, awaiter, moAwaiter, result, parameters);
         }
 
         private BoxTypeReference AsyncResolveReturnBoxTypeRef(TypeReference returnTypeRef, FieldReference builderField)
