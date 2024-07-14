@@ -360,7 +360,7 @@ namespace Rougamo.Fody
 
                 if (moVariables == null)
                 {
-                    ExecuteMoMethod(methodName, mo, moFields![j], contextField!);
+                    instructions.Add(ExecuteMoMethod(methodName, mo, moFields![j], contextField!));
                 }
                 else
                 {

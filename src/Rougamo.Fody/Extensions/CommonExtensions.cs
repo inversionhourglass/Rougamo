@@ -29,7 +29,7 @@ namespace Rougamo.Fody
         public static bool Contains<T>(this T set1, int set2) where T : Enum
         {
             var iSet1 = Convert.ToInt32(set1);
-            return (iSet1 & set2) != set2;
+            return (iSet1 & set2) == set2;
         }
 
         public static bool SubsetOf<T>(this T set1, T set2) where T : Enum
