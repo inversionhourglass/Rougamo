@@ -102,9 +102,9 @@ namespace Rougamo.Fody
                         {
                             _typeMethodContextRef = _importer.Import(methodDef.Parameters.First().ParameterType);
                         }
-                        if (_typeValuetask == null && methodDef.ReturnType.Is(Constants.TYPE_ValueTask))
+                        if (_typeValueTaskAwaiterRef == null && methodDef.ReturnType.Is(Constants.TYPE_ValueTask))
                         {
-                            _typeValuetask = _importer.Import(methodDef.ReturnType).Simulate<TsAsyncable>(ModuleDefinition);
+                            _typeValueTaskAwaiterRef = _importer.Import(methodDef.ReturnType.Resolve().Methods.Single(x => x.Name == Constants.METHOD_GetAwaiter).ReturnType);
                         }
                     }
                 }
