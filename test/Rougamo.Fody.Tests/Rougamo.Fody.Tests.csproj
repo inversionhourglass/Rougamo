@@ -32,4 +32,8 @@
     <ProjectReference Include="..\TestAssemblies\SignatureUsage\SignatureUsage.csproj" />
   </ItemGroup>
 
+  <ItemGroup Condition="'$(TargetFramework)'=='net6.0'">
+    <ProjectReference Include="..\TestAssemblies\WebApis\WebApis.csproj" />
+  </ItemGroup>
+
 </Project>

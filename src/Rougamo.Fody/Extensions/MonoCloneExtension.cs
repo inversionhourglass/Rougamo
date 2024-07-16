@@ -115,6 +115,7 @@ namespace Rougamo.Fody
             var clonedMethodDef = new MethodDefinition(methodName, methodAttributes, methodDef.ReturnType);
 
             methodDef.Clone(clonedMethodDef, map, false, cloneBody);
+            clonedMethodDef.Attributes &= ~MethodAttributes.Virtual;
 
             return clonedMethodDef;
         }
