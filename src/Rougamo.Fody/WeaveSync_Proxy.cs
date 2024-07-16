@@ -12,6 +12,7 @@ namespace Rougamo.Fody
         {
             var actualMethodDef = rouMethod.MethodDef.Clone($"$Rougamo_{rouMethod.MethodDef.Name}");
             rouMethod.MethodDef.DeclaringType.Methods.Add(actualMethodDef);
+            actualMethodDef.CustomAttributes.Clear();
 
             rouMethod.MethodDef.DebuggerStepThrough(_methodDebuggerStepThroughCtorRef);
             rouMethod.MethodDef.Clear();

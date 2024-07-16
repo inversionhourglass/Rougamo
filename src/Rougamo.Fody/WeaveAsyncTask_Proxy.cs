@@ -487,7 +487,7 @@ namespace Rougamo.Fody
         private void ProxyStateMachineAttributeClone(MethodDefinition clonedMethodDef, TypeDefinition clonedStateMachineTypeDef, string stateMachineAttributeTypeName)
         {
             var stateMachineAttribute = clonedMethodDef.CustomAttributes.Single(x => x.Is(stateMachineAttributeTypeName));
-            clonedMethodDef.CustomAttributes.Remove(stateMachineAttribute);
+            clonedMethodDef.CustomAttributes.Clear();
 
             if (!_stateMachineCtorRefs.TryGetValue(stateMachineAttributeTypeName, out var ctor))
             {

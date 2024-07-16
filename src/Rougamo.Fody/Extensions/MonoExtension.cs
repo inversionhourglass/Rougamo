@@ -487,7 +487,6 @@ namespace Rougamo.Fody
 
         public static void DebuggerStepThrough(this MethodDefinition methodDef, MethodReference ctor)
         {
-            methodDef.CustomAttributes.Clear();
             methodDef.CustomAttributes.Add(new CustomAttribute(ctor));
         }
 
