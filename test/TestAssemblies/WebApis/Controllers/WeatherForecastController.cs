@@ -31,5 +31,12 @@ namespace WebApis.Controllers
             })
             .ToArray();
         }
+
+        [HttpPost]
+        public async Task<string> Post()
+        {
+            await Task.Yield();
+            return nameof(Post);
+        }
     }
 }
