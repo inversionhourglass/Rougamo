@@ -9,7 +9,7 @@ namespace Rougamo.Fody.Simulations
 {
     internal class MethodSimulation : Simulation
     {
-        private readonly int[]? _genericParaIndexes;
+        private readonly int[][]? _genericParaIndexes;
 
         public MethodSimulation(TypeSimulation declaringType, MethodDefinition methodDef) : base(declaringType.Module)
         {
@@ -51,11 +51,7 @@ namespace Rougamo.Fody.Simulations
 
             var instructions = new List<Instruction>();
 
-            if (generics == null)
-            {
-                if (_genericParaIndexes == null) throw new RougamoException($"[{Def}] Not all method generic parameters are inferred from parameters, you have to specify all the generic parameters manually.");
-                generics = _genericParaIndexes.Select(x => arguments[x]?.Type ?? throw new RougamoException($"[{Def}] Cannot infer the generic type from a null value at parameter index {x}")).ToArray();
-            }
+            generics ??= ResolveGenerics(arguments);
 
             var methodRef = generics == null ? Ref : Ref.WithGenerics(generics.Select(x => x.Ref).ToArray());
 
@@ -108,11 +104,11 @@ namespace Rougamo.Fody.Simulations
             return Def.Body.CreateVariable(variableTypeRef).Simulate<T>(this);
         }
 
-        private int[]? GetGenericParameterIndexes()
+        private int[][]? GetGenericParameterIndexes()
         {
             if (!Def.HasGenericParameters) return [];
 
-            var indexes = Enumerable.Repeat(-1, Def.GenericParameters.Count).ToArray();
+            var indexes = Enumerable.Repeat<int[]?>(null, Def.GenericParameters.Count).ToArray();
             var index = 0;
             var map = new Dictionary<GenericParameter, int>();
             foreach (var gp in Def.GenericParameters)
@@ -121,13 +117,49 @@ namespace Rougamo.Fody.Simulations
             }
             for (var i = 0; i < Def.Parameters.Count; i++)
             {
-                if (Def.Parameters[i].ParameterType is GenericParameter gp && map.TryGetValue(gp, out var idx))
-                {
-                    indexes[idx] = i;
-                }
+                var parameterType = Def.Parameters[i].ParameterType;
+                if (parameterType is ByReferenceType brt) parameterType = brt.ElementType;
+
+                int[] steps = [i];
+                ResolveGenericIndex(parameterType, indexes, steps, map);
             }
 
-            return indexes.Contains(-1) ? null : indexes;
+#pragma warning disable CS8619 // Nullability of reference types in value doesn't match target type.
+            return indexes.Contains(null) ? null : indexes;
+#pragma warning restore CS8619 // Nullability of reference types in value doesn't match target type.
+        }
+
+        private void ResolveGenericIndex(TypeReference parameterType, int[]?[] indexes, int[] steps, Dictionary<GenericParameter, int> map)
+        {
+            if (parameterType is GenericParameter gp && map.TryGetValue(gp, out var index))
+            {
+                indexes[index] = steps;
+            }
+
+            if (parameterType is GenericInstanceType git)
+            {
+                for (var i = 0; i < git.GenericArguments.Count; i++)
+                {
+                    ResolveGenericIndex(git.GenericArguments[i], indexes, [.. steps, i], map);
+                }
+            }
+        }
+
+        private TypeSimulation[] ResolveGenerics(IParameterSimulation?[] arguments)
+        {
+            if (_genericParaIndexes == null) throw new RougamoException($"[{Def}] Not all method generic parameters are inferred from parameters, you have to specify all the generic parameters manually.");
+            return _genericParaIndexes.Select(indexes =>
+            {
+                var arg = arguments[indexes[0]] ?? throw new RougamoException($"[{Def}] Cannot infer the generic type from a null value at parameter index {indexes}");
+                var argType = arg.Type.Ref;
+                for (var i = 1; i < indexes.Length; i++)
+                {
+                    if (argType is not GenericInstanceType git) throw new RougamoException($"[{Def}] Cannot infer the generic type from type {argType}");
+
+                    argType = git.GenericArguments[indexes[i]];
+                }
+                return argType.Simulate(Module);
+            }).ToArray();
         }
 
         public static implicit operator MethodReference(MethodSimulation value) => value.Ref;
