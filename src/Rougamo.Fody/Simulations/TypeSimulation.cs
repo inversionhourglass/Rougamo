@@ -1,12 +1,12 @@
-﻿using Mono.Cecil;
+﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System;
-using System.Collections.Concurrent;
+using Mono.Cecil;
 using Mono.Cecil.Cil;
-using static Mono.Cecil.Cil.Instruction;
 using Mono.Cecil.Rocks;
 using Rougamo.Fody.Simulations.PlainValues;
+using static Mono.Cecil.Cil.Instruction;
 
 namespace Rougamo.Fody.Simulations
 {
@@ -18,7 +18,7 @@ namespace Rougamo.Fody.Simulations
 
         public TypeSimulation(TypeReference typeRef, IHost? host, ModuleDefinition moduleDef) : base(moduleDef)
         {
-            Ref = typeRef.ImportInto(moduleDef);
+            Ref = moduleDef == null ? typeRef : typeRef.ImportInto(moduleDef);
             Def = typeRef.Resolve();
             Host = host ?? new This(this);
         }
@@ -31,7 +31,7 @@ namespace Rougamo.Fody.Simulations
 
         public bool IsValueType => Ref.IsValueType;
 
-        public TypeSimulation Type => this;
+        public virtual TypeSimulation Type => this;
 
         public virtual OpCode TrueToken => OpCodes.Brtrue;
 
@@ -91,33 +91,33 @@ namespace Rougamo.Fody.Simulations
         #region Simulate
 
         #region Simulate-Method
-        protected MethodSimulation<TRet> MethodSimulate<TRet>(string methodName) where TRet : TypeSimulation => MethodSimulate<TRet>(methodName, x => x.Name == methodName);
+        protected MethodSimulation<TRet> MethodSimulate<TRet>(string methodName, bool recursion) where TRet : TypeSimulation => MethodSimulate<TRet>(methodName, recursion, x => x.Name == methodName);
 
-        protected MethodSimulation<TRet> MethodSimulate<TRet>(string id, Func<MethodDefinition, bool> predicate) where TRet : TypeSimulation
+        protected MethodSimulation<TRet> MethodSimulate<TRet>(string id, bool recursion, Func<MethodDefinition, bool> predicate) where TRet : TypeSimulation
         {
             if (!_methodSimulations.TryGetValue(id, out var simulation))
             {
-                simulation = Def.Methods.Single(predicate).Simulate<TRet>(this);
+                simulation = Def.GetMethod(recursion, predicate)!.Simulate<TRet>(this);
                 _methodSimulations[id] = simulation;
             }
             return (MethodSimulation<TRet>)simulation;
         }
 
-        protected MethodSimulation<TRet> PublicMethodSimulate<TRet>(string methodName) where TRet : TypeSimulation => MethodSimulate<TRet>(methodName, x => x.Name == methodName && x.IsPublic);
+        protected MethodSimulation<TRet> PublicMethodSimulate<TRet>(string methodName, bool recursion) where TRet : TypeSimulation => MethodSimulate<TRet>(methodName, recursion, x => x.Name == methodName && x.IsPublic);
 
-        protected MethodSimulation MethodSimulate(string methodName) => MethodSimulate(methodName, x => x.Name == methodName);
+        protected MethodSimulation MethodSimulate(string methodName, bool recursion) => MethodSimulate(methodName, recursion, x => x.Name == methodName);
 
-        protected MethodSimulation MethodSimulate(string id, Func<MethodDefinition, bool> predicate)
+        protected MethodSimulation MethodSimulate(string id, bool recursion, Func<MethodDefinition, bool> predicate)
         {
             if (!_methodSimulations.TryGetValue(id, out var simulation))
             {
-                simulation = Def.Methods.Single(predicate).Simulate(this);
+                simulation = Def.GetMethod(recursion, predicate)!.Simulate(this);
                 _methodSimulations[id] = simulation;
             }
             return simulation;
         }
 
-        protected MethodSimulation PublicMethodSimulate(string methodName) => MethodSimulate(methodName, x => x.Name == methodName && x.IsPublic);
+        protected MethodSimulation PublicMethodSimulate(string methodName, bool recursion) => MethodSimulate(methodName, recursion, x => x.Name == methodName && x.IsPublic);
         #endregion Simulate-Method
 
         #region Simulate-Field
