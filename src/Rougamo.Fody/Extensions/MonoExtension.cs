@@ -27,7 +27,7 @@ namespace Rougamo.Fody
             return methodRef.FullName == fullName;
         }
 
-        public static bool IsObject(this TypeReference typeRef) => typeRef.Is(typeof(string).FullName);
+        public static bool IsObject(this TypeReference typeRef) => typeRef.Is(typeof(object).FullName);
 
         public static bool IsGeneric(this TypeReference typeRef, string genericName, out TypeReference[]? genericTypeRefs)
         {
