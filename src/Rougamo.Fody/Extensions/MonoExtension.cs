@@ -375,10 +375,21 @@ namespace Rougamo.Fody
         public static TypeReference Import(this TypeReference typeRef, params TypeReference[] inferenceChain)
         {
             var chainLast = inferenceChain.Last();
-            var isGenericParameter = chainLast is GenericParameter;
-            if (chainLast is not GenericInstanceType importingTypeRef) return chainLast.ImportInto(typeRef.Module);
+            TypeReference[] genericArguments;
+            if (chainLast is GenericInstanceType importingTypeRef)
+            {
+                genericArguments = importingTypeRef.GenericArguments.ToArray();
+            }
+            else if (chainLast is GenericParameter)
+            {
+                importingTypeRef = null!;
+                genericArguments = [chainLast];
+            }
+            else
+            {
+                return chainLast.ImportInto(typeRef.Module);
+            }
 
-            var genericArguments = isGenericParameter ? [chainLast] : importingTypeRef.GenericArguments.ToArray();
             for (var i = inferenceChain.Length - 2; i >= 0; i--)
             {
                 if (inferenceChain[i] is not GenericInstanceType preTypeRef) throw new RougamoException($"Item in inference chain must be GenericInstanceType, but {inferenceChain[i]} is not. Cannot import {importingTypeRef} into {typeRef}");
@@ -388,7 +399,7 @@ namespace Rougamo.Fody
 
             MappingGenerics(genericArguments, typeRef);
 
-            if (isGenericParameter) return genericArguments[0];
+            if (importingTypeRef == null) return genericArguments[0].ImportInto(typeRef.Module);
 
             var git = new GenericInstanceType(importingTypeRef.ElementType.ImportInto(typeRef.Module));
             git.GenericArguments.Add(genericArguments);
@@ -512,7 +523,7 @@ namespace Rougamo.Fody
         public static Instruction CallAny(this MethodReference methodRef)
         {
             var methodDef = methodRef.Resolve();
-            if (methodDef.IsConstructor) return Instruction.Create(OpCodes.Newobj, methodDef);
+            if (methodDef.IsConstructor) return Instruction.Create(OpCodes.Newobj, methodRef);
 
             var opCall = methodDef.IsVirtual ? OpCodes.Callvirt : OpCodes.Call;
             return Instruction.Create(opCall, methodRef);
