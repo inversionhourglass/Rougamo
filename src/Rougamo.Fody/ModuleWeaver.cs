@@ -28,6 +28,7 @@ namespace Rougamo.Fody
         internal TypeReference _typeExceptionRef;
         internal TypeReference _typeCancellationTokenRef;
         internal TypeReference _typeListRef;
+        internal TypeReference _typeValueTaskRef;
         internal TypeReference _typeValueTaskAwaiterRef;
         internal TypeReference _typeIMoRef;
         internal TypeReference _typeMethodContextRef;
