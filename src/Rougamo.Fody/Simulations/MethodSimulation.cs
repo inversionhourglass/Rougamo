@@ -36,17 +36,17 @@ namespace Rougamo.Fody.Simulations
 
         public VariableDefinition? TempThis { get; set; }
 
-        public virtual IList<Instruction> DupCall(params IParameterSimulation?[] arguments)
+        public virtual IList<Instruction> DupCall(MethodSimulation? host, params IParameterSimulation?[] arguments)
         {
-            return Call(true, null, arguments);
+            return Call(host, true, null, arguments);
         }
 
-        public virtual IList<Instruction> Call(params IParameterSimulation?[] arguments)
+        public virtual IList<Instruction> Call(MethodSimulation? host, params IParameterSimulation?[] arguments)
         {
-            return Call(false, null, arguments);
+            return Call(host, false, null, arguments);
         }
 
-        public IList<Instruction> Call(bool dupCalling, TypeSimulation[]? generics, params IParameterSimulation?[] arguments)
+        public IList<Instruction> Call(MethodSimulation? host, bool dupCalling, TypeSimulation[]? generics, params IParameterSimulation?[] arguments)
         {
             if (Def.Parameters.Count != arguments.Length) throw new RougamoException($"Parameters count not match of method {Def}, need {Def.Parameters.Count} gave {arguments.Length}");
 
@@ -62,7 +62,7 @@ namespace Rougamo.Fody.Simulations
                 if (Def.Parameters[i].ParameterType is ByReferenceType)
                 {
                     var argument = arguments[i] ?? new Null();
-                    instructions.Add(argument.PrepareLoadAddress(this));
+                    instructions.Add(argument.PrepareLoadAddress(host));
                 }
             }
 
@@ -83,7 +83,7 @@ namespace Rougamo.Fody.Simulations
                 var parameterTypeRef = Def.Parameters[i].ParameterType;
                 if (parameterTypeRef is ByReferenceType)
                 {
-                    instructions.Add(argument.LoadAddress(this));
+                    instructions.Add(argument.LoadAddress(host));
                 }
                 else
                 {

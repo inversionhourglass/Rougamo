@@ -5,8 +5,8 @@ namespace Rougamo.Fody.Simulations
 {
     internal interface IParameterSimulation : ILoadable
     {
-        IList<Instruction> PrepareLoadAddress(MethodSimulation method);
+        IList<Instruction> PrepareLoadAddress(MethodSimulation? method);
 
-        IList<Instruction> LoadAddress(MethodSimulation method);
+        IList<Instruction> LoadAddress(MethodSimulation? method);
     }
 }

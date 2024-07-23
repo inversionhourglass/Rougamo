@@ -26,12 +26,12 @@ namespace Rougamo.Fody.Simulations
 
         public IList<Instruction> Assign(Func<IAssignable, IList<Instruction>> valueFactory)
         {
-            return Setter!.Call(new RawValue(Type, valueFactory(this)));
+            return Setter!.Call(null, new RawValue(Type, valueFactory(this)));
         }
 
         public IList<Instruction> Cast(TypeReference to) => Type.Cast(to);
 
-        public IList<Instruction> Load() => Getter!.Call();
+        public IList<Instruction> Load() => Getter!.Call(null);
 
         public static implicit operator PropertyDefinition(PropertySimulation value) => value.PropertyDef;
     }

@@ -20,10 +20,10 @@ namespace Rougamo.Fody.Simulations
 
         public IList<Instruction> Load() => [];
 
-        public IList<Instruction> LoadAddress(MethodSimulation method) => [];
+        public IList<Instruction> LoadAddress(MethodSimulation? method) => [];
 
         public IList<Instruction> LoadForCallingMethod() => [];
 
-        public IList<Instruction> PrepareLoadAddress(MethodSimulation method) => [];
+        public IList<Instruction> PrepareLoadAddress(MethodSimulation? method) => [];
     }
 }

@@ -40,7 +40,7 @@ namespace Rougamo.Fody.Simulations
 
         public virtual OpCode FalseToken => OpCodes.Brfalse;
 
-        public virtual IList<Instruction> New(params IParameterSimulation?[] arguments)
+        public virtual IList<Instruction> New(MethodSimulation host, params IParameterSimulation?[] arguments)
         {
             if (IsValueType && arguments.Length == 0)
             {
@@ -50,7 +50,7 @@ namespace Rougamo.Fody.Simulations
             // todo: 考虑泛型参数问题
             var ctorDef = Def.GetConstructors().Single(x => x.Parameters.Count == arguments.Length && x.Parameters.Select(y => y.ParameterType.FullName).SequenceEqual(arguments.Select(y => y!.Type.Ref.FullName)));
             var ctorRef = ModuleWeaver.Import(ctorDef).WithGenericDeclaringType(Ref);
-            return ctorRef.Simulate(this).Call(arguments);
+            return ctorRef.Simulate(this).Call(host, arguments);
         }
 
         public virtual IList<Instruction> Default()
@@ -64,9 +64,9 @@ namespace Rougamo.Fody.Simulations
 
         public virtual IList<Instruction> LoadForCallingMethod() => Host.LoadForCallingMethod();
 
-        public virtual IList<Instruction> PrepareLoadAddress(MethodSimulation method) => Host.PrepareLoadAddress(method);
+        public virtual IList<Instruction> PrepareLoadAddress(MethodSimulation? method) => Host.PrepareLoadAddress(method);
 
-        public virtual IList<Instruction> LoadAddress(MethodSimulation method) => Host.LoadAddress(method);
+        public virtual IList<Instruction> LoadAddress(MethodSimulation? method) => Host.LoadAddress(method);
 
         public IList<Instruction> Load() => Host.Load();
 
@@ -84,6 +84,15 @@ namespace Rougamo.Fody.Simulations
             }
 
             if (to.IsValueType || to.IsGenericParameter) throw new RougamoException($"Cannot convert {Ref} to {to}. Only object types can be converted to value types.");
+
+            if (to.IsObject())
+            {
+                if (Ref.IsValueType || Ref.IsGenericParameter)
+                {
+                    return [Create(OpCodes.Box, Ref)];
+                }
+                return [];
+            }
 
             var toDef = to.Resolve();
             if (toDef.IsInterface && Ref.Implement(to.FullName) || !toDef.IsInterface && Ref.IsOrDerivesFrom(to.FullName)) return [];

@@ -18,9 +18,9 @@ namespace Rougamo.Fody.Simulations
 
         public IList<Instruction> Load() => parameter.Load();
 
-        public IList<Instruction> LoadAddress(MethodSimulation method) => parameter.LoadAddress(method);
+        public IList<Instruction> LoadAddress(MethodSimulation? method) => parameter.LoadAddress(method);
 
-        public IList<Instruction> PrepareLoadAddress(MethodSimulation method) => parameter.PrepareLoadAddress(method);
+        public IList<Instruction> PrepareLoadAddress(MethodSimulation? method) => parameter.PrepareLoadAddress(method);
     }
 
     internal static class TypedParameterExtensions

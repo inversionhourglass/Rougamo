@@ -21,9 +21,9 @@ namespace Rougamo.Fody.Simulations
 
         public IList<Instruction> LoadForCallingMethod() => [VariableDef.LdlocAny()];
 
-        public IList<Instruction> PrepareLoadAddress(MethodSimulation method) => [];
+        public IList<Instruction> PrepareLoadAddress(MethodSimulation? method) => [];
 
-        public IList<Instruction> LoadAddress(MethodSimulation method) => [VariableDef.Ldloca()];
+        public IList<Instruction> LoadAddress(MethodSimulation? method) => [VariableDef.Ldloca()];
 
         public IList<Instruction> Load() => [VariableDef.Ldloc()];
 
@@ -36,9 +36,9 @@ namespace Rougamo.Fody.Simulations
         {
             if (VariableDef.VariableType.IsValueType)
             {
-                return [VariableDef.Ldloca(), .. type.New(arguments)];
+                return [VariableDef.Ldloca(), .. type.New(DeclaringMethod, arguments)];
             }
-            return Assign(target => type.New(arguments));
+            return Assign(target => type.New(DeclaringMethod, arguments));
         }
 
         public IList<Instruction> AssignDefault(TypeSimulation type)

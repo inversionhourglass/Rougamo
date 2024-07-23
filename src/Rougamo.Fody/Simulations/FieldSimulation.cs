@@ -29,9 +29,9 @@ namespace Rougamo.Fody.Simulations
             return [.. _declaringType.LoadForCallingMethod(), FieldRef.LdfldAny()];
         }
 
-        public IList<Instruction> PrepareLoadAddress(MethodSimulation method) => [];
+        public IList<Instruction> PrepareLoadAddress(MethodSimulation? method) => [];
 
-        public IList<Instruction> LoadAddress(MethodSimulation method)
+        public IList<Instruction> LoadAddress(MethodSimulation? method)
         {
             return [.. _declaringType.Load(), FieldRef.Ldflda()];
         }
@@ -46,13 +46,13 @@ namespace Rougamo.Fody.Simulations
             return [.. _declaringType.Load(), .. valueFactory(this), FieldRef.Stfld()];
         }
 
-        public IList<Instruction> AssignNew(TypeSimulation type, params IParameterSimulation?[] arguments)
+        public IList<Instruction> AssignNew(MethodSimulation host, TypeSimulation type, params IParameterSimulation?[] arguments)
         {
             if (FieldRef.FieldType.IsValueType)
             {
-                return [.. _declaringType.Load(), FieldRef.Ldflda(), .. type.New(arguments)];
+                return [.. _declaringType.Load(), FieldRef.Ldflda(), .. type.New(host, arguments)];
             }
-            return Assign(target => type.New(arguments));
+            return Assign(target => type.New(host, arguments));
         }
 
         public IList<Instruction> AssignDefault(TypeSimulation type)
@@ -62,7 +62,7 @@ namespace Rougamo.Fody.Simulations
             {
                 return [.. _declaringType.Load(), FieldRef.Ldflda(), .. type.Default()];
             }
-            return [.. _declaringType.Load(), .. type.Default(), FieldRef.Ldfld()];
+            return [.. _declaringType.Load(), .. type.Default(), FieldRef.Stfld()];
         }
 
         public IList<Instruction> Cast(TypeReference to) => Type.Cast(to);
@@ -76,9 +76,9 @@ namespace Rougamo.Fody.Simulations
 
         public new T Value => _value ??= FieldRef.FieldType.Simulate<T>(this, ModuleWeaver);
 
-        public IList<Instruction> AssignNew(params IParameterSimulation?[] arguments)
+        public IList<Instruction> AssignNew(MethodSimulation host, params IParameterSimulation?[] arguments)
         {
-            return AssignNew(Value, arguments);
+            return AssignNew(host, Value, arguments);
         }
     }
 
