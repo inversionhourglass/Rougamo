@@ -29,5 +29,17 @@ namespace Rougamo.Fody
             var declaringTypeGenericNames = declaringTypeDef.GenericParameters.Select(x => x.Name).ToArray();
             return typeDef.GenericParameters.Where(x => !declaringTypeGenericNames.Contains(x.Name)).ToArray();
         }
+
+        public static TypeDefinition AddUniqueField(this TypeDefinition typeDef, FieldDefinition? fieldDef)
+        {
+            if (fieldDef == null) return typeDef;
+
+            var fields = typeDef.Fields;
+            var currentFieldDef = fields.FirstOrDefault(x => x.Name == fieldDef.Name);
+            if (currentFieldDef != null) fields.Remove(currentFieldDef);
+            fields.Add(fieldDef);
+
+            return typeDef;
+        }
     }
 }
