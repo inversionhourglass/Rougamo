@@ -2,9 +2,11 @@
 using Mono.Cecil.Cil;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Rougamo.Fody.Simulations
 {
+    [DebuggerDisplay("{FieldRef}")]
     internal class FieldSimulation(TypeSimulation declaringType, FieldDefinition fieldDef) : Simulation(declaringType.ModuleWeaver), IHost, IAssignable
     {
         protected readonly TypeSimulation _declaringType = declaringType;

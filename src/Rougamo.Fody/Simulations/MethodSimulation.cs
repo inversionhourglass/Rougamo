@@ -2,10 +2,12 @@
 using Mono.Cecil.Cil;
 using Rougamo.Fody.Simulations.PlainValues;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 
 namespace Rougamo.Fody.Simulations
 {
+    [DebuggerDisplay("{Ref}")]
     internal class MethodSimulation : Simulation
     {
         private readonly int[][]? _genericParaIndexes;

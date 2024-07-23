@@ -1,9 +1,11 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Rougamo.Fody.Simulations
 {
+    [DebuggerDisplay("")]
     internal class EmptyHost : IHost
     {
         public TypeSimulation TypeRef => GlobalSimulations.Object;

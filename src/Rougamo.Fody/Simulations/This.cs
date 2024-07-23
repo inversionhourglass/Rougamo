@@ -1,10 +1,12 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System.Collections.Generic;
+using System.Diagnostics;
 using static Mono.Cecil.Cil.Instruction;
 
 namespace Rougamo.Fody.Simulations
 {
+    [DebuggerDisplay("this")]
     internal class This(TypeSimulation type) : IHost
     {
         public TypeSimulation Type => type;

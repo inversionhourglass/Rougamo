@@ -1,9 +1,11 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Rougamo.Fody.Simulations
 {
+    [DebuggerDisplay("Type = {Type}, Parameter = {parameter}")]
     internal class TypedParameter(TypeSimulation type, IParameterSimulation parameter) : IParameterSimulation
     {
         public TypeSimulation Type => type;

@@ -2,9 +2,11 @@
 using Mono.Cecil.Cil;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Rougamo.Fody.Simulations
 {
+    [DebuggerDisplay("{VariableDef}")]
     internal class VariableSimulation(VariableDefinition variableDef, MethodSimulation declaringMethod) : Simulation(declaringMethod.ModuleWeaver), IHost, IAssignable
     {
         public VariableDefinition VariableDef { get; } = variableDef;

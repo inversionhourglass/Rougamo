@@ -3,9 +3,11 @@ using Mono.Cecil.Cil;
 using Rougamo.Fody.Simulations.PlainValues;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 
 namespace Rougamo.Fody.Simulations
 {
+    [DebuggerDisplay("{PropertyDef}")]
     internal class PropertySimulation(TypeSimulation declaringType, PropertyDefinition propertyDef) : Simulation(declaringType.ModuleWeaver), ILoadable, IAssignable
     {
         protected readonly TypeSimulation _declaringType = declaringType;

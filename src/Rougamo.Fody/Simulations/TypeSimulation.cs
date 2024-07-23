@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using Fody;
 using Mono.Cecil;
@@ -11,6 +12,7 @@ using static Mono.Cecil.Cil.Instruction;
 
 namespace Rougamo.Fody.Simulations
 {
+    [DebuggerDisplay("{Ref}")]
     internal class TypeSimulation : Simulation, IHost
     {
         private readonly Dictionary<string, object?> _fieldSimulations = [];
