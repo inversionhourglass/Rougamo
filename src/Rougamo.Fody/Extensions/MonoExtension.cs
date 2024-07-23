@@ -336,7 +336,7 @@ namespace Rougamo.Fody
         public static TypeReference ImportInto(this TypeReference typeRef, ModuleDefinition moduleDef)
         {
             if (typeRef.IsByReference) return new ByReferenceType(typeRef.GetElementType().ImportInto(moduleDef));
-            if (typeRef.IsArray) return new ArrayType(typeRef.GetElementType().ImportInto(moduleDef));
+            if (typeRef is ArrayType at) return new ArrayType(at.ElementType.ImportInto(moduleDef), at.Rank);
             if (typeRef is GenericParameter) return typeRef;
 
             var iTypeRef = moduleDef.ImportReference(typeRef.Resolve());

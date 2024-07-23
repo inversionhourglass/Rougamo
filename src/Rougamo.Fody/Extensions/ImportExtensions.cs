@@ -14,7 +14,7 @@ namespace Rougamo.Fody
             if (typeRef.Scope.Name == SCOPE_ROUGAMO) return typeRef.ImportInto(moduleWeaver.ModuleDefinition);
 
             if (typeRef.IsByReference) return new ByReferenceType(Import(moduleWeaver, typeRef.GetElementType()));
-            if (typeRef.IsArray) return new ArrayType(Import(moduleWeaver, typeRef.GetElementType()));
+            if (typeRef is ArrayType at) return new ArrayType(Import(moduleWeaver, at.ElementType), at.Rank);
             if (typeRef is GenericParameter) return typeRef;
 
             var typeDef = typeRef.Resolve();
