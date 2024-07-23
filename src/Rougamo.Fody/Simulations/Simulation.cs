@@ -1,9 +1,9 @@
-﻿using Mono.Cecil;
+﻿using Fody;
 
 namespace Rougamo.Fody.Simulations
 {
-    internal abstract class Simulation(ModuleDefinition moduleDef)
+    internal abstract class Simulation(BaseModuleWeaver moduleWeaver)
     {
-        public ModuleDefinition Module { get; } = moduleDef;
+        public BaseModuleWeaver ModuleWeaver { get; } = moduleWeaver;
     }
 }

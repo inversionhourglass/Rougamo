@@ -6,7 +6,7 @@ using System.Collections.Generic;
 
 namespace Rougamo.Fody.Simulations
 {
-    internal class PropertySimulation(TypeSimulation declaringType, PropertyDefinition propertyDef) : Simulation(declaringType.Module), ILoadable, IAssignable
+    internal class PropertySimulation(TypeSimulation declaringType, PropertyDefinition propertyDef) : Simulation(declaringType.ModuleWeaver), ILoadable, IAssignable
     {
         protected readonly TypeSimulation _declaringType = declaringType;
 
@@ -16,7 +16,7 @@ namespace Rougamo.Fody.Simulations
 
         public MethodSimulation? Setter { get; } = propertyDef.SetMethod?.Simulate(declaringType);
 
-        public TypeSimulation Type { get; } = propertyDef.PropertyType.Simulate(declaringType.Module);
+        public TypeSimulation Type { get; } = propertyDef.PropertyType.Simulate(declaringType.ModuleWeaver);
 
         public OpCode TrueToken => Type.TrueToken;
 

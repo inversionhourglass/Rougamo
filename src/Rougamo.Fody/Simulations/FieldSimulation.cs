@@ -5,7 +5,7 @@ using System.Collections.Generic;
 
 namespace Rougamo.Fody.Simulations
 {
-    internal class FieldSimulation(TypeSimulation declaringType, FieldDefinition fieldDef) : Simulation(declaringType.Module), IHost, IAssignable
+    internal class FieldSimulation(TypeSimulation declaringType, FieldDefinition fieldDef) : Simulation(declaringType.ModuleWeaver), IHost, IAssignable
     {
         protected readonly TypeSimulation _declaringType = declaringType;
         private TypeSimulation? _value;
@@ -16,7 +16,7 @@ namespace Rougamo.Fody.Simulations
 
         public TypeSimulation Type => Value;
 
-        public TypeSimulation Value => _value ??= FieldRef.FieldType.Simulate(this, Module);
+        public TypeSimulation Value => _value ??= FieldRef.FieldType.Simulate(this, ModuleWeaver);
 
         public OpCode TrueToken => Type.TrueToken;
 
@@ -72,7 +72,7 @@ namespace Rougamo.Fody.Simulations
     {
         private T? _value;
 
-        public new T Value => _value ??= FieldRef.FieldType.Simulate<T>(this, Module);
+        public new T Value => _value ??= FieldRef.FieldType.Simulate<T>(this, ModuleWeaver);
 
         public IList<Instruction> AssignNew(params IParameterSimulation?[] arguments)
         {

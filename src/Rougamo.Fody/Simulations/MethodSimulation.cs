@@ -1,7 +1,6 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Rougamo.Fody.Simulations.PlainValues;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -11,15 +10,15 @@ namespace Rougamo.Fody.Simulations
     {
         private readonly int[][]? _genericParaIndexes;
 
-        public MethodSimulation(TypeSimulation declaringType, MethodDefinition methodDef) : base(declaringType.Module)
+        public MethodSimulation(TypeSimulation declaringType, MethodDefinition methodDef) : base(declaringType.ModuleWeaver)
         {
             DeclaringType = declaringType;
             Def = methodDef;
-            Ref = methodDef.WithGenericDeclaringType(declaringType).ImportInto(Module);
+            Ref = ModuleWeaver.Import(methodDef).WithGenericDeclaringType(declaringType);
             _genericParaIndexes = GetGenericParameterIndexes();
         }
 
-        public MethodSimulation(TypeSimulation declaringType, MethodReference methodRef) : base(declaringType.Module)
+        public MethodSimulation(TypeSimulation declaringType, MethodReference methodRef) : base(declaringType.ModuleWeaver)
         {
             DeclaringType = declaringType;
             Def = methodRef.Resolve();
@@ -55,6 +54,7 @@ namespace Rougamo.Fody.Simulations
 
             var methodRef = generics == null ? Ref : Ref.WithGenerics(generics.Select(x => x.Ref).ToArray());
 
+            var genericMap = ResolveGenericMap(methodRef);
             for (var i = 0; i < arguments.Length; i++)
             {
                 if (Def.Parameters[i].ParameterType is ByReferenceType)
@@ -86,6 +86,10 @@ namespace Rougamo.Fody.Simulations
                 else
                 {
                     instructions.Add(argument.Load());
+                    if (parameterTypeRef is GenericParameter gp)
+                    {
+                        parameterTypeRef = genericMap[gp.Name];
+                    }
                     instructions.Add(argument.Cast(parameterTypeRef));
                 }
             }
@@ -102,6 +106,31 @@ namespace Rougamo.Fody.Simulations
         public VariableSimulation<T> CreateVariable<T>(TypeReference variableTypeRef) where T : TypeSimulation
         {
             return Def.Body.CreateVariable(variableTypeRef).Simulate<T>(this);
+        }
+
+        private Dictionary<string, TypeReference> ResolveGenericMap(MethodReference methodRef)
+        {
+            var map = new Dictionary<string, TypeReference>();
+
+            if (methodRef.DeclaringType is GenericInstanceType git)
+            {
+                var typeDef = git.ElementType;
+                for (var i = 0; i < typeDef.GenericParameters.Count; i++)
+                {
+                    map[typeDef.GenericParameters[i].Name] = git.GenericArguments[i];
+                }
+            }
+
+            if (methodRef is GenericInstanceMethod gim)
+            {
+                var methodDef = methodRef.GetElementMethod();
+                for (var i = 0; i < methodDef.GenericParameters.Count; i++)
+                {
+                    map[methodDef.GenericParameters[i].Name] = gim.GenericArguments[i];
+                }
+            }
+
+            return map;
         }
 
         private int[][]? GetGenericParameterIndexes()
@@ -158,7 +187,7 @@ namespace Rougamo.Fody.Simulations
 
                     argType = git.GenericArguments[indexes[i]];
                 }
-                return argType.Simulate(Module);
+                return argType.Simulate(ModuleWeaver);
             }).ToArray();
         }
 
@@ -173,7 +202,7 @@ namespace Rougamo.Fody.Simulations
 
         private T? _result;
 
-        public T Result => _result ??= Ref.ReturnType.Simulate<T>(new EmptyHost(), Module);
+        public T Result => _result ??= Ref.ReturnType.Simulate<T>(new EmptyHost(), ModuleWeaver);
     }
 
     internal static class MethodSimulationExtensions

@@ -1,24 +1,25 @@
-﻿using Mono.Cecil;
+﻿using Fody;
+using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System.Collections.Generic;
 
 namespace Rougamo.Fody.Simulations.PlainValues
 {
-    internal class ObjectValue(object value, TypeReference valueTypeRef, ModuleDefinition moduleDef) : PlainValueSimulation(moduleDef), IParameterSimulation
+    internal class ObjectValue(object value, TypeReference valueTypeRef, BaseModuleWeaver moduleWeaver) : PlainValueSimulation(moduleWeaver), IParameterSimulation
     {
-        public override TypeSimulation Type => valueTypeRef.Simulate(Module);
+        public override TypeSimulation Type => valueTypeRef.Simulate(ModuleWeaver);
 
         public override IList<Instruction> Load()
         {
-            return Module.LoadValueOnStack(valueTypeRef, value);
+            return ModuleWeaver.ModuleDefinition.LoadValueOnStack(valueTypeRef, value);
         }
     }
 
     internal static class ObjectValueExtensions
     {
-        public static ObjectValue Simulate(this CustomAttributeArgument attributeArgument, ModuleDefinition moduleDef)
+        public static ObjectValue Simulate(this CustomAttributeArgument attributeArgument, BaseModuleWeaver moduleWeaver)
         {
-            return new ObjectValue(attributeArgument.Value, attributeArgument.Type, moduleDef);
+            return new(attributeArgument.Value, attributeArgument.Type, moduleWeaver);
         }
     }
 }

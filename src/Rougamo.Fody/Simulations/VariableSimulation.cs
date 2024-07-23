@@ -5,13 +5,13 @@ using System.Collections.Generic;
 
 namespace Rougamo.Fody.Simulations
 {
-    internal class VariableSimulation(VariableDefinition variableDef, MethodSimulation declaringMethod) : Simulation(declaringMethod.Module), IHost, IAssignable
+    internal class VariableSimulation(VariableDefinition variableDef, MethodSimulation declaringMethod) : Simulation(declaringMethod.ModuleWeaver), IHost, IAssignable
     {
         public VariableDefinition VariableDef { get; } = variableDef;
 
         public MethodSimulation DeclaringMethod { get; } = declaringMethod;
 
-        public TypeSimulation Type { get; } = variableDef.VariableType.Simulate(declaringMethod.Module);
+        public TypeSimulation Type { get; } = variableDef.VariableType.Simulate(declaringMethod.ModuleWeaver);
 
         public OpCode TrueToken => Type.TrueToken;
 
@@ -58,7 +58,7 @@ namespace Rougamo.Fody.Simulations
     {
         private T? _value;
 
-        public T Value => _value ??= VariableDef.VariableType.Simulate<T>(this, Module);
+        public T Value => _value ??= VariableDef.VariableType.Simulate<T>(this, ModuleWeaver);
 
         public IList<Instruction> AssignNew(params IParameterSimulation[] arguments)
         {
