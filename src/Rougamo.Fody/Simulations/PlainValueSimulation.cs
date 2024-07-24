@@ -1,11 +1,10 @@
-﻿using Fody;
-using Mono.Cecil;
+﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System.Collections.Generic;
 
 namespace Rougamo.Fody.Simulations
 {
-    internal abstract class PlainValueSimulation(BaseModuleWeaver moduleWeaver) : Simulation(moduleWeaver), IParameterSimulation
+    internal abstract class PlainValueSimulation(ModuleWeaver moduleWeaver) : Simulation(moduleWeaver), IParameterSimulation
     {
         public OpCode TrueToken => OpCodes.Brtrue;
 

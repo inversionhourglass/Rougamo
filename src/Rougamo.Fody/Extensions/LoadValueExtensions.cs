@@ -8,7 +8,7 @@ namespace Rougamo.Fody
     // refer: https://github.com/vescon/MethodBoundaryAspect.Fody/blob/master/src/MethodBoundaryAspect.Fody/InstructionBlockCreator.cs#L313
     internal static class LoadValueExtensions
     {
-        public static IList<Instruction> LoadValueOnStack(this ModuleDefinition moduleDef, TypeReference parameterType, object value)
+        public static IList<Instruction> LoadValueOnStack(this ModuleWeaver moduleWeaver, TypeReference parameterType, object value)
         {
             if (parameterType.IsArray(out var elementType) && value is CustomAttributeArgument[] args)
             {
@@ -23,7 +23,7 @@ namespace Rougamo.Fody
                 {
                     createArrayInstructions.Add(Instruction.Create(OpCodes.Dup));
                     createArrayInstructions.Add(Instruction.Create(OpCodes.Ldc_I4, i));
-                    createArrayInstructions.AddRange(LoadValueOnStack(moduleDef, elementType!, args[i].Value));
+                    createArrayInstructions.AddRange(LoadValueOnStack(moduleWeaver, elementType!, args[i].Value));
                     createArrayInstructions.Add(Instruction.Create(stelem));
                 }
 
@@ -38,8 +38,8 @@ namespace Rougamo.Fody
             {
                 return
                 [
-                    Instruction.Create(OpCodes.Ldtoken, typeRefValue.ImportInto(moduleDef)),
-                    Instruction.Create(OpCodes.Call, GlobalRefs.MrGetTypeFromHandle)
+                    Instruction.Create(OpCodes.Ldtoken, typeRefValue.ImportInto(moduleWeaver.ModuleDefinition)),
+                    Instruction.Create(OpCodes.Call, moduleWeaver._methodGetTypeFromHandleRef)
                 ];
             }
 
@@ -47,9 +47,9 @@ namespace Rougamo.Fody
             {
                 var valueType = arg.Type;
                 if (arg.Value is TypeReference)
-                    valueType = GlobalRefs.TrType;
+                    valueType = moduleWeaver._typeSystemRef;
                 bool isEnum = valueType.IsEnum();
-                var instructions = LoadValueOnStack(moduleDef, valueType, arg.Value);
+                var instructions = LoadValueOnStack(moduleWeaver, valueType, arg.Value);
                 if (valueType.IsValueType || (!valueType.IsArray && isEnum) || valueType.IsGenericParameter)
                     instructions.Add(Instruction.Create(OpCodes.Box, valueType));
                 return instructions;

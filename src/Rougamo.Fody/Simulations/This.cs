@@ -15,6 +15,8 @@ namespace Rougamo.Fody.Simulations
 
         public OpCode FalseToken => OpCodes.Brfalse;
 
+        public ModuleWeaver ModuleWeaver => type.ModuleWeaver;
+
         public IList<Instruction> LoadForCallingMethod() => [Create(OpCodes.Ldarg_0)];
 
         public IList<Instruction> PrepareLoadAddress(MethodSimulation? method)

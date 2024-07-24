@@ -7,6 +7,8 @@ namespace Rougamo.Fody.Simulations
 {
     internal interface ILoadable : IAnalysable, IAssertable
     {
+        ModuleWeaver ModuleWeaver { get; }
+
         IList<Instruction> Load();
 
         IList<Instruction> Cast(TypeReference to);

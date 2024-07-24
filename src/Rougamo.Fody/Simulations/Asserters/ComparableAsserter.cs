@@ -6,11 +6,13 @@ namespace Rougamo.Fody.Simulations.Asserters
 {
     internal abstract class ComparableAsserter(ILoadable value1, ILoadable value2) : ILoadable
     {
-        public TypeSimulation Type => GlobalSimulations.Bool;
+        public TypeSimulation Type => ModuleWeaver._simulations.Bool;
 
         public abstract OpCode TrueToken { get; }
 
         public abstract OpCode FalseToken { get; }
+
+        public ModuleWeaver ModuleWeaver => value1.ModuleWeaver ?? value2.ModuleWeaver;
 
         public IList<Instruction> Cast(TypeReference to) => Type.Cast(to);
 

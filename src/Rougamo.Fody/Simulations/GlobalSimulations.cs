@@ -1,11 +1,11 @@
 ﻿namespace Rougamo.Fody.Simulations
 {
-    internal static class GlobalSimulations
+    internal class GlobalSimulations(ModuleWeaver moduleWeaver)
     {
-        public static TypeSimulation Object = GlobalRefs.TrObject.Simulate(null!);
-        public static TypeSimulation Bool = GlobalRefs.TrBool.Simulate(null!);
-        public static TypeSimulation Int32 = GlobalRefs.TrInt.Simulate(null!);
-        public static TypeSimulation Type = GlobalRefs.TrType.Simulate(null!);
-        public static TypeSimulation MethodBase = GlobalRefs.TrMethodBase.Simulate(null!);
+        public TypeSimulation Object { get; } = moduleWeaver._typeObjectRef.Simulate(moduleWeaver);
+        public TypeSimulation Bool { get; } = moduleWeaver._typeBoolRef.Simulate(moduleWeaver);
+        public TypeSimulation Int32 { get; } = moduleWeaver._typeIntRef.Simulate(moduleWeaver);
+        public TypeSimulation Type { get; } = moduleWeaver._typeSystemRef.Simulate(moduleWeaver);
+        public TypeSimulation MethodBase { get; } = moduleWeaver._typeMethodBaseRef.Simulate(moduleWeaver);
     }
 }

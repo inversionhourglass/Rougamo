@@ -61,7 +61,7 @@ namespace Rougamo.Fody.Simulations
             {
                 if (Def.Parameters[i].ParameterType is ByReferenceType)
                 {
-                    var argument = arguments[i] ?? new Null();
+                    var argument = arguments[i] ?? new Null(ModuleWeaver);
                     instructions.Add(argument.PrepareLoadAddress(host));
                 }
             }
@@ -79,7 +79,7 @@ namespace Rougamo.Fody.Simulations
             }
             for (var i = 0; i < arguments.Length; i++)
             {
-                var argument = arguments[i] ?? new Null();
+                var argument = arguments[i] ?? new Null(ModuleWeaver);
                 var parameterTypeRef = Def.Parameters[i].ParameterType;
                 if (parameterTypeRef is ByReferenceType)
                 {
@@ -204,7 +204,7 @@ namespace Rougamo.Fody.Simulations
 
         private T? _result;
 
-        public T Result => _result ??= Ref.ReturnType.Simulate<T>(new EmptyHost(), ModuleWeaver);
+        public T Result => _result ??= Ref.ReturnType.Simulate<T>(new EmptyHost(ModuleWeaver), ModuleWeaver);
     }
 
     internal static class MethodSimulationExtensions

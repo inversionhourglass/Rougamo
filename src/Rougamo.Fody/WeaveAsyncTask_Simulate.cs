@@ -144,7 +144,7 @@ namespace Rougamo.Fody
                     if (vPersistentInnerException != null)
                     {
                         // .if (persistentInnerException != null)
-                        instructions.Add(vPersistentInnerException.IsEqual(new Null()).IfNot(anchor =>
+                        instructions.Add(vPersistentInnerException.IsEqual(new Null(this)).IfNot(anchor =>
                         {
                             return [
                                 // ._context.Exception = persistentInnerException;
@@ -268,12 +268,12 @@ namespace Rougamo.Fody
             var tMoArray = _typeIMoRef.Simulate<TsArray>(this);
             var tObjectArray = _typeObjectRef.Simulate<TsArray>(this);
             IParameterSimulation?[] arguments = [
-                tStateMachine.F_DeclaringThis?.Typed(GlobalSimulations.Object),
-                new SystemType(rouMethod.MethodDef.DeclaringType),
-                new SystemMethodBase(rouMethod.MethodDef),
-                new Bool(rouMethod.IsAsyncTaskOrValueTask || rouMethod.IsAsyncIterator),
-                new Bool(rouMethod.IsIterator || rouMethod.IsAsyncIterator),
-                new Bool(!_config.ReverseCallNonEntry),
+                tStateMachine.F_DeclaringThis?.Typed(_simulations.Object),
+                new SystemType(rouMethod.MethodDef.DeclaringType, this),
+                new SystemMethodBase(rouMethod.MethodDef, this),
+                new Bool(rouMethod.IsAsyncTaskOrValueTask || rouMethod.IsAsyncIterator, this),
+                new Bool(rouMethod.IsIterator || rouMethod.IsAsyncIterator, this),
+                new Bool(!_config.ReverseCallNonEntry, this),
                 rouMethod.MethodContextOmits.Contains(Omit.Mos) ? tMoArray.Null() : tMoArray.NewAsPlainValue(tStateMachine.F_Mos!),
                 rouMethod.MethodContextOmits.Contains(Omit.Arguments) ? tObjectArray.Null() : tObjectArray.NewAsPlainValue(tStateMachine.F_Parameters)
             ];
@@ -412,7 +412,7 @@ namespace Rougamo.Fody
         private IList<Instruction> AsyncProxyCall(RouMethod rouMethod, TsAsyncStateMachine tStateMachine, VariableSimulation vState, VariableSimulation<TsAwaiter> vAwaiter, MethodSimulation<TsAsyncable> mActualMethod, AsyncContext context)
         {
             // .if (state == STATE)
-            return vState.IsEqual(new Int32Value(context.State)).If((a1, a2) =>
+            return vState.IsEqual(new Int32Value(context.State, this)).If((a1, a2) =>
             {
                 // .awaiter = _awaiter;
                 return vAwaiter.Assign(tStateMachine.F_Awaiter);
@@ -486,7 +486,7 @@ namespace Rougamo.Fody
         {
             if (!rouMethod.Features.Contains(Feature.ExceptionRetry)) return [];
 
-            return tStateMachine.F_MethodContext.Value.P_RetryCount.Gt(new Int32Value(0)).If(anchor =>
+            return tStateMachine.F_MethodContext.Value.P_RetryCount.Gt(new Int32Value(0, this)).If(anchor =>
             {
                 return [Create(insideBlock ? OpCodes.Leave : OpCodes.Br, context.AnchorProxyCallCase)];
             });

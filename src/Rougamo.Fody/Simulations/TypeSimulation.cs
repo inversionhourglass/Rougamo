@@ -3,7 +3,6 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using Fody;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
@@ -19,7 +18,7 @@ namespace Rougamo.Fody.Simulations
         private readonly Dictionary<string, MethodSimulation> _methodSimulations = [];
         private readonly Dictionary<string, PropertySimulation?> _propertySimulations = [];
 
-        public TypeSimulation(TypeReference typeRef, IHost? host, BaseModuleWeaver moduleWeaver) : base(moduleWeaver)
+        public TypeSimulation(TypeReference typeRef, IHost? host, ModuleWeaver moduleWeaver) : base(moduleWeaver)
         {
             Ref = moduleWeaver == null ? typeRef : moduleWeaver.Import(typeRef);
             Def = typeRef.Resolve();
@@ -46,7 +45,7 @@ namespace Rougamo.Fody.Simulations
             {
                 return [Create(OpCodes.Initobj, Ref)];
             }
-            arguments = arguments.Select(x => x ?? new Null()).ToArray();
+            arguments = arguments.Select(x => x ?? new Null(ModuleWeaver)).ToArray();
             // todo: 考虑泛型参数问题
             var ctorDef = Def.GetConstructors().Single(x => x.Parameters.Count == arguments.Length && x.Parameters.Select(y => y.ParameterType.FullName).SequenceEqual(arguments.Select(y => y!.Type.Ref.FullName)));
             var ctorRef = ModuleWeaver.Import(ctorDef).WithGenericDeclaringType(Ref);
@@ -247,19 +246,19 @@ namespace Rougamo.Fody.Simulations
 
     internal static class TypeSimulationExtensions
     {
-        private static readonly ConcurrentDictionary<Type, Func<TypeReference, IHost?, BaseModuleWeaver, object>> _Cache = [];
+        private static readonly ConcurrentDictionary<Type, Func<TypeReference, IHost?, ModuleWeaver, object>> _Cache = [];
 
-        public static TypeSimulation Simulate(this TypeReference typeRef, BaseModuleWeaver moduleWeaver) => new(typeRef, null, moduleWeaver);
+        public static TypeSimulation Simulate(this TypeReference typeRef, ModuleWeaver moduleWeaver) => new(typeRef, null, moduleWeaver);
 
-        public static TypeSimulation Simulate(this TypeReference typeRef, IHost? host, BaseModuleWeaver moduleWeaver) => new(typeRef, host, moduleWeaver);
+        public static TypeSimulation Simulate(this TypeReference typeRef, IHost? host, ModuleWeaver moduleWeaver) => new(typeRef, host, moduleWeaver);
 
-        public static T Simulate<T>(this TypeReference typeRef, BaseModuleWeaver moduleWeaver) where T : TypeSimulation => Simulate<T>(typeRef, null, moduleWeaver);
+        public static T Simulate<T>(this TypeReference typeRef, ModuleWeaver moduleWeaver) where T : TypeSimulation => Simulate<T>(typeRef, null, moduleWeaver);
 
-        public static T Simulate<T>(this TypeReference typeRef, IHost? host, BaseModuleWeaver moduleWeaver) where T : TypeSimulation
+        public static T Simulate<T>(this TypeReference typeRef, IHost? host, ModuleWeaver moduleWeaver) where T : TypeSimulation
         {
             var ctor = _Cache.GetOrAdd(typeof(T), t =>
             {
-                var ctorInfo = t.GetConstructor([typeof(TypeReference), typeof(IHost), typeof(BaseModuleWeaver)]);
+                var ctorInfo = t.GetConstructor([typeof(TypeReference), typeof(IHost), typeof(ModuleWeaver)]);
                 return (tr, h, md) => ctorInfo.Invoke([tr, h, md]);
             });
 

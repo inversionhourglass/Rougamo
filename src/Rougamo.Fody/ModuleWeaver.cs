@@ -2,7 +2,7 @@
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Rougamo.Fody.Models;
-using Rougamo.Fody.Simulations.Types;
+using Rougamo.Fody.Simulations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -57,6 +57,8 @@ namespace Rougamo.Fody
         internal Dictionary<string, MethodReference> _methodIMosRef;
         internal Dictionary<string, MethodReference> _stateMachineCtorRefs;
 
+        internal GlobalSimulations _simulations;
+
         private List<RouType> _rouTypes;
         private Config _config;
 
@@ -81,7 +83,7 @@ namespace Rougamo.Fody
                 if (!_config.Enabled) return;
 
                 LoadBasicReference();
-                GlobalRefs.Init(this);
+                _simulations = new(this);
                 FindRous();
                 if (_rouTypes.Count == 0) return;
                 WeaveMos();

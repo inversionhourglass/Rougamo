@@ -14,6 +14,8 @@ namespace Rougamo.Fody.Simulations
 
         public OpCode FalseToken => parameter.FalseToken;
 
+        public ModuleWeaver ModuleWeaver => type.ModuleWeaver;
+
         public IList<Instruction> Cast(TypeReference to) => parameter.Cast(to);
 
         public IList<Instruction> Load() => parameter.Load();

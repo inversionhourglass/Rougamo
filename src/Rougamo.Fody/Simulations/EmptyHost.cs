@@ -1,20 +1,20 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace Rougamo.Fody.Simulations
 {
-    [DebuggerDisplay("")]
-    internal class EmptyHost : IHost
+    internal class EmptyHost(ModuleWeaver moduleWeaver) : IHost
     {
-        public TypeSimulation TypeRef => GlobalSimulations.Object;
+        public TypeSimulation TypeRef => moduleWeaver._simulations.Object;
 
-        public TypeSimulation Type => GlobalSimulations.Object;
+        public TypeSimulation Type => moduleWeaver._simulations.Object;
 
         public OpCode TrueToken => OpCodes.Brtrue;
 
         public OpCode FalseToken => OpCodes.Brfalse;
+
+        public ModuleWeaver ModuleWeaver => moduleWeaver;
 
         public IList<Instruction> Cast(TypeReference to) => [];
 

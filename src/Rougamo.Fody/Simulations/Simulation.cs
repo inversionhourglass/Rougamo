@@ -1,9 +1,7 @@
-﻿using Fody;
-
-namespace Rougamo.Fody.Simulations
+﻿namespace Rougamo.Fody.Simulations
 {
-    internal abstract class Simulation(BaseModuleWeaver moduleWeaver)
+    internal abstract class Simulation(ModuleWeaver moduleWeaver)
     {
-        public BaseModuleWeaver ModuleWeaver { get; } = moduleWeaver;
+        public ModuleWeaver ModuleWeaver { get; } = moduleWeaver;
     }
 }

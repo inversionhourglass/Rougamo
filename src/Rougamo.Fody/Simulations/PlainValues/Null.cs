@@ -1,16 +1,12 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System.Collections.Generic;
-using System.Diagnostics;
 
 namespace Rougamo.Fody.Simulations.PlainValues
 {
-    [DebuggerDisplay("null")]
-    internal class Null(TypeSimulation? type = null) : PlainValueSimulation(null!)
+    internal class Null(ModuleWeaver moduleWeaver, TypeSimulation? type = null) : PlainValueSimulation(moduleWeaver)
     {
-        private static readonly TypeSimulation _Type = GlobalRefs.TrObject.Simulate(null!);
-
-        public override TypeSimulation Type => type ?? _Type;
+        public override TypeSimulation Type => type ?? ModuleWeaver._simulations.Object;
 
         public override IList<Instruction> Load() => [Instruction.Create(OpCodes.Ldnull)];
 
@@ -19,6 +15,6 @@ namespace Rougamo.Fody.Simulations.PlainValues
 
     internal static class NullExtensions
     {
-        public static Null Null(this TypeSimulation type) => new(type);
+        public static Null Null(this TypeSimulation type) => new(type.ModuleWeaver, type);
     }
 }

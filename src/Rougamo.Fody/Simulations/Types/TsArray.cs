@@ -1,5 +1,4 @@
-﻿using Fody;
-using Mono.Cecil;
+﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Rougamo.Fody.Simulations.PlainValues;
 using System.Collections.Generic;
@@ -7,7 +6,7 @@ using static Mono.Cecil.Cil.Instruction;
 
 namespace Rougamo.Fody.Simulations.Types
 {
-    internal class TsArray(TypeReference elementTypeRef, IHost? host, BaseModuleWeaver moduleWeaver) : TypeSimulation(new ArrayType(elementTypeRef), host, moduleWeaver)
+    internal class TsArray(TypeReference elementTypeRef, IHost? host, ModuleWeaver moduleWeaver) : TypeSimulation(new ArrayType(elementTypeRef), host, moduleWeaver)
     {
         private readonly OpCode _ldCode = elementTypeRef.GetLdElemCode();
         private readonly OpCode _stCode = elementTypeRef.GetStElemCode();
@@ -51,6 +50,8 @@ namespace Rougamo.Fody.Simulations.Types
             public OpCode TrueToken => Type.TrueToken;
 
             public OpCode FalseToken => Type.FalseToken;
+
+            public ModuleWeaver ModuleWeaver => array.ModuleWeaver;
 
             public IList<Instruction> Load()
             {
