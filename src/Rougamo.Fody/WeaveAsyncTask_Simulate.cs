@@ -535,8 +535,11 @@ namespace Rougamo.Fody
 
             var instructions = new List<Instruction>();
 
-            foreach (var mo in tStateMachine.F_Mos!)
+            for (var i = 0; i < tStateMachine.F_Mos!.Length; i++)
             {
+                var j = _config.ReverseCallNonEntry ? rouMethod.Mos.Length - i - 1 : i;
+                var mo = tStateMachine.F_Mos[j];
+
                 instructions.Add(mo.Value.M_OnException.Call(tStateMachine.M_MoveNext, tStateMachine.F_MethodContext));
             }
 
@@ -549,8 +552,11 @@ namespace Rougamo.Fody
 
             var instructions = new List<Instruction>();
 
-            foreach (var mo in tStateMachine.F_Mos!)
+            for (var i = 0; i < tStateMachine.F_Mos!.Length; i++)
             {
+                var j = _config.ReverseCallNonEntry ? rouMethod.Mos.Length - i - 1 : i;
+                var mo = tStateMachine.F_Mos[j];
+
                 instructions.Add(mo.Value.M_OnExit.Call(tStateMachine.M_MoveNext, tStateMachine.F_MethodContext));
             }
 
@@ -561,16 +567,20 @@ namespace Rougamo.Fody
         {
             if (!rouMethod.Features.Contains(feature)) return [];
 
+            var reverseCall = feature != Feature.OnEntry && _config.ReverseCallNonEntry;
+
             var instructions = new List<Instruction>();
 
             for (var i = 0; i < rouMethod.Mos.Length; i++)
             {
-                var mo = rouMethod.Mos[i];
+                var j = reverseCall ? rouMethod.Mos.Length - i - 1 : i;
+
+                var mo = rouMethod.Mos[j];
                 if (!mo.Features.Contains(feature)) continue;
 
                 instructions.Add(AsyncAwaitMoAwaiterIfNeed(rouMethod, tStateMachine, vMoAwaiter, context));
 
-                var fMo = tStateMachine.F_Mos![i];
+                var fMo = tStateMachine.F_Mos![j];
                 if (mo.ForceSync.Contains(forceSync))
                 {
                     // ._mo.OnXxx(_context);
