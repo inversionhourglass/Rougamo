@@ -265,7 +265,7 @@ namespace Rougamo.Fody.Simulations
             return (T)ctor(typeRef, host, moduleWeaver);
         }
 
-        public static T ReplaceGenerics<T>(this T simulation, Dictionary<string, GenericParameter> genericMap) where T : TypeSimulation
+        public static T ReplaceGenerics<T>(this T simulation, Dictionary<string, TypeReference> genericMap) where T : TypeSimulation
         {
             simulation.Ref = simulation.Ref.ReplaceGenericArgs(genericMap);
 
@@ -274,9 +274,9 @@ namespace Rougamo.Fody.Simulations
 
         public static T ReplaceGenericsWith<T>(this T simulation, TypeSimulation baseSimulation) where T : TypeSimulation
         {
-            if (baseSimulation.Ref is not GenericInstanceType git) return simulation;
+            if (baseSimulation.Ref is not GenericInstanceType) return simulation;
 
-            return simulation.ReplaceGenerics(git.GenericArguments.Where(x => x is GenericParameter).ToDictionary(x => x.Name, x => (GenericParameter)x));
+            return simulation.ReplaceGenerics(baseSimulation.Ref.GetGenericMap());
         }
 
         public static T SetGenerics<T>(this T simulation, TypeReference[] generics) where T : TypeSimulation

@@ -33,7 +33,7 @@ namespace Rougamo.Fody
 
         private ProxyIteratorContext ProxyCallIterator(RouMethod rouMethod, TypeDefinition proxyStateMachineTypeDef, MethodDefinition proxyMoveNextDef, MethodDefinition actualMethodDef)
         {
-            var genericMap = proxyStateMachineTypeDef.GenericParameters.ToDictionary(x => x.Name, x => x);
+            var genericMap = proxyStateMachineTypeDef.GenericParameters.ToDictionary(x => x.Name, x => (TypeReference)x);
 
             var declaringTypeRef = actualMethodDef.DeclaringType.MakeReference().ReplaceGenericArgs(genericMap);
             var returnTypeRef = actualMethodDef.ReturnType.ReplaceGenericArgs(genericMap);
@@ -242,7 +242,7 @@ namespace Rougamo.Fody
             var loadStateMachine = vStateMachine == null ? Create(OpCodes.Dup) : vStateMachine.LdlocAny();
             var stateMachineTypeRef = vStateMachine == null ? ProxyIteratorResolveStateMachineType(stateMachineTypeDef, rouMethod.MethodDef) : vStateMachine.VariableType;
             var ret = instructions.Last();
-            var genericMap = stateMachineTypeDef.GenericParameters.ToDictionary(x => x.Name, x => x);
+            var genericMap = stateMachineTypeDef.GenericParameters.ToDictionary(x => x.Name, x => (TypeReference)x);
             
             var getEnumeratorMethodDef = stateMachineTypeDef.Methods.Single(x => x.Name.StartsWith(mGetEnumeratorPrefix) && x.Name.EndsWith(mGetEnumeratorSuffix));
 

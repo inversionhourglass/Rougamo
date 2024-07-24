@@ -661,8 +661,10 @@ namespace Rougamo.Fody
             return genericInstanceMethod;
         }
 
-        public static TypeReference ReplaceGenericArgs(this TypeReference typeRef, Dictionary<string, GenericParameter> genericMap)
+        public static TypeReference ReplaceGenericArgs(this TypeReference typeRef, Dictionary<string, TypeReference>? genericMap)
         {
+            if (genericMap == null) return typeRef;
+
             if (typeRef is GenericParameter gp && genericMap.TryGetValue(gp.Name, out var value)) return value;
 
             if (typeRef is GenericInstanceType git)

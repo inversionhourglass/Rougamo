@@ -1,5 +1,6 @@
 ﻿using Mono.Cecil;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Rougamo.Fody
@@ -40,6 +41,23 @@ namespace Rougamo.Fody
             fields.Add(fieldDef);
 
             return typeDef;
+        }
+
+        public static Dictionary<string, TypeReference> GetGenericMap(this TypeReference typeRef)
+        {
+            if (typeRef is GenericParameter gp) return new() { { gp.Name, gp } };
+            if (typeRef is TypeDefinition td) return td.GenericParameters.ToDictionary(x => x.Name, x => (TypeReference)x);
+            if (typeRef is not GenericInstanceType git) return [];
+
+            var typeDef = typeRef.Resolve();
+            var map = new Dictionary<string, TypeReference>();
+
+            for (var i = 0; i < typeDef.GenericParameters.Count; i++)
+            {
+                map[typeDef.GenericParameters[i].Name] = git.GenericArguments[i];
+            }
+
+            return map;
         }
     }
 }

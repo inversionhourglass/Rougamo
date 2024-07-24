@@ -31,7 +31,7 @@ namespace Rougamo.Fody
 
         private ProxyAiteratorContext ProxyCallAiterator(RouMethod rouMethod, TypeDefinition proxyStateMachineTypeDef, MethodDefinition proxyMoveNextDef, MethodDefinition actualMethodDef)
         {
-            var genericMap = proxyStateMachineTypeDef.GenericParameters.ToDictionary(x => x.Name, x => x);
+            var genericMap = proxyStateMachineTypeDef.GenericParameters.ToDictionary(x => x.Name, x => (TypeReference)x);
 
             var proxyStateMachineTypeRef = proxyStateMachineTypeDef.MakeReference();
             var declaringTypeRef = actualMethodDef.DeclaringType.MakeReference().ReplaceGenericArgs(genericMap);

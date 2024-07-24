@@ -11,12 +11,15 @@ namespace Rougamo.Fody.Simulations
     internal class MethodSimulation : Simulation
     {
         private readonly int[][]? _genericParaIndexes;
+        private readonly Dictionary<string, TypeReference> _declaringTypeGenericMap;
+        protected Dictionary<string, TypeReference>? _lastCallMethodGenericMap;
 
         public MethodSimulation(TypeSimulation declaringType, MethodDefinition methodDef) : base(declaringType.ModuleWeaver)
         {
             DeclaringType = declaringType;
             Def = methodDef;
             Ref = ModuleWeaver.Import(methodDef).WithGenericDeclaringType(declaringType);
+            _declaringTypeGenericMap = DeclaringType.Ref.GetGenericMap();
             _genericParaIndexes = GetGenericParameterIndexes();
         }
 
@@ -25,7 +28,20 @@ namespace Rougamo.Fody.Simulations
             DeclaringType = declaringType;
             Def = methodRef.Resolve();
             Ref = methodRef;
+            _declaringTypeGenericMap = DeclaringType.Ref.GetGenericMap();
             _genericParaIndexes = GetGenericParameterIndexes();
+        }
+
+        protected Dictionary<string, TypeReference> GenericMap
+        {
+            get
+            {
+                if (_lastCallMethodGenericMap == null) return _declaringTypeGenericMap;
+
+                var merged = new Dictionary<string, TypeReference>(_declaringTypeGenericMap);
+                merged.AddRange(_lastCallMethodGenericMap);
+                return merged;
+            }
         }
 
         public TypeSimulation DeclaringType { get; }
@@ -38,21 +54,27 @@ namespace Rougamo.Fody.Simulations
 
         public virtual IList<Instruction> DupCall(MethodSimulation? host, params IParameterSimulation?[] arguments)
         {
-            return Call(host, true, null, arguments);
+            return InferGenericCall(host, true, arguments);
         }
 
         public virtual IList<Instruction> Call(MethodSimulation? host, params IParameterSimulation?[] arguments)
         {
-            return Call(host, false, null, arguments);
+            return InferGenericCall(host, false, arguments);
         }
 
-        public IList<Instruction> Call(MethodSimulation? host, bool dupCalling, TypeSimulation[]? generics, params IParameterSimulation?[] arguments)
+        private IList<Instruction> InferGenericCall(MethodSimulation? host, bool dupCalling, params IParameterSimulation?[] arguments)
+        {
+            var generics = ResolveGenerics(arguments);
+            SetGenericMap(generics);
+
+            return Call(host, dupCalling, generics, arguments);
+        }
+
+        public IList<Instruction> Call(MethodSimulation? host, bool dupCalling, TypeSimulation[] generics, params IParameterSimulation?[] arguments)
         {
             if (Def.Parameters.Count != arguments.Length) throw new RougamoException($"Parameters count not match of method {Def}, need {Def.Parameters.Count} gave {arguments.Length}");
 
             var instructions = new List<Instruction>();
-
-            generics ??= ResolveGenerics(arguments);
 
             var methodRef = generics == null ? Ref : Ref.WithGenerics(generics.Select(x => x.Ref).ToArray());
 
@@ -109,6 +131,8 @@ namespace Rougamo.Fody.Simulations
         {
             return Def.Body.CreateVariable(variableTypeRef).Simulate<T>(this);
         }
+
+        public GenericMethodSimulation MakeGenericMethod(TypeSimulation[] generics) => new(DeclaringType, Ref, generics);
 
         private Dictionary<string, TypeReference> ResolveGenericMap(MethodReference methodRef)
         {
@@ -193,6 +217,28 @@ namespace Rougamo.Fody.Simulations
             }).ToArray();
         }
 
+        protected void SetGenericMap(TypeSimulation[] generics)
+        {
+            if (generics.Length == 0) return;
+
+            var map = new Dictionary<string, TypeReference>();
+
+            var gim = Ref as GenericInstanceMethod;
+            for (var i = 0; i < generics.Length; i++)
+            {
+                if (gim != null)
+                {
+                    map[gim.GenericArguments[i].Name] = generics[i].Ref;
+                }
+                else
+                {
+                    map[Def.GenericParameters[i].Name] = generics[i].Ref;
+                }
+            }
+
+            _lastCallMethodGenericMap = map;
+        }
+
         public static implicit operator MethodReference(MethodSimulation value) => value.Ref;
     }
 
@@ -204,7 +250,14 @@ namespace Rougamo.Fody.Simulations
 
         private T? _result;
 
-        public T Result => _result ??= Ref.ReturnType.Simulate<T>(new EmptyHost(ModuleWeaver), ModuleWeaver);
+        /// <summary>
+        /// Notice: If result type contains a generic type that is declared by the method and you will use the result value later,
+        /// then you should call MakeGenericMethod to get a GenericMethodSimulation and use the Result of the GenericMethodSimulation instead,
+        /// or you will get a wrong result type.
+        /// </summary>
+        public T Result => _result ??= Ref.ReturnType.ReplaceGenericArgs(GenericMap).Simulate<T>(new EmptyHost(ModuleWeaver), ModuleWeaver);
+
+        public new GenericMethodSimulation<T> MakeGenericMethod(TypeSimulation[] generics) => new(DeclaringType, Ref, generics);
     }
 
     internal static class MethodSimulationExtensions
