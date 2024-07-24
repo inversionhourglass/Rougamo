@@ -26,6 +26,8 @@ namespace Rougamo.Fody.Enhances.Async
 
         public Instruction AnchorSetResult { get; } = Instruction.Create(OpCodes.Nop);
 
+        public Instruction Ret { get; } = Instruction.Create(OpCodes.Ret);
+
         public Instruction GetNextStateReadyAnchor() => AnchorStateReady = Instruction.Create(OpCodes.Nop);
     }
 }

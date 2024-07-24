@@ -77,7 +77,7 @@ namespace Rougamo.Fody
             if (rouMethod.Mos.Length >= _config.MoArrayThreshold)
             {
                 moArray = new FieldDefinition(Constants.FIELD_RougamoMos, FieldAttributes.Public, _typeIMoArrayRef);
-                stateMachineTypeDef.Fields.Add(moArray);
+                stateMachineTypeDef.AddUniqueField(moArray);
             }
             else
             {
@@ -85,7 +85,7 @@ namespace Rougamo.Fody
                 for (int i = 0; i < rouMethod.Mos.Length; i++)
                 {
                     mos[i] = new FieldDefinition(Constants.FIELD_RougamoMo_Prefix + i, FieldAttributes.Public, rouMethod.Mos[i].MoTypeRef.ImportInto(ModuleDefinition));
-                    stateMachineTypeDef.Fields.Add(mos[i]);
+                    stateMachineTypeDef.AddUniqueField(mos[i]);
                 }
             }
             var methodContext = new FieldDefinition(Constants.FIELD_RougamoContext, FieldAttributes.Public, _typeMethodContextRef);
@@ -97,9 +97,11 @@ namespace Rougamo.Fody
             var declaringThis = stateMachineTypeDef.Fields.SingleOrDefault(x => x.FieldType.Resolve() == stateMachineTypeDef.DeclaringType);
             var parameters = StateMachineParameterFields(rouMethod);
 
-            stateMachineTypeDef.Fields.Add(methodContext);
-            stateMachineTypeDef.Fields.Add(awaiter);
-            if (moAwaiter != null) stateMachineTypeDef.Fields.Add(moAwaiter);
+            stateMachineTypeDef
+                .AddUniqueField(methodContext)
+                .AddUniqueField(awaiter)
+                .AddUniqueField(moAwaiter)
+                .AddUniqueField(result);
 
             return new AsyncFields(stateMachineTypeDef, moArray, mos, methodContext, state, builder, declaringThis, awaiter, moAwaiter, result, parameters);
         }
