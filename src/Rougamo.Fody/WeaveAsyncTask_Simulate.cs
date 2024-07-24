@@ -26,6 +26,7 @@ namespace Rougamo.Fody
             var actualMoveNextDef = actualStateMachineTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
             actualMoveNextDef.DebugInformation.StateMachineKickOffMethod = actualMethodDef;
 
+            _config.MoArrayThreshold = int.MaxValue;
             var fields = AsyncResolveFields(rouMethod, stateMachineTypeDef);
             ProxyAsyncSetAbsentFields(rouMethod, stateMachineTypeDef, fields);
             ProxyFieldCleanup(stateMachineTypeDef, fields);
@@ -246,7 +247,7 @@ namespace Rougamo.Fody
 
         private void AsyncBuildMoArrayMoveNext(RouMethod rouMethod, TsAsyncStateMachine tStateMachine, MethodSimulation<TsAsyncable> mActualMethod)
         {
-
+            throw new NotImplementedException($"Currently, async methods are not allowed to use array to save the Mos. Contact the author to get support.");
         }
 
         private IList<Instruction> AsyncStateMachineInitMos(RouMethod rouMethod, TsAsyncStateMachine tStateMachine)

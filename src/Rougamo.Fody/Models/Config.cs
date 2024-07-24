@@ -22,7 +22,7 @@ namespace Rougamo.Fody.Models
 
         public bool CompositeAccessibility { get; }
 
-        public int MoArrayThreshold { get; }
+        public int MoArrayThreshold { get; set; }
 
         public bool RecordingIteratorReturns { get; }
 
