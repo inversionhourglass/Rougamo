@@ -2,10 +2,8 @@
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Rougamo.Fody.Simulations.PlainValues;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using static Mono.Cecil.Cil.Instruction;
 
 namespace Rougamo.Fody.Simulations.Types
 {
