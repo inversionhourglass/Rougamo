@@ -32,8 +32,7 @@ namespace Rougamo.Fody
             ProxyFieldCleanup(stateMachineTypeDef, fields);
 
             var tStateMachine = stateMachineTypeDef.MakeReference().Simulate<TsAsyncStateMachine>(this).SetFields(fields);
-            var tDeclaring = AsyncResolveDeclaringType(tStateMachine);
-            var mActualMethod = actualMethodDef.Simulate<TsAsyncable>(tDeclaring);
+            var mActualMethod = AsyncResolveActualMethod(tStateMachine, actualMethodDef);
             AsyncBuildMoveNext(rouMethod, tStateMachine, mActualMethod);
         }
 
@@ -49,20 +48,6 @@ namespace Rougamo.Fody
             {
                 AsyncBuildMoArrayMoveNext(rouMethod, tStateMachine, mActualMethod);
             }
-        }
-
-        private TypeSimulation AsyncResolveDeclaringType(TsAsyncStateMachine tStateMachine)
-        {
-            if (tStateMachine.F_DeclaringThis != null) return tStateMachine.F_DeclaringThis.Value;
-
-            var stateMachineRef = tStateMachine.M_MoveNext.DeclaringType.Ref;
-            var declaringTypeDef = stateMachineRef.DeclaringType.Resolve();
-            if (stateMachineRef is not GenericInstanceType git || !declaringTypeDef.HasGenericParameters) return new TsWeaveingTarget(declaringTypeDef, null, this);
-
-            var genericMap = git.GenericArguments.ToDictionary(x => ((GenericParameter)x).Name, x => (GenericParameter)x);
-            var declaringTypeRef = declaringTypeDef.ReplaceGenericArgs(genericMap);
-
-            return new TsWeaveingTarget(declaringTypeRef, null, this);
         }
 
         private void AsyncBuildMosMoveNext(RouMethod rouMethod, TsAsyncStateMachine tStateMachine, MethodSimulation<TsAsyncable> mActualMethod)
@@ -250,6 +235,34 @@ namespace Rougamo.Fody
             throw new NotImplementedException($"Currently, async methods are not allowed to use array to save the Mos. Contact the author to get support.");
         }
 
+        private MethodSimulation<TsAsyncable> AsyncResolveActualMethod(TsAsyncStateMachine tStateMachine, MethodDefinition actualMethodDef)
+        {
+            var tDeclaring = AsyncResolveDeclaringType(tStateMachine);
+            var mActualMethod = actualMethodDef.Simulate<TsAsyncable>(tDeclaring);
+
+            if (actualMethodDef.HasGenericParameters)
+            {
+                var generics = tStateMachine.Def.GetSelfGenerics();
+                var tGenerics = mActualMethod.Def.GenericParameters.Select(x => generics.Single(y => y.Name == x.Name).Simulate(this)).ToArray();
+                mActualMethod = mActualMethod.MakeGenericMethod(tGenerics);
+            }
+
+            return mActualMethod;
+        }
+
+        private TypeSimulation AsyncResolveDeclaringType(TsAsyncStateMachine tStateMachine)
+        {
+            if (tStateMachine.F_DeclaringThis != null) return tStateMachine.F_DeclaringThis.Value;
+
+            var stateMachineRef = tStateMachine.M_MoveNext.DeclaringType.Ref;
+            var declaringTypeDef = stateMachineRef.DeclaringType.Resolve();
+            if (stateMachineRef is not GenericInstanceType || !declaringTypeDef.HasGenericParameters) return new TsWeaveingTarget(declaringTypeDef, null, this);
+
+            var declaringTypeRef = declaringTypeDef.ReplaceGenericArgs(stateMachineRef.GetGenericMap());
+
+            return new TsWeaveingTarget(declaringTypeRef, null, this);
+        }
+
         private IList<Instruction> AsyncStateMachineInitMos(RouMethod rouMethod, TsAsyncStateMachine tStateMachine)
         {
             var instructions = new List<Instruction>();
@@ -419,15 +432,13 @@ namespace Rougamo.Fody
                 return vAwaiter.Assign(tStateMachine.F_Awaiter);
             }, (a1, a2) =>
             {// .else (state != STATE)
-                var generics = tStateMachine.Def.GetSelfGenerics();
-                var tGenerics = mActualMethod.Def.GenericParameters.Select(x => generics.Single(y => y.Name == x.Name).Simulate(null!)).ToArray();
                 Instruction[] callAssignAwaiter;
                 if (mActualMethod.Result.IsValueType)
                 {
                     var vResultTask = tStateMachine.M_MoveNext.CreateVariable<TsAsyncable>(mActualMethod.Result);
                     callAssignAwaiter = [
                         // .resultTask = ActualMethod(...);
-                        .. vResultTask.Assign(target => mActualMethod.Call(tStateMachine.M_MoveNext, false, tGenerics, tStateMachine.F_Parameters)),
+                        .. vResultTask.Assign(target => mActualMethod.Call(tStateMachine.M_MoveNext, tStateMachine.F_Parameters)),
                         // .awaiter = resultTask.GetAwaiter();
                         .. vAwaiter.Assign(target => vResultTask.Value.M_GetAwaiter.Call(tStateMachine.M_MoveNext))
                     ];
@@ -436,7 +447,7 @@ namespace Rougamo.Fody
                 {
                     callAssignAwaiter = [
                         // .awaiter = ActualMethod(...).GetAwaiter();
-                        .. mActualMethod.Call(tStateMachine.M_MoveNext, false, tGenerics, tStateMachine.F_Parameters),
+                        .. mActualMethod.Call(tStateMachine.M_MoveNext, tStateMachine.F_Parameters),
                         .. vAwaiter.Assign(target => mActualMethod.Result.M_GetAwaiter.Call(tStateMachine.M_MoveNext)),
                     ];
                 }
