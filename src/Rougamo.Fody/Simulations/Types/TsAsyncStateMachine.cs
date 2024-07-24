@@ -1,11 +1,12 @@
-﻿using Mono.Cecil;
+﻿using Fody;
+using Mono.Cecil;
 using Rougamo.Fody.Enhances.Async;
 using System.Linq;
 
 namespace Rougamo.Fody.Simulations.Types
 {
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    internal class TsAsyncStateMachine(TypeReference typeRef, IHost? host, ModuleDefinition moduleDef) : TypeSimulation(typeRef, host, moduleDef)
+    internal class TsAsyncStateMachine(TypeReference typeRef, IHost? host, BaseModuleWeaver moduleWeaver) : TypeSimulation(typeRef, host, moduleWeaver)
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     {
         public FieldSimulation? F_MoArray { get; private set; }
@@ -28,7 +29,7 @@ namespace Rougamo.Fody.Simulations.Types
 
         public FieldSimulation? F_Result { get; private set; }
 
-        public MethodSimulation M_MoveNext => MethodSimulate(Constants.METHOD_MoveNext);
+        public MethodSimulation M_MoveNext => MethodSimulate(Constants.METHOD_MoveNext, false);
 
         public TsAsyncStateMachine SetFields(AsyncFields fields)
         {

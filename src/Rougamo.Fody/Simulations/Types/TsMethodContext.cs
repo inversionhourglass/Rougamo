@@ -1,8 +1,9 @@
-﻿using Mono.Cecil;
+﻿using Fody;
+using Mono.Cecil;
 
 namespace Rougamo.Fody.Simulations.Types
 {
-    internal class TsMethodContext(TypeReference typeRef, IHost? host, ModuleDefinition moduldeDef) : TypeSimulation(typeRef, host, moduldeDef)
+    internal class TsMethodContext(TypeReference typeRef, IHost? host, BaseModuleWeaver moduldeWeaver) : TypeSimulation(typeRef, host, moduldeWeaver)
     {
         public PropertySimulation P_ReturnValueReplaced => PropertySimulate(Constants.PROP_ReturnValueReplaced, false);
 
@@ -13,6 +14,8 @@ namespace Rougamo.Fody.Simulations.Types
         public PropertySimulation<TsArray> P_Arguments => PropertySimulate<TsArray>(Constants.PROP_Arguments, false);
 
         public PropertySimulation P_Exception => PropertySimulate(Constants.PROP_Exception, false);
+
+        public PropertySimulation P_HasException => PropertySimulate(Constants.PROP_HasException, false);
 
         public PropertySimulation P_RetryCount => PropertySimulate(Constants.PROP_RetryCount, false);
 

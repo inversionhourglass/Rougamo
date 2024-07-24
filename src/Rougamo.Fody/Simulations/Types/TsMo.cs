@@ -1,4 +1,5 @@
-﻿using Mono.Cecil;
+﻿using Fody;
+using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Rougamo.Fody.Simulations.PlainValues;
 using System.Collections;
@@ -8,35 +9,35 @@ using static Mono.Cecil.Cil.Instruction;
 
 namespace Rougamo.Fody.Simulations.Types
 {
-    internal class TsMo(TypeReference typeRef, IHost? host, ModuleDefinition moduldeDef) : TypeSimulation(typeRef, host, moduldeDef)
+    internal class TsMo(TypeReference typeRef, IHost? host, BaseModuleWeaver moduldeWeaver) : TypeSimulation(typeRef, host, moduldeWeaver)
     {
         public PropertySimulation P_IsCompleted => PropertySimulate(Constants.PROP_IsCompleted, true);
 
-        public MethodSimulation M_OnEntry => MethodSimulate(Constants.METHOD_OnEntry);
+        public MethodSimulation M_OnEntry => MethodSimulate(Constants.METHOD_OnEntry, true);
 
-        public MethodSimulation M_OnException => MethodSimulate(Constants.METHOD_OnException);
+        public MethodSimulation M_OnException => MethodSimulate(Constants.METHOD_OnException, true);
 
-        public MethodSimulation M_OnSuccess => MethodSimulate(Constants.METHOD_OnSuccess);
+        public MethodSimulation M_OnSuccess => MethodSimulate(Constants.METHOD_OnSuccess, true);
 
-        public MethodSimulation M_OnExit => MethodSimulate(Constants.METHOD_OnExit);
+        public MethodSimulation M_OnExit => MethodSimulate(Constants.METHOD_OnExit, true);
 
-        public MethodSimulation<TsAsyncable> M_OnEntryAsync => MethodSimulate<TsAsyncable>(Constants.METHOD_OnEntryAsync);
+        public MethodSimulation<TsAsyncable> M_OnEntryAsync => MethodSimulate<TsAsyncable>(Constants.METHOD_OnEntryAsync, true);
 
-        public MethodSimulation<TsAsyncable> M_OnExceptionAsync => MethodSimulate<TsAsyncable>(Constants.METHOD_OnExceptionAsync);
+        public MethodSimulation<TsAsyncable> M_OnExceptionAsync => MethodSimulate<TsAsyncable>(Constants.METHOD_OnExceptionAsync, true);
 
-        public MethodSimulation<TsAsyncable> M_OnSuccessAsync => MethodSimulate<TsAsyncable>(Constants.METHOD_OnSuccessAsync);
+        public MethodSimulation<TsAsyncable> M_OnSuccessAsync => MethodSimulate<TsAsyncable>(Constants.METHOD_OnSuccessAsync, true);
 
-        public MethodSimulation<TsAsyncable> M_OnExitAsync => MethodSimulate<TsAsyncable>(Constants.METHOD_OnExitAsync);
+        public MethodSimulation<TsAsyncable> M_OnExitAsync => MethodSimulate<TsAsyncable>(Constants.METHOD_OnExitAsync, true);
 
-        public IList<Instruction> New(Mo mo, MethodSimulation executingMethod)
+        public IList<Instruction> New(MethodSimulation host, Mo mo, MethodSimulation executingMethod)
         {
             if (mo.Attribute != null)
             {
                 var ctor = mo.Attribute.Constructor.Simulate(this);
-                var arguments = mo.Attribute.ConstructorArguments.Select(x => x.Simulate(Module)).ToArray();
+                var arguments = mo.Attribute.ConstructorArguments.Select(x => x.Simulate(ModuleWeaver)).ToArray();
                 var instructions = new List<Instruction>
                 {
-                    ctor.Call(arguments)
+                    ctor.Call(host, arguments)
                 };
                 if (mo.Attribute.HasProperties)
                 {
@@ -45,8 +46,8 @@ namespace Rougamo.Fody.Simulations.Types
                         var propSimulation = OptionalPropertySimulate(property.Name, true);
                         if (propSimulation?.Setter != null)
                         {
-                            var propValue = new ObjectValue(property.Argument.Value, property.Argument.Type, Module);
-                            instructions.Add(propSimulation.Setter.DupCall(propValue));
+                            var propValue = new ObjectValue(property.Argument.Value, property.Argument.Type, ModuleWeaver);
+                            instructions.Add(propSimulation.Setter.DupCall(host, propValue));
                         }
                     }
                 }
@@ -60,7 +61,7 @@ namespace Rougamo.Fody.Simulations.Types
                 return [.. vThis.AssignNew(), .. vThis.Load()];
             }
 
-            return New();
+            return New(host);
         }
     }
 }
