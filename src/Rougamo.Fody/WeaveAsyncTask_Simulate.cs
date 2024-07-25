@@ -91,6 +91,10 @@ namespace Rougamo.Fody
                     // .PROXY CALL
                     instructions.Add(context.AnchorProxyCallCase);
                     context.AnchorSwitches.Add(context.AnchorProxyCallCase);
+                    if (vPersistentInnerException != null)
+                    {
+                        instructions.Add(vPersistentInnerException.AssignDefault());
+                    }
                     // .try
                     {
                         // .ActualMethod(...).GetAwaiter()...
