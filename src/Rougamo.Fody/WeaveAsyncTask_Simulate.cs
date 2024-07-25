@@ -122,7 +122,7 @@ namespace Rougamo.Fody
                             instructions.Add(tStateMachine.F_MethodContext.Value.P_Exception.Assign(vInnerException));
                             // ._mo.OnException(_context); ...
                             instructions.Add(AsyncMosSyncOnException(rouMethod, tStateMachine));
-                            instructions.Add(AsynCheckRetry(rouMethod, tStateMachine, context, Feature.OnException, true));
+                            instructions.Add(AsynCheckRetry(rouMethod, tStateMachine, context, Feature.OnException, vState, true));
                             instructions.Add(AsyncSaveResultIfExceptionHandled(rouMethod, tStateMachine));
                             instructions.Add(AsyncMosSyncOnExit(rouMethod, tStateMachine));
                             instructions.Add(AsyncMosReturnIfExceptionHandled(rouMethod, tStateMachine, context));
@@ -147,7 +147,7 @@ namespace Rougamo.Fody
                     // ._mo.OnSuccessAsync(_context).GetAwaiter(); ...
                     instructions.Add(AsyncMosOn(rouMethod, tStateMachine, vMoValueTask, vMoAwaiter, context, Feature.OnSuccess, ForceSync.OnSuccess, fMo => fMo.Value.M_OnSuccess, fMo => fMo.Value.M_OnSuccessAsync));
                     // .if (_context.RetryCount > 0) continue;
-                    instructions.Add(AsynCheckRetry(rouMethod, tStateMachine, context, Feature.OnSuccess, false));
+                    instructions.Add(AsynCheckRetry(rouMethod, tStateMachine, context, Feature.OnSuccess, vState, false));
                     // .if (_context.ReturnValueReplaced) _result = _context.ReturnValue;
                     instructions.Add(AsyncSaveResultIfReplaced(rouMethod, tStateMachine));
                     // .ON_EXIT
@@ -170,7 +170,7 @@ namespace Rougamo.Fody
                         // ._mo.OnExceptionAsync(_context).GetAwaiter(); ...
                         instructions.Add(AsyncMosOn(rouMethod, tStateMachine, vMoValueTask, vMoAwaiter, context, Feature.OnException, ForceSync.OnException, fMo => fMo.Value.M_OnException, fMo => fMo.Value.M_OnExceptionAsync));
                         // .if (_context.RetryCount > 0) continue;
-                        instructions.Add(AsynCheckRetry(rouMethod, tStateMachine, context, Feature.OnException, false));
+                        instructions.Add(AsynCheckRetry(rouMethod, tStateMachine, context, Feature.OnException, vState, false));
                         // .if (_context.ExceptionHandled) _result = _context.ReturnValue;
                         instructions.Add(AsyncSaveResultIfExceptionHandled(rouMethod, tStateMachine));
                         // .goto ON_EXIT;
@@ -489,7 +489,7 @@ namespace Rougamo.Fody
             ];
         }
 
-        private IList<Instruction> AsynCheckRetry(RouMethod rouMethod, TsAsyncStateMachine tStateMachine, AsyncContext context, Feature action, bool insideBlock)
+        private IList<Instruction> AsynCheckRetry(RouMethod rouMethod, TsAsyncStateMachine tStateMachine, AsyncContext context, Feature action, VariableSimulation vState, bool insideBlock)
         {
 #pragma warning disable CS0618 // Type or member is obsolete
             if (!rouMethod.Features.Contains(Feature.RetryAny | action)) return [];
@@ -497,7 +497,10 @@ namespace Rougamo.Fody
 
             return tStateMachine.F_MethodContext.Value.P_RetryCount.Gt(new Int32Value(0, this)).If(anchor =>
             {
-                return [Create(insideBlock ? OpCodes.Leave : OpCodes.Br, context.AnchorProxyCallCase)];
+                return [
+                    .. vState.Assign(-1),
+                    Create(insideBlock ? OpCodes.Leave : OpCodes.Br, context.AnchorProxyCallCase)
+                ];
             });
         }
 
