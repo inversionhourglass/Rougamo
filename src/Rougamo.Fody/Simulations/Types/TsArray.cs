@@ -31,10 +31,7 @@ namespace Rougamo.Fody.Simulations.Types
                 instructions.Add(Create(OpCodes.Dup));
                 instructions.Add(Create(OpCodes.Ldc_I4, i));
                 instructions.Add(item.Load());
-                if (item.Type.IsValueType && !ElementType.IsValueType)
-                {
-                    instructions.Add(Create(OpCodes.Box, item.Type));
-                }
+                instructions.Add(item.Cast(ElementType));
                 instructions.Add(Create(_stCode));
             }
 
