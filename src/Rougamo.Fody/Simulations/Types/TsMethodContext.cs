@@ -14,8 +14,6 @@ namespace Rougamo.Fody.Simulations.Types
 
         public PropertySimulation P_Exception => PropertySimulate(Constants.PROP_Exception, false);
 
-        public PropertySimulation P_HasException => PropertySimulate(Constants.PROP_HasException, false);
-
         public PropertySimulation P_RetryCount => PropertySimulate(Constants.PROP_RetryCount, false);
 
         public PropertySimulation P_ExceptionHandled => PropertySimulate(Constants.PROP_ExceptionHandled, false);

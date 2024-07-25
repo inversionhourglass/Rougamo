@@ -153,17 +153,8 @@ namespace Rougamo.Fody
 
                     if (vPersistentInnerException != null)
                     {
-                        // .if (_context.HasException)
-                        //instructions.Add(tStateMachine.F_MethodContext.Value.P_Exception.IsEqual(new Null()).IfNot(anchor =>
-                        instructions.Add(tStateMachine.F_MethodContext.Value.P_HasException.If(anchor =>
-                        {
-                            // .ExceptionDispatchInfo.Capture(_context.Exception).Throw();
-                            return [
-                                .. tStateMachine.F_MethodContext.Value.P_Exception.Load(),
-                                Create(OpCodes.Call, _methodExceptionDispatchInfoCaptureRef),
-                                Create(OpCodes.Callvirt, _methodExceptionDispatchInfoThrowRef)
-                            ];
-                        }));
+                        // .if (!_context.ExceptionHandled) ExceptionDispatchInfo.Capture(_context.Exception).Throw();
+                        instructions.Add(AsyncThrowIfExceptionNotHandled(rouMethod, tStateMachine, vPersistentInnerException));
                     }
                     // goto END;
                     instructions.Add(Create(OpCodes.Leave, context.AnchorSetResult));
@@ -528,6 +519,24 @@ namespace Rougamo.Fody
                 // .goto END;
                 return [Create(OpCodes.Leave, context.AnchorSetResult)];
             });
+        }
+
+        private IList<Instruction> AsyncThrowIfExceptionNotHandled(RouMethod rouMethod, TsAsyncStateMachine tStateMachine, VariableSimulation vPersistentInnerException)
+        {
+            // .ExceptionDispatchInfo.Capture(persistentInnerException).Throw();
+            IList<Instruction> instructions = [
+                .. vPersistentInnerException.Load(),
+                Create(OpCodes.Call, _methodExceptionDispatchInfoCaptureRef),
+                Create(OpCodes.Callvirt, _methodExceptionDispatchInfoThrowRef)
+            ];
+
+            if (rouMethod.Features.Contains(Feature.ExceptionHandle))
+            {
+                // .if (!_context.ExceptionHandled) { ... }
+                instructions = tStateMachine.F_MethodContext.Value.P_ExceptionHandled.IfNot(anchor => instructions);
+            }
+
+            return vPersistentInnerException.IsEqual(new Null(this)).IfNot(anchor => instructions);
         }
 
         private IList<Instruction> AsyncSaveResultIfReplaced(RouMethod rouMethod, TsAsyncStateMachine tStateMachine)
