@@ -79,5 +79,9 @@ namespace Rougamo.Fody.Simulations
         {
             return new VariableSimulation<T>(typeRef, declaringMethod);
         }
+
+        public static IList<Instruction> AssignDefault(this VariableSimulation variable) => variable.AssignDefault(variable.Type);
+
+        public static IList<Instruction> AssignDefault<T>(this VariableSimulation<T> variable) where T : TypeSimulation => variable.AssignDefault(variable.Value);
     }
 }

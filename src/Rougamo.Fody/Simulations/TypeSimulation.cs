@@ -84,17 +84,13 @@ namespace Rougamo.Fody.Simulations
 
             if (to.IsValueType || to.IsGenericParameter) throw new RougamoException($"Cannot convert {Ref} to {to}. Only object types can be converted to value types.");
 
-            if (to.IsObject())
+            if (Ref.IsValueType || Ref.IsGenericParameter)
             {
-                if (Ref.IsValueType || Ref.IsGenericParameter)
-                {
-                    return [Create(OpCodes.Box, Ref)];
-                }
-                return [];
+                return [Create(OpCodes.Box, Ref)];
             }
 
             var toDef = to.Resolve();
-            if (toDef.IsInterface && Ref.Implement(to.FullName) || !toDef.IsInterface && Ref.IsOrDerivesFrom(to.FullName)) return [];
+            if (to.IsObject() || toDef.IsInterface && Ref.Implement(to.FullName) || !toDef.IsInterface && Ref.IsOrDerivesFrom(to.FullName)) return [];
 
             return [Create(OpCodes.Castclass, to)];
         }
