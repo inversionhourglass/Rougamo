@@ -38,7 +38,8 @@ namespace Rougamo.Fody
 
         private void AsyncBuildMoveNext(RouMethod rouMethod, TsAsyncStateMachine tStateMachine, MethodSimulation<TsAwaitable> mActualMethod)
         {
-            tStateMachine.M_MoveNext.Def.Clear();
+            var mMoveNext = tStateMachine.M_MoveNext;
+            mMoveNext.Def.Clear();
 
             if (tStateMachine.F_MoArray == null)
             {
@@ -48,6 +49,9 @@ namespace Rougamo.Fody
             {
                 AsyncBuildMoArrayMoveNext(rouMethod, tStateMachine, mActualMethod);
             }
+
+            mMoveNext.Def.DebuggerStepThrough(_methodDebuggerStepThroughCtorRef);
+            mMoveNext.Def.Body.OptimizePlus(EmptyInstructions);
         }
 
         private void AsyncBuildMosMoveNext(RouMethod rouMethod, TsAsyncStateMachine tStateMachine, MethodSimulation<TsAwaitable> mActualMethod)
@@ -220,9 +224,6 @@ namespace Rougamo.Fody
                 HandlerEnd = outerCatchEnd,
                 CatchType = _typeExceptionRef
             });
-
-            mMoveNext.Def.DebuggerStepThrough(_methodDebuggerStepThroughCtorRef);
-            mMoveNext.Def.Body.OptimizePlus(EmptyInstructions);
         }
 
         private void AsyncBuildMoArrayMoveNext(RouMethod rouMethod, TsAsyncStateMachine tStateMachine, MethodSimulation<TsAwaitable> mActualMethod)
@@ -274,8 +275,8 @@ namespace Rougamo.Fody
 
         private IList<Instruction> AsyncStateMachineInitMethodContext(RouMethod rouMethod, TsAsyncStateMachine tStateMachine)
         {
-            var tMoArray = _typeIMoRef.Simulate<TsArray>(this);
-            var tObjectArray = _typeObjectRef.Simulate<TsArray>(this);
+            var tMoArray = _typeIMoArrayRef.Simulate<TsArray>(this);
+            var tObjectArray = _typeObjectArrayRef.Simulate<TsArray>(this);
             IParameterSimulation?[] arguments = [
                 tStateMachine.F_DeclaringThis?.Typed(_simulations.Object),
                 new SystemType(rouMethod.MethodDef.DeclaringType, this),
@@ -396,7 +397,7 @@ namespace Rougamo.Fody
             return tStateMachine.F_MethodContext.Value.P_RewriteArguments.If(anchor =>
             {
                 var instructions = new List<Instruction>();
-                var vArguments = tStateMachine.M_MoveNext.CreateVariable<TsArray>(new ArrayType(_typeObjectRef));
+                var vArguments = tStateMachine.M_MoveNext.CreateVariable<TsArray>(_typeObjectArrayRef);
 
                 // .var args = _context.Arguments;
                 instructions.Add(vArguments.Assign(tStateMachine.F_MethodContext.Value.P_Arguments));

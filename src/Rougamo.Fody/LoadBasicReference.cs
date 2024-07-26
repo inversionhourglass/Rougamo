@@ -1,4 +1,5 @@
-﻿using Mono.Cecil.Cil;
+﻿using Mono.Cecil;
+using Mono.Cecil.Cil;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -25,6 +26,7 @@ namespace Rougamo.Fody
             _typeIntRef = FindTypeDefinition(typeof(int).FullName).ImportInto(ModuleDefinition);
             _typeBoolRef = FindTypeDefinition(typeof(bool).FullName).ImportInto(ModuleDefinition);
             _typeObjectRef = FindTypeDefinition(typeof(object).FullName).ImportInto(ModuleDefinition);
+            _typeObjectArrayRef = new ArrayType(_typeObjectRef);
             _typeExceptionRef = FindTypeDefinition(typeof(Exception).FullName).ImportInto(ModuleDefinition);
             _typeCancellationTokenRef = FindTypeDefinition(typeof(CancellationToken).FullName).ImportInto(ModuleDefinition);
             _typeDebuggerStepThroughAttributeRef = FindTypeDefinition(typeof(DebuggerStepThroughAttribute).FullName).ImportInto(ModuleDefinition);

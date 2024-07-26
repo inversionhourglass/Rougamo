@@ -6,12 +6,12 @@ using static Mono.Cecil.Cil.Instruction;
 
 namespace Rougamo.Fody.Simulations.Types
 {
-    internal class TsArray(TypeReference elementTypeRef, IHost? host, ModuleWeaver moduleWeaver) : TypeSimulation(new ArrayType(elementTypeRef), host, moduleWeaver)
+    internal class TsArray(TypeReference typeRef, IHost? host, ModuleWeaver moduleWeaver) : TypeSimulation(typeRef, host, moduleWeaver)
     {
-        private readonly OpCode _ldCode = elementTypeRef.GetLdElemCode();
-        private readonly OpCode _stCode = elementTypeRef.GetStElemCode();
+        private readonly OpCode _ldCode = ((ArrayType)typeRef).ElementType.GetLdElemCode();
+        private readonly OpCode _stCode = ((ArrayType)typeRef).ElementType.GetStElemCode();
 
-        public TypeSimulation ElementType { get; } = elementTypeRef.Simulate(moduleWeaver);
+        public TypeSimulation ElementType { get; } = ((ArrayType)typeRef).ElementType.Simulate(moduleWeaver);
 
         public Element this[int index]
         {
