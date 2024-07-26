@@ -4,7 +4,7 @@ using System.Collections.Generic;
 
 namespace Rougamo.Fody.Simulations.Operations
 {
-    internal abstract class ComparableAsserter(ILoadable value1, ILoadable value2) : ILoadable
+    internal abstract class ComparableOperation(ILoadable value1, ILoadable value2) : ILoadable
     {
         public TypeSimulation Type => ModuleWeaver._simulations.Bool;
 

@@ -2,7 +2,7 @@
 
 namespace Rougamo.Fody.Simulations.Operations
 {
-    internal static class AsserterExtensions
+    internal static class OperationExtensions
     {
         public static Eq IsEqual(this ILoadable value1, ILoadable value2) => new(value1, value2);
 
