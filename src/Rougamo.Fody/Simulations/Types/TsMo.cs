@@ -18,13 +18,13 @@ namespace Rougamo.Fody.Simulations.Types
 
         public MethodSimulation M_OnExit => MethodSimulate(Constants.METHOD_OnExit, true);
 
-        public MethodSimulation<TsAsyncable> M_OnEntryAsync => MethodSimulate<TsAsyncable>(Constants.METHOD_OnEntryAsync, true);
+        public MethodSimulation<TsAwaitable> M_OnEntryAsync => MethodSimulate<TsAwaitable>(Constants.METHOD_OnEntryAsync, true);
 
-        public MethodSimulation<TsAsyncable> M_OnExceptionAsync => MethodSimulate<TsAsyncable>(Constants.METHOD_OnExceptionAsync, true);
+        public MethodSimulation<TsAwaitable> M_OnExceptionAsync => MethodSimulate<TsAwaitable>(Constants.METHOD_OnExceptionAsync, true);
 
-        public MethodSimulation<TsAsyncable> M_OnSuccessAsync => MethodSimulate<TsAsyncable>(Constants.METHOD_OnSuccessAsync, true);
+        public MethodSimulation<TsAwaitable> M_OnSuccessAsync => MethodSimulate<TsAwaitable>(Constants.METHOD_OnSuccessAsync, true);
 
-        public MethodSimulation<TsAsyncable> M_OnExitAsync => MethodSimulate<TsAsyncable>(Constants.METHOD_OnExitAsync, true);
+        public MethodSimulation<TsAwaitable> M_OnExitAsync => MethodSimulate<TsAwaitable>(Constants.METHOD_OnExitAsync, true);
 
         public IList<Instruction> New(MethodSimulation host, Mo mo, MethodSimulation executingMethod)
         {

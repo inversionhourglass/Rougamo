@@ -36,7 +36,7 @@ namespace Rougamo.Fody
             AsyncBuildMoveNext(rouMethod, tStateMachine, mActualMethod);
         }
 
-        private void AsyncBuildMoveNext(RouMethod rouMethod, TsAsyncStateMachine tStateMachine, MethodSimulation<TsAsyncable> mActualMethod)
+        private void AsyncBuildMoveNext(RouMethod rouMethod, TsAsyncStateMachine tStateMachine, MethodSimulation<TsAwaitable> mActualMethod)
         {
             tStateMachine.M_MoveNext.Def.Clear();
 
@@ -50,7 +50,7 @@ namespace Rougamo.Fody
             }
         }
 
-        private void AsyncBuildMosMoveNext(RouMethod rouMethod, TsAsyncStateMachine tStateMachine, MethodSimulation<TsAsyncable> mActualMethod)
+        private void AsyncBuildMosMoveNext(RouMethod rouMethod, TsAsyncStateMachine tStateMachine, MethodSimulation<TsAwaitable> mActualMethod)
         {
             var mMoveNext = tStateMachine.M_MoveNext;
             var instructions = mMoveNext.Def.Body.Instructions;
@@ -58,7 +58,7 @@ namespace Rougamo.Fody
             var context = new AsyncContext(rouMethod);
 
             var vState = mMoveNext.CreateVariable(_typeIntRef);
-            var vMoValueTask = mMoveNext.CreateVariable<TsAsyncable>(_typeValueTaskRef);
+            var vMoValueTask = mMoveNext.CreateVariable<TsAwaitable>(_typeValueTaskRef);
             var vAwaiter = mMoveNext.CreateVariable<TsAwaiter>(tStateMachine.F_Awaiter.Value);
             var vMoAwaiter = tStateMachine.F_MoAwaiter == tStateMachine.F_Awaiter ? vAwaiter : mMoveNext.CreateVariable<TsAwaiter>(tStateMachine.F_MoAwaiter.Value);
             var vException = mMoveNext.CreateVariable(_typeExceptionRef);
@@ -225,15 +225,15 @@ namespace Rougamo.Fody
             mMoveNext.Def.Body.OptimizePlus(EmptyInstructions);
         }
 
-        private void AsyncBuildMoArrayMoveNext(RouMethod rouMethod, TsAsyncStateMachine tStateMachine, MethodSimulation<TsAsyncable> mActualMethod)
+        private void AsyncBuildMoArrayMoveNext(RouMethod rouMethod, TsAsyncStateMachine tStateMachine, MethodSimulation<TsAwaitable> mActualMethod)
         {
             throw new NotImplementedException($"Currently, async methods are not allowed to use array to save the Mos. Contact the author to get support.");
         }
 
-        private MethodSimulation<TsAsyncable> AsyncResolveActualMethod(TsAsyncStateMachine tStateMachine, MethodDefinition actualMethodDef)
+        private MethodSimulation<TsAwaitable> AsyncResolveActualMethod(TsAsyncStateMachine tStateMachine, MethodDefinition actualMethodDef)
         {
             var tDeclaring = AsyncResolveDeclaringType(tStateMachine);
-            var mActualMethod = actualMethodDef.Simulate<TsAsyncable>(tDeclaring);
+            var mActualMethod = actualMethodDef.Simulate<TsAwaitable>(tDeclaring);
 
             if (actualMethodDef.HasGenericParameters)
             {
@@ -418,7 +418,7 @@ namespace Rougamo.Fody
             });
         }
 
-        private IList<Instruction> AsyncProxyCall(RouMethod rouMethod, TsAsyncStateMachine tStateMachine, VariableSimulation vState, VariableSimulation<TsAwaiter> vAwaiter, MethodSimulation<TsAsyncable> mActualMethod, AsyncContext context)
+        private IList<Instruction> AsyncProxyCall(RouMethod rouMethod, TsAsyncStateMachine tStateMachine, VariableSimulation vState, VariableSimulation<TsAwaiter> vAwaiter, MethodSimulation<TsAwaitable> mActualMethod, AsyncContext context)
         {
             // .if (state == STATE)
             return vState.IsEqual(new Int32Value(context.State, this)).If((a1, a2) =>
@@ -430,7 +430,7 @@ namespace Rougamo.Fody
                 Instruction[] callAssignAwaiter;
                 if (mActualMethod.Result.IsValueType)
                 {
-                    var vResultTask = tStateMachine.M_MoveNext.CreateVariable<TsAsyncable>(mActualMethod.Result);
+                    var vResultTask = tStateMachine.M_MoveNext.CreateVariable<TsAwaitable>(mActualMethod.Result);
                     callAssignAwaiter = [
                         // .resultTask = ActualMethod(...);
                         .. vResultTask.Assign(target => mActualMethod.Call(tStateMachine.M_MoveNext, tStateMachine.F_Parameters)),
@@ -592,7 +592,7 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private IList<Instruction> AsyncMosOn(RouMethod rouMethod, TsAsyncStateMachine tStateMachine, VariableSimulation<TsAsyncable> vMoValueTask, VariableSimulation<TsAwaiter> vMoAwaiter, AsyncContext context, Feature feature, ForceSync forceSync, Func<FieldSimulation<TsMo>, MethodSimulation> syncMethodFactory, Func<FieldSimulation<TsMo>, MethodSimulation<TsAsyncable>> asyncMethodFactory)
+        private IList<Instruction> AsyncMosOn(RouMethod rouMethod, TsAsyncStateMachine tStateMachine, VariableSimulation<TsAwaitable> vMoValueTask, VariableSimulation<TsAwaiter> vMoAwaiter, AsyncContext context, Feature feature, ForceSync forceSync, Func<FieldSimulation<TsMo>, MethodSimulation> syncMethodFactory, Func<FieldSimulation<TsMo>, MethodSimulation<TsAwaitable>> asyncMethodFactory)
         {
             if (!rouMethod.Features.Contains(feature)) return [];
 
