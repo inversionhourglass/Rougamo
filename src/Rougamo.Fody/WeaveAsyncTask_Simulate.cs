@@ -251,11 +251,11 @@ namespace Rougamo.Fody
 
             var stateMachineRef = tStateMachine.M_MoveNext.DeclaringType.Ref;
             var declaringTypeDef = stateMachineRef.DeclaringType.Resolve();
-            if (stateMachineRef is not GenericInstanceType || !declaringTypeDef.HasGenericParameters) return new TsWeaveingTarget(declaringTypeDef, null, this);
+            if (stateMachineRef is not GenericInstanceType || !declaringTypeDef.HasGenericParameters) return new TsWeavingTarget(declaringTypeDef, null, this);
 
             var declaringTypeRef = declaringTypeDef.ReplaceGenericArgs(stateMachineRef.GetGenericMap());
 
-            return new TsWeaveingTarget(declaringTypeRef, null, this);
+            return new TsWeavingTarget(declaringTypeRef, null, this);
         }
 
         private IList<Instruction> AsyncStateMachineInitMos(RouMethod rouMethod, TsAsyncStateMachine tStateMachine)

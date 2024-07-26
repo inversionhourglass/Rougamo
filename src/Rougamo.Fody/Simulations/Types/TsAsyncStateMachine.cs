@@ -20,7 +20,7 @@ namespace Rougamo.Fody.Simulations.Types
 
         public FieldSimulation[] F_Parameters { get; private set; }
 
-        public FieldSimulation<TsWeaveingTarget>? F_DeclaringThis { get; private set; }
+        public FieldSimulation<TsWeavingTarget>? F_DeclaringThis { get; private set; }
 
         public FieldSimulation<TsAwaiter> F_Awaiter { get; private set; }
 
@@ -38,7 +38,7 @@ namespace Rougamo.Fody.Simulations.Types
             F_State = fields.State.Resolve().Simulate(this);
             F_Builder = fields.Builder.Resolve().Simulate<TsAsyncBuilder>(this);
             F_Parameters = fields.Parameters.Select(x => x!.Resolve().Simulate(this)).ToArray();
-            F_DeclaringThis = fields.DeclaringThis?.Resolve().Simulate<TsWeaveingTarget>(this);
+            F_DeclaringThis = fields.DeclaringThis?.Resolve().Simulate<TsWeavingTarget>(this);
             F_Awaiter = fields.Awaiter.Resolve().Simulate<TsAwaiter>(this);
             F_MoAwaiter = fields.MoAwaiter.Resolve().Simulate<TsAwaiter>(this);
             F_Result = fields.Result?.Resolve().Simulate(this);
