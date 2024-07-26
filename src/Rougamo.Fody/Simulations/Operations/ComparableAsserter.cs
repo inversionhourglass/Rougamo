@@ -2,7 +2,7 @@
 using Mono.Cecil;
 using System.Collections.Generic;
 
-namespace Rougamo.Fody.Simulations.Asserters
+namespace Rougamo.Fody.Simulations.Operations
 {
     internal abstract class ComparableAsserter(ILoadable value1, ILoadable value2) : ILoadable
     {

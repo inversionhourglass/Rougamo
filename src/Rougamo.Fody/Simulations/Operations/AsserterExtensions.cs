@@ -1,6 +1,6 @@
 ﻿using Rougamo.Fody.Simulations.PlainValues;
 
-namespace Rougamo.Fody.Simulations.Asserters
+namespace Rougamo.Fody.Simulations.Operations
 {
     internal static class AsserterExtensions
     {

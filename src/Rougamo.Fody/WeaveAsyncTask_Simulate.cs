@@ -5,7 +5,7 @@ using Mono.Cecil.Cil;
 using Mono.Cecil;
 using Rougamo.Fody.Enhances.Async;
 using Rougamo.Fody.Simulations;
-using Rougamo.Fody.Simulations.Asserters;
+using Rougamo.Fody.Simulations.Operations;
 using Rougamo.Fody.Simulations.PlainValues;
 using Rougamo.Fody.Simulations.Types;
 using static Mono.Cecil.Cil.Instruction;
