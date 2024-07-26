@@ -3,6 +3,7 @@ using Mono.Cecil.Cil;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using static Mono.Cecil.Cil.Instruction;
 
 namespace Rougamo.Fody.Simulations
 {
@@ -60,9 +61,9 @@ namespace Rougamo.Fody.Simulations
             var filedTypeRef = FieldRef.FieldType;
             if (filedTypeRef.IsValueType || filedTypeRef.IsGenericParameter)
             {
-                return [.. _declaringType.Load(), FieldRef.Ldflda(), .. type.Default()];
+                return [.. _declaringType.Load(), FieldRef.Ldflda(), Create(OpCodes.Initobj, Type)];
             }
-            return [.. _declaringType.Load(), .. type.Default(), FieldRef.Stfld()];
+            return [.. _declaringType.Load(), Create(OpCodes.Ldnull), FieldRef.Stfld()];
         }
 
         public IList<Instruction> Cast(TypeReference to) => Type.Cast(to);

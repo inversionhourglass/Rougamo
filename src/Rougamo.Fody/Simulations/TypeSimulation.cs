@@ -52,22 +52,13 @@ namespace Rougamo.Fody.Simulations
             return ctorRef.Simulate(this).Call(host, arguments);
         }
 
-        public virtual IList<Instruction> Default()
-        {
-            if (IsValueType || Ref.IsGenericParameter)
-            {
-                return [Create(OpCodes.Initobj, Ref)];
-            }
-            return [Create(OpCodes.Ldnull)];
-        }
-
         public virtual IList<Instruction> LoadForCallingMethod() => Host.LoadForCallingMethod();
 
         public virtual IList<Instruction> PrepareLoadAddress(MethodSimulation? method) => Host.PrepareLoadAddress(method);
 
         public virtual IList<Instruction> LoadAddress(MethodSimulation? method) => Host.LoadAddress(method);
 
-        public IList<Instruction> Load() => Host.Load();
+        public virtual IList<Instruction> Load() => Host.Load();
 
         public virtual IList<Instruction> Cast(TypeReference to)
         {

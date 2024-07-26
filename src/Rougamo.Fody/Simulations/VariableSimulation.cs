@@ -3,6 +3,7 @@ using Mono.Cecil.Cil;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using static Mono.Cecil.Cil.Instruction;
 
 namespace Rougamo.Fody.Simulations
 {
@@ -46,9 +47,9 @@ namespace Rougamo.Fody.Simulations
             var varTypeRef = VariableDef.VariableType;
             if (varTypeRef.IsValueType || varTypeRef.IsGenericParameter)
             {
-                return [VariableDef.Ldloca(), .. type.Default()];
+                return [VariableDef.Ldloca(), Create(OpCodes.Initobj, Type)];
             }
-            return Assign(target => type.Default());
+            return Assign(target => [Create(OpCodes.Ldnull)]);
         }
 
         public IList<Instruction> Cast(TypeReference to) => Type.Cast(to);
