@@ -61,6 +61,7 @@ namespace Rougamo.Fody
 
             var context = new AsyncContext(rouMethod);
 
+            VariableSimulation? vExceptionHandled = null;
             var vState = mMoveNext.CreateVariable(_typeIntRef);
             var vMoValueTask = mMoveNext.CreateVariable<TsAwaitable>(_typeValueTaskRef);
             var vAwaiter = mMoveNext.CreateVariable<TsAwaiter>(tStateMachine.F_Awaiter.Value);
@@ -92,7 +93,7 @@ namespace Rougamo.Fody
                     instructions.Add(AsyncIfOnEntryReplacedReturn(rouMethod, tStateMachine, context));
                     // .if (_context.RewriteArguments) { ... }
                     instructions.Add(AsyncIfRewriteArguments(rouMethod, tStateMachine, context));
-                    // .PROXY CALL
+                    // .RETRY:
                     instructions.Add(context.AnchorProxyCallCase);
                     context.AnchorSwitches.Add(context.AnchorProxyCallCase);
                     if (vPersistentInnerException != null)
@@ -124,12 +125,17 @@ namespace Rougamo.Fody
                         {
                             // ._context.Exception = innerException;
                             instructions.Add(tStateMachine.F_MethodContext.Value.P_Exception.Assign(vInnerException));
-                            // ._mo.OnException(_context); ...
+                            // ._mo.OnException(_context);
                             instructions.Add(AsyncMosSyncOnException(rouMethod, tStateMachine));
+                            // // .if (_context.RetryCount > 0) goto RETRY;
                             instructions.Add(AsynCheckRetry(rouMethod, tStateMachine, context, Feature.OnException, vState, true));
-                            instructions.Add(AsyncSaveResultIfExceptionHandled(rouMethod, tStateMachine));
+                            // .if (exceptionHandled) _result = _context.ReturnValue;
+                            instructions.Add(AsyncSaveResultIfExceptionHandled(rouMethod, tStateMachine, ref vExceptionHandled));
+                            // ._mo.OnExit(_context);
                             instructions.Add(AsyncMosSyncOnExit(rouMethod, tStateMachine));
-                            instructions.Add(AsyncMosReturnIfExceptionHandled(rouMethod, tStateMachine, context));
+                            // .if (exceptionHandled) goto END;
+                            instructions.Add(AsyncMosReturnIfExceptionHandled(rouMethod, tStateMachine, context, vExceptionHandled));
+                            // throw;
                             instructions.Add(Create(OpCodes.Rethrow));
                         }
 
@@ -161,8 +167,8 @@ namespace Rougamo.Fody
 
                     if (vPersistentInnerException != null)
                     {
-                        // .if (!_context.ExceptionHandled) ExceptionDispatchInfo.Capture(_context.Exception).Throw();
-                        instructions.Add(AsyncThrowIfExceptionNotHandled(rouMethod, tStateMachine, vPersistentInnerException));
+                        // .if (!exceptionHandled) ExceptionDispatchInfo.Capture(persistentInnerException).Throw();
+                        instructions.Add(AsyncThrowIfExceptionNotHandled(rouMethod, tStateMachine, vPersistentInnerException, ref vExceptionHandled));
                     }
                     // goto END;
                     instructions.Add(Create(OpCodes.Leave, context.AnchorSetResult));
@@ -175,8 +181,8 @@ namespace Rougamo.Fody
                         instructions.Add(AsyncMosOn(rouMethod, tStateMachine, vMoValueTask, vMoAwaiter, context, Feature.OnException, ForceSync.OnException, fMo => fMo.Value.M_OnException, fMo => fMo.Value.M_OnExceptionAsync));
                         // .if (_context.RetryCount > 0) continue;
                         instructions.Add(AsynCheckRetry(rouMethod, tStateMachine, context, Feature.OnException, vState, false));
-                        // .if (_context.ExceptionHandled) _result = _context.ReturnValue;
-                        instructions.Add(AsyncSaveResultIfExceptionHandled(rouMethod, tStateMachine));
+                        // .if (exceptionHandled) _result = _context.ReturnValue;
+                        instructions.Add(AsyncSaveResultIfExceptionHandled(rouMethod, tStateMachine, ref vExceptionHandled));
                         // .goto ON_EXIT;
                         instructions.Add(Create(OpCodes.Br, context.AnchorOnExitAsync));
                     }
@@ -498,40 +504,55 @@ namespace Rougamo.Fody
             if (!rouMethod.Features.Contains(Feature.RetryAny | action)) return [];
 #pragma warning restore CS0618 // Type or member is obsolete
 
+            // .if (_context.RetryCount > 0)
             return tStateMachine.F_MethodContext.Value.P_RetryCount.Gt(0).If(anchor =>
             {
                 return [
+                    // .state = -1;
                     .. vState.Assign(-1),
+                    // .goto RETRY;
                     Create(insideBlock ? OpCodes.Leave : OpCodes.Br, context.AnchorProxyCallCase)
                 ];
             });
         }
 
-        private IList<Instruction> AsyncSaveResultIfExceptionHandled(RouMethod rouMethod, TsAsyncStateMachine tStateMachine)
-        {
-            if (tStateMachine.F_Result == null || !rouMethod.Features.Contains(Feature.ExceptionHandle) || rouMethod.MethodContextOmits.Contains(Omit.ReturnValue)) return [];
-
-            // .if (_context.ExceptionHandled)
-            return tStateMachine.F_MethodContext.Value.P_ExceptionHandled.If(anchor =>
-            {
-                // ._result = _context.ReturnValue;
-                return tStateMachine.F_Result.Assign(tStateMachine.F_MethodContext.Value.P_ReturnValue);
-            });
-        }
-
-        private IList<Instruction> AsyncMosReturnIfExceptionHandled(RouMethod rouMethod, TsAsyncStateMachine tStateMachine, AsyncContext context)
+        private IList<Instruction> AsyncSaveResultIfExceptionHandled(RouMethod rouMethod, TsAsyncStateMachine tStateMachine, ref VariableSimulation? vExceptionHandled)
         {
             if (!rouMethod.Features.Contains(Feature.ExceptionHandle) || rouMethod.MethodContextOmits.Contains(Omit.ReturnValue)) return [];
 
-            // .if (_context.ExceptionHandled)
-            return tStateMachine.F_MethodContext.Value.P_ExceptionHandled.If(anchor =>
+            var instructions = new List<Instruction>();
+
+            vExceptionHandled ??= tStateMachine.M_MoveNext.CreateVariable(_typeBoolRef);
+
+            // .exceptionHandled = _context.ExceptionHandled;
+            instructions.Add(vExceptionHandled.Assign(tStateMachine.F_MethodContext.Value.P_ExceptionHandled));
+
+            if (tStateMachine.F_Result != null)
+            {
+                // .if (exceptionHandled)
+                instructions.Add(vExceptionHandled.If(anchor =>
+                {
+                    // ._result = _context.ReturnValue;
+                    return tStateMachine.F_Result.Assign(tStateMachine.F_MethodContext.Value.P_ReturnValue);
+                }));
+            }
+
+            return instructions;
+        }
+
+        private IList<Instruction> AsyncMosReturnIfExceptionHandled(RouMethod rouMethod, TsAsyncStateMachine tStateMachine, AsyncContext context, VariableSimulation? vExceptionHandled)
+        {
+            if (vExceptionHandled == null) return [];
+
+            // .if (exceptionHandled)
+            return vExceptionHandled.If(anchor =>
             {
                 // .goto END;
                 return [Create(OpCodes.Leave, context.AnchorSetResult)];
             });
         }
 
-        private IList<Instruction> AsyncThrowIfExceptionNotHandled(RouMethod rouMethod, TsAsyncStateMachine tStateMachine, VariableSimulation vPersistentInnerException)
+        private IList<Instruction> AsyncThrowIfExceptionNotHandled(RouMethod rouMethod, TsAsyncStateMachine tStateMachine, VariableSimulation vPersistentInnerException, ref VariableSimulation? vExceptionHandled)
         {
             // .ExceptionDispatchInfo.Capture(persistentInnerException).Throw();
             IList<Instruction> instructions = [
@@ -540,10 +561,11 @@ namespace Rougamo.Fody
                 Create(OpCodes.Callvirt, _methodExceptionDispatchInfoThrowRef)
             ];
 
-            if (rouMethod.Features.Contains(Feature.ExceptionHandle))
+            if (rouMethod.Features.Contains(Feature.ExceptionHandle) && !rouMethod.MethodContextOmits.Contains(Omit.ReturnValue))
             {
-                // .if (!_context.ExceptionHandled) { ... }
-                instructions = tStateMachine.F_MethodContext.Value.P_ExceptionHandled.IfNot(anchor => instructions);
+                vExceptionHandled = tStateMachine.M_MoveNext.CreateVariable(_typeBoolRef);
+                // .if (exceptionHandled) { ... }
+                instructions = vExceptionHandled.IfNot(anchor => instructions);
             }
 
             return vPersistentInnerException.IsEqual(new Null(this)).IfNot(anchor => instructions);
