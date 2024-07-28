@@ -267,7 +267,7 @@ namespace Rougamo.Fody
             {
                 var mo = rouMethod.Mos[i];
                 var fMo = tStateMachine.F_Mos![i];
-                instructions.Add(fMo.Assign(target => fMo.Value.New(tStateMachine.M_MoveNext, mo, tStateMachine.M_MoveNext)));
+                instructions.Add(fMo.Assign(target => fMo.Value.New(tStateMachine.M_MoveNext, mo)));
             }
 
             return instructions;
@@ -379,6 +379,8 @@ namespace Rougamo.Fody
                 {
                     // ._mo.OnExit(_contexxt);
                     instructions.Add(AsyncMosSyncOnExit(rouMethod, tStateMachine));
+                    // .goto END;
+                    instructions.Add(Create(OpCodes.Leave, context.AnchorSetResult));
                 }
                 else
                 {
@@ -496,7 +498,7 @@ namespace Rougamo.Fody
             if (!rouMethod.Features.Contains(Feature.RetryAny | action)) return [];
 #pragma warning restore CS0618 // Type or member is obsolete
 
-            return tStateMachine.F_MethodContext.Value.P_RetryCount.Gt(new Int32Value(0, this)).If(anchor =>
+            return tStateMachine.F_MethodContext.Value.P_RetryCount.Gt(0).If(anchor =>
             {
                 return [
                     .. vState.Assign(-1),
