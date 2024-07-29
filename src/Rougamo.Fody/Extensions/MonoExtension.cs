@@ -520,9 +520,9 @@ namespace Rougamo.Fody
             return Instruction.Create(OpCodes.Stfld, fieldRef);
         }
 
-        public static Instruction CallAny(this MethodReference methodRef)
+        public static Instruction CallAny(this MethodReference methodRef, MethodDefinition? methodDef = null)
         {
-            var methodDef = methodRef.Resolve();
+            methodDef ??= methodRef.Resolve();
             if (methodDef.IsConstructor) return Instruction.Create(OpCodes.Newobj, methodRef);
 
             var opCall = methodDef.IsVirtual ? OpCodes.Callvirt : OpCodes.Call;
