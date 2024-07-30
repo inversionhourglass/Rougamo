@@ -20,8 +20,16 @@ namespace Rougamo.Fody.Simulations
 
         public TypeSimulation(TypeReference typeRef, IHost? host, ModuleWeaver moduleWeaver) : base(moduleWeaver)
         {
+            if (typeRef is TypeDefinition typeDef)
+            {
+                Def = typeDef;
+                typeRef = typeDef.MakeReference();
+            }
+            else
+            {
+                Def = typeRef.Resolve();
+            }
             Ref = moduleWeaver == null ? typeRef : moduleWeaver.Import(typeRef);
-            Def = typeRef.Resolve();
             Host = host ?? new This(this);
         }
 
