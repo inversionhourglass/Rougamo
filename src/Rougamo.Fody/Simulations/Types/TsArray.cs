@@ -1,22 +1,34 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Rougamo.Fody.Simulations.PlainValues;
+using System;
 using System.Collections.Generic;
 using static Mono.Cecil.Cil.Instruction;
 
 namespace Rougamo.Fody.Simulations.Types
 {
-    internal class TsArray(TypeReference typeRef, IHost? host, ModuleWeaver moduleWeaver) : TypeSimulation(typeRef, host, moduleWeaver)
+    internal class TsArray(TypeReference typeRef, IHost? host, ModuleWeaver moduleWeaver) : TsArray<TypeSimulation>(typeRef, host, moduleWeaver) { }
+
+    internal class TsArray<T> : TypeSimulation, IDisposable where T : TypeSimulation
     {
-        private readonly OpCode _ldCode = ((ArrayType)typeRef).ElementType.GetLdElemCode();
-        private readonly OpCode _stCode = ((ArrayType)typeRef).ElementType.GetStElemCode();
+        private readonly OpCode _ldCode;
+        private readonly OpCode _stCode;
+        private bool _dupScope;
 
-        public TypeSimulation ElementType { get; } = ((ArrayType)typeRef).ElementType.Simulate(moduleWeaver);
-
-        public Element this[int index]
+        public TsArray(TypeReference typeRef, IHost? host, ModuleWeaver moduleWeaver) : base(typeRef, host, moduleWeaver)
         {
-            get => new(this, index, _ldCode);
-        } 
+            var arrayTypeRef = (ArrayType)typeRef;
+
+            _ldCode = arrayTypeRef.ElementType.GetLdElemCode();
+            _stCode = arrayTypeRef.ElementType.GetStElemCode();
+            ElementType = arrayTypeRef.ElementType.Simulate<T>(moduleWeaver);
+        }
+
+        public T ElementType { get; }
+
+        public Element this[int index] => this[new Int32Value(index, ModuleWeaver)];
+
+        public Element this[ILoadable indexLoader] => new(this, indexLoader);
 
         public IList<Instruction> New(ILoadable[] items)
         {
@@ -40,22 +52,73 @@ namespace Rougamo.Fody.Simulations.Types
 
         public Element Get(int index) => this[index];
 
-        public class Element(TsArray array, int index, OpCode ldCode) : ILoadable
+        public Element Get(ILoadable indexLoader) => this[indexLoader];
+
+        public IDisposable EnterDupScope()
         {
-            public TypeSimulation Type => array.ElementType;
+            _dupScope = true;
+            return this;
+        }
+
+        public override IList<Instruction> Load()
+        {
+            return _dupScope ? [Create(OpCodes.Dup)] : base.Load();
+        }
+
+        public void Dispose()
+        {
+            _dupScope = false;
+        }
+
+        public class Element : Simulation, IHost, IAssignable
+        {
+            private readonly TsArray<T> _array;
+            private readonly ILoadable _indexLoader;
+
+            public Element(TsArray<T> array, ILoadable indexLoader) : base(array.ModuleWeaver)
+            {
+                _array = array;
+                _indexLoader = indexLoader;
+                Type = array.ElementType;
+                Value = array.ElementType.Ref.Simulate<T>(this, ModuleWeaver);
+            }
+
+            public TypeSimulation Type { get; }
 
             public OpCode TrueToken => Type.TrueToken;
 
             public OpCode FalseToken => Type.FalseToken;
 
-            public ModuleWeaver ModuleWeaver => array.ModuleWeaver;
+            public T Value { get; }
 
             public IList<Instruction> Load()
             {
-                return [.. array.Load(), Create(OpCodes.Ldc_I4, index), Create(ldCode)];
+                return [.. _array.Load(), .. _indexLoader.Load(), Create(_array._ldCode)];
             }
 
-            IList<Instruction> ILoadable.Cast(TypeReference to) => Type.Cast(to);
+            public IList<Instruction> Assign(Func<IAssignable, IList<Instruction>> valueFactory)
+            {
+                return [.. _array.Load(), .. _indexLoader.Load(), .. valueFactory(this), Create(_array._stCode)];
+            }
+
+            public IList<Instruction> Cast(TypeReference to) => Type.Cast(to);
+
+            public IList<Instruction> LoadForCallingMethod()
+            {
+                var ldele = Type.IsValueType ? Create(OpCodes.Ldelema, Type) : Create(_array._ldCode);
+
+                return [.. _array.Load(), .. _indexLoader.Load(), ldele];
+            }
+
+            public IList<Instruction> PrepareLoadAddress(MethodSimulation? method)
+            {
+                return [];
+            }
+
+            public IList<Instruction> LoadAddress(MethodSimulation? method)
+            {
+                return [.. _array.Load(), .. _indexLoader.Load(), Create(OpCodes.Ldelema, Type)];
+            }
         }
     }
 
