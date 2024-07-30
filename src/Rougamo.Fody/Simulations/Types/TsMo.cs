@@ -10,6 +10,8 @@ namespace Rougamo.Fody.Simulations.Types
     {
         public PropertySimulation P_IsCompleted => PropertySimulate(Constants.PROP_IsCompleted, true);
 
+        public PropertySimulation P_Features => PropertySimulate(Constants.PROP_Features, true);
+
         public MethodSimulation M_OnEntry => MethodSimulate(Constants.METHOD_OnEntry, true);
 
         public MethodSimulation M_OnException => MethodSimulate(Constants.METHOD_OnException, true);
@@ -26,7 +28,7 @@ namespace Rougamo.Fody.Simulations.Types
 
         public MethodSimulation<TsAwaitable> M_OnExitAsync => MethodSimulate<TsAwaitable>(Constants.METHOD_OnExitAsync, true);
 
-        public IList<Instruction> New(MethodSimulation host, Mo mo, MethodSimulation executingMethod)
+        public IList<Instruction> New(MethodSimulation host, Mo mo)
         {
             if (mo.Attribute != null)
             {
@@ -54,7 +56,7 @@ namespace Rougamo.Fody.Simulations.Types
 
             if (mo.IsStruct)
             {
-                var vThis = executingMethod.CreateVariable<TsMo>(this);
+                var vThis = host.CreateVariable<TsMo>(this);
                 return [.. vThis.AssignNew(), .. vThis.Load()];
             }
 

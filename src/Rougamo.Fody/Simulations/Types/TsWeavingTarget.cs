@@ -1,4 +1,5 @@
 ﻿using Mono.Cecil;
+using System.Linq;
 
 namespace Rougamo.Fody.Simulations.Types
 {
@@ -14,6 +15,15 @@ namespace Rougamo.Fody.Simulations.Types
         {
             M_Actual = actualMethodDef.Simulate(this);
             M_Proxy = proxyMethodDef.Simulate(this);
+
+            if (M_Proxy.Ref is GenericInstanceMethod gim)
+            {
+                M_Actual = M_Actual.MakeGenericMethod(gim.GenericArguments.Select(x => x.Simulate(ModuleWeaver)).ToArray());
+            }
+            else if (M_Proxy.Ref.HasGenericParameters)
+            {
+                M_Actual = M_Actual.MakeGenericMethod(M_Proxy.Ref.GenericParameters.Select(x => x.Simulate(ModuleWeaver)).ToArray());
+            }
 
             return this;
         }
