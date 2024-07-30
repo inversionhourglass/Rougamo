@@ -35,6 +35,10 @@ namespace Rougamo.Fody
                             //AsyncTaskMethodWeave(rouMethod);
                             WeavingAsyncTaskMethod(rouMethod);
                         }
+                        else if (!rouMethod.MethodDef.IsConstructor)
+                        {
+                            WeavingSyncMethod(rouMethod);
+                        }
                         else
                         {
                             SyncMethodWeave(rouMethod);
