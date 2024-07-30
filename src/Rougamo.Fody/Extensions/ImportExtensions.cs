@@ -13,9 +13,17 @@ namespace Rougamo.Fody
         {
             if (typeRef.Scope.Name == SCOPE_ROUGAMO) return typeRef.ImportInto(moduleWeaver.ModuleDefinition);
 
-            if (typeRef.IsByReference) return new ByReferenceType(Import(moduleWeaver, typeRef.GetElementType()));
-            if (typeRef is ArrayType at) return new ArrayType(Import(moduleWeaver, at.ElementType), at.Rank);
+            if (typeRef is ByReferenceType brt) return new ByReferenceType(Import(moduleWeaver, brt.ElementType));
             if (typeRef is GenericParameter) return typeRef;
+            if (typeRef is ArrayType at)
+            {
+                var arrayType = new ArrayType(Import(moduleWeaver, at.ElementType), at.Rank);
+                for (var i = 0; i < at.Rank; i++)
+                {
+                    arrayType.Dimensions[i] = at.Dimensions[i];
+                }
+                return arrayType;
+            }
 
             var typeDef = typeRef.Resolve();
             if (moduleWeaver.TryFindTypeDefinition(typeDef.FullName, out var td))
