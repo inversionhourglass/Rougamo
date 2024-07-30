@@ -13,6 +13,7 @@ namespace Rougamo.Fody.Simulations
         private readonly int[][]? _genericParaIndexes;
         private readonly Dictionary<string, TypeReference> _declaringTypeGenericMap;
         protected Dictionary<string, TypeReference>? _lastCallMethodGenericMap;
+        private TypeSimulation? _result;
 
         public MethodSimulation(TypeSimulation declaringType, MethodDefinition methodDef) : base(declaringType.ModuleWeaver)
         {
@@ -49,6 +50,8 @@ namespace Rougamo.Fody.Simulations
         public MethodDefinition Def { get; }
 
         public MethodReference Ref { get; }
+
+        public TypeSimulation Result => _result ??= Ref.ReturnType.ReplaceGenericArgs(GenericMap).Simulate(new EmptyHost(ModuleWeaver), ModuleWeaver);
 
         public VariableDefinition? TempThis { get; set; }
 
@@ -117,18 +120,20 @@ namespace Rougamo.Fody.Simulations
                     instructions.Add(argument.Cast(parameterTypeRef));
                 }
             }
-            instructions.Add(methodRef.CallAny());
+            instructions.Add(methodRef.CallAny(Def));
 
             return instructions;
         }
 
         public VariableSimulation CreateVariable(TypeReference variableTypeRef)
         {
+            variableTypeRef = ModuleWeaver.Import(variableTypeRef);
             return Def.Body.CreateVariable(variableTypeRef).Simulate(this);
         }
 
         public VariableSimulation<T> CreateVariable<T>(TypeReference variableTypeRef) where T : TypeSimulation
         {
+            variableTypeRef = ModuleWeaver.Import(variableTypeRef);
             return Def.Body.CreateVariable(variableTypeRef).Simulate<T>(this);
         }
 
@@ -255,7 +260,7 @@ namespace Rougamo.Fody.Simulations
         /// then you should call MakeGenericMethod to get a GenericMethodSimulation and use the Result of the GenericMethodSimulation instead,
         /// or you will get a wrong result type.
         /// </summary>
-        public T Result => _result ??= Ref.ReturnType.ReplaceGenericArgs(GenericMap).Simulate<T>(new EmptyHost(ModuleWeaver), ModuleWeaver);
+        public new T Result => _result ??= Ref.ReturnType.ReplaceGenericArgs(GenericMap).Simulate<T>(new EmptyHost(ModuleWeaver), ModuleWeaver);
 
         public new GenericMethodSimulation<T> MakeGenericMethod(TypeSimulation[] generics) => new(DeclaringType, Ref, generics);
     }
