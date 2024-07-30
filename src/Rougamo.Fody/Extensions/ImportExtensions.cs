@@ -8,6 +8,7 @@ namespace Rougamo.Fody
     internal static class ImportExtensions
     {
         private const string SCOPE_ROUGAMO = "Rougamo.dll";
+        private const string SCOPE_VALUE_TUPLE = "System.ValueTuple.dll";
 
         public static TypeReference Import(this BaseModuleWeaver moduleWeaver, TypeReference typeRef)
         {
@@ -26,7 +27,14 @@ namespace Rougamo.Fody
             }
 
             var typeDef = typeRef.Resolve();
-            if (moduleWeaver.TryFindTypeDefinition(typeDef.FullName, out var td))
+            /**
+             * todo: 真棒棒呢，曾经在#31出现过的ValueTuple的问题，当时搞得我只能把肉夹馍用到ValueTuple的地方全都改掉，现在更厉害了，
+             * 唯独net461的ValueTuple默认scope是System.ValueTuple.dll(其实不确定net462, net47等是否也是这样，这里framework版本仅测试net461和net48)，
+             * 同时ValueTuple还能从基础库mscorlib中获取到，然而如果使用mscorlib中的ValueTuple，在运行时就会报错，现在不细究底层原因了，
+             * 有的是其他头疼的问题，先跳过就完了。若要复现问题，删除下面if判断中`typeDef.Scope.Name != SCOPE_VALUE_TUPLE`部分，
+             * 然后执行net461下的测试用例`ExecutionTupleSyntaxTest`
+             */
+            if (typeDef.Scope.Name != SCOPE_VALUE_TUPLE && moduleWeaver.TryFindTypeDefinition(typeDef.FullName, out var td))
             {
                 typeDef = td;
             }
