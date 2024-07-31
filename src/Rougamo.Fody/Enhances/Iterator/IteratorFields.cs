@@ -12,7 +12,7 @@ namespace Rougamo.Fody.Enhances.Iterator
             FieldDefinition methodContext,
             FieldDefinition state, FieldDefinition current,
             FieldDefinition initialThreadId, FieldDefinition? recordedReturn,
-            FieldDefinition? declaringThis,
+            FieldDefinition? declaringThis, FieldDefinition iterator,
             FieldDefinition?[] transitParameters, FieldDefinition?[] parameters) : base(stateMachineTypeDef)
         {
             MoArray = MakeReference(moArray);
@@ -25,6 +25,7 @@ namespace Rougamo.Fody.Enhances.Iterator
             TransitParameters = transitParameters.Select(MakeReference).ToArray();
             Parameters = parameters.Select(MakeReference).ToArray();
             DeclaringThis = MakeReference(declaringThis);
+            Iterator = MakeReference(iterator)!;
         }
 
         public FieldReference? MoArray { get; }
@@ -55,13 +56,13 @@ namespace Rougamo.Fody.Enhances.Iterator
             }
         }
 
-        private FieldReference? _iterator;
-        public FieldReference? Iterator
+        private FieldReference _iterator;
+        public FieldReference Iterator
         {
             get => _iterator;
             set
             {
-                _iterator = value is FieldDefinition fd ? MakeReference(fd) : value;
+                _iterator = value is FieldDefinition fd ? MakeReference(fd)! : value;
             }
         }
 
