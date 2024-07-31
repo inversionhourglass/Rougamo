@@ -67,7 +67,7 @@ namespace Rougamo.Fody
             if (rouMethod.Mos.Length >= _config.MoArrayThreshold)
             {
                 moArray = new FieldDefinition(Constants.FIELD_RougamoMos, FieldAttributes.Public, _typeIMoArrayRef);
-                stateMachineTypeDef.Fields.Add(moArray);
+                stateMachineTypeDef.AddUniqueField(moArray);
             }
             else
             {
@@ -75,7 +75,7 @@ namespace Rougamo.Fody
                 for (int i = 0; i < rouMethod.Mos.Length; i++)
                 {
                     mos[i] = new FieldDefinition(Constants.FIELD_RougamoMo_Prefix + i, FieldAttributes.Public, rouMethod.Mos[i].MoTypeRef.ImportInto(ModuleDefinition));
-                    stateMachineTypeDef.Fields.Add(mos[i]);
+                    stateMachineTypeDef.AddUniqueField(mos[i]);
                 }
             }
             var methodContext = new FieldDefinition(Constants.FIELD_RougamoContext, FieldAttributes.Public, _typeMethodContextRef);
@@ -86,17 +86,23 @@ namespace Rougamo.Fody
             FieldDefinition? recordedReturn = null;
             var transitParameters = StateMachineParameterFields(rouMethod);
             var parameters = IteratorGetPrivateParameterFields(getEnumeratorMethodDef, transitParameters);
-            if (_config.RecordingIteratorReturns && rouMethod.Features.HasIntersection(Feature.OnSuccess | Feature.OnExit) && (rouMethod.MethodContextOmits & Omit.ReturnValue) == 0)
+            if (_config.RecordingIteratorReturns && rouMethod.Features.HasIntersection(Feature.OnSuccess | Feature.OnExit) && !rouMethod.MethodContextOmits.Contains(Omit.ReturnValue))
             {
                 var listReturnsRef = new GenericInstanceType(_typeListRef);
                 listReturnsRef.GenericArguments.Add(((GenericInstanceType)rouMethod.MethodDef.ReturnType).GenericArguments[0]);
                 recordedReturn = new FieldDefinition(Constants.FIELD_IteratorReturnList, FieldAttributes.Public, listReturnsRef);
-                stateMachineTypeDef.Fields.Add(recordedReturn);
+                stateMachineTypeDef.AddUniqueField(recordedReturn);
             }
 
-            stateMachineTypeDef.Fields.Add(methodContext);
+            var enumerableTypeRef = rouMethod.MethodDef.ReturnType;
+            var enumeratorTypeRef = enumerableTypeRef.GetMethod(Constants.METHOD_GetEnumerator, false).ReturnType;
+            enumeratorTypeRef = stateMachineTypeDef.Import(enumerableTypeRef, enumeratorTypeRef);
+            var iterator = new FieldDefinition(Constants.FIELD_Iterator, FieldAttributes.Private, enumeratorTypeRef);
 
-            return new IteratorFields(stateMachineTypeDef, moArray, mos, methodContext, state, current, initialThreadId, recordedReturn, declaringThis, transitParameters, parameters);
+            stateMachineTypeDef.AddUniqueField(methodContext);
+            stateMachineTypeDef.AddUniqueField(iterator);
+
+            return new IteratorFields(stateMachineTypeDef, moArray, mos, methodContext, state, current, initialThreadId, recordedReturn, declaringThis, iterator, transitParameters, parameters);
         }
 
         private IteratorVariables IteratorResolveVariables(RouMethod rouMethod, MethodDefinition moveNextMethodDef, TypeDefinition stateMachineTypeDef)
