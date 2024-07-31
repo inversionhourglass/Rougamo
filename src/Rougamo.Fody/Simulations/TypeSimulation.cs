@@ -55,7 +55,7 @@ namespace Rougamo.Fody.Simulations
             }
             arguments = arguments.Select(x => x ?? new Null(ModuleWeaver)).ToArray();
             // todo: 考虑泛型参数问题
-            var ctorDef = Def.GetConstructors().Single(x => x.Parameters.Count == arguments.Length && x.Parameters.Select(y => y.ParameterType.FullName).SequenceEqual(arguments.Select(y => y!.Type.Ref.FullName)));
+            var ctorDef = Def.GetConstructors().Single(x => x.Parameters.Count == arguments.Length && !x.IsStatic && x.Parameters.Select(y => y.ParameterType.FullName).SequenceEqual(arguments.Select(y => y!.Type.Ref.FullName)));
             var ctorRef = ModuleWeaver.Import(ctorDef).WithGenericDeclaringType(Ref);
             return ctorRef.Simulate(this).Call(host, arguments);
         }
