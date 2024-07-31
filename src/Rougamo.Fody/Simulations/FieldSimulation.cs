@@ -19,7 +19,7 @@ namespace Rougamo.Fody.Simulations
 
         public TypeSimulation Type => Value;
 
-        public TypeSimulation Value => _value ??= FieldRef.FieldType.Simulate(this, ModuleWeaver);
+        public TypeSimulation Value => _value ??= _declaringType.Ref.Import(FieldRef.FieldType).Simulate(this, ModuleWeaver);
 
         public OpCode TrueToken => Type.TrueToken;
 
@@ -75,7 +75,7 @@ namespace Rougamo.Fody.Simulations
     {
         private T? _value;
 
-        public new T Value => _value ??= FieldRef.FieldType.Simulate<T>(this, ModuleWeaver);
+        public new T Value => _value ??= _declaringType.Ref.Import(FieldRef.FieldType).Simulate<T>(this, ModuleWeaver);
 
         public IList<Instruction> AssignNew(MethodSimulation host, params IParameterSimulation?[] arguments)
         {
