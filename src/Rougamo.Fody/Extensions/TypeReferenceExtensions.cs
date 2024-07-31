@@ -14,6 +14,21 @@ namespace Rougamo.Fody
             if (typeRef is not TypeDefinition typeDef) typeDef = typeRef.Resolve();
 
             MethodDefinition? methodDef = null;
+            if (typeDef.IsInterface)
+            {
+                methodDef = typeDef.Methods.SingleOrDefault(predicate);
+                if (methodDef == null)
+                {
+                    foreach (var @interface in typeDef.Interfaces)
+                    {
+                        methodDef = @interface.InterfaceType.Resolve().Methods.SingleOrDefault(predicate);
+                        if (methodDef != null) break;
+                    }
+                }
+
+                return methodDef;
+            }
+
             do
             {
                 methodDef = typeDef.Methods.SingleOrDefault(predicate);
