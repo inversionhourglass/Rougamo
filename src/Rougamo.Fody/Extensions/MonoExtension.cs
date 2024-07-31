@@ -631,6 +631,8 @@ namespace Rougamo.Fody
         public static MethodReference WithGenericDeclaringType(this MethodReference methodRef, TypeReference typeRef)
         {
             methodRef = methodRef.ImportInto(typeRef.Module);
+            var typeDef = typeRef.Resolve();
+            if (typeDef != null && typeDef != methodRef.DeclaringType.Resolve() && typeDef.IsInterface) return methodRef;
 
             var genericMethodRef = new MethodReference(methodRef.Name, methodRef.ReturnType, typeRef)
             {
