@@ -1,6 +1,4 @@
-﻿using Mono.Cecil;
-using Mono.Cecil.Cil;
-using Rougamo.Fody.Enhances.Async;
+﻿using Mono.Cecil.Cil;
 using Rougamo.Fody.Enhances.Sync;
 using Rougamo.Fody.Simulations;
 using Rougamo.Fody.Simulations.Operations;
@@ -367,16 +365,19 @@ namespace Rougamo.Fody
 
         private IList<Instruction> SyncMosOn(RouMethod rouMethod, TsWeavingTarget tWeavingTarget, VariableSimulation<TsMethodContext> vContext, VariableSimulation<TsMo>[]? vMos, VariableSimulation<TsArray<TsMo>>? vMoArray, Feature feature, Func<TsMo, MethodSimulation> methodFactory)
         {
+            return SyncMosOn(rouMethod, tWeavingTarget.M_Proxy, vContext, vMos?.Select(x => x.Value).ToArray(), vMoArray?.Value, feature, methodFactory);
+        }
+
+        private IList<Instruction> SyncMosOn(RouMethod rouMethod, MethodSimulation mHost, IParameterSimulation pContext, TsMo[]? tMos, TsArray<TsMo>? tMoArray, Feature feature, Func<TsMo, MethodSimulation> methodFactory)
+        {
             if (!rouMethod.Features.Contains(feature)) return [];
 
             var instructions = new List<Instruction>();
 
-            var tIMo = _typeIMoRef.Simulate<TsMo>(this);
-            var vFlag = tWeavingTarget.M_Proxy.CreateVariable(_typeIntRef);
             var reverseCall = feature != Feature.OnEntry && _config.ReverseCallNonEntry;
             var executeSequence = 0;
 
-            if (vMoArray != null && rouMethod.Mos.Length > 31)
+            if (tMoArray != null && rouMethod.Mos.Length > 31)
             {
                 executeSequence = -1;
             }
@@ -386,10 +387,10 @@ namespace Rougamo.Fody
                 var mo = rouMethod.Mos[j];
                 if (!mo.Features.Contains(feature)) continue;
 
-                if (vMos != null)
+                if (tMos != null)
                 {
                     // .mo.OnXxx(context);
-                    instructions.Add(methodFactory(vMos[j].Value).Call(tWeavingTarget.M_Proxy, vContext));
+                    instructions.Add(methodFactory(tMos[j]).Call(mHost, pContext));
                 }
                 else if (executeSequence != -1)
                 {
@@ -397,13 +398,14 @@ namespace Rougamo.Fody
                 }
             }
 
-            if (vMoArray != null)
+            if (tMoArray != null)
             {
                 Eq featureMatch;
+                var vFlag = mHost.CreateVariable(_typeIntRef);
                 if (executeSequence == -1)
                 {
                     // .(moArray[flag].Feature & feature) != 0
-                    featureMatch = vMoArray.Value[vFlag].Value.P_Features.And((int)feature).IsEqual(0);
+                    featureMatch = tMoArray[vFlag].Value.P_Features.And((int)feature).IsEqual(0);
                 }
                 else
                 {
@@ -416,7 +418,7 @@ namespace Rougamo.Fody
                 {
                     return [
                         // .moArray[flag].OnXxx(context);
-                        .. methodFactory(vMoArray.Value[vFlag].Value).Call(tWeavingTarget.M_Proxy, vContext),
+                        .. methodFactory(tMoArray[vFlag].Value).Call(mHost, pContext),
                         // .flag += 1; / flag -= 1;
                         .. vFlag.Assign(target => [ldFlag, Create(OpCodes.Ldc_I4_1), updateFlag]),
                         Create(OpCodes.Br, loopFirst)
