@@ -18,7 +18,7 @@ namespace Rougamo.Fody.Simulations
 
         public MethodSimulation? Setter { get; } = propertyDef.SetMethod?.Simulate(declaringType);
 
-        public TypeSimulation Type { get; } = propertyDef.PropertyType.Simulate(declaringType.ModuleWeaver);
+        public TypeSimulation Type { get; } = declaringType.Ref.Import(propertyDef.PropertyType).Simulate(declaringType.ModuleWeaver);
 
         public OpCode TrueToken => Type.TrueToken;
 
