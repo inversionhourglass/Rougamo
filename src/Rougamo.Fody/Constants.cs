@@ -90,7 +90,7 @@
         public const string FIELD_Result = ">_<result";
         public const string FIELD_Current_Suffix = "current";
         public const string FIELD_Iterator = ">_<iterator";
-        public const string FIELD_IteratorReturnList = ">_<returns";
+        public const string FIELD_IteratorReturnList = ">_<items";
         public const string FIELD_MoAwaiter = ">_<moAwaiter";
         public const string FIELD_InitialThreadId = "<>l__initialThreadId";
         public const string FIELD_Disposed = "<>w__disposeMode";
