@@ -541,7 +541,7 @@ namespace Rougamo.Fody
             methodDef ??= methodRef.Resolve();
             if (methodDef.IsConstructor) return Instruction.Create(OpCodes.Newobj, methodRef);
 
-            var opCall = methodDef.IsVirtual ? OpCodes.Callvirt : OpCodes.Call;
+            var opCall = methodDef.IsVirtual && !methodDef.DeclaringType.IsValueType ? OpCodes.Callvirt : OpCodes.Call;
             return Instruction.Create(opCall, methodRef);
         }
 
