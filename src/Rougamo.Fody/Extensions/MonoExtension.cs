@@ -429,6 +429,14 @@ namespace Rougamo.Fody
                     var gpIndex = typeDef.GetGenericParameterIndexByName(gp.Name);
                     generics[j] = git.GenericArguments[gpIndex];
                 }
+                else if (generic is GenericInstanceType gitt)
+                {
+                    var innerGenerics = gitt.GenericArguments.ToArray();
+                    MappingGenerics(innerGenerics, git);
+                    var newGit = new GenericInstanceType(gitt.ElementType);
+                    newGit.GenericArguments.Add(innerGenerics);
+                    generics[j] = newGit;
+                }
                 else
                 {
                     generics[j] = generic;
@@ -445,6 +453,14 @@ namespace Rougamo.Fody
                 {
                     var gpIndex = typeDef.GetGenericParameterIndexByName(gp.Name);
                     generics[j] = typeDef.GenericParameters[gpIndex];
+                }
+                else if (generic is GenericInstanceType git)
+                {
+                    var innerGenerics = git.GenericArguments.ToArray();
+                    MappingGenerics(innerGenerics, typeDef);
+                    var newGit = new GenericInstanceType(git.ElementType);
+                    newGit.GenericArguments.Add(innerGenerics);
+                    generics[j] = newGit;
                 }
                 else
                 {
