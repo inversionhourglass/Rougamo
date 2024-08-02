@@ -2,7 +2,7 @@
 
 namespace Rougamo.Fody.Simulations.Types
 {
-    internal class TsAsyncBuilder(TypeReference typeRef, IHost? host, ModuleWeaver moduleWeaver) : TypeSimulation(typeRef, host, moduleWeaver)
+    internal class TsAsyncBuilder(TypeReference typeRef, IHost? host, ModuleWeaver moduleWeaver) : TypeSimulation(typeRef, host, moduleWeaver), IAsyncBuilder
     {
         public MethodSimulation M_AwaitUnsafeOnCompleted => PublicMethodSimulate(Constants.METHOD_AwaitUnsafeOnCompleted, true);
 

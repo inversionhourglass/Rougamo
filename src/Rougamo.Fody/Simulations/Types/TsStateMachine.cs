@@ -3,7 +3,7 @@
 namespace Rougamo.Fody.Simulations.Types
 {
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    internal abstract class TsStateMachine(TypeReference typeRef, IHost? host, ModuleWeaver moduleWeaver) : TypeSimulation(typeRef, host, moduleWeaver)
+    internal abstract class TsStateMachine(TypeReference typeRef, IHost? host, ModuleWeaver moduleWeaver) : TypeSimulation(typeRef, host, moduleWeaver), IStateMachine
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     {
         public FieldSimulation<TsArray<TsMo>>? F_MoArray { get; protected set; }
