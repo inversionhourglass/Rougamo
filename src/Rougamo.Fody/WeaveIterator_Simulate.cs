@@ -146,7 +146,7 @@ namespace Rougamo.Fody
             }
         }
 
-        private IList<Instruction> IteratorInitItems(RouMethod rouMethod, TsIteratorStateMachine tStateMachine)
+        private IList<Instruction> IteratorInitItems(RouMethod rouMethod, IIteratorStateMachine tStateMachine)
         {
             if (tStateMachine.F_Items == null) return [];
 
@@ -154,7 +154,7 @@ namespace Rougamo.Fody
             return tStateMachine.F_Items.AssignNew(tStateMachine.M_MoveNext);
         }
 
-        private IList<Instruction> IteratorSaveItem(RouMethod rouMethod, TsIteratorStateMachine tStateMachine)
+        private IList<Instruction> IteratorSaveItem(RouMethod rouMethod, IIteratorStateMachine tStateMachine)
         {
             if (tStateMachine.F_Items == null) return [];
 
