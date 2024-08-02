@@ -133,17 +133,7 @@ namespace Rougamo.Fody
             instructions.Add(Create(OpCodes.Ldc_I4_0));
             instructions.Add(Create(OpCodes.Ret));
 
-            if (tryStart != null && catchStart != null && catchEnd != null)
-            {
-                tStateMachine.M_MoveNext.Def.Body.ExceptionHandlers.Add(new(ExceptionHandlerType.Catch)
-                {
-                    TryStart = tryStart,
-                    TryEnd = catchStart,
-                    HandlerStart = catchStart,
-                    HandlerEnd = catchEnd,
-                    CatchType = _typeExceptionRef
-                });
-            }
+            SetTryCatch(tStateMachine.M_MoveNext.Def, tryStart, catchStart, catchEnd);
         }
 
         private IList<Instruction> IteratorInitItems(RouMethod rouMethod, IIteratorStateMachine tStateMachine)

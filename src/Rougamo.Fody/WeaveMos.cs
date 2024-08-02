@@ -54,6 +54,22 @@ namespace Rougamo.Fody
             }
         }
 
+        private void SetTryCatch(MethodDefinition methodDef, Instruction? tryStart, Instruction? catchStart, Instruction? catchEnd, TypeReference? catchType = null)
+        {
+            if (tryStart == null || catchStart == null || catchEnd == null) return;
+
+            catchType ??= _typeExceptionRef;
+
+            methodDef.Body.ExceptionHandlers.Add(new(ExceptionHandlerType.Catch)
+            {
+                TryStart = tryStart,
+                TryEnd = catchStart,
+                HandlerStart = catchStart,
+                HandlerEnd = catchEnd,
+                CatchType = catchType
+            });
+        }
+
         #region LoadMosOnStack
 
         private IList<Instruction> CreateTempMoArray(VariableDefinition[] moVariables, Mo[] mos)

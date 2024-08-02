@@ -255,25 +255,8 @@ namespace Rougamo.Fody
 
             switches.Operand = context.AnchorSwitches.ToArray();
 
-            if (innerTryStart != null && innerCatchStart != null && innerCatchEnd != null)
-            {
-                mMoveNext.Def.Body.ExceptionHandlers.Add(new(ExceptionHandlerType.Catch)
-                {
-                    TryStart = innerTryStart,
-                    TryEnd = innerCatchStart,
-                    HandlerStart = innerCatchStart,
-                    HandlerEnd = innerCatchEnd,
-                    CatchType = _typeExceptionRef
-                });
-            }
-            mMoveNext.Def.Body.ExceptionHandlers.Add(new(ExceptionHandlerType.Catch)
-            {
-                TryStart = outerTryStart,
-                TryEnd = outerCatchStart,
-                HandlerStart = outerCatchStart,
-                HandlerEnd = outerCatchEnd,
-                CatchType = _typeExceptionRef
-            });
+            SetTryCatch(mMoveNext.Def, innerTryStart, innerCatchStart, innerCatchEnd);
+            SetTryCatch(mMoveNext.Def, outerTryStart, outerCatchStart, outerCatchEnd);
         }
 
         private void AsyncIteratorBuildMoArrayMoveNext(RouMethod rouMethod, TsAsyncIteratorStateMachine tStateMachine, MethodSimulation<TsAsyncEnumerable> mActualMethod)

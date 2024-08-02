@@ -130,17 +130,7 @@ namespace Rougamo.Fody
             if (vResult != null) instructions.Add(vResult.Load());
             instructions.Add(Create(OpCodes.Ret));
 
-            if (tryStart != null && catchStart != null && catchEnd != null)
-            {
-                tWeavingTarget.M_Proxy.Def.Body.ExceptionHandlers.Add(new(ExceptionHandlerType.Catch)
-                {
-                    TryStart = tryStart,
-                    TryEnd = catchStart,
-                    HandlerStart = catchStart,
-                    HandlerEnd = catchEnd,
-                    CatchType = _typeExceptionRef
-                });
-            }
+            SetTryCatch(tWeavingTarget.M_Proxy.Def, tryStart, catchStart, catchEnd);
         }
 
         private IList<Instruction> SyncInitMos(RouMethod rouMethod, TsWeavingTarget tWeavingTarget, VariableSimulation<TsMo>[]? vMos, VariableSimulation<TsArray<TsMo>>? vMoArray)
