@@ -58,6 +58,10 @@ namespace Rougamo.Fody
         internal Dictionary<string, MethodReference> _methodIMosRef;
         internal Dictionary<string, MethodReference> _stateMachineCtorRefs;
 
+#if DEBUG
+        internal MethodReference _methodDebuggerBreakRef;
+#endif
+
         internal GlobalSimulations _simulations;
 
         private List<RouType> _rouTypes;
@@ -142,6 +146,13 @@ namespace Rougamo.Fody
             }
 
             return defaultValue;
+        }
+
+        private void Debugger(IList<Instruction> instructions, RouMethod rouMethod, string methodName)
+        {
+#if DEBUG
+            if (rouMethod.MethodDef.Name == methodName) instructions.Add(Instruction.Create(OpCodes.Call, _methodDebuggerBreakRef));
+#endif
         }
     }
 }

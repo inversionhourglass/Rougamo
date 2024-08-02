@@ -1,5 +1,4 @@
 ﻿using Mono.Cecil;
-using Mono.Cecil.Cil;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -51,6 +50,11 @@ namespace Rougamo.Fody
                 { Constants.TYPE_AsyncStateMachineAttribute, asyncStateMachineAttributeCtorRef },
                 { Constants.TYPE_IteratorStateMachineAttribute, iteratorStateMachineAttributeCtorRef }
             };
+
+#if DEBUG
+            var debuggerTypeRef = this.Import(FindTypeDefinition(typeof(Debugger).FullName));
+            _methodDebuggerBreakRef = this.Import(debuggerTypeRef.GetMethod(false, x => x.IsStatic && x.Name == "Break")!);
+#endif
         }
     }
 }
