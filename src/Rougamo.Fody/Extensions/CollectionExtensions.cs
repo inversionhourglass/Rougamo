@@ -23,6 +23,12 @@ namespace Rougamo.Fody
             return list;
         }
 
+        public static T AddGet<T>(this List<T> list, T item)
+        {
+            list.Add(item);
+            return item;
+        }
+
         public static void AddRange<TKey, TValue>(this IDictionary<TKey, TValue> dictionary, IDictionary<TKey, TValue> more)
         {
             foreach (var item in more)
