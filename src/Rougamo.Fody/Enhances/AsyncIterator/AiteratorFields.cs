@@ -13,6 +13,7 @@ namespace Rougamo.Fody.Enhances.AsyncIterator
             FieldDefinition initialThreadId, FieldDefinition disposed,
             FieldDefinition builder, FieldDefinition promise,
             FieldDefinition? recordedReturn, FieldDefinition? declaringThis,
+            FieldDefinition iterator, FieldDefinition awaiter, FieldDefinition moAwaiter,
             FieldDefinition?[] transitParameters, FieldDefinition?[] parameters) : base(stateMachineTypeDef)
         {
             MoArray = MakeReference(moArray);
@@ -26,6 +27,9 @@ namespace Rougamo.Fody.Enhances.AsyncIterator
             Promise = MakeReference(promise)!;
             RecordedReturn = MakeReference(recordedReturn);
             DeclaringThis = MakeReference(declaringThis);
+            Iterator = MakeReference(iterator)!;
+            Awaiter = MakeReference(awaiter)!;
+            MoAwaiter = MakeReference(moAwaiter)!;
             TransitParameters = transitParameters.Select(MakeReference).ToArray();
             Parameters = parameters.Select(MakeReference).ToArray();
         }
@@ -61,18 +65,20 @@ namespace Rougamo.Fody.Enhances.AsyncIterator
             set => _declaringThis = value is FieldDefinition fd ? MakeReference(fd) : value;
         }
 
-        private FieldReference? _awaiter;
-        public FieldReference? Awaiter {
+        private FieldReference _awaiter;
+        public FieldReference Awaiter {
             get => _awaiter;
-            set => _awaiter = value is FieldDefinition fd ? MakeReference(fd) : value;
+            set => _awaiter = value is FieldDefinition fd ? MakeReference(fd)! : value;
         }
 
-        private FieldReference? _iterator;
-        public FieldReference? Iterator
+        private FieldReference _iterator;
+        public FieldReference Iterator
         {
             get => _iterator;
-            set => _iterator = value is FieldDefinition fd ? MakeReference(fd) : value;
+            set => _iterator = value is FieldDefinition fd ? MakeReference(fd)! : value;
         }
+
+        public FieldReference MoAwaiter { get; }
 
         public void SetParameter(int index, FieldDefinition fieldDef)
         {
