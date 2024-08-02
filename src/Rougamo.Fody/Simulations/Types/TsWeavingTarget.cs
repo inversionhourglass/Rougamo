@@ -27,5 +27,13 @@ namespace Rougamo.Fody.Simulations.Types
 
             return this;
         }
+
+        public TsWeavingTarget SetMethod(MethodDefinition methodDef)
+        {
+            M_Actual = methodDef.Simulate(this);
+            M_Proxy = M_Actual;
+
+            return this;
+        }
     }
 }

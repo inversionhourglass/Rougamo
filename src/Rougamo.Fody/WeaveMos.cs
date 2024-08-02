@@ -43,7 +43,8 @@ namespace Rougamo.Fody
                         }
                         else
                         {
-                            SyncMethodWeave(rouMethod);
+                            //SyncMethodWeave(rouMethod);
+                            WeavingConstructor(rouMethod);
                         }
                     }
                     catch (Exception ex) when (ex is not RougamoException)

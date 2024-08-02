@@ -243,11 +243,11 @@ namespace Rougamo.Fody
             return vContext.Value.P_ReturnValue.Assign(vResult);
         }
 
-        private IList<Instruction> SyncRefreshArguments(RouMethod rouMethod, TsWeavingTarget tWeavingTarget, ArgumentSimulation[] args, VariableSimulation<TsMethodContext> vContext, Feature feature)
+        private IList<Instruction> SyncRefreshArguments(RouMethod rouMethod, TsWeavingTarget tWeavingTarget, ArgumentSimulation[] args, VariableSimulation<TsMethodContext> vContext, Feature feature, bool checkByRef = true)
         {
             if (!rouMethod.Features.Contains(feature | Feature.OnExit | Feature.FreshArgs) || rouMethod.MethodContextOmits.Contains(Omit.Arguments)) return [];
 
-            var count = args.Count(x => x.IsByReference);
+            var count = checkByRef ? args.Count(x => x.IsByReference) : args.Length;
 
             if (count == 0) return [];
 
@@ -264,7 +264,7 @@ namespace Rougamo.Fody
             for (var i = 0; i < args.Length; i++)
             {
                 var arg = args[i];
-                if (!arg.IsByReference) continue;
+                if (checkByRef && !arg.IsByReference) continue;
 
                 // .context.Arguments[i] = arg_i;
                 if (vArguments == null)
@@ -327,6 +327,16 @@ namespace Rougamo.Fody
 
             // .if (exceptionHandled)
             return vExceptionHandled.If(anchor =>
+            {
+                // return result;
+                return [Create(OpCodes.Leave, context.AnchorReturnResult)];
+            });
+        }
+
+        private IList<Instruction> SyncReturnIfExceptionHandled(RouMethod rouMethod, VariableSimulation<TsMethodContext> vContext, SyncContext context)
+        {
+            // .if (context.ExceptionHandled)
+            return vContext.Value.P_ExceptionHandled.If(anchor =>
             {
                 // return result;
                 return [Create(OpCodes.Leave, context.AnchorReturnResult)];
