@@ -4,7 +4,7 @@ using System.Linq;
 
 namespace Rougamo.Fody.Enhances.Async
 {
-    internal class AsyncContext(RouMethod rouMethod)
+    internal class AsyncContext(RouMethod rouMethod) : IAsyncContext
     {
         public bool OnExceptionAllInSync { get; } = rouMethod.Mos.All(x => x.ForceSync.Contains(ForceSync.OnException));
 
