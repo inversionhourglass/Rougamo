@@ -59,6 +59,11 @@ namespace BasicUsage.Mos
                     context.ReplaceReturnValue(mo, map);
                 }
             }
+            else if (context.Method is ConstructorInfo && context.Method.IsStatic)
+            {
+                var addExecutedMos = context.TargetType.GetMethod("AddExecutedMos", BindingFlags.Public | BindingFlags.Static);
+                addExecutedMos.Invoke(null, [name]);
+            }
         }
     }
 }

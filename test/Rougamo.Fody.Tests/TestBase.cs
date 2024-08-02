@@ -23,7 +23,7 @@ namespace Rougamo.Fody.Tests
             Assembly = result.Assembly;
         }
 
-        protected dynamic GetInstance(string className, bool fullName = false, Func<Type, Type> processor = null)
+        protected dynamic GetInstance(string className, bool fullName = false, Func<Type, Type> processor = null, object[] args = null)
         {
             if (!fullName)
             {
@@ -32,7 +32,7 @@ namespace Rougamo.Fody.Tests
             var type = Assembly.GetType(className, true);
             if (processor != null) type = processor(type);
 
-            return Activator.CreateInstance(type);
+            return Activator.CreateInstance(type, args);
         }
 
         protected dynamic GetStaticInstance(string className, bool fullName = false, Func<Type, Type> processor = null)

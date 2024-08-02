@@ -642,7 +642,7 @@ namespace Rougamo.Fody.Tests
         }
 
         [Fact]
-        public async Task IndirectDependencyTes()
+        public async Task IndirectDependencyTest()
         {
             var instance = GetInstance(nameof(IndirectDependencyUseCase));
             var sInstance = GetStaticInstance(nameof(IndirectDependencyUseCase));
@@ -656,6 +656,33 @@ namespace Rougamo.Fody.Tests
             mos.Clear();
             var asyncResult = await (Task<string[]>)sInstance.Async(mos);
             Assert.Equal(asyncResult, mos);
+        }
+
+        [Fact]
+        public void CtorTest()
+        {
+            var sEmptyInstance = GetStaticInstance(nameof(ConstructorEmpty));
+            var sThrowsInstance = GetStaticInstance(nameof(ConstructorThrows));
+            var sTryCatchInstance = GetStaticInstance(nameof(ConstructorTryCatch));
+
+            string[] expected = ["CtorValueMo"];
+            Assert.Equal(expected, sEmptyInstance.GetExecutedMos());
+            Assert.Equal(expected, sThrowsInstance.GetExecutedMos());
+            Assert.Equal(expected, sTryCatchInstance.GetExecutedMos());
+
+            var executedMos = new List<string>();
+
+            executedMos.Clear();
+            var emptyInstance = GetInstance(nameof(ConstructorEmpty), false, null, [executedMos]);
+            Assert.Equal(executedMos, executedMos);
+
+            executedMos.Clear();
+            var throwsInstance = GetInstance(nameof(ConstructorThrows), false, null, [executedMos]);
+            Assert.Equal(executedMos, executedMos);
+
+            executedMos.Clear();
+            var tryCatchInstance = GetInstance(nameof(ConstructorTryCatch), false, null, [executedMos]);
+            Assert.Equal(executedMos, executedMos);
         }
     }
 }
