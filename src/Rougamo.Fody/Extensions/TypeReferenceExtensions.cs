@@ -74,5 +74,17 @@ namespace Rougamo.Fody
 
             return map;
         }
+
+        public static Dictionary<string, TypeReference> GetGenericMap(this MethodDefinition methodDef)
+        {
+            var map = methodDef.DeclaringType.GetGenericMap();
+
+            foreach (var gp in methodDef.GenericParameters)
+            {
+                map[gp.Name] = gp;
+            }
+
+            return map;
+        }
     }
 }
