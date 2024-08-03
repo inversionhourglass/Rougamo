@@ -48,6 +48,7 @@ namespace Rougamo.Fody
         internal MethodReference _methodIEnumeratorMoveNextRef;
         internal MethodReference _methodObjectCtorRef;
         internal MethodReference _methodDebuggerStepThroughCtorRef;
+        internal MethodReference _methodAsyncStateMachineAttributeCtorRef;
         internal MethodReference _methodCompilerGeneratedAttributeCtorRef;
         internal MethodReference _methodDebuggerHiddenAttributeCtorRef;
         internal MethodReference _methodExceptionDispatchInfoCaptureRef;

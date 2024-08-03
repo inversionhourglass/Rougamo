@@ -620,7 +620,7 @@ namespace Rougamo.Fody
 
             if (_debugMode) stateMachineTypeDef.Methods.Add(AsyncBuildStateMachineCtor());
             stateMachineTypeDef.Methods.Add(AsyncBuildStateMachineMethodSetStateMachine());
-            stateMachineTypeDef.Methods.Add(AsyncBuildStateMachineMethodMoveNext());
+            stateMachineTypeDef.Methods.Add(AsyncBuildStateMachineMethodMoveNext(methodDef));
 
             return stateMachineTypeDef;
         }
@@ -643,7 +643,7 @@ namespace Rougamo.Fody
             return methodDef;
         }
 
-        private MethodDefinition AsyncBuildStateMachineMethodMoveNext()
+        private MethodDefinition AsyncBuildStateMachineMethodMoveNext(MethodDefinition kickOffMethodDef)
         {
             var attribute = MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.Virtual | MethodAttributes.HideBySig | MethodAttributes.NewSlot;
             var methodDef = new MethodDefinition(Constants.METHOD_MoveNext, attribute, _typeVoidRef);
@@ -651,6 +651,7 @@ namespace Rougamo.Fody
             methodDef.ExplicitThis = false;
             methodDef.CallingConvention = MethodCallingConvention.Default;
             methodDef.Overrides.Add(_methodIAsyncStateMachineMoveNextRef);
+            methodDef.DebugInformation.StateMachineKickOffMethod = kickOffMethodDef;
             methodDef.Body.InitLocals = true;
 
             return methodDef;
@@ -688,6 +689,10 @@ namespace Rougamo.Fody
         {
             methodDef.Clear();
             methodDef.Body.InitLocals = true;
+            var stateMachineAttribute = new CustomAttribute(_methodAsyncStateMachineAttributeCtorRef);
+            stateMachineAttribute.ConstructorArguments.Add(new(_typeSystemRef, stateMachineTypeDef));
+            methodDef.CustomAttributes.Add(stateMachineAttribute);
+
             var stateMachineTypeRef = stateMachineTypeDef.ReplaceGenericArgs(methodDef.GetGenericMap());
             var builderTypeRef = AsyncGetBuilderType(methodDef, null);
 

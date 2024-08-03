@@ -53,12 +53,12 @@ namespace Rougamo.Fody
             _methodExceptionDispatchInfoThrowRef = typeExceptionDispatchInfoDef.Methods.Single(x => x.Parameters.Count == 0 && x.Name == Constants.METHOD_Throw).ImportInto(ModuleDefinition);
             _methodIAsyncStateMachineSetStateMachineRef = _typeIAsyncStateMachineRef.GetMethod(Constants.METHOD_SetStateMachine, false)!.ImportInto(ModuleDefinition);
             _methodIAsyncStateMachineMoveNextRef = _typeIAsyncStateMachineRef.GetMethod(Constants.METHOD_MoveNext, false)!.ImportInto(ModuleDefinition);
-            var asyncStateMachineAttributeCtorRef = typeAsyncStateMachineAttributeRef.Resolve().Methods.Single(x => x.IsConstructor && !x.IsStatic && x.Parameters.Single().ParameterType.Is(Constants.TYPE_Type)).ImportInto(ModuleDefinition);
+            _methodAsyncStateMachineAttributeCtorRef = typeAsyncStateMachineAttributeRef.Resolve().Methods.Single(x => x.IsConstructor && !x.IsStatic && x.Parameters.Single().ParameterType.Is(Constants.TYPE_Type)).ImportInto(ModuleDefinition);
             var iteratorStateMachineAttributeCtorRef = typeIteratorStateMachineAttributeRef.Resolve().Methods.Single(x => x.IsConstructor && !x.IsStatic && x.Parameters.Single().ParameterType.Is(Constants.TYPE_Type)).ImportInto(ModuleDefinition);
 
             _stateMachineCtorRefs = new()
             {
-                { Constants.TYPE_AsyncStateMachineAttribute, asyncStateMachineAttributeCtorRef },
+                { Constants.TYPE_AsyncStateMachineAttribute, _methodAsyncStateMachineAttributeCtorRef },
                 { Constants.TYPE_IteratorStateMachineAttribute, iteratorStateMachineAttributeCtorRef }
             };
 
