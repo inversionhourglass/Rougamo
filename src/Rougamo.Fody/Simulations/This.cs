@@ -6,7 +6,7 @@ using static Mono.Cecil.Cil.Instruction;
 
 namespace Rougamo.Fody.Simulations
 {
-    [DebuggerDisplay("this")]
+    [DebuggerDisplay("This={Type}")]
     internal class This(TypeSimulation type) : IHost
     {
         public TypeSimulation Type => type;
@@ -17,7 +17,7 @@ namespace Rougamo.Fody.Simulations
 
         public ModuleWeaver ModuleWeaver => type.ModuleWeaver;
 
-        public IList<Instruction> LoadForCallingMethod() => [Create(OpCodes.Ldarg_0)];
+        public IList<Instruction> LoadAny() => [Create(OpCodes.Ldarg_0)];
 
         public IList<Instruction> PrepareLoadAddress(MethodSimulation? method)
         {

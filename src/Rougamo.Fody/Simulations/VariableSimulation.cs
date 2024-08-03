@@ -20,7 +20,7 @@ namespace Rougamo.Fody.Simulations
 
         public OpCode FalseToken => Type.FalseToken;
 
-        public IList<Instruction> LoadForCallingMethod() => [VariableDef.LdlocAny()];
+        public IList<Instruction> LoadAny() => [VariableDef.LdlocAny()];
 
         public IList<Instruction> PrepareLoadAddress(MethodSimulation? method) => [];
 

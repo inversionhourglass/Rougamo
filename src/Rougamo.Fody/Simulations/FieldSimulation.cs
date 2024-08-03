@@ -25,9 +25,9 @@ namespace Rougamo.Fody.Simulations
 
         public OpCode FalseToken => Type.FalseToken;
 
-        public IList<Instruction> LoadForCallingMethod()
+        public IList<Instruction> LoadAny()
         {
-            return [.. _declaringType.LoadForCallingMethod(), FieldRef.LdfldAny()];
+            return [.. _declaringType.LoadAny(), FieldRef.LdfldAny()];
         }
 
         public IList<Instruction> PrepareLoadAddress(MethodSimulation? method) => [];
@@ -44,14 +44,14 @@ namespace Rougamo.Fody.Simulations
 
         public IList<Instruction> Assign(Func<IAssignable, IList<Instruction>> valueFactory)
         {
-            return [.. _declaringType.Load(), .. valueFactory(this), FieldRef.Stfld()];
+            return [.. _declaringType.LoadAny(), .. valueFactory(this), FieldRef.Stfld()];
         }
 
         public IList<Instruction> AssignNew(MethodSimulation host, TypeSimulation type, params IParameterSimulation?[] arguments)
         {
             if (FieldRef.FieldType.IsValueType)
             {
-                return [.. _declaringType.Load(), FieldRef.Ldflda(), .. type.New(host, arguments)];
+                return [.. _declaringType.LoadAny(), FieldRef.Ldflda(), .. type.New(host, arguments)];
             }
             return Assign(target => type.New(host, arguments));
         }
@@ -61,9 +61,9 @@ namespace Rougamo.Fody.Simulations
             var filedTypeRef = FieldRef.FieldType;
             if (filedTypeRef.IsValueType || filedTypeRef.IsGenericParameter)
             {
-                return [.. _declaringType.Load(), FieldRef.Ldflda(), Create(OpCodes.Initobj, Type)];
+                return [.. _declaringType.LoadAny(), FieldRef.Ldflda(), Create(OpCodes.Initobj, Type)];
             }
-            return [.. _declaringType.Load(), Create(OpCodes.Ldnull), FieldRef.Stfld()];
+            return [.. _declaringType.LoadAny(), Create(OpCodes.Ldnull), FieldRef.Stfld()];
         }
 
         public IList<Instruction> Cast(TypeReference to) => Type.Cast(to);

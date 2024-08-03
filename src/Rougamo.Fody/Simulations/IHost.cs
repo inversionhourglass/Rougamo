@@ -1,6 +1,10 @@
-﻿namespace Rougamo.Fody.Simulations
+﻿using Mono.Cecil.Cil;
+using System.Collections.Generic;
+
+namespace Rougamo.Fody.Simulations
 {
-    internal interface IHost : ICallingTarget, IParameterSimulation
+    internal interface IHost : IParameterSimulation
     {
+        IList<Instruction> LoadAny();
     }
 }

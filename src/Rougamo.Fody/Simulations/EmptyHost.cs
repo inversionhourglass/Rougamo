@@ -22,7 +22,7 @@ namespace Rougamo.Fody.Simulations
 
         public IList<Instruction> LoadAddress(MethodSimulation? method) => [];
 
-        public IList<Instruction> LoadForCallingMethod() => [];
+        public IList<Instruction> LoadAny() => [];
 
         public IList<Instruction> PrepareLoadAddress(MethodSimulation? method) => [];
     }

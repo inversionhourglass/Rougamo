@@ -60,7 +60,7 @@ namespace Rougamo.Fody.Simulations
             return ctorRef.Simulate(this).Call(host, arguments);
         }
 
-        public virtual IList<Instruction> LoadForCallingMethod() => Host.LoadForCallingMethod();
+        public virtual IList<Instruction> LoadAny() => Host.LoadAny();
 
         public virtual IList<Instruction> PrepareLoadAddress(MethodSimulation? method) => Host.PrepareLoadAddress(method);
 

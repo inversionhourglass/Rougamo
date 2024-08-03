@@ -103,7 +103,7 @@ namespace Rougamo.Fody.Simulations.Types
 
             public IList<Instruction> Cast(TypeReference to) => Type.Cast(to);
 
-            public IList<Instruction> LoadForCallingMethod()
+            public IList<Instruction> LoadAny()
             {
                 var ldele = Type.IsValueType ? Create(OpCodes.Ldelema, Type) : Create(_array._ldCode);
 

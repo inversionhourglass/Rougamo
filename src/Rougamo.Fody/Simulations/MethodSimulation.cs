@@ -99,7 +99,7 @@ namespace Rougamo.Fody.Simulations
                 }
                 else
                 {
-                    instructions.Add(DeclaringType.LoadForCallingMethod());
+                    instructions.Add(DeclaringType.LoadAny());
                 }
             }
             for (var i = 0; i < arguments.Length; i++)
