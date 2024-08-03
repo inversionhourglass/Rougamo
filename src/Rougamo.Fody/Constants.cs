@@ -40,10 +40,12 @@
         public const string TYPE_IAsyncEnumerable = "System.Collections.Generic.IAsyncEnumerable";
         public const string TYPE_CompilerGeneratedAttribute = "System.CompilerGeneratedAttribute";
         public const string TYPE_IsByRefLikeAttribute = "System.Runtime.CompilerServices.IsByRefLikeAttribute";
+        public const string TYPE_DebuggableAttribute = "System.Diagnostics.DebuggableAttribute";
         public const string TYPE_Runtime_CompilerGeneratedAttribute = "System.Runtime.CompilerServices.CompilerGeneratedAttribute";
         public const string TYPE_AsyncStateMachineAttribute = "System.Runtime.CompilerServices.AsyncStateMachineAttribute";
         public const string TYPE_IteratorStateMachineAttribute = "System.Runtime.CompilerServices.IteratorStateMachineAttribute";
         public const string TYPE_AsyncIteratorStateMachineAttribute = "System.Runtime.CompilerServices.AsyncIteratorStateMachineAttribute";
+        public const string TYPE_AsyncMethodBuilderAttribute = "System.Runtime.CompilerServices.AsyncMethodBuilderAttribute";
         public const string TYPE_AsyncMethodBuilder = "System.Runtime.CompilerServices.AsyncMethodBuilder";
         public const string TYPE_AsyncTaskMethodBuilder = "System.Runtime.CompilerServices.AsyncTaskMethodBuilder"; // async Task
         public const string TYPE_AsyncValueTaskMethodBuilder = "System.Runtime.CompilerServices.AsyncValueTaskMethodBuilder"; // async ValueTask
@@ -73,6 +75,7 @@
         public const string PROP_MethodContextOmits = "MethodContextOmits";
         public const string PROP_IsCompleted = "IsCompleted";
         public const string PROP_Current = "Current";
+        public const string PROP_Task = "Task";
 
         public const string FIELD_Format = "<{0}>k__BackingField";
         public const string FIELD_Repulsions = "<Repulsions>k__BackingField";
@@ -103,9 +106,12 @@
         public const string METHOD_OnSuccessAsync = "OnSuccessAsync";
         public const string METHOD_OnExceptionAsync = "OnExceptionAsync";
         public const string METHOD_OnExitAsync = "OnExitAsync";
+        public const string METHOD_Ctor = ".ctor";
         public const string METHOD_IsMatch = "IsMatch";
         public const string METHOD_Create = "Create";
         public const string METHOD_MoveNext = "MoveNext";
+        public const string METHOD_SetStateMachine = "SetStateMachine";
+        public const string METHOD_Start = "Start";
         public const string METHOD_SetResult = "SetResult";
         public const string METHOD_SetException = "SetException";
         public const string METHOD_GetAwaiter = "GetAwaiter";
