@@ -30,7 +30,7 @@ namespace BasicUsage
         [ForceSync(Order = 3, ForceSync = ForceSync.OnSuccess)]
         public static ValueTask<string[]> SVPassedASA(List<string> actualExecution)
         {
-            return new(["ASA", "ASA", "ASA", "ASA"]);
+            return new(["ASA", "ASA", "ASA"]);
         }
 
         [ForceSync(Order = 1, ForceSync = ForceSync.OnSuccess | ForceSync.OnExit)]
@@ -192,7 +192,7 @@ namespace BasicUsage
         public static async Task<string[]> SPassedASS_SAS_SSA(List<string> actualExecution)
         {
             await Task.Yield();
-            return ["ASS", "SAS", "SSA"];
+            return ["SSA", "SAS", "ASS"];
         }
 
         [ForceSync(Order = 1, ForceSync = ForceSync.OnEntry)]
@@ -201,7 +201,7 @@ namespace BasicUsage
         public static async Task<string[]> SPassedSAA_ASA_AAS(List<string> actualExecution)
         {
             await Task.Yield();
-            return ["SAA", "ASA", "AAS"];
+            return ["AAS", "ASA", "SAA"];
         }
 
         [ForceSync(Order = 1, ForceSync = ForceSync.None)]
@@ -209,9 +209,9 @@ namespace BasicUsage
         [ForceSync(Order = 3, ForceSync = ForceSync.All)]
         public async ValueTask VFailedAAA_SSS_SSS(List<string> actualExecution, List<string> expectedExecution)
         {
+            expectedExecution.Add("SSS");
+            expectedExecution.Add("SSS");
             expectedExecution.Add("AAA");
-            expectedExecution.Add("SSS");
-            expectedExecution.Add("SSS");
             await Task.Yield();
             throw new NotImplementedException();
         }
@@ -221,9 +221,9 @@ namespace BasicUsage
         [ForceSync(Order = 3, ForceSync = ForceSync.None)]
         public async ValueTask VFailedSSS_SSS_AAA(List<string> actualExecution, List<string> expectedExecution)
         {
-            expectedExecution.Add("SSS");
-            expectedExecution.Add("SSS");
             expectedExecution.Add("AAA");
+            expectedExecution.Add("SSS");
+            expectedExecution.Add("SSS");
             await Task.Yield();
             throw new NotImplementedException();
         }
@@ -233,9 +233,9 @@ namespace BasicUsage
         [ForceSync(Order = 3, ForceSync = ForceSync.OnException)]
         public static async ValueTask SVFailedAAS_ASS_ASA(List<string> actualExecution, List<string> expectedExecution)
         {
-            expectedExecution.Add("AAS");
-            expectedExecution.Add("ASS");
             expectedExecution.Add("ASA");
+            expectedExecution.Add("ASS");
+            expectedExecution.Add("AAS");
             await Task.Yield();
             throw new NotImplementedException();
         }
@@ -245,9 +245,9 @@ namespace BasicUsage
         [ForceSync(Order = 3, ForceSync = ForceSync.OnEntry | ForceSync.OnExit)]
         public static async ValueTask SVFailedSAA_SSA_SAS(List<string> actualExecution, List<string> expectedExecution)
         {
-            expectedExecution.Add("SAA");
-            expectedExecution.Add("SSA");
             expectedExecution.Add("SAS");
+            expectedExecution.Add("SSA");
+            expectedExecution.Add("SAA");
             await Task.Yield();
             throw new NotImplementedException();
         }

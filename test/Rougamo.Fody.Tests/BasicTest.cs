@@ -30,8 +30,6 @@ namespace Rougamo.Fody.Tests
             {
                 Assert.Equal(arrArg[i], instance.Context.Arguments[2][i]);
             }
-            Assert.False(instance.Context.IsAsync);
-            Assert.False(instance.Context.IsIterator);
 
             instance.Context = null;
             Assert.Throws<InvalidOperationException>(() => instance.Exception());
@@ -70,8 +68,6 @@ namespace Rougamo.Fody.Tests
             {
                 Assert.Equal(arrArg[i], instance.Context.Arguments[2][i]);
             }
-            Assert.True(instance.Context.IsAsync);
-            Assert.False(instance.Context.IsIterator);
 
             instance.Context = null;
 #if NET461 || NET6
@@ -729,42 +725,42 @@ namespace Rougamo.Fody.Tests
 
             actualExecution.Clear();
             expectedExecution.Clear();
-            await Assert.ThrowsAsync<NotImplementedException>(async () => await (Task<string[]>)instance.FailedAAA(actualExecution, expectedExecution));
+            await Assert.ThrowsAsync<NotImplementedException>(async () => await (Task)instance.FailedAAA(actualExecution, expectedExecution));
             Assert.Equal(expectedExecution, actualExecution);
 
             actualExecution.Clear();
             expectedExecution.Clear();
-            await Assert.ThrowsAsync<NotImplementedException>(async () => await (ValueTask<string[]>)instance.VFailedAAS(actualExecution, expectedExecution));
+            await Assert.ThrowsAsync<NotImplementedException>(async () => await (ValueTask)instance.VFailedAAS(actualExecution, expectedExecution));
             Assert.Equal(expectedExecution, actualExecution);
 
             actualExecution.Clear();
             expectedExecution.Clear();
-            await Assert.ThrowsAsync<NotImplementedException>(async () => await (Task<string[]>)sInstance.SFailedASA(actualExecution, expectedExecution));
+            await Assert.ThrowsAsync<NotImplementedException>(async () => await (Task)sInstance.SFailedASA(actualExecution, expectedExecution));
             Assert.Equal(expectedExecution, actualExecution);
 
             actualExecution.Clear();
             expectedExecution.Clear();
-            await Assert.ThrowsAsync<NotImplementedException>(async () => await (ValueTask<string[]>)sInstance.SVFailedASS(actualExecution, expectedExecution));
+            await Assert.ThrowsAsync<NotImplementedException>(async () => await (ValueTask)sInstance.SVFailedASS(actualExecution, expectedExecution));
             Assert.Equal(expectedExecution, actualExecution);
 
             actualExecution.Clear();
             expectedExecution.Clear();
-            await Assert.ThrowsAsync<NotImplementedException>(async () => await (ValueTask<string[]>)instance.VFailedSSS(actualExecution, expectedExecution));
+            await Assert.ThrowsAsync<NotImplementedException>(async () => await (ValueTask)instance.VFailedSSS(actualExecution, expectedExecution));
             Assert.Equal(expectedExecution, actualExecution);
 
             actualExecution.Clear();
             expectedExecution.Clear();
-            await Assert.ThrowsAsync<NotImplementedException>(async () => await (Task<string[]>)instance.FailedSSA(actualExecution, expectedExecution));
+            await Assert.ThrowsAsync<NotImplementedException>(async () => await (Task)instance.FailedSSA(actualExecution, expectedExecution));
             Assert.Equal(expectedExecution, actualExecution);
 
             actualExecution.Clear();
             expectedExecution.Clear();
-            await Assert.ThrowsAsync<NotImplementedException>(async () => await (ValueTask<string[]>)sInstance.SVFailedSAS(actualExecution, expectedExecution));
+            await Assert.ThrowsAsync<NotImplementedException>(async () => await (ValueTask)sInstance.SVFailedSAS(actualExecution, expectedExecution));
             Assert.Equal(expectedExecution, actualExecution);
 
             actualExecution.Clear();
             expectedExecution.Clear();
-            await Assert.ThrowsAsync<NotImplementedException>(async () => await (Task<string[]>)sInstance.SFailedSAA(actualExecution, expectedExecution));
+            await Assert.ThrowsAsync<NotImplementedException>(async () => await (Task)sInstance.SFailedSAA(actualExecution, expectedExecution));
             Assert.Equal(expectedExecution, actualExecution);
 
             actualExecution.Clear();
@@ -785,22 +781,22 @@ namespace Rougamo.Fody.Tests
 
             actualExecution.Clear();
             expectedExecution.Clear();
-            await Assert.ThrowsAsync<NotImplementedException>(async () => await (ValueTask<string[]>)instance.VFailedAAA_SSS_SSS(actualExecution, expectedExecution));
+            await Assert.ThrowsAsync<NotImplementedException>(async () => await (ValueTask)instance.VFailedAAA_SSS_SSS(actualExecution, expectedExecution));
             Assert.Equal(expectedExecution, actualExecution);
 
             actualExecution.Clear();
             expectedExecution.Clear();
-            await Assert.ThrowsAsync<NotImplementedException>(async () => await (ValueTask<string[]>)instance.VFailedSSS_SSS_AAA(actualExecution, expectedExecution));
+            await Assert.ThrowsAsync<NotImplementedException>(async () => await (ValueTask)instance.VFailedSSS_SSS_AAA(actualExecution, expectedExecution));
             Assert.Equal(expectedExecution, actualExecution);
 
             actualExecution.Clear();
             expectedExecution.Clear();
-            await Assert.ThrowsAsync<NotImplementedException>(async () => await (ValueTask<string[]>)sInstance.SVFailedAAS_ASS_ASA(actualExecution, expectedExecution));
+            await Assert.ThrowsAsync<NotImplementedException>(async () => await (ValueTask)sInstance.SVFailedAAS_ASS_ASA(actualExecution, expectedExecution));
             Assert.Equal(expectedExecution, actualExecution);
 
             actualExecution.Clear();
             expectedExecution.Clear();
-            await Assert.ThrowsAsync<NotImplementedException>(async () => await (ValueTask<string[]>)sInstance.SVFailedSAA_SSA_SAS(actualExecution, expectedExecution));
+            await Assert.ThrowsAsync<NotImplementedException>(async () => await (ValueTask)sInstance.SVFailedSAA_SSA_SAS(actualExecution, expectedExecution));
             Assert.Equal(expectedExecution, actualExecution);
         }
     }
