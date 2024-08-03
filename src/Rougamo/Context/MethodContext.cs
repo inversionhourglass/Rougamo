@@ -2,7 +2,6 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -16,191 +15,166 @@ namespace Rougamo.Context
         private readonly static IMo[] _EmptyMos = [];
         private readonly static object[] _EmptyArgs = [];
         
-        private Type? _realReturnType;
+        private Type? _taskReturnType;
         private IDictionary? _datas;
 
         /// <summary>
         /// Compatibility with versions prior to 1.2.0
         /// </summary>
-        [Obsolete]
+        [Obsolete("It will be deleted in version 5.0")]
         [EditorBrowsable(EditorBrowsableState.Never)]
         public MethodContext(object target, Type targetType, MethodBase method, bool isAsync, bool isIterator, object[] args)
             : this(target, targetType, method, isAsync, isIterator, false, null, args) { }
 
         /// <summary>
         /// </summary>
+        [Obsolete("It will be deleted in version 5.0")]
+        [EditorBrowsable(EditorBrowsableState.Never)]
         public MethodContext(object target, Type targetType, MethodBase method, bool isAsync, bool isIterator, bool mosNonEntryFIFO, IMo[]? mos, object[]? args)
         {
             Target = target;
             TargetType = targetType;
             Method = method;
-            IsAsync = isAsync;
-            IsIterator = isIterator;
-            MosNonEntryFIFO = mosNonEntryFIFO;
             Mos = mos ?? _EmptyMos;
             Arguments = args ?? _EmptyArgs;
         }
 
         /// <summary>
         /// </summary>
-        [Obsolete]
-        [EditorBrowsable(EditorBrowsableState.Never)]
         public MethodContext(object target, Type targetType, MethodBase method, IMo[]? mos, object[]? args)
         {
             Target = target;
             TargetType = targetType;
             Method = method;
-            IsAsync = true;
-            IsIterator = false;
-            MosNonEntryFIFO = false;
             Mos = mos ?? _EmptyMos;
             Arguments = args ?? _EmptyArgs;
         }
 
         /// <summary>
-        /// Array of IMos to which the current method applies.
+        /// All of the <see cref="IMo"/> instances that apply to the current method.
         /// </summary>
         public IReadOnlyList<IMo> Mos { get; }
 
         /// <summary>
-        /// Whether the execution order of multiple IMo non-OnEntry methods is consistent with OnEntry, the default false indicates that the execution order is opposite to OnEntry.
-        /// </summary>
-        public bool MosNonEntryFIFO { get; }
-
-        /// <summary>
-        /// User defined state data
-        /// </summary>
-        [Obsolete("The Dictionary type is more suitable for multi-developer scenarios, use Datas property instead")]
-        [EditorBrowsable(EditorBrowsableState.Never)]
-        public object? Data { get; set; }
-
-        /// <summary>
-        /// User defined state datas
+        /// User-defined state data.
         /// </summary>
         public IDictionary Datas => _datas ??= new Dictionary<object, object>();
 
         /// <summary>
-        /// Instance of declaring type, return null if current method is static
+        /// Instance of the declaring type; return null if the current method is static.
         /// </summary>
         public object? Target { get; private set; }
 
         /// <summary>
-        /// Declaring type of current method
+        /// The declaring type of current method.
         /// </summary>
         public Type TargetType { get; set; }
 
         /// <summary>
-        /// Arguments of current method
+        /// Arguments of current method.
         /// </summary>
         public object?[] Arguments { get; private set; }
 
         /// <summary>
-        /// When set to true, <see cref="Arguments"/> will rewrite method parameter values after <see cref="IMo.OnEntry(MethodContext)"/> is executed
+        /// Set it to true in OnEntry or OnEntryAsync; the <see cref="Arguments"/> you change in OnEntry/OnEntryAsync will rewrite the method's arguments.
         /// </summary>
         public bool RewriteArguments { get; set; }
 
         /// <summary>
-        /// Method info
+        /// Current method information.
         /// </summary>
         public MethodBase Method { get; private set; }
 
         /// <summary>
-        /// Return true if method use async/await syntax
-        /// </summary>
-        public bool IsAsync { get; }
-
-        /// <summary>
-        /// Return true if method use yield return syntax
-        /// </summary>
-        public bool IsIterator { get; }
-
-        /// <summary>
-        /// Method decleard return type, return <see cref="Task"/>/<see cref="Task{TResult}"/>/ValueTask/ValueTask&lt;TResult&gt; even if method run in async
+        /// The return type of current method.
         /// </summary>
         public Type? ReturnType => (Method as MethodInfo)?.ReturnType;
 
         /// <summary>
-        /// Method real return type, return first generic argument if current method is an async <see cref="Task{TResult}"/>/ValueTask&lt;TResult&gt; method, 
-        /// or return typeof(void) if method is an async <see cref="Task"/>/ValueTask method
         /// </summary>
-        public Type? RealReturnType
+        [Obsolete("Use TaskReturnType instead. It will be deleted in the next major version.")]
+        [EditorBrowsable(EditorBrowsableState.Never)]
+        public Type? RealReturnType => TaskReturnType;
+
+        /// <summary>
+        /// Get void if the method's return type is <see cref="Task"/> or <see cref="ValueTask"/>;
+        /// get the first generic argument type if the method's return type is <see cref="Task{TResult}"/> or <see cref="ValueTask{TResult}"/>
+        /// </summary>
+        public Type? TaskReturnType
         {
             get
             {
-                if(_realReturnType == null && Method is MethodInfo methodInfo)
+                if(_taskReturnType == null && Method is MethodInfo methodInfo)
                 {
                     var returnType = methodInfo.ReturnType;
-                    if (IsAsync)
+                    if (returnType == typeof(Task) || returnType == typeof(ValueTask))
                     {
-                        if (returnType == typeof(void) || returnType == typeof(Task) || returnType.FullName == Constants.FULLNAME_ValueTask)
+                        returnType = typeof(void);
+                    }
+                    else if (returnType.IsGenericType)
+                    {
+                        var definitionType = returnType.GetGenericTypeDefinition();
+                        if (definitionType == typeof(Task<>) || definitionType == typeof(ValueTask<>))
                         {
-                            _realReturnType = typeof(void);
-                        }
-                        else
-                        {
-                            _realReturnType = returnType.GetGenericArguments().Single();
+                            returnType = returnType.GenericTypeArguments[0];
                         }
                     }
-                    else
-                    {
-                        _realReturnType = returnType;
-                    }
+                    _taskReturnType = returnType;
                 }
-                return _realReturnType;
+                return _taskReturnType;
             }
         }
 
         /// <summary>
-        /// Return true if return value type is not void
+        /// Return true if return value type is not void or Task or ValueTask
         /// </summary>
-        public bool HasReturnValue => RealReturnType != typeof(void);
+        public bool HasReturnValue => TaskReturnType != typeof(void);
 
         /// <summary>
-        /// Method return value, if you want to assign a value to it, you'd better use <see cref="HandledException(IMo, object)"/> or <see cref="ReplaceReturnValue(IMo, object)"/>, 
-        /// the type of this value is equals to <see cref="RealReturnType"/>
+        /// Method return value. Do not change it directly, call <see cref="ReplaceReturnValue(IMo, object)"/> or <see cref="HandledException(IMo, object)"/> instead.
         /// </summary>
         public object? ReturnValue { get; set; }
 
         /// <summary>
-        /// Return true if return value has been replaced
+        /// Return true if return value has been replaced.
         /// </summary>
         public bool ReturnValueReplaced { get; private set; }
 
         /// <summary>
-        /// When multiple <see cref="IMo"/> applied to the method, you will know who replace the return value
+        /// Which <see cref="IMo"/> changed the return value.
         /// </summary>
         public IMo? ReturnValueModifier { get; private set; }
 
         /// <summary>
-        /// Exception throws by method, if you want to prevent exception, you'd better use <see cref="HandledException(IMo, object)"/>
+        /// Exception thrown by method. Do not change it directly, call <see cref="HandledException(IMo, object)"/> instead.
         /// </summary>
         public Exception? Exception { get; set; }
 
         /// <summary>
-        /// Is there a unhandled exception
+        /// Is there an unhandled exception.
         /// </summary>
         public bool HasException => Exception != null;
 
         /// <summary>
-        /// Return true if exception has been handled
+        /// Return true if the exception has been handled
         /// </summary>
         public bool ExceptionHandled { get; private set; }
 
         /// <summary>
-        /// when multiple <see cref="IMo"/> applied to the method, you will know who handled the exception
+        /// Which <see cref="IMo"/> handled the exception.
         /// </summary>
         public IMo? ExceptionHandler { get; private set; }
 
         /// <summary>
-        /// This property will be checked after <see cref="MoAttribute.OnSuccess(MethodContext)"/> and <see cref="MoAttribute.OnException(MethodContext)"/>,
-        /// and the method will be re-executed when the value is greater than 0 (skipping the OnEntry method execution).
+        /// The current method will re-execute if the value is greater than 0 after <see cref="IMo.OnSuccess(MethodContext)"/> and
+        /// <see cref="IMo.OnException(MethodContext)"/> have been executed.
         /// </summary>
         public int RetryCount { get; set; }
 
         /// <summary>
-        /// Prevent exception thrown by the method and set the return value.
+        /// Prevent exceptions thrown by the method and set the return value.
         /// If the return type is void, <paramref name="returnValue"/> is ignored.
-        /// <see cref="ExceptionHandled"/> and <see cref="ReturnValueReplaced"/> will be set to true
+        /// <see cref="ExceptionHandled"/> and <see cref="ReturnValueReplaced"/> will be set to true.
         /// </summary>
         public void HandledException(IMo handler, object returnValue)
         {

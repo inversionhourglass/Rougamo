@@ -272,9 +272,6 @@ namespace Rougamo.Fody
                 tStateMachine.F_DeclaringThis?.Typed(_simulations.Object),
                 new SystemType(rouMethod.MethodDef.DeclaringType, this),
                 new SystemMethodBase(rouMethod.MethodDef, this),
-                new Bool(rouMethod.IsAsyncTaskOrValueTask || rouMethod.IsAsyncIterator, this),
-                new Bool(rouMethod.IsIterator || rouMethod.IsAsyncIterator, this),
-                new Bool(!_config.ReverseCallNonEntry, this),
                 rouMethod.MethodContextOmits.Contains(Omit.Mos) ? tMoArray.Null() : tMoArray.NewAsPlainValue(tStateMachine.F_Mos!),
                 rouMethod.MethodContextOmits.Contains(Omit.Arguments) ? tObjectArray.Null() : tObjectArray.NewAsPlainValue(tStateMachine.F_Parameters)
             ];

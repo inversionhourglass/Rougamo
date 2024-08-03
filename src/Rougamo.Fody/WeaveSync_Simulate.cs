@@ -170,9 +170,6 @@ namespace Rougamo.Fody
                 tWeavingTarget.M_Proxy.Def.IsStatic ? new Null(this) : new This(_simulations.Object),
                 new SystemType(rouMethod.MethodDef.DeclaringType, this),
                 new SystemMethodBase(rouMethod.MethodDef, this),
-                new Bool(false, this),
-                new Bool(false, this),
-                new Bool(!_config.ReverseCallNonEntry, this),
                 rouMethod.MethodContextOmits.Contains(Omit.Mos) ? tMoArray.Null() : vMoArray ?? (IParameterSimulation)tMoArray.NewAsPlainValue(vMos!),
                 rouMethod.MethodContextOmits.Contains(Omit.Arguments) ? tObjectArray.Null() : tObjectArray.NewAsPlainValue(args)
             ];
