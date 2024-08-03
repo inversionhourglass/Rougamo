@@ -142,7 +142,17 @@ namespace Rougamo.Fody
                 if (typeX.FullName != typeY.FullName || argsX.Count != argsY.Count) return false;
                 for (var i = 0; i < argsX.Count; i++)
                 {
-                    if(!Equals(argsY[i], argsX[i])) return false;
+                    if (!Equals(argsY[i], argsX[i])) return false;
+                }
+                var propsX = ExtractTypeProperties(x);
+                var propsY = ExtractTypeProperties(y);
+                if (propsX.Count != propsY.Count) return false;
+                var propMapX = propsX.ToDictionary(x => x.Name, x => x.Argument);
+                var propMapY = propsY.ToDictionary(x => x.Name, x => x.Argument);
+                foreach (var xItem in propMapX)
+                {
+                    if (!propMapY.TryGetValue(xItem.Key, out var value)) return false;
+                    if (!Equals(xItem.Value, value)) return false;
                 }
                 return true;
             }
@@ -150,12 +160,17 @@ namespace Rougamo.Fody
             public int GetHashCode(Mo obj)
             {
                 var args = ExtractTypeArgs(obj, out var type);
+                var props = ExtractTypeProperties(obj);
                 var hash = type.GetHashCode();
                 unchecked
                 {
                     foreach (var arg in args)
                     {
                         hash = hash * 17 + GetHashCode(hash, arg);
+                    }
+                    foreach (var prop in props)
+                    {
+                        hash = hash * 17 + GetHashCode(hash, prop);
                     }
                     return hash;
                 }
@@ -180,6 +195,15 @@ namespace Rougamo.Fody
                 return hash;
             }
 
+            private int GetHashCode(int hash, CustomAttributeNamedArgument arg)
+            {
+                hash = hash * 17 + arg.Name.GetHashCode();
+
+                hash = hash * 17 + GetHashCode(hash, arg.Argument);
+
+                return hash;
+            }
+
             private Collection<CustomAttributeArgument> ExtractTypeArgs(Mo mo, out TypeReference typeRef)
             {
                 if (mo.Attribute != null)
@@ -191,9 +215,14 @@ namespace Rougamo.Fody
                 return [];
             }
 
+            private Collection<CustomAttributeNamedArgument> ExtractTypeProperties(Mo mo)
+            {
+                return mo.Attribute == null ? [] : mo.Attribute.Properties;
+            }
+
             private bool Equals(CustomAttributeArgument arg1, CustomAttributeArgument arg2)
             {
-                if(arg1.Value is CustomAttributeArgument[] args1 && arg2.Value is CustomAttributeArgument[] args2 && args1.Length == args2.Length)
+                if (arg1.Value is CustomAttributeArgument[] args1 && arg2.Value is CustomAttributeArgument[] args2 && args1.Length == args2.Length)
                 {
                     for (var i = 0; i < args1.Length; i++)
                     {
