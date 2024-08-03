@@ -9,15 +9,15 @@ namespace BasicUsage.Attributes
         public override void OnEntry(MethodContext context)
         {
             base.OnEntry(context);
-            if (context.RealReturnType == typeof(string[]))
+            if (context.TaskReturnType == typeof(string[]))
             {
                 context.ReplaceReturnValue(this, ArrayValue);
             }
-            else if(context.RealReturnType == typeof(long))
+            else if(context.TaskReturnType == typeof(long))
             {
                 context.ReplaceReturnValue(this, null);
             }
-            else if(context.RealReturnType == typeof(long?))
+            else if(context.TaskReturnType == typeof(long?))
             {
                 context.ReplaceReturnValue(this, null);
             }

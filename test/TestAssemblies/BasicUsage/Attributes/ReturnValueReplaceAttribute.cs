@@ -14,19 +14,19 @@ namespace BasicUsage.Attributes
         public override void OnSuccess(MethodContext context)
         {
             base.OnSuccess(context);
-            if (context.RealReturnType == typeof(int))
+            if (context.TaskReturnType == typeof(int))
             {
                 context.ReplaceReturnValue(this, IntValue);
             }
-            else if (context.RealReturnType == typeof(string))
+            else if (context.TaskReturnType == typeof(string))
             {
                 context.ReplaceReturnValue(this, StringValue);
             }
-            else if (context.RealReturnType == typeof(IEnumerable<int>))
+            else if (context.TaskReturnType == typeof(IEnumerable<int>))
             {
                 context.ReplaceReturnValue(this, IteratorValue);
             }
-            else if (context.RealReturnType == typeof(int?))
+            else if (context.TaskReturnType == typeof(int?))
             {
                 context.ReplaceReturnValue(this, IntValue);
             }

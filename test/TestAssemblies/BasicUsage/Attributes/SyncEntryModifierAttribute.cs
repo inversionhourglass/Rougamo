@@ -10,11 +10,11 @@ namespace BasicUsage.Attributes
         {
             var datas = (List<string>)context.Arguments[0];
             datas.Add(nameof(OnEntry));
-            if (context.RealReturnType == typeof(string))
+            if (context.TaskReturnType == typeof(string))
             {
                 context.ReplaceReturnValue(this, nameof(OnEntry));
             }
-            else if(context.RealReturnType == typeof(void))
+            else if(context.TaskReturnType == typeof(void))
             {
                 context.ReplaceReturnValue(this, null);
             }

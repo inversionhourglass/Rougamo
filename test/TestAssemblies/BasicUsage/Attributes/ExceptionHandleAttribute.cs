@@ -14,15 +14,15 @@ namespace BasicUsage.Attributes
         public override void OnException(MethodContext context)
         {
             base.OnException(context);
-            if(context.RealReturnType == typeof(int))
+            if(context.TaskReturnType == typeof(int))
             {
                 context.HandledException(this, IntValue);
             }
-            else if(context.RealReturnType == typeof(string))
+            else if(context.TaskReturnType == typeof(string))
             {
                 context.HandledException(this, StringValue);
             }
-            else if (context.RealReturnType == typeof(IEnumerable<int>))
+            else if (context.TaskReturnType == typeof(IEnumerable<int>))
             {
                 context.HandledException(this, IteratorValue);
             }
