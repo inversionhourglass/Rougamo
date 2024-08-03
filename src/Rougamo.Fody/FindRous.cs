@@ -2,8 +2,6 @@
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
 using Mono.Collections.Generic;
-using Rougamo.Fody.Simulations;
-using Rougamo.Fody.Simulations.Types;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -215,7 +213,7 @@ namespace Rougamo.Fody
             foreach (var attribute in attributes)
             {
                 var attrType = attribute.AttributeType;
-                if (attrType.DerivesFrom(Constants.TYPE_MoAttribute))
+                if (attrType.Implement(Constants.TYPE_IMo))
                 {
                     ExtractMoAttributeUniq(directs, attribute);
                 }
@@ -228,9 +226,9 @@ namespace Rougamo.Fody
                 {
                     var origin = (TypeReference)attribute.ConstructorArguments[0].Value;
                     var proxy = (TypeReference)attribute.ConstructorArguments[1].Value;
-                    if (!proxy.DerivesFrom(Constants.TYPE_MoAttribute))
+                    if (!proxy.Implement(Constants.TYPE_IMo))
                     {
-                        WriteError($"Mo proxy type({proxy.FullName}) must inherit from Rougamo.MoAttribute");
+                        WriteError($"Mo proxy type({proxy.FullName}) must implement Rougamo.IMo");
                     }
                     else if (!proxy.Resolve().GetConstructors().Any(ctor => !ctor.HasParameters))
                     {
@@ -378,7 +376,7 @@ namespace Rougamo.Fody
             var proxied = new Dictionary<string, TypeReference>();
             foreach (var attribute in attributes)
             {
-                if (attribute.AttributeType.DerivesFrom(Constants.TYPE_MoAttribute))
+                if (attribute.AttributeType.Implement(Constants.TYPE_IMo))
                 {
                     ExtractMoAttributeUniq(mos, attribute);
                 }
