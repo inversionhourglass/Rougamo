@@ -12,6 +12,7 @@ namespace Rougamo.Fody
     public partial class ModuleWeaver : BaseModuleWeaver
     {
         private readonly bool _testRun;
+        private bool _debugMode;
 
         private RougamoRefImporter _importer;
 
@@ -89,6 +90,7 @@ namespace Rougamo.Fody
 
         public override void Execute()
         {
+            _debugMode = IsDebugMode();
             _importer = new(this);
 
             try
@@ -155,6 +157,16 @@ namespace Rougamo.Fody
             }
 
             return defaultValue;
+        }
+
+        public bool IsDebugMode()
+        {
+            var debuggableAttribute = ModuleDefinition.Assembly.CustomAttributes.SingleOrDefault(x => x.Is(Constants.TYPE_DebuggableAttribute));
+            if (debuggableAttribute == null) return false;
+            if (debuggableAttribute.ConstructorArguments.Count == 1 && debuggableAttribute.ConstructorArguments[0].Value is int modes) return (modes & 0x100) != 0;
+            if (debuggableAttribute.ConstructorArguments.Count == 2 && debuggableAttribute.ConstructorArguments[1].Value is bool isJITOptimizerDisabled) return isJITOptimizerDisabled;
+
+            return false;
         }
 
         private void Debugger(IList<Instruction> instructions, RouMethod rouMethod, string methodName)
