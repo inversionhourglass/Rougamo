@@ -32,7 +32,7 @@ namespace Rougamo.Fody
                             //AiteratorMethodWeave(rouMethod);
                             WeavingAsyncIteratorMethod(rouMethod);
                         }
-                        else if (rouMethod.IsAsyncTaskOrValueTask && (!_config.ProxyCalling || !rouMethod.MethodDef.ReturnType.Is(Constants.TYPE_Void)))
+                        else if (rouMethod.IsAsyncTaskOrValueTask)
                         {
                             //AsyncTaskMethodWeave(rouMethod);
                             WeavingAsyncTaskMethod(rouMethod);

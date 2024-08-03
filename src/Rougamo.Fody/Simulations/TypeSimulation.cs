@@ -127,6 +127,18 @@ namespace Rougamo.Fody.Simulations
         #endregion Simulate-Method
 
         #region Simulate-Field
+        protected FieldSimulation FieldSimulate(string fieldName) => FieldSimulate(fieldName, x => x.Name == fieldName);
+
+        protected FieldSimulation FieldSimulate(string id, Func<FieldDefinition, bool> predicate)
+        {
+            if (!_fieldSimulations.TryGetValue(id, out var simulation))
+            {
+                simulation = Def.Fields.Single(predicate).Simulate(this);
+                _fieldSimulations[id] = simulation;
+            }
+            return (FieldSimulation)simulation!;
+        }
+
         protected FieldSimulation<T> FieldSimulate<T>(string fieldName) where T : TypeSimulation => FieldSimulate<T>(fieldName, x => x.Name == fieldName);
 
         protected FieldSimulation<T> FieldSimulate<T>(string id, Func<FieldDefinition, bool> predicate) where T : TypeSimulation

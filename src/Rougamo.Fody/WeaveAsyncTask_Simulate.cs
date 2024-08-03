@@ -15,17 +15,33 @@ namespace Rougamo.Fody
 {
     partial class ModuleWeaver
     {
+        private readonly Dictionary<TypeDefinition, Dictionary<MethodDefinition, object?>> _stateMachineComputeMap = [];
+
         private void WeavingAsyncTaskMethod(RouMethod rouMethod)
         {
-            var stateMachineTypeDef = rouMethod.MethodDef.ResolveStateMachine(Constants.TYPE_AsyncStateMachineAttribute);
-            var actualStateMachineTypeDef = ProxyStateMachineClone(stateMachineTypeDef);
-            if (actualStateMachineTypeDef == null) return;
+            var buildSetStateMachine = false;
+            MethodDefinition actualMethodDef;
+            if (rouMethod.MethodDef.TryResolveStateMachine(Constants.TYPE_AsyncStateMachineAttribute, out var stateMachineTypeDef))
+            {
+                var actualStateMachineTypeDef = ProxyStateMachineClone(stateMachineTypeDef);
+                if (actualStateMachineTypeDef == null) return;
+                
+                actualMethodDef = ProxyStateMachineSetupMethodClone(rouMethod.MethodDef, stateMachineTypeDef, actualStateMachineTypeDef, Constants.TYPE_AsyncStateMachineAttribute);
+                rouMethod.MethodDef.DeclaringType.Methods.Add(actualMethodDef);
 
-            var actualMethodDef = ProxyStateMachineSetupMethodClone(rouMethod.MethodDef, stateMachineTypeDef, actualStateMachineTypeDef, Constants.TYPE_AsyncStateMachineAttribute);
-            rouMethod.MethodDef.DeclaringType.Methods.Add(actualMethodDef);
+                var actualMoveNextDef = actualStateMachineTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
+                actualMoveNextDef.DebugInformation.StateMachineKickOffMethod = actualMethodDef;
+            }
+            else
+            {
+                actualMethodDef = rouMethod.MethodDef.Clone($"$Rougamo_{rouMethod.MethodDef.Name}");
+                rouMethod.MethodDef.DeclaringType.Methods.Add(actualMethodDef);
+                actualMethodDef.CustomAttributes.Clear();
 
-            var actualMoveNextDef = actualStateMachineTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
-            actualMoveNextDef.DebugInformation.StateMachineKickOffMethod = actualMethodDef;
+                stateMachineTypeDef = AsyncBuildStateMachine(rouMethod.MethodDef);
+                AsyncBuildSetupMethod(rouMethod.MethodDef, stateMachineTypeDef);
+                buildSetStateMachine = true;
+            }
 
             _config.MoArrayThreshold = int.MaxValue;
             var fields = AsyncResolveFields(rouMethod, stateMachineTypeDef);
@@ -34,6 +50,7 @@ namespace Rougamo.Fody
 
             var tStateMachine = stateMachineTypeDef.MakeReference().Simulate<TsAsyncStateMachine>(this).SetFields(fields);
             var mActualMethod = StateMachineResolveActualMethod<TsAwaitable>(tStateMachine, actualMethodDef);
+            if (buildSetStateMachine) AsyncBuildSetStateMachine(tStateMachine);
             AsyncBuildMoveNext(rouMethod, tStateMachine, mActualMethod);
         }
 
@@ -566,6 +583,167 @@ namespace Rougamo.Fody
         private IList<Instruction> StateMachineSyncMosNo(RouMethod rouMethod, TsStateMachine tStateMachine, Feature feature, Func<TsMo, MethodSimulation> methodFactory)
         {
             return SyncMosOn(rouMethod, tStateMachine.M_MoveNext, tStateMachine.F_MethodContext, tStateMachine.F_Mos?.Select(x => x.Value).ToArray(), tStateMachine.F_MoArray?.Value, feature, methodFactory);
+        }
+
+        private TypeDefinition AsyncBuildStateMachine(MethodDefinition methodDef)
+        {
+            var typeDef = methodDef.DeclaringType;
+            if (!_stateMachineComputeMap.TryGetValue(typeDef, out var map))
+            {
+                map = [];
+                _stateMachineComputeMap[typeDef] = map;
+            }
+            if (map.ContainsKey(methodDef)) throw new RougamoException($"Try build a duplicate state machine type for {methodDef}", methodDef);
+            map[methodDef] = null;
+
+            var attribute = TypeAttributes.NestedPrivate | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit;
+            var baseTypeRef = _debugMode ? _typeObjectRef : _typeValueTypeRef;
+            var stateMachineTypeDef = new TypeDefinition(methodDef.DeclaringType.Namespace, $"<{methodDef.Name}>r__{map.Count}", attribute, baseTypeRef);
+            stateMachineTypeDef.Interfaces.Add(new(_typeIAsyncStateMachineRef));
+            stateMachineTypeDef.DeclaringType = methodDef.DeclaringType;
+            methodDef.DeclaringType.NestedTypes.Add(stateMachineTypeDef);
+            stateMachineTypeDef.CustomAttributes.Add(new(_methodCompilerGeneratedAttributeCtorRef));
+
+            if (methodDef.DeclaringType.HasGenericParameters)
+            {
+                stateMachineTypeDef.GenericParameters.Add(methodDef.DeclaringType.GenericParameters.Select(x => x.Clone(stateMachineTypeDef)).ToArray());
+            }
+            if (methodDef.HasGenericParameters)
+            {
+                stateMachineTypeDef.GenericParameters.Add(methodDef.GenericParameters.Select(x => x.Clone(stateMachineTypeDef)).ToArray());
+            }
+
+            var builderTypeRef = AsyncGetBuilderType(methodDef, stateMachineTypeDef);
+            var fBuilder = new FieldDefinition(Constants.FIELD_Builder, FieldAttributes.Public, builderTypeRef);
+            var fState = new FieldDefinition(Constants.FIELD_State, FieldAttributes.Public, _typeIntRef);
+            stateMachineTypeDef.AddUniqueField(fBuilder).AddUniqueField(fState);
+
+            if (_debugMode) stateMachineTypeDef.Methods.Add(AsyncBuildStateMachineCtor());
+            stateMachineTypeDef.Methods.Add(AsyncBuildStateMachineMethodSetStateMachine());
+            stateMachineTypeDef.Methods.Add(AsyncBuildStateMachineMethodMoveNext());
+
+            return stateMachineTypeDef;
+        }
+
+        private MethodDefinition AsyncBuildStateMachineCtor()
+        {
+            var attribute = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName;
+            var methodDef = new MethodDefinition(Constants.METHOD_Ctor, attribute, _typeVoidRef);
+            methodDef.HasThis = true;
+            methodDef.ExplicitThis = false;
+            methodDef.CallingConvention = MethodCallingConvention.Default;
+
+            methodDef.Body.InitLocals = true;
+            methodDef.Body.Instructions.Add([
+                Create(OpCodes.Ldarg_0),
+                Create(OpCodes.Call, _methodObjectCtorRef),
+                Create(OpCodes.Ret)
+            ]);
+
+            return methodDef;
+        }
+
+        private MethodDefinition AsyncBuildStateMachineMethodMoveNext()
+        {
+            var attribute = MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.Virtual | MethodAttributes.HideBySig | MethodAttributes.NewSlot;
+            var methodDef = new MethodDefinition(Constants.METHOD_MoveNext, attribute, _typeVoidRef);
+            methodDef.HasThis = true;
+            methodDef.ExplicitThis = false;
+            methodDef.CallingConvention = MethodCallingConvention.Default;
+            methodDef.Overrides.Add(_methodIAsyncStateMachineMoveNextRef);
+            methodDef.Body.InitLocals = true;
+
+            return methodDef;
+        }
+
+        private MethodDefinition AsyncBuildStateMachineMethodSetStateMachine()
+        {
+            var attribute = MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.Virtual | MethodAttributes.HideBySig | MethodAttributes.NewSlot;
+            var methodDef = new MethodDefinition(Constants.METHOD_SetStateMachine, attribute, _typeVoidRef);
+            methodDef.HasThis = true;
+            methodDef.ExplicitThis = false;
+            methodDef.CallingConvention = MethodCallingConvention.Default;
+            methodDef.CustomAttributes.Add(new(_methodDebuggerHiddenAttributeCtorRef));
+            methodDef.Overrides.Add(_methodIAsyncStateMachineSetStateMachineRef);
+            methodDef.Parameters.Add(new("stateMachine", ParameterAttributes.None, _typeIAsyncStateMachineRef));
+            methodDef.Body.InitLocals = true;
+
+            return methodDef;
+        }
+
+        private void AsyncBuildSetStateMachine(TsAsyncStateMachine tStateMachine)
+        {
+            var instructions = tStateMachine.M_SetStateMachine.Def.Body.Instructions;
+
+            if (!_debugMode)
+            {
+                var args = tStateMachine.M_SetStateMachine.Def.Parameters.Select(x => x.Simulate(this)).ToArray();
+                // ._builder.SetStateMachine(stateMachine);
+                instructions.Add(tStateMachine.F_Builder.Value.M_SetStateMachine.Call(tStateMachine.M_SetStateMachine, args));
+            }
+            instructions.Add(Create(OpCodes.Ret));
+        }
+
+        private void AsyncBuildSetupMethod(MethodDefinition methodDef, TypeDefinition stateMachineTypeDef)
+        {
+            methodDef.Clear();
+            methodDef.Body.InitLocals = true;
+            var stateMachineTypeRef = stateMachineTypeDef.ReplaceGenericArgs(methodDef.GetGenericMap());
+            var builderTypeRef = AsyncGetBuilderType(methodDef, null);
+
+            var instructions = methodDef.Body.Instructions;
+
+            var method = methodDef.Simulate<TsAwaitable>(methodDef.DeclaringType.Simulate(this));
+
+            var vStateMachine = method.CreateVariable<TsAsyncStateMachine>(stateMachineTypeRef);
+            var mCreate = builderTypeRef.GetMethod(true, x => x.IsStatic && x.Name == Constants.METHOD_Create)!.Simulate(builderTypeRef.Simulate(this));
+
+            // .stateMachine = new();
+            if (!vStateMachine.VariableDef.VariableType.IsValueType)
+            {
+                instructions.Add(vStateMachine.AssignNew());
+            }
+            // .stateMachine._builder = AsyncTaskMethodBuilder.Create();
+            instructions.Add(vStateMachine.Value.F_Builder.Assign(target => mCreate.Call(method)));
+            // .stateMachine._state = -1;
+            instructions.Add(vStateMachine.Value.F_State.Assign(-1));
+            // .stateMachine._builder.Start(ref stateMachine);
+            instructions.Add(vStateMachine.Value.F_Builder.Value.M_Start.Call(method, vStateMachine));
+            // .return stateMachine._builder.Task;
+            instructions.Add(vStateMachine.Value.F_Builder.Value.P_Task.Load());
+            instructions.Add(Create(OpCodes.Ret));
+        }
+
+        private TypeReference AsyncGetBuilderType(MethodDefinition methodDef, TypeDefinition? stateMachineDef)
+        {
+            var returnTypeRef = methodDef.ReturnType;
+            if (returnTypeRef.IsTask()) return _typeAsyncTaskMethodBuilderRef;
+            if (returnTypeRef.IsGenericTask()) return GetGenericBuilderType(stateMachineDef, returnTypeRef, _typeAsyncTaskMethodBuilder1Ref);
+
+            var builderAttribute = methodDef.ReturnType.Resolve().CustomAttributes.Single(x => x.Is(Constants.TYPE_AsyncMethodBuilderAttribute));
+            var builderTypeRef = (TypeReference)builderAttribute.ConstructorArguments[0].Value;
+            if (builderTypeRef is GenericInstanceType) return this.Import(builderTypeRef);
+            if (builderTypeRef is not TypeDefinition typeDef) throw new RougamoException($"Unrecognized async method builder type {builderTypeRef}", methodDef);
+            if (!typeDef.HasGenericParameters) return this.Import(typeDef);
+
+            return GetGenericBuilderType(stateMachineDef, returnTypeRef, this.Import(typeDef));
+
+            TypeReference GetGenericBuilderType(TypeDefinition? stateMachineDef, TypeReference returnTypeRef, TypeReference builderTypeRef)
+            {
+                var elementTypeRef = ((GenericInstanceType)returnTypeRef).GenericArguments[0];
+                if (stateMachineDef == null)
+                {
+                    elementTypeRef = this.Import(elementTypeRef);
+                }
+                else
+                {
+                    elementTypeRef = this.Import(elementTypeRef.ReplaceGenericArgs(stateMachineDef.GetGenericMap()));
+                }
+
+                var git = new GenericInstanceType(builderTypeRef);
+                git.GenericArguments.Add(elementTypeRef);
+                return git;
+            }
         }
     }
 }

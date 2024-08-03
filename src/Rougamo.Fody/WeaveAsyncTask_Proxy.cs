@@ -527,7 +527,7 @@ namespace Rougamo.Fody
         private void ProxyAsyncSetAbsentFields(RouMethod rouMethod, TypeDefinition stateMachineTypeDef, AsyncFields fields)
         {
             var instructions = rouMethod.MethodDef.Body.Instructions;
-            var setState = instructions.Single(x => x.OpCode.Code == Code.Ldc_I4_M1 && x.Next.OpCode.Code == Code.Stfld && x.Next.Operand is FieldReference fr && fr.Resolve() == fields.State.Resolve());
+            var setState = instructions.Single(x => (x.OpCode.Code == Code.Ldc_I4_M1 || x.OpCode.Code == Code.Ldc_I4 && x.Operand is int v && v == -1) && x.Next.OpCode.Code == Code.Stfld && x.Next.Operand is FieldReference fr && fr.Resolve() == fields.State.Resolve());
             var vStateMachine = rouMethod.MethodDef.Body.Variables.Single(x => x.VariableType.Resolve() == stateMachineTypeDef);
             var genericMap = stateMachineTypeDef.GenericParameters.ToDictionary(x => x.Name, x => (TypeReference)x);
 

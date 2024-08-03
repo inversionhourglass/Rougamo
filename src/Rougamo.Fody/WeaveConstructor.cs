@@ -21,6 +21,7 @@ namespace Rougamo.Fody
         {
             CtorBuildMethodInternal(rouMethod, tWeavingTarget);
 
+            tWeavingTarget.M_Actual.Def.Body.InitLocals = true;
             tWeavingTarget.M_Actual.Def.Body.OptimizePlus(EmptyInstructions);
         }
 
