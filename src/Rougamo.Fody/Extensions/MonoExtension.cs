@@ -488,6 +488,16 @@ namespace Rougamo.Fody
             return obj as TypeDefinition ?? ((TypeReference)obj).Resolve();
         }
 
+        public static bool TryResolveStateMachine(this MethodDefinition methodDef, string stateMachineAttributeName, out TypeDefinition stateMachineTypeDef)
+        {
+            stateMachineTypeDef = null!;
+            var stateMachineAttr = methodDef.CustomAttributes.SingleOrDefault(attr => attr.Is(stateMachineAttributeName));
+            if (stateMachineAttr == null) return false;
+            var obj = stateMachineAttr.ConstructorArguments[0].Value;
+            stateMachineTypeDef = obj as TypeDefinition ?? ((TypeReference)obj).Resolve();
+            return true;
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static Instruction Ldloc(this VariableDefinition variable)
         {
@@ -684,6 +694,8 @@ namespace Rougamo.Fody
 
             if (typeRef is GenericParameter gp && genericMap.TryGetValue(gp.Name, out var value)) return value;
 
+            if (typeRef is ArrayType at) return new ArrayType(ReplaceGenericArgs(at.ElementType, genericMap));
+
             if (typeRef is GenericInstanceType git)
             {
                 var replacedGit = new GenericInstanceType(git.GetElementType());
@@ -727,10 +739,13 @@ namespace Rougamo.Fody
         {
             debugInformation.CustomDebugInformations.Clear();
             debugInformation.SequencePoints.Clear();
-            debugInformation.Scope.Constants.Clear();
-            debugInformation.Scope.Variables.Clear();
-            debugInformation.Scope.Scopes.Clear();
-            debugInformation.Scope.CustomDebugInformations.Clear();
+            if (debugInformation.Scope != null)
+            {
+                debugInformation.Scope.Constants.Clear();
+                debugInformation.Scope.Variables.Clear();
+                debugInformation.Scope.Scopes.Clear();
+                debugInformation.Scope.CustomDebugInformations.Clear();
+            }
         }
 
         public static void HardClearCustomDebugInformation(this MethodDefinition methodDef)
