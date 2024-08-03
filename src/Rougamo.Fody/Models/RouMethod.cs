@@ -130,7 +130,9 @@ namespace Rougamo.Fody
             {
                 if (!_isAsync.HasValue)
                 {
-                    _isAsync = MethodDef.CustomAttributes.Any(attr => attr.Is(Constants.TYPE_AsyncStateMachineAttribute));
+                    var returnTypeDef = MethodDef.ReturnType.Resolve();
+                    _isAsync = MethodDef.ReturnType.IsTask() || MethodDef.ReturnType.IsGenericTask() ||
+                                returnTypeDef != null && returnTypeDef.CustomAttributes.Any(x => x.Is(Constants.TYPE_AsyncMethodBuilderAttribute));
                 }
                 return _isAsync.Value;
             }
