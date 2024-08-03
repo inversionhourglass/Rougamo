@@ -750,5 +750,277 @@ namespace Rougamo.Fody
                 return git;
             }
         }
+
+        private AsyncFields AsyncResolveFields(RouMethod rouMethod, TypeDefinition stateMachineTypeDef)
+        {
+            var asyncableTypeRef = rouMethod.MethodDef.ReturnType;
+            var awaiterTypeRef = asyncableTypeRef.Resolve().Methods.Single(x => x.Name == Constants.METHOD_GetAwaiter).ReturnType;
+            awaiterTypeRef = stateMachineTypeDef.Import(asyncableTypeRef, awaiterTypeRef);
+            var resultTypeRef = awaiterTypeRef.Resolve().Methods.Single(x => x.Name == Constants.METHOD_GetResult).ReturnType;
+            resultTypeRef = awaiterTypeRef.Import(resultTypeRef);
+
+            FieldDefinition? moArray = null;
+            var mos = new FieldDefinition[0];
+            if (rouMethod.Mos.Length >= _config.MoArrayThreshold)
+            {
+                moArray = new FieldDefinition(Constants.FIELD_RougamoMos, FieldAttributes.Public, _typeIMoArrayRef);
+                stateMachineTypeDef.AddUniqueField(moArray);
+            }
+            else
+            {
+                mos = new FieldDefinition[rouMethod.Mos.Length];
+                for (int i = 0; i < rouMethod.Mos.Length; i++)
+                {
+                    mos[i] = new FieldDefinition(Constants.FIELD_RougamoMo_Prefix + i, FieldAttributes.Public, rouMethod.Mos[i].MoTypeRef.ImportInto(ModuleDefinition));
+                    stateMachineTypeDef.AddUniqueField(mos[i]);
+                }
+            }
+            var methodContext = new FieldDefinition(Constants.FIELD_RougamoContext, FieldAttributes.Public, _typeMethodContextRef);
+            var awaiter = new FieldDefinition(Constants.FIELD_Awaiter, FieldAttributes.Private, awaiterTypeRef);
+            var moAwaiter = asyncableTypeRef.Is(Constants.TYPE_ValueTask) ? null : new FieldDefinition(Constants.FIELD_MoAwaiter, FieldAttributes.Private, _typeValueTaskAwaiterRef);
+            var result = resultTypeRef.Is(Constants.TYPE_Void) ? null : new FieldDefinition(Constants.FIELD_Result, FieldAttributes.Private, resultTypeRef);
+            var builder = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_Builder);
+            var state = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_State);
+            var declaringThis = stateMachineTypeDef.Fields.SingleOrDefault(x => x.FieldType.Resolve() == stateMachineTypeDef.DeclaringType);
+            var parameters = StateMachineParameterFields(rouMethod);
+
+            stateMachineTypeDef
+                .AddUniqueField(methodContext)
+                .AddUniqueField(awaiter)
+                .AddUniqueField(moAwaiter)
+                .AddUniqueField(result);
+
+            return new AsyncFields(stateMachineTypeDef, moArray, mos, methodContext, state, builder, declaringThis, awaiter, moAwaiter, result, parameters);
+        }
+
+        private FieldDefinition?[] StateMachineParameterFields(RouMethod rouMethod)
+        {
+            if (rouMethod.MethodDef.Parameters.Count == 0) return new FieldDefinition?[0];
+
+            var isStaticMethod = rouMethod.MethodDef.IsStatic;
+            var parameterFieldDefs = new FieldDefinition?[rouMethod.MethodDef.Parameters.Count];
+            foreach (var instruction in rouMethod.MethodDef.Body.Instructions)
+            {
+                var index = -1;
+                var code = instruction.OpCode.Code;
+                if (isStaticMethod && code == Code.Ldarg_0 || !isStaticMethod && code == Code.Ldarg_1)
+                {
+                    index = 0;
+                }
+                else if (isStaticMethod && code == Code.Ldarg_1 || !isStaticMethod && code == Code.Ldarg_2)
+                {
+                    index = 1;
+                }
+                else if (isStaticMethod && code == Code.Ldarg_2 || !isStaticMethod && code == Code.Ldarg_3)
+                {
+                    index = 2;
+                }
+                else if (isStaticMethod && code == Code.Ldarg_3)
+                {
+                    index = 3;
+                }
+                else if (code == Code.Ldarg || code == Code.Ldarg_S)
+                {
+                    index = rouMethod.MethodDef.Parameters.IndexOf((ParameterDefinition)instruction.Operand);
+                    if (index == -1) throw new RougamoException($"{rouMethod.MethodDef.FullName} can not locate the index of parameter {((ParameterDefinition)instruction.Operand).Name}");
+                }
+                if (index != -1)
+                {
+                    parameterFieldDefs[index] = ((FieldReference)instruction.Next.Operand).Resolve();
+                }
+            }
+
+            return parameterFieldDefs;
+        }
+
+        private TypeDefinition? ProxyStateMachineClone(TypeDefinition stateMachineTypeDef)
+        {
+            var typeName = $"$Rougamo_{stateMachineTypeDef.Name}";
+            if (stateMachineTypeDef.DeclaringType.NestedTypes.Any(x => x.Name == typeName)) return null;
+
+            var actualTypeDef = stateMachineTypeDef.Clone(typeName);
+            actualTypeDef.DeclaringType.NestedTypes.Add(actualTypeDef);
+
+            return actualTypeDef;
+        }
+
+        private MethodDefinition ProxyStateMachineSetupMethodClone(MethodDefinition methodDef, TypeDefinition stateMachineTypeDef, TypeDefinition clonedStateMachineTypeDef, string stateMachineAttributeTypeName)
+        {
+            var clonedMethodDef = methodDef.Clone($"$Rougamo_{methodDef.Name}");
+
+            ProxyStateMachineAttributeClone(clonedMethodDef, clonedStateMachineTypeDef, stateMachineAttributeTypeName);
+
+            var genericMap = methodDef.DeclaringType.GenericParameters.ToDictionary(x => x.Name, x => (TypeReference)x);
+            genericMap.AddRange(clonedMethodDef.GenericParameters.ToDictionary(x => x.Name, x => (TypeReference)x));
+            var stateMachineVariableTypeRef = clonedStateMachineTypeDef.MakeReference().ReplaceGenericArgs(genericMap);
+            var vStateMachine = clonedMethodDef.Body.Variables.SingleOrDefault(x => x.VariableType.Resolve() == stateMachineTypeDef);
+            VariableDefinition? vClonedStateMachine = null;
+            if (vStateMachine != null)
+            {
+                var index = clonedMethodDef.Body.Variables.IndexOf(vStateMachine);
+                clonedMethodDef.Body.Variables.Remove(vStateMachine);
+                vClonedStateMachine = new VariableDefinition(stateMachineVariableTypeRef);
+                clonedMethodDef.Body.Variables.Insert(index, vClonedStateMachine);
+            }
+
+            var fieldMap = new Dictionary<FieldDefinition, FieldReference>();
+            foreach (var fieldDef in stateMachineTypeDef.Fields)
+            {
+                fieldMap[fieldDef] = new FieldReference(fieldDef.Name, fieldDef.FieldType, stateMachineVariableTypeRef);
+            }
+
+            foreach (var instruction in clonedMethodDef.Body.Instructions)
+            {
+                if (instruction.Operand == null) continue;
+
+                if (instruction.Operand is MethodReference methodRef)
+                {
+                    if (methodRef.Resolve().IsConstructor && methodRef.DeclaringType.Resolve() == stateMachineTypeDef)
+                    {
+                        var stateMachineCtorDef = clonedStateMachineTypeDef.Methods.Single(x => x.IsConstructor && !x.IsStatic);
+                        var stateMachineCtorRef = stateMachineCtorDef.WithGenericDeclaringType(stateMachineVariableTypeRef);
+                        instruction.Operand = stateMachineCtorRef;
+                    }
+                    else if (methodRef is GenericInstanceMethod gim)
+                    {
+                        var mr = new GenericInstanceMethod(gim.ElementMethod);
+                        foreach (var generic in gim.GenericArguments)
+                        {
+                            if (generic == stateMachineTypeDef)
+                            {
+                                mr.GenericArguments.Add(clonedStateMachineTypeDef);
+                            }
+                            else if (generic is GenericInstanceType git && git.ElementType == stateMachineTypeDef)
+                            {
+                                mr.GenericArguments.Add(clonedStateMachineTypeDef.ReplaceGenericArgs(genericMap));
+                            }
+                            else
+                            {
+                                mr.GenericArguments.Add(generic.ReplaceGenericArgs(genericMap));
+                            }
+                        }
+                        instruction.Operand = mr;
+                    }
+                }
+                else if (instruction.Operand is FieldReference fr && fieldMap.TryGetValue(fr.Resolve(), out var fieldRef))
+                {
+                    instruction.Operand = fieldRef;
+                }
+                else if (instruction.Operand == vStateMachine)
+                {
+                    instruction.Operand = vClonedStateMachine;
+                }
+            }
+
+            return clonedMethodDef;
+        }
+
+        private void ProxyStateMachineAttributeClone(MethodDefinition clonedMethodDef, TypeDefinition clonedStateMachineTypeDef, string stateMachineAttributeTypeName)
+        {
+            var stateMachineAttribute = clonedMethodDef.CustomAttributes.Single(x => x.Is(stateMachineAttributeTypeName));
+            clonedMethodDef.CustomAttributes.Clear();
+
+            if (!_stateMachineCtorRefs.TryGetValue(stateMachineAttributeTypeName, out var ctor))
+            {
+                ctor = stateMachineAttribute.AttributeType.Resolve().Methods.Single(x => x.IsConstructor && !x.IsStatic && x.Parameters.Single().ParameterType.Is(Constants.TYPE_Type)).ImportInto(ModuleDefinition);
+                _stateMachineCtorRefs[stateMachineAttributeTypeName] = ctor;
+            }
+            stateMachineAttribute = new CustomAttribute(ctor);
+            stateMachineAttribute.ConstructorArguments.Add(new CustomAttributeArgument(_typeSystemRef, clonedStateMachineTypeDef));
+            clonedMethodDef.CustomAttributes.Add(stateMachineAttribute);
+        }
+
+        private void ProxyFieldCleanup(TypeDefinition stateMachineTypeDef, IStateMachineFields fields)
+        {
+            var fieldNames = new Dictionary<string, object?>();
+            foreach (var prop in fields.GetType().GetProperties())
+            {
+                var value = prop.GetValue(fields);
+                if (value == null) continue;
+                if (value is FieldReference fr) fieldNames[fr.Name] = null;
+                if (value is FieldReference[] frs)
+                {
+                    foreach (var f in frs)
+                    {
+                        fieldNames[f.Name] = null;
+                    }
+                }
+            }
+
+            foreach (var field in stateMachineTypeDef.Fields.ToArray())
+            {
+                if (fieldNames.ContainsKey(field.Name)) continue;
+
+                stateMachineTypeDef.Fields.Remove(field);
+            }
+        }
+
+        private void ProxyAsyncSetAbsentFields(RouMethod rouMethod, TypeDefinition stateMachineTypeDef, AsyncFields fields)
+        {
+            var instructions = rouMethod.MethodDef.Body.Instructions;
+            var setState = instructions.Single(x => (x.OpCode.Code == Code.Ldc_I4_M1 || x.OpCode.Code == Code.Ldc_I4 && x.Operand is int v && v == -1) && x.Next.OpCode.Code == Code.Stfld && x.Next.Operand is FieldReference fr && fr.Resolve() == fields.State.Resolve());
+            var vStateMachine = rouMethod.MethodDef.Body.Variables.Single(x => x.VariableType.Resolve() == stateMachineTypeDef);
+            var genericMap = stateMachineTypeDef.GenericParameters.ToDictionary(x => x.Name, x => (TypeReference)x);
+
+            ProxyAddAbsentField(stateMachineTypeDef, ProxySetAbsentFieldThis(rouMethod, fields, vStateMachine.VariableType, vStateMachine.LdlocAny(), setState, genericMap));
+
+            ProxyAddAbsentField(stateMachineTypeDef, ProxySetAbsentFieldParameters(rouMethod, fields, vStateMachine.VariableType, vStateMachine.LdlocAny(), setState, genericMap));
+        }
+
+        private IEnumerable<FieldDefinition> ProxySetAbsentFieldThis(RouMethod rouMethod, IStateMachineFields fields, TypeReference stateMachineTypeRef, Instruction loadStateMachine, Instruction anchor, Dictionary<string, TypeReference> genericMap)
+        {
+            if (rouMethod.MethodDef.IsStatic || fields.DeclaringThis != null) yield break;
+
+            var thisTypeRef = stateMachineTypeRef.DeclaringType.ReplaceGenericArgs(genericMap);
+            var thisFieldDef = new FieldDefinition(Constants.FIELD_This, FieldAttributes.Public, thisTypeRef);
+            var thisFieldRef = new FieldReference(thisFieldDef.Name, thisFieldDef.FieldType, stateMachineTypeRef);
+
+            fields.DeclaringThis = thisFieldDef;
+
+            rouMethod.MethodDef.Body.Instructions.InsertBefore(anchor, [
+                loadStateMachine.Clone(),
+                Create(OpCodes.Ldarg_0),
+                Create(OpCodes.Stfld, thisFieldRef)
+            ]);
+
+            yield return thisFieldDef;
+        }
+
+        private IEnumerable<FieldDefinition> ProxySetAbsentFieldParameters(RouMethod rouMethod, IStateMachineFields fields, TypeReference stateMachineTypeRef, Instruction loadStateMachine, Instruction anchor, Dictionary<string, TypeReference> genericMap)
+        {
+            if (fields.Parameters.All(x => x != null)) yield break;
+
+            var instructions = rouMethod.MethodDef.Body.Instructions;
+            var parameters = rouMethod.MethodDef.Parameters;
+
+            for (var i = 0; i < fields.Parameters.Length; i++)
+            {
+                var parameterFieldRef = fields.Parameters[i];
+                if (parameterFieldRef != null) continue;
+
+                var parameter = parameters[i];
+                var fieldTypeRef = parameter.ParameterType.ReplaceGenericArgs(genericMap);
+                var parameterFieldDef = new FieldDefinition(parameter.Name, FieldAttributes.Public, fieldTypeRef);
+                parameterFieldRef = new FieldReference(parameterFieldDef.Name, parameterFieldDef.FieldType, stateMachineTypeRef);
+
+                fields.SetParameter(i, parameterFieldDef);
+
+                instructions.InsertBefore(anchor, [
+                    loadStateMachine.Clone(),
+                    Create(OpCodes.Ldarg, parameter),
+                    Create(OpCodes.Stfld, parameterFieldRef)
+                ]);
+
+                yield return parameterFieldDef;
+            }
+        }
+
+        private void ProxyAddAbsentField(TypeDefinition typeDef, IEnumerable<FieldDefinition> fieldDefs)
+        {
+            foreach (var fieldDef in fieldDefs)
+            {
+                typeDef.Fields.Add(fieldDef);
+            }
+        }
     }
 }

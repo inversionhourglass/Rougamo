@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Rougamo.Fody.Enhances.AsyncIterator;
 using Rougamo.Fody.Simulations;
@@ -273,6 +274,64 @@ namespace Rougamo.Fody
                 Create(OpCodes.Call, _methodExceptionDispatchInfoCaptureRef),
                 Create(OpCodes.Callvirt, _methodExceptionDispatchInfoThrowRef)
             ]);
+        }
+
+        private AiteratorFields AiteratorResolveFields(RouMethod rouMethod, TypeDefinition stateMachineTypeDef)
+        {
+            var getEnumeratorMethodDef = stateMachineTypeDef.Methods.Single(x => x.Name.StartsWith(Constants.GenericPrefix(Constants.TYPE_IAsyncEnumerable)) && x.Name.EndsWith(Constants.GenericSuffix(Constants.METHOD_GetAsyncEnumerator)));
+
+            FieldDefinition? moArray = null;
+            var mos = new FieldDefinition[0];
+            if (rouMethod.Mos.Length >= _config.MoArrayThreshold)
+            {
+                moArray = new FieldDefinition(Constants.FIELD_RougamoMos, FieldAttributes.Public, _typeIMoArrayRef);
+                stateMachineTypeDef.AddUniqueField(moArray);
+            }
+            else
+            {
+                mos = new FieldDefinition[rouMethod.Mos.Length];
+                for (int i = 0; i < rouMethod.Mos.Length; i++)
+                {
+                    mos[i] = new FieldDefinition(Constants.FIELD_RougamoMo_Prefix + i, FieldAttributes.Public, rouMethod.Mos[i].MoTypeRef.ImportInto(ModuleDefinition));
+                    stateMachineTypeDef.AddUniqueField(mos[i]);
+                }
+            }
+            var methodContext = new FieldDefinition(Constants.FIELD_RougamoContext, FieldAttributes.Public, _typeMethodContextRef);
+            var state = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_State);
+            var current = stateMachineTypeDef.Fields.Single(x => x.Name.EndsWith(Constants.FIELD_Current_Suffix));
+            var initialThreadId = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_InitialThreadId);
+            var disposed = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_Disposed);
+            var builder = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_Builder);
+            var promise = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_Promise);
+            var declaringThis = stateMachineTypeDef.Fields.SingleOrDefault(x => x.FieldType.Resolve() == stateMachineTypeDef.DeclaringType);
+            FieldDefinition? recordedReturn = null;
+            var transitParameters = StateMachineParameterFields(rouMethod);
+            var parameters = IteratorGetPrivateParameterFields(getEnumeratorMethodDef, transitParameters);
+            if (_config.RecordingIteratorReturns && (rouMethod.MethodContextOmits & Omit.ReturnValue) == 0)
+            {
+                var listReturnsRef = new GenericInstanceType(_typeListRef);
+                listReturnsRef.GenericArguments.Add(((GenericInstanceType)rouMethod.MethodDef.ReturnType).GenericArguments[0]);
+                recordedReturn = new FieldDefinition(Constants.FIELD_IteratorReturnList, FieldAttributes.Public, listReturnsRef);
+                stateMachineTypeDef.AddUniqueField(recordedReturn);
+            }
+
+            var enumerableTypeRef = rouMethod.MethodDef.ReturnType;
+            var enumeratorTypeRef = enumerableTypeRef.GetMethod(Constants.METHOD_GetAsyncEnumerator, false).ReturnType;
+            enumeratorTypeRef = stateMachineTypeDef.Import(enumerableTypeRef, enumeratorTypeRef);
+            var taskTypeRef = enumeratorTypeRef.GetMethod(Constants.METHOD_MoveNextAsync, false).ReturnType;
+            var awaiterTypeRef = taskTypeRef.GetMethod(Constants.METHOD_GetAwaiter, false).ReturnType;
+            awaiterTypeRef = enumerableTypeRef.Import(taskTypeRef, awaiterTypeRef);
+            var iterator = new FieldDefinition(Constants.FIELD_Iterator, FieldAttributes.Private, enumeratorTypeRef);
+            var awaiter = new FieldDefinition(Constants.FIELD_Awaiter, FieldAttributes.Private, awaiterTypeRef);
+            var moAwaiter = new FieldDefinition(Constants.FIELD_MoAwaiter, FieldAttributes.Private, _typeValueTaskAwaiterRef);
+
+            stateMachineTypeDef
+                .AddUniqueField(methodContext)
+                .AddUniqueField(iterator)
+                .AddUniqueField(awaiter)
+                .AddUniqueField(moAwaiter);
+
+            return new AiteratorFields(stateMachineTypeDef, moArray, mos, methodContext, state, current, initialThreadId, disposed, builder, promise, recordedReturn, declaringThis, iterator, awaiter, moAwaiter, transitParameters, parameters);
         }
     }
 }

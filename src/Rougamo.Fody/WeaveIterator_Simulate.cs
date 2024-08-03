@@ -1,4 +1,6 @@
-﻿using Mono.Cecil.Cil;
+﻿using Mono.Cecil;
+using Mono.Cecil.Cil;
+using Rougamo.Fody.Enhances;
 using Rougamo.Fody.Enhances.Iterator;
 using Rougamo.Fody.Simulations;
 using Rougamo.Fody.Simulations.Operations;
@@ -158,6 +160,179 @@ namespace Rougamo.Fody
 
             // ._context.ReturnValue = _items.ToArray();
             return tStateMachine.F_MethodContext.Value.P_ReturnValue.Assign(target => tStateMachine.F_Items.Value.M_ToArray.Call(tStateMachine.M_MoveNext));
+        }
+
+        private IteratorFields IteratorResolveFields(RouMethod rouMethod, TypeDefinition stateMachineTypeDef)
+        {
+            var getEnumeratorMethodDef = stateMachineTypeDef.Methods.Single(x => x.Name.StartsWith(Constants.GenericPrefix(Constants.TYPE_IEnumerable)) && x.Name.EndsWith(Constants.GenericSuffix(Constants.METHOD_GetEnumerator)));
+
+            FieldDefinition? moArray = null;
+            var mos = new FieldDefinition[0];
+            if (rouMethod.Mos.Length >= _config.MoArrayThreshold)
+            {
+                moArray = new FieldDefinition(Constants.FIELD_RougamoMos, FieldAttributes.Public, _typeIMoArrayRef);
+                stateMachineTypeDef.AddUniqueField(moArray);
+            }
+            else
+            {
+                mos = new FieldDefinition[rouMethod.Mos.Length];
+                for (int i = 0; i < rouMethod.Mos.Length; i++)
+                {
+                    mos[i] = new FieldDefinition(Constants.FIELD_RougamoMo_Prefix + i, FieldAttributes.Public, rouMethod.Mos[i].MoTypeRef.ImportInto(ModuleDefinition));
+                    stateMachineTypeDef.AddUniqueField(mos[i]);
+                }
+            }
+            var methodContext = new FieldDefinition(Constants.FIELD_RougamoContext, FieldAttributes.Public, _typeMethodContextRef);
+            var state = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_State);
+            var current = stateMachineTypeDef.Fields.Single(m => m.Name.EndsWith(Constants.FIELD_Current_Suffix));
+            var initialThreadId = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_InitialThreadId);
+            var declaringThis = stateMachineTypeDef.Fields.SingleOrDefault(x => x.FieldType.Resolve() == stateMachineTypeDef.DeclaringType);
+            FieldDefinition? recordedReturn = null;
+            var transitParameters = StateMachineParameterFields(rouMethod);
+            var parameters = IteratorGetPrivateParameterFields(getEnumeratorMethodDef, transitParameters);
+            if (_config.RecordingIteratorReturns && rouMethod.Features.HasIntersection(Feature.OnSuccess | Feature.OnExit) && !rouMethod.MethodContextOmits.Contains(Omit.ReturnValue))
+            {
+                var listReturnsRef = new GenericInstanceType(_typeListRef);
+                listReturnsRef.GenericArguments.Add(((GenericInstanceType)rouMethod.MethodDef.ReturnType).GenericArguments[0]);
+                recordedReturn = new FieldDefinition(Constants.FIELD_IteratorReturnList, FieldAttributes.Public, listReturnsRef);
+                stateMachineTypeDef.AddUniqueField(recordedReturn);
+            }
+
+            var enumerableTypeRef = rouMethod.MethodDef.ReturnType;
+            var enumeratorTypeRef = enumerableTypeRef.GetMethod(Constants.METHOD_GetEnumerator, false).ReturnType;
+            enumeratorTypeRef = stateMachineTypeDef.Import(enumerableTypeRef, enumeratorTypeRef);
+            var iterator = new FieldDefinition(Constants.FIELD_Iterator, FieldAttributes.Private, enumeratorTypeRef);
+
+            stateMachineTypeDef.AddUniqueField(methodContext);
+            stateMachineTypeDef.AddUniqueField(iterator);
+
+            return new IteratorFields(stateMachineTypeDef, moArray, mos, methodContext, state, current, initialThreadId, recordedReturn, declaringThis, iterator, transitParameters, parameters);
+        }
+
+        private FieldDefinition?[] IteratorGetPrivateParameterFields(MethodDefinition getEnumeratorMethodDef, FieldDefinition?[] transitParameterFieldDefs)
+        {
+            if (transitParameterFieldDefs.Length == 0) return [];
+
+            var parameters = new FieldDefinition?[transitParameterFieldDefs.Length];
+            var map = new Dictionary<FieldDefinition, int>();
+            for (var i = 0; i < transitParameterFieldDefs.Length; i++)
+            {
+                var parameterFieldDef = transitParameterFieldDefs[i];
+                if (parameterFieldDef == null) continue;
+
+                map.Add(parameterFieldDef, i);
+            }
+
+            foreach (var instruction in getEnumeratorMethodDef.Body.Instructions)
+            {
+                if (instruction.OpCode.Code == Code.Ldfld && map.TryGetValue(((FieldReference)instruction.Operand).Resolve(), out var index))
+                {
+                    parameters[index] = ((FieldReference)instruction.Next.Operand).Resolve();
+                }
+            }
+
+            return parameters;
+        }
+
+        private void ProxyIteratorSetAbsentFields(RouMethod rouMethod, TypeDefinition stateMachineTypeDef, IIteratorFields fields, string mGetEnumeratorPrefix, string mGetEnumeratorSuffix)
+        {
+            var instructions = rouMethod.MethodDef.Body.Instructions;
+            var vStateMachine = rouMethod.MethodDef.Body.Variables.SingleOrDefault(x => x.VariableType.Resolve() == stateMachineTypeDef);
+            var loadStateMachine = vStateMachine == null ? Create(OpCodes.Dup) : vStateMachine.LdlocAny();
+            var stateMachineTypeRef = vStateMachine == null ? ProxyIteratorResolveStateMachineType(stateMachineTypeDef, rouMethod.MethodDef) : vStateMachine.VariableType;
+            var ret = instructions.Last();
+            var genericMap = stateMachineTypeDef.GenericParameters.ToDictionary(x => x.Name, x => (TypeReference)x);
+
+            var getEnumeratorMethodDef = stateMachineTypeDef.Methods.Single(x => x.Name.StartsWith(mGetEnumeratorPrefix) && x.Name.EndsWith(mGetEnumeratorSuffix));
+
+            ProxyAddAbsentField(stateMachineTypeDef, ProxySetAbsentFieldThis(rouMethod, fields, stateMachineTypeRef, loadStateMachine, ret, genericMap));
+
+            ProxyAddAbsentField(stateMachineTypeDef, ProxySetAbsentFieldParameters(rouMethod, fields, stateMachineTypeRef, loadStateMachine, ret, genericMap));
+
+            ProxyIteratorSetAbsentFieldThis(stateMachineTypeDef, getEnumeratorMethodDef, fields);
+
+            ProxyAddAbsentField(stateMachineTypeDef, ProxyIteratorSetAbsentFieldParameters(getEnumeratorMethodDef, fields));
+        }
+
+        private TypeReference ProxyIteratorResolveStateMachineType(TypeDefinition stateMachineTypeDef, MethodDefinition methodDef)
+        {
+            foreach (var instruction in methodDef.Body.Instructions)
+            {
+                if (instruction.OpCode.Code == Code.Newobj)
+                {
+                    if (instruction.Operand is MethodReference mr && mr.Resolve().IsConstructor && mr.DeclaringType.Resolve() == stateMachineTypeDef) return mr.DeclaringType;
+                }
+                else if (instruction.OpCode.Code == Code.Initobj)
+                {
+                    if (instruction.Operand is TypeReference tr && tr.Resolve() == stateMachineTypeDef) return tr;
+                }
+            }
+
+            throw new RougamoException($"Cannot find {stateMachineTypeDef} init instruction from {methodDef}");
+        }
+
+        private void ProxyIteratorSetAbsentFieldThis(TypeDefinition stateMachineTypeDef, MethodDefinition getEnumeratorMethodDef, IIteratorFields fields)
+        {
+            if (fields.DeclaringThis == null) return;
+
+            var instructions = getEnumeratorMethodDef.Body.Instructions;
+
+            Instruction? stloc = null;
+            foreach (var instruction in instructions)
+            {
+                if (instruction.OpCode.Code == Code.Newobj && instruction.Operand is MethodReference mr && mr.Resolve().IsConstructor && mr.DeclaringType.Resolve() == stateMachineTypeDef)
+                {
+                    stloc = instruction.Next;
+                }
+                else if (instruction.OpCode.Code == Code.Ldfld && instruction.Operand is FieldReference fr && fr.Resolve() == fields.DeclaringThis.Resolve())
+                {
+                    return;
+                }
+            }
+
+            if (stloc == null) throw new RougamoException($"Cannot find new operation of {stateMachineTypeDef} in method {getEnumeratorMethodDef}");
+
+            var vStateMachine = stloc.ResolveVariable(getEnumeratorMethodDef);
+
+            instructions.InsertAfter(stloc, [
+                Create(OpCodes.Ldloc, vStateMachine),
+                Create(OpCodes.Ldarg_0),
+                Create(OpCodes.Ldfld, fields.DeclaringThis),
+                Create(OpCodes.Stfld, new FieldReference(fields.DeclaringThis!.Name, fields.DeclaringThis!.FieldType, vStateMachine.VariableType))
+            ]);
+        }
+
+        private IEnumerable<FieldDefinition> ProxyIteratorSetAbsentFieldParameters(MethodDefinition getEnumeratorMethodDef, IIteratorFields fields)
+        {
+            if (fields.TransitParameters.All(x => x != null)) yield break;
+
+            var instructions = getEnumeratorMethodDef.Body.Instructions;
+
+            var ldloc = instructions.Last().Previous;
+
+            var vStateMachine = ldloc.ResolveVariable(getEnumeratorMethodDef);
+
+            for (var i = fields.TransitParameters.Length - 1; i >= 0; i--)
+            {
+                if (fields.TransitParameters[i] != null) continue;
+
+                fields.TransitParameters[i] = fields.Parameters[i];
+
+                var transitParameterFieldRef = fields.TransitParameters[i]!;
+                var parameterFieldDef = new FieldDefinition($">_<{transitParameterFieldRef.Name}", FieldAttributes.Private, transitParameterFieldRef.FieldType);
+                var parameterFieldRef = new FieldReference(parameterFieldDef.Name, parameterFieldDef.FieldType, vStateMachine.VariableType);
+
+                fields.SetParameter(i, parameterFieldDef);
+
+                instructions.InsertAfter(ldloc, [
+                    Create(OpCodes.Ldarg_0),
+                    Create(OpCodes.Ldfld, transitParameterFieldRef),
+                    Create(OpCodes.Stfld, parameterFieldRef),
+                    Create(OpCodes.Ldloc, vStateMachine)
+                ]);
+
+                yield return parameterFieldDef;
+            }
         }
     }
 }
