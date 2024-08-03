@@ -16,14 +16,20 @@ namespace Rougamo.Fody
             return typeReference.Is(Constants.TYPE_Task);
         }
 
-        public static bool IsGenericTask(this TypeReference typeReference)
+        public static bool IsGeneric(this TypeReference typeRef, string typeFullName, int genericCount)
         {
-            var fullName = typeReference.Resolve()?.FullName;
-
-            if (fullName == null) return false;
-
-            return fullName.StartsWith(Constants.TYPE_Task) && fullName.Length != Constants.TYPE_Task.Length;
+            if (typeRef is GenericInstanceType git)
+            {
+                return git.GenericArguments.Count == genericCount && git.ElementType.FullName == $"{typeFullName}`{genericCount}";
+            }
+            if (typeRef is TypeDefinition typeDef && typeDef.HasGenericParameters)
+            {
+                return typeDef.GenericParameters.Count == genericCount && typeDef.FullName == $"{typeFullName}`{genericCount}";
+            }
+            return false;
         }
+
+        public static bool IsGenericTask(this TypeReference typeReference) => IsGeneric(typeReference, Constants.TYPE_Task, 1);
 
         public static bool IsValueTask(this TypeReference typeReference)
         {
