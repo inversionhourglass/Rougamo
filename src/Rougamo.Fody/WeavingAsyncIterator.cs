@@ -331,7 +331,7 @@ namespace Rougamo.Fody
                 .AddUniqueField(awaiter)
                 .AddUniqueField(moAwaiter);
 
-            return new AiteratorFields(stateMachineTypeDef, moArray, mos, methodContext, state, current, initialThreadId, disposed, builder, promise, recordedReturn, declaringThis, iterator, awaiter, moAwaiter, transitParameters, parameters);
+            return new AiteratorFields(moArray, mos, methodContext, state, current, initialThreadId, disposed, builder, promise, recordedReturn, declaringThis, iterator, awaiter, moAwaiter, transitParameters, parameters);
         }
     }
 }

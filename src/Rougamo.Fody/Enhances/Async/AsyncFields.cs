@@ -1,73 +1,51 @@
 ﻿using Mono.Cecil;
-using System.Linq;
 
 namespace Rougamo.Fody.Enhances.Async
 {
-    internal class AsyncFields : StateMachineFields, IStateMachineFields
+    internal class AsyncFields : IStateMachineFields
     {
         public AsyncFields(
-            TypeDefinition stateMachineTypeDef,
             FieldDefinition? moArray, FieldDefinition[] mos,
             FieldDefinition methodContext, FieldDefinition state,
             FieldDefinition builder, FieldDefinition? declaringThis,
             FieldDefinition awaiter, FieldDefinition? moAwaiter,
-            FieldDefinition? result, FieldDefinition?[] parameters) : base(stateMachineTypeDef)
+            FieldDefinition? result, FieldDefinition?[] parameters)
         {
-            MoArray = MakeReference(moArray);
-            Mos = mos.Select(x => MakeReference(x)!).ToArray();
-            MethodContext = MakeReference(methodContext)!;
-            State = MakeReference(state)!;
-            Builder = MakeReference(builder)!;
-            Parameters = parameters.Select(x => MakeReference(x)!).ToArray();
-            DeclaringThis = MakeReference(declaringThis);
+            MoArray = moArray;
+            Mos = mos;
+            MethodContext = methodContext;
+            State = state;
+            Builder = builder;
+            Parameters = parameters;
+            DeclaringThis = declaringThis;
             Awaiter = awaiter;
             MoAwaiter = moAwaiter ?? Awaiter;
             Result = result;
         }
 
-        public FieldReference? MoArray { get; }
+        public FieldDefinition? MoArray { get; }
 
-        public FieldReference[] Mos { get; }
+        public FieldDefinition[] Mos { get; }
 
-        public FieldReference MethodContext { get; }
+        public FieldDefinition MethodContext { get; }
 
-        public FieldReference State { get; }
+        public FieldDefinition State { get; }
 
-        public FieldReference Builder { get; }
+        public FieldDefinition Builder { get; }
 
-        public FieldReference?[] Parameters { get; }
+        public FieldDefinition?[] Parameters { get; }
 
-        private FieldReference? _declaringThis;
-        public FieldReference? DeclaringThis
-        {
-            get => _declaringThis;
-            set => _declaringThis = value is FieldDefinition fd ? MakeReference(fd) : value;
-        }
+        public FieldDefinition? DeclaringThis { get; set; }
 
-        private FieldReference _awaiter;
-        public FieldReference Awaiter
-        {
-            get => _awaiter;
-            set => _awaiter = value is FieldDefinition fd ? MakeReference(fd)! : value;
-        }
+        public FieldDefinition Awaiter { get; set; }
 
-        private FieldReference _moAwaiter;
-        public FieldReference MoAwaiter
-        {
-            get => _moAwaiter;
-            set => _moAwaiter = value is FieldDefinition fd ? MakeReference(fd)! : value;
-        }
+        public FieldDefinition MoAwaiter { get; set; }
 
-        private FieldReference? _result;
-        public FieldReference? Result
-        {
-            get => _result;
-            set => _result = value is FieldDefinition fd ? MakeReference(fd) : value;
-        }
+        public FieldDefinition? Result { get; set; }
 
         public void SetParameter(int index, FieldDefinition fieldDef)
         {
-            Parameters[index] = MakeReference(fieldDef);
+            Parameters[index] = fieldDef;
         }
     }
 }

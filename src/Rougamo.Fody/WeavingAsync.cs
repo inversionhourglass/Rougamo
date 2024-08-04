@@ -790,7 +790,7 @@ namespace Rougamo.Fody
                 .AddUniqueField(moAwaiter)
                 .AddUniqueField(result);
 
-            return new AsyncFields(stateMachineTypeDef, moArray, mos, methodContext, state, builder, declaringThis, awaiter, moAwaiter, result, parameters);
+            return new AsyncFields(moArray, mos, methodContext, state, builder, declaringThis, awaiter, moAwaiter, result, parameters);
         }
 
         private FieldDefinition?[] StateMachineParameterFields(RouMethod rouMethod)
@@ -995,13 +995,13 @@ namespace Rougamo.Fody
 
             for (var i = 0; i < fields.Parameters.Length; i++)
             {
-                var parameterFieldRef = fields.Parameters[i];
-                if (parameterFieldRef != null) continue;
+                var parameterFieldDef = fields.Parameters[i];
+                if (parameterFieldDef != null) continue;
 
                 var parameter = parameters[i];
                 var fieldTypeRef = parameter.ParameterType.ReplaceGenericArgs(genericMap);
-                var parameterFieldDef = new FieldDefinition(parameter.Name, FieldAttributes.Public, fieldTypeRef);
-                parameterFieldRef = new FieldReference(parameterFieldDef.Name, parameterFieldDef.FieldType, stateMachineTypeRef);
+                parameterFieldDef = new FieldDefinition(parameter.Name, FieldAttributes.Public, fieldTypeRef);
+                var parameterFieldRef = new FieldReference(parameterFieldDef.Name, parameterFieldDef.FieldType, stateMachineTypeRef);
 
                 fields.SetParameter(i, parameterFieldDef);
 

@@ -4,10 +4,10 @@ namespace Rougamo.Fody.Enhances
 {
     internal interface IIteratorFields : IStateMachineFields
     {
-        FieldReference Current { get; }
+        FieldDefinition Current { get; }
 
-        FieldReference? RecordedReturn { get; }
+        FieldDefinition? RecordedReturn { get; }
 
-        FieldReference?[] TransitParameters { get; set; }
+        FieldDefinition?[] TransitParameters { get; set; }
     }
 }

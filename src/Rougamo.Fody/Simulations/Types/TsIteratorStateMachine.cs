@@ -16,15 +16,15 @@ namespace Rougamo.Fody.Simulations.Types
 
         public TsIteratorStateMachine SetFields(IteratorFields fields)
         {
-            F_MoArray = fields.MoArray?.Resolve().Simulate<TsArray<TsMo>>(this);
-            F_Mos = fields.Mos.Select(x => x.Resolve().Simulate<TsMo>(this)).ToArray();
-            F_MethodContext = fields.MethodContext.Resolve().Simulate<TsMethodContext>(this);
-            F_State = fields.State.Resolve().Simulate(this);
-            F_Parameters = fields.Parameters.Select(x => x!.Resolve().Simulate(this)).ToArray();
-            F_DeclaringThis = fields.DeclaringThis?.Resolve().Simulate<TsWeavingTarget>(this);
-            F_Current = fields.Current.Resolve().Simulate(this);
-            F_Items = fields.RecordedReturn?.Resolve().Simulate<TsList>(this);
-            F_Iterator = fields.Iterator.Resolve().Simulate<TsEnumerator>(this);
+            F_MoArray = fields.MoArray?.Simulate<TsArray<TsMo>>(this);
+            F_Mos = fields.Mos.Select(x => x.Simulate<TsMo>(this)).ToArray();
+            F_MethodContext = fields.MethodContext.Simulate<TsMethodContext>(this);
+            F_State = fields.State.Simulate(this);
+            F_Parameters = fields.Parameters.Select(x => x!.Simulate(this)).ToArray();
+            F_DeclaringThis = fields.DeclaringThis?.Simulate<TsWeavingTarget>(this);
+            F_Current = fields.Current.Simulate(this);
+            F_Items = fields.RecordedReturn?.Simulate<TsList>(this);
+            F_Iterator = fields.Iterator.Simulate<TsEnumerator>(this);
 
             return this;
         }

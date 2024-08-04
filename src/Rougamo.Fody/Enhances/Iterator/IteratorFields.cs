@@ -1,74 +1,40 @@
 ﻿using Mono.Cecil;
-using System;
-using System.Linq;
 
 namespace Rougamo.Fody.Enhances.Iterator
 {
-    internal class IteratorFields : StateMachineFields, IIteratorFields
+    internal class IteratorFields(
+        FieldDefinition? moArray, FieldDefinition[] mos,
+        FieldDefinition methodContext,
+        FieldDefinition state, FieldDefinition current,
+        FieldDefinition initialThreadId, FieldDefinition? recordedReturn,
+        FieldDefinition? declaringThis, FieldDefinition iterator,
+        FieldDefinition?[] transitParameters, FieldDefinition?[] parameters) : IIteratorFields
     {
-        public IteratorFields(
-            TypeDefinition stateMachineTypeDef,
-            FieldDefinition? moArray, FieldDefinition[] mos,
-            FieldDefinition methodContext,
-            FieldDefinition state, FieldDefinition current,
-            FieldDefinition initialThreadId, FieldDefinition? recordedReturn,
-            FieldDefinition? declaringThis, FieldDefinition iterator,
-            FieldDefinition?[] transitParameters, FieldDefinition?[] parameters) : base(stateMachineTypeDef)
-        {
-            MoArray = MakeReference(moArray);
-            Mos = mos.Select(x => MakeReference(x)!).ToArray();
-            MethodContext = MakeReference(methodContext)!;
-            State = MakeReference(state)!;
-            Current = MakeReference(current)!;
-            InitialThreadId = MakeReference(initialThreadId)!;
-            RecordedReturn = MakeReference(recordedReturn);
-            TransitParameters = transitParameters.Select(MakeReference).ToArray();
-            Parameters = parameters.Select(MakeReference).ToArray();
-            DeclaringThis = MakeReference(declaringThis);
-            Iterator = MakeReference(iterator)!;
-        }
+        public FieldDefinition? MoArray { get; } = moArray;
 
-        public FieldReference? MoArray { get; }
+        public FieldDefinition[] Mos { get; } = mos;
 
-        public FieldReference[] Mos { get; }
+        public FieldDefinition MethodContext { get; } = methodContext!;
 
-        public FieldReference MethodContext { get; }
+        public FieldDefinition State { get; } = state!;
 
-        public FieldReference State { get; }
+        public FieldDefinition Current { get; } = current!;
 
-        public FieldReference Current { get; }
+        public FieldDefinition InitialThreadId { get; } = initialThreadId!;
 
-        public FieldReference InitialThreadId { get; }
+        public FieldDefinition? RecordedReturn { get; } = recordedReturn;
 
-        public FieldReference? RecordedReturn { get; }
+        public FieldDefinition?[] TransitParameters { get; set; } = transitParameters;
 
-        public FieldReference?[] TransitParameters { get; set; }
+        public FieldDefinition?[] Parameters { get; } = parameters;
 
-        public FieldReference?[] Parameters { get; }
+        public FieldDefinition? DeclaringThis { get; set; } = declaringThis;
 
-        private FieldReference? _declaringThis;
-        public FieldReference? DeclaringThis
-        {
-            get => _declaringThis;
-            set
-            {
-                _declaringThis = value is FieldDefinition fd ? MakeReference(fd) : value;
-            }
-        }
-
-        private FieldReference _iterator;
-        public FieldReference Iterator
-        {
-            get => _iterator;
-            set
-            {
-                _iterator = value is FieldDefinition fd ? MakeReference(fd)! : value;
-            }
-        }
+        public FieldDefinition Iterator { get; set; } = iterator!;
 
         public void SetParameter(int index, FieldDefinition fieldDef)
         {
-            Parameters[index] = MakeReference(fieldDef);
+            Parameters[index] = fieldDef;
         }
     }
 }

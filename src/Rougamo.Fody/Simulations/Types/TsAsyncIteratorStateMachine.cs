@@ -28,20 +28,20 @@ namespace Rougamo.Fody.Simulations.Types
 
         public TsAsyncIteratorStateMachine SetFields(AiteratorFields fields)
         {
-            F_Disposed = fields.Disposed.Resolve().Simulate(this);
-            F_MoArray = fields.MoArray?.Resolve().Simulate<TsArray<TsMo>>(this);
-            F_Mos = fields.Mos.Select(x => x.Resolve().Simulate<TsMo>(this)).ToArray();
-            F_MethodContext = fields.MethodContext.Resolve().Simulate<TsMethodContext>(this);
-            F_State = fields.State.Resolve().Simulate(this);
-            F_Parameters = fields.Parameters.Select(x => x!.Resolve().Simulate(this)).ToArray();
-            F_DeclaringThis = fields.DeclaringThis?.Resolve().Simulate<TsWeavingTarget>(this);
-            F_Current = fields.Current.Resolve().Simulate(this);
-            F_Items = fields.RecordedReturn?.Resolve().Simulate<TsList>(this);
-            F_Iterator = fields.Iterator.Resolve().Simulate<TsAsyncEnumerator>(this);
-            F_Builder = fields.Builder.Resolve().Simulate<TsAsyncIteratorMethodBuilder>(this);
-            F_Promise = fields.Promise.Resolve().Simulate<TsManualResetValueTaskSourceCore>(this);
-            F_Awaiter = fields.Awaiter.Resolve().Simulate<TsAwaiter>(this);
-            F_MoAwaiter = fields.MoAwaiter.Resolve().Simulate<TsAwaiter>(this);
+            F_Disposed = fields.Disposed.Simulate(this);
+            F_MoArray = fields.MoArray?.Simulate<TsArray<TsMo>>(this);
+            F_Mos = fields.Mos.Select(x => x.Simulate<TsMo>(this)).ToArray();
+            F_MethodContext = fields.MethodContext.Simulate<TsMethodContext>(this);
+            F_State = fields.State.Simulate(this);
+            F_Parameters = fields.Parameters.Select(x => x!.Simulate(this)).ToArray();
+            F_DeclaringThis = fields.DeclaringThis?.Simulate<TsWeavingTarget>(this);
+            F_Current = fields.Current.Simulate(this);
+            F_Items = fields.RecordedReturn?.Simulate<TsList>(this);
+            F_Iterator = fields.Iterator.Simulate<TsAsyncEnumerator>(this);
+            F_Builder = fields.Builder.Simulate<TsAsyncIteratorMethodBuilder>(this);
+            F_Promise = fields.Promise.Simulate<TsManualResetValueTaskSourceCore>(this);
+            F_Awaiter = fields.Awaiter.Simulate<TsAwaiter>(this);
+            F_MoAwaiter = fields.MoAwaiter.Simulate<TsAwaiter>(this);
 
             return this;
         }

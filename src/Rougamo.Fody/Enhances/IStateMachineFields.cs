@@ -4,17 +4,17 @@ namespace Rougamo.Fody.Enhances
 {
     internal interface IStateMachineFields
     {
-        FieldReference? MoArray { get; }
+        FieldDefinition? MoArray { get; }
 
-        FieldReference[] Mos { get; }
+        FieldDefinition[] Mos { get; }
 
-        FieldReference MethodContext { get; }
+        FieldDefinition MethodContext { get; }
 
-        FieldReference State { get; }
+        FieldDefinition State { get; }
 
-        FieldReference?[] Parameters { get; }
+        FieldDefinition?[] Parameters { get; }
 
-        FieldReference? DeclaringThis { get; set; }
+        FieldDefinition? DeclaringThis { get; set; }
 
         void SetParameter(int index, FieldDefinition fieldDef);
     }

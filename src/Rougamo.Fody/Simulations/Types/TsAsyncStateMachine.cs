@@ -24,16 +24,16 @@ namespace Rougamo.Fody.Simulations.Types
 
         public TsAsyncStateMachine SetFields(AsyncFields fields)
         {
-            F_MoArray = fields.MoArray?.Resolve().Simulate<TsArray<TsMo>>(this);
-            F_Mos = fields.Mos.Select(x => x.Resolve().Simulate<TsMo>(this)).ToArray();
-            F_MethodContext = fields.MethodContext.Resolve().Simulate<TsMethodContext>(this);
-            F_State = fields.State.Resolve().Simulate(this);
-            _fBuilder = fields.Builder.Resolve().Simulate<TsAsyncBuilder>(this);
-            F_Parameters = fields.Parameters.Select(x => x!.Resolve().Simulate(this)).ToArray();
-            F_DeclaringThis = fields.DeclaringThis?.Resolve().Simulate<TsWeavingTarget>(this);
-            F_Awaiter = fields.Awaiter.Resolve().Simulate<TsAwaiter>(this);
-            F_MoAwaiter = fields.MoAwaiter.Resolve().Simulate<TsAwaiter>(this);
-            F_Result = fields.Result?.Resolve().Simulate(this);
+            F_MoArray = fields.MoArray?.Simulate<TsArray<TsMo>>(this);
+            F_Mos = fields.Mos.Select(x => x.Simulate<TsMo>(this)).ToArray();
+            F_MethodContext = fields.MethodContext.Simulate<TsMethodContext>(this);
+            F_State = fields.State.Simulate(this);
+            _fBuilder = fields.Builder.Simulate<TsAsyncBuilder>(this);
+            F_Parameters = fields.Parameters.Select(x => x!.Simulate(this)).ToArray();
+            F_DeclaringThis = fields.DeclaringThis?.Simulate<TsWeavingTarget>(this);
+            F_Awaiter = fields.Awaiter.Simulate<TsAwaiter>(this);
+            F_MoAwaiter = fields.MoAwaiter.Simulate<TsAwaiter>(this);
+            F_Result = fields.Result?.Simulate(this);
 
             return this;
         }

@@ -206,7 +206,7 @@ namespace Rougamo.Fody
             stateMachineTypeDef.AddUniqueField(methodContext);
             stateMachineTypeDef.AddUniqueField(iterator);
 
-            return new IteratorFields(stateMachineTypeDef, moArray, mos, methodContext, state, current, initialThreadId, recordedReturn, declaringThis, iterator, transitParameters, parameters);
+            return new IteratorFields(moArray, mos, methodContext, state, current, initialThreadId, recordedReturn, declaringThis, iterator, transitParameters, parameters);
         }
 
         private FieldDefinition?[] IteratorGetPrivateParameterFields(MethodDefinition getEnumeratorMethodDef, FieldDefinition?[] transitParameterFieldDefs)

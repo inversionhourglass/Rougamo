@@ -1,88 +1,52 @@
 ﻿using Mono.Cecil;
-using System.Linq;
 
 namespace Rougamo.Fody.Enhances.AsyncIterator
 {
-    internal class AiteratorFields : StateMachineFields, IIteratorFields
+    internal class AiteratorFields(
+        FieldDefinition? moArray, FieldDefinition[] mos,
+        FieldDefinition methodContext,
+        FieldDefinition state, FieldDefinition current,
+        FieldDefinition initialThreadId, FieldDefinition disposed,
+        FieldDefinition builder, FieldDefinition promise,
+        FieldDefinition? recordedReturn, FieldDefinition? declaringThis,
+        FieldDefinition iterator, FieldDefinition awaiter, FieldDefinition moAwaiter,
+        FieldDefinition?[] transitParameters, FieldDefinition?[] parameters) : IIteratorFields
     {
-        public AiteratorFields(
-            TypeDefinition stateMachineTypeDef,
-            FieldDefinition? moArray, FieldDefinition[] mos,
-            FieldDefinition methodContext,
-            FieldDefinition state, FieldDefinition current,
-            FieldDefinition initialThreadId, FieldDefinition disposed,
-            FieldDefinition builder, FieldDefinition promise,
-            FieldDefinition? recordedReturn, FieldDefinition? declaringThis,
-            FieldDefinition iterator, FieldDefinition awaiter, FieldDefinition moAwaiter,
-            FieldDefinition?[] transitParameters, FieldDefinition?[] parameters) : base(stateMachineTypeDef)
-        {
-            MoArray = MakeReference(moArray);
-            Mos = mos.Select(x => MakeReference(x)!).ToArray();
-            MethodContext = MakeReference(methodContext)!;
-            State = MakeReference(state)!;
-            Current = MakeReference(current)!;
-            InitialThreadId = MakeReference(initialThreadId)!;
-            Disposed = MakeReference(disposed)!;
-            Builder = MakeReference(builder)!;
-            Promise = MakeReference(promise)!;
-            RecordedReturn = MakeReference(recordedReturn);
-            DeclaringThis = MakeReference(declaringThis);
-            Iterator = MakeReference(iterator)!;
-            Awaiter = MakeReference(awaiter)!;
-            MoAwaiter = MakeReference(moAwaiter)!;
-            TransitParameters = transitParameters.Select(MakeReference).ToArray();
-            Parameters = parameters.Select(MakeReference).ToArray();
-        }
+        public FieldDefinition? MoArray { get; } = moArray;
 
-        public FieldReference? MoArray { get; }
+        public FieldDefinition[] Mos { get; } = mos;
 
-        public FieldReference[] Mos { get; }
+        public FieldDefinition MethodContext { get; } = methodContext!;
 
-        public FieldReference MethodContext { get; }
+        public FieldDefinition State { get; } = state!;
 
-        public FieldReference State { get; }
+        public FieldDefinition Current { get; } = current!;
 
-        public FieldReference Current { get; }
+        public FieldDefinition InitialThreadId { get; } = initialThreadId!;
 
-        public FieldReference InitialThreadId { get; }
+        public FieldDefinition Disposed { get; } = disposed!;
 
-        public FieldReference Disposed { get; }
+        public FieldDefinition Builder { get; } = builder!;
 
-        public FieldReference Builder { get; }
+        public FieldDefinition Promise { get; } = promise!;
 
-        public FieldReference Promise { get; }
+        public FieldDefinition? RecordedReturn { get; } = recordedReturn;
 
-        public FieldReference? RecordedReturn { get; }
+        public FieldDefinition?[] TransitParameters { get; set; } = transitParameters;
 
-        public FieldReference?[] TransitParameters { get; set; }
+        public FieldDefinition?[] Parameters { get; } = parameters;
 
-        public FieldReference?[] Parameters { get; }
+        public FieldDefinition? DeclaringThis { get; set; } = declaringThis;
 
-        private FieldReference? _declaringThis;
-        public FieldReference? DeclaringThis
-        {
-            get => _declaringThis;
-            set => _declaringThis = value is FieldDefinition fd ? MakeReference(fd) : value;
-        }
+        public FieldDefinition Awaiter { get; set; } = awaiter!;
 
-        private FieldReference _awaiter;
-        public FieldReference Awaiter {
-            get => _awaiter;
-            set => _awaiter = value is FieldDefinition fd ? MakeReference(fd)! : value;
-        }
+        public FieldDefinition Iterator { get; set; } = iterator!;
 
-        private FieldReference _iterator;
-        public FieldReference Iterator
-        {
-            get => _iterator;
-            set => _iterator = value is FieldDefinition fd ? MakeReference(fd)! : value;
-        }
-
-        public FieldReference MoAwaiter { get; }
+        public FieldDefinition MoAwaiter { get; } = moAwaiter!;
 
         public void SetParameter(int index, FieldDefinition fieldDef)
         {
-            Parameters[index] = MakeReference(fieldDef);
+            Parameters[index] = fieldDef;
         }
     }
 }
