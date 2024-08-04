@@ -2,6 +2,7 @@
 using Mono.Cecil.Cil;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -125,6 +126,8 @@ namespace Rougamo.Fody
 
         private void DebuggerStepThrough(MethodDefinition methodDef)
         {
+            if (methodDef.CustomAttributes.Any(x => x.Is(typeof(DebuggerStepThroughAttribute).FullName))) return;
+
             methodDef.CustomAttributes.Add(new CustomAttribute(_ctorDebuggerStepThroughRef));
         }
 
