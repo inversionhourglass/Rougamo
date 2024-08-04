@@ -95,35 +95,35 @@ namespace Rougamo.Fody
                         methodDef.Name == Constants.METHOD_OnExceptionAsync ||
                         methodDef.Name == Constants.METHOD_OnExitAsync)
                     {
-                        _methodIMosRef.Add(methodDef.Name, _importer.Import(methodDef));
+                        _methodIMosRef.Add(methodDef.Name, this.Import(methodDef));
                         if (_typeMethodContextRef == null)
                         {
-                            _typeMethodContextRef = _importer.Import(methodDef.Parameters.First().ParameterType);
+                            _typeMethodContextRef = this.Import(methodDef.Parameters.First().ParameterType);
                         }
                         if (_typeValueTaskAwaiterRef == null && methodDef.ReturnType.Is(Constants.TYPE_ValueTask))
                         {
-                            _typeValueTaskRef = _importer.Import(methodDef.ReturnType);
-                            _typeValueTaskAwaiterRef = _importer.Import(methodDef.ReturnType.Resolve().Methods.Single(x => x.Name == Constants.METHOD_GetAwaiter).ReturnType);
+                            _typeValueTaskRef = this.Import(methodDef.ReturnType);
+                            _typeValueTaskAwaiterRef = this.Import(methodDef.ReturnType.Resolve().Methods.Single(x => x.Name == Constants.METHOD_GetAwaiter).ReturnType);
                         }
                     }
                 }
-                _typeIMoRef = _importer.Import(imoTypeDef);
+                _typeIMoRef = this.Import(imoTypeDef);
                 _typeIMoArrayRef = new ArrayType(_typeIMoRef);
                 var typeMethodContextDef = _typeMethodContextRef.Resolve();
-                _methodMethodContextCtorRef = _importer.Import(typeMethodContextDef.GetConstructors().First(x => x.Parameters.Count == 8));
-                _methodMethodContext3CtorRef = _importer.Import(typeMethodContextDef.GetConstructors().First(x => x.Parameters.Count == 5));
-                _methodMethodContextSetExceptionRef = _importer.Import(typeMethodContextDef.GetPropertySetterDef(Constants.PROP_Exception));
-                _methodMethodContextSetReturnValueRef = _importer.Import(typeMethodContextDef.GetPropertySetterDef(Constants.PROP_ReturnValue));
-                _methodMethodContextGetReturnValueRef = _importer.Import(typeMethodContextDef.GetPropertyGetterDef(Constants.PROP_ReturnValue));
-                _methodMethodContextGetExceptionHandledRef = _importer.Import(typeMethodContextDef.GetPropertyGetterDef(Constants.PROP_ExceptionHandled));
-                _methodMethodContextGetReturnValueReplacedRef = _importer.Import(typeMethodContextDef.GetPropertyGetterDef(Constants.PROP_ReturnValueReplaced));
-                _methodMethodContextGetArgumentsRef = _importer.Import(typeMethodContextDef.GetPropertyGetterDef(Constants.PROP_Arguments));
-                _methodMethodContextGetRewriteArgumentsRef = _importer.Import(typeMethodContextDef.GetPropertyGetterDef(Constants.PROP_RewriteArguments));
-                _methodMethodContextGetRetryCountRef = _importer.Import(typeMethodContextDef.GetPropertyGetterDef(Constants.PROP_RetryCount));
+                _methodMethodContextCtorRef = this.Import(typeMethodContextDef.GetConstructors().First(x => x.Parameters.Count == 8));
+                _methodMethodContext3CtorRef = this.Import(typeMethodContextDef.GetConstructors().First(x => x.Parameters.Count == 5));
+                _methodMethodContextSetExceptionRef = this.Import(typeMethodContextDef.GetPropertySetterDef(Constants.PROP_Exception));
+                _methodMethodContextSetReturnValueRef = this.Import(typeMethodContextDef.GetPropertySetterDef(Constants.PROP_ReturnValue));
+                _methodMethodContextGetReturnValueRef = this.Import(typeMethodContextDef.GetPropertyGetterDef(Constants.PROP_ReturnValue));
+                _methodMethodContextGetExceptionHandledRef = this.Import(typeMethodContextDef.GetPropertyGetterDef(Constants.PROP_ExceptionHandled));
+                _methodMethodContextGetReturnValueReplacedRef = this.Import(typeMethodContextDef.GetPropertyGetterDef(Constants.PROP_ReturnValueReplaced));
+                _methodMethodContextGetArgumentsRef = this.Import(typeMethodContextDef.GetPropertyGetterDef(Constants.PROP_Arguments));
+                _methodMethodContextGetRewriteArgumentsRef = this.Import(typeMethodContextDef.GetPropertyGetterDef(Constants.PROP_RewriteArguments));
+                _methodMethodContextGetRetryCountRef = this.Import(typeMethodContextDef.GetPropertyGetterDef(Constants.PROP_RetryCount));
                 // Private fields cannot be accessed externally even using IL
                 //_fieldMethodContextExceptionRef = typeMethodContextDef.Fields.Single(x => x.Name == Constants.FIELD_Exception).ImportInto(ModuleDefinition);
                 //_fieldMethodContextReturnValueRef = typeMethodContextDef.Fields.Single(x => x.Name == Constants.FIELD_ReturnValue).ImportInto(ModuleDefinition);
-                _methodMethodContextGetHasExceptionRef = _importer.Import(typeMethodContextDef.GetPropertyGetterDef(Constants.PROP_HasException));
+                _methodMethodContextGetHasExceptionRef = this.Import(typeMethodContextDef.GetPropertyGetterDef(Constants.PROP_HasException));
             }
         }
 

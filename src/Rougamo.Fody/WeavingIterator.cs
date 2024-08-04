@@ -178,7 +178,7 @@ namespace Rougamo.Fody
                 mos = new FieldDefinition[rouMethod.Mos.Length];
                 for (int i = 0; i < rouMethod.Mos.Length; i++)
                 {
-                    mos[i] = new FieldDefinition(Constants.FIELD_RougamoMo_Prefix + i, FieldAttributes.Public, rouMethod.Mos[i].MoTypeRef.ImportInto(ModuleDefinition));
+                    mos[i] = new FieldDefinition(Constants.FIELD_RougamoMo_Prefix + i, FieldAttributes.Public, this.Import(rouMethod.Mos[i].MoTypeRef));
                     stateMachineTypeDef.AddUniqueField(mos[i]);
                 }
             }
@@ -201,7 +201,7 @@ namespace Rougamo.Fody
             var enumerableTypeRef = rouMethod.MethodDef.ReturnType;
             var enumeratorTypeRef = enumerableTypeRef.GetMethod(Constants.METHOD_GetEnumerator, false).ReturnType;
             enumeratorTypeRef = stateMachineTypeDef.Import(enumerableTypeRef, enumeratorTypeRef);
-            var iterator = new FieldDefinition(Constants.FIELD_Iterator, FieldAttributes.Private, enumeratorTypeRef);
+            var iterator = new FieldDefinition(Constants.FIELD_Iterator, FieldAttributes.Private, this.Import(enumeratorTypeRef));
 
             stateMachineTypeDef.AddUniqueField(methodContext);
             stateMachineTypeDef.AddUniqueField(iterator);

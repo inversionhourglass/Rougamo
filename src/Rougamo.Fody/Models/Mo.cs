@@ -118,19 +118,6 @@ namespace Rougamo.Fody
 
         public TypeReference MoTypeRef => TypeRef ?? Attribute!.AttributeType;
 
-        public MethodReference? On(string methodName, ModuleDefinition moduleDef)
-        {
-            var methodRef = MoTypeDef.Methods.FirstOrDefault(x => x.Name == methodName)?.ImportInto(moduleDef);
-            if (methodRef == null) return null;
-
-            var moTypeRef = MoTypeRef.ImportInto(moduleDef);
-            if (moTypeRef is GenericInstanceType git)
-            {
-                methodRef = methodRef.WithGenericDeclaringType(git);
-            }
-            return methodRef;
-        }
-
         public string FullName => Attribute?.AttributeType?.FullName ?? TypeRef!.FullName;
 
         class EqualityComparer : IEqualityComparer<Mo>

@@ -12,7 +12,7 @@ namespace Rougamo.Fody
 
         public static TypeReference Import(this BaseModuleWeaver moduleWeaver, TypeReference typeRef)
         {
-            if (typeRef.Scope.Name == SCOPE_ROUGAMO) return typeRef.ImportInto(moduleWeaver.ModuleDefinition);
+            //if (typeRef.Scope.Name == SCOPE_ROUGAMO) return typeRef.ImportInto(moduleWeaver.ModuleDefinition);
 
             if (typeRef is ByReferenceType brt) return new ByReferenceType(Import(moduleWeaver, brt.ElementType));
             if (typeRef is GenericParameter) return typeRef;
@@ -79,25 +79,19 @@ namespace Rougamo.Fody
             return moduleWeaver.ModuleDefinition.ImportReference(reference);
         }
 
+        public static TypeReference ImportInto(this TypeReference typeRef, ModuleWeaver moduleWeaver)
+        {
+            return moduleWeaver.Import(typeRef);
+        }
+
+        public static MethodReference ImportInto(this MethodReference methodRef, ModuleWeaver moduleWeaver)
+        {
+            return moduleWeaver.Import(methodRef);
+        }
+
         public static TypeReference ImportInto(this TypeReference typeRef, ModuleDefinition moduleDef)
         {
-            if (typeRef.IsByReference) return new ByReferenceType(typeRef.GetElementType().ImportInto(moduleDef));
-            if (typeRef is ArrayType at) return new ArrayType(at.ElementType.ImportInto(moduleDef), at.Rank);
-            if (typeRef is GenericParameter) return typeRef;
-
-            var iTypeRef = moduleDef.ImportReference(typeRef.Resolve());
-            if (typeRef is GenericInstanceType git)
-            {
-                var igas = new List<TypeReference>(git.GenericArguments.Count);
-                foreach (var ga in git.GenericArguments)
-                {
-                    var iga = ga.ImportInto(moduleDef);
-                    igas.Add(iga);
-                }
-                iTypeRef = iTypeRef.MakeGenericInstanceType(igas.ToArray());
-            }
-
-            return iTypeRef;
+            return moduleDef.ImportReference(typeRef);
         }
 
         public static MethodReference ImportInto(this MethodReference methodRef, ModuleDefinition moduleDef)

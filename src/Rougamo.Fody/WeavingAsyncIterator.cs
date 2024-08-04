@@ -292,7 +292,7 @@ namespace Rougamo.Fody
                 mos = new FieldDefinition[rouMethod.Mos.Length];
                 for (int i = 0; i < rouMethod.Mos.Length; i++)
                 {
-                    mos[i] = new FieldDefinition(Constants.FIELD_RougamoMo_Prefix + i, FieldAttributes.Public, rouMethod.Mos[i].MoTypeRef.ImportInto(ModuleDefinition));
+                    mos[i] = new FieldDefinition(Constants.FIELD_RougamoMo_Prefix + i, FieldAttributes.Public, this.Import(rouMethod.Mos[i].MoTypeRef));
                     stateMachineTypeDef.AddUniqueField(mos[i]);
                 }
             }
@@ -321,8 +321,8 @@ namespace Rougamo.Fody
             var taskTypeRef = enumeratorTypeRef.GetMethod(Constants.METHOD_MoveNextAsync, false).ReturnType;
             var awaiterTypeRef = taskTypeRef.GetMethod(Constants.METHOD_GetAwaiter, false).ReturnType;
             awaiterTypeRef = enumerableTypeRef.Import(taskTypeRef, awaiterTypeRef);
-            var iterator = new FieldDefinition(Constants.FIELD_Iterator, FieldAttributes.Private, enumeratorTypeRef);
-            var awaiter = new FieldDefinition(Constants.FIELD_Awaiter, FieldAttributes.Private, awaiterTypeRef);
+            var iterator = new FieldDefinition(Constants.FIELD_Iterator, FieldAttributes.Private, this.Import(enumeratorTypeRef));
+            var awaiter = new FieldDefinition(Constants.FIELD_Awaiter, FieldAttributes.Private, this.Import(awaiterTypeRef));
             var moAwaiter = new FieldDefinition(Constants.FIELD_MoAwaiter, FieldAttributes.Private, _typeValueTaskAwaiterRef);
 
             stateMachineTypeDef

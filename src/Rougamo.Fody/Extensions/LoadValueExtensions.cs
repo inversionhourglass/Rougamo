@@ -38,7 +38,7 @@ namespace Rougamo.Fody
             {
                 return
                 [
-                    Instruction.Create(OpCodes.Ldtoken, typeRefValue.ImportInto(moduleWeaver.ModuleDefinition)),
+                    Instruction.Create(OpCodes.Ldtoken, typeRefValue.ImportInto(moduleWeaver)),
                     Instruction.Create(OpCodes.Call, moduleWeaver._methodGetTypeFromHandleRef)
                 ];
             }

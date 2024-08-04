@@ -771,14 +771,14 @@ namespace Rougamo.Fody
                 mos = new FieldDefinition[rouMethod.Mos.Length];
                 for (int i = 0; i < rouMethod.Mos.Length; i++)
                 {
-                    mos[i] = new FieldDefinition(Constants.FIELD_RougamoMo_Prefix + i, FieldAttributes.Public, rouMethod.Mos[i].MoTypeRef.ImportInto(ModuleDefinition));
+                    mos[i] = new FieldDefinition(Constants.FIELD_RougamoMo_Prefix + i, FieldAttributes.Public, this.Import(rouMethod.Mos[i].MoTypeRef));
                     stateMachineTypeDef.AddUniqueField(mos[i]);
                 }
             }
             var methodContext = new FieldDefinition(Constants.FIELD_RougamoContext, FieldAttributes.Public, _typeMethodContextRef);
-            var awaiter = new FieldDefinition(Constants.FIELD_Awaiter, FieldAttributes.Private, awaiterTypeRef);
+            var awaiter = new FieldDefinition(Constants.FIELD_Awaiter, FieldAttributes.Private, this.Import(awaiterTypeRef));
             var moAwaiter = asyncableTypeRef.Is(Constants.TYPE_ValueTask) ? null : new FieldDefinition(Constants.FIELD_MoAwaiter, FieldAttributes.Private, _typeValueTaskAwaiterRef);
-            var result = resultTypeRef.Is(Constants.TYPE_Void) ? null : new FieldDefinition(Constants.FIELD_Result, FieldAttributes.Private, resultTypeRef);
+            var result = resultTypeRef.Is(Constants.TYPE_Void) ? null : new FieldDefinition(Constants.FIELD_Result, FieldAttributes.Private, this.Import(resultTypeRef));
             var builder = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_Builder);
             var state = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_State);
             var declaringThis = stateMachineTypeDef.Fields.SingleOrDefault(x => x.FieldType.Resolve() == stateMachineTypeDef.DeclaringType);

@@ -201,6 +201,9 @@ namespace Rougamo.Fody
         #endregion Generic
 
         #region Infering Import
+        /// <summary>
+        ///  注意：该Import仅用于类型推断，最终返回的TypeReference还是需要进行Module的import
+        /// </summary>
         public static TypeReference Import(this TypeReference typeRef, params TypeReference[] inferenceChain)
         {
             var chainLast = inferenceChain.Last();
@@ -216,7 +219,7 @@ namespace Rougamo.Fody
             }
             else
             {
-                return chainLast.ImportInto(typeRef.Module);
+                return chainLast;
             }
 
             for (var i = inferenceChain.Length - 2; i >= 0; i--)
@@ -228,9 +231,9 @@ namespace Rougamo.Fody
 
             MappingGenerics(genericArguments, typeRef);
 
-            if (importingTypeRef == null) return genericArguments[0].ImportInto(typeRef.Module);
+            if (importingTypeRef == null) return genericArguments[0];
 
-            var git = new GenericInstanceType(importingTypeRef.ElementType.ImportInto(typeRef.Module));
+            var git = new GenericInstanceType(importingTypeRef.ElementType);
             git.GenericArguments.Add(genericArguments);
             return git;
         }

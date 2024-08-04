@@ -14,8 +14,6 @@ namespace Rougamo.Fody
         private readonly bool _testRun;
         private bool _debugMode;
 
-        private RougamoRefImporter _importer;
-
         internal TypeDefinition _typeListDef;
         internal TypeDefinition _typeSystemDef;
         internal TypeDefinition _typeMethodBaseDef;
@@ -92,7 +90,6 @@ namespace Rougamo.Fody
         public override void Execute()
         {
             _debugMode = IsDebugMode();
-            _importer = new(this);
 
             try
             {
