@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 namespace Rougamo
 {
     /// <summary>
+    /// Basic interface for code weaving.
     /// </summary>
     public interface IMo
     {
