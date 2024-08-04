@@ -13,9 +13,10 @@
         public const string TYPE_Feature = "Rougamo.Feature";
         public const string TYPE_Omit = "Rougamo.Context.Omit";
         public const string TYPE_ForceSync = "Rougamo.ForceSync";
+        public const string TYPE_IRougamo = "Rougamo.IRougamo";
         public const string TYPE_IRougamo_1 = "Rougamo.IRougamo`1";
         public const string TYPE_IRougamo_2 = "Rougamo.IRougamo`2";
-        public const string TYPE_IRepulsionsRougamo = "Rougamo.IRepulsionsRougamo`2";
+        public const string TYPE_IRepulsionsRougamo = "Rougamo.IRepulsionsRougamo";
         public const string TYPE_MethodContext = "Rougamo.Context.MethodContext";
 
         public const string TYPE_Void = "System.Void";

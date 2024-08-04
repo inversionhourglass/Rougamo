@@ -68,8 +68,8 @@ namespace Rougamo.Fody
                 AsyncBuildMoArrayMoveNext(rouMethod, tStateMachine, mActualMethod);
             }
 
+            DebuggerStepThrough(mMoveNext.Def);
             mMoveNext.Def.Body.InitLocals = true;
-            mMoveNext.Def.DebuggerStepThrough(_methodDebuggerStepThroughCtorRef);
             mMoveNext.Def.Body.OptimizePlus(EmptyInstructions);
         }
 

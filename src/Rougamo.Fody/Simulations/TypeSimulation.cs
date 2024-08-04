@@ -89,7 +89,7 @@ namespace Rougamo.Fody.Simulations
             }
 
             var toDef = to.Resolve();
-            if (to.IsObject() || toDef.IsInterface && Ref.Implement(to.FullName) || !toDef.IsInterface && Ref.IsOrDerivesFrom(to.FullName)) return [];
+            if (to.IsObject() || toDef.IsInterface && Ref.Implement(to.FullName) || !toDef.IsInterface && Ref.IsOrInherit(to.FullName)) return [];
 
             return [Create(OpCodes.Castclass, to)];
         }

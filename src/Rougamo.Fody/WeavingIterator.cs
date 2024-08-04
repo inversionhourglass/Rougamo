@@ -38,7 +38,7 @@ namespace Rougamo.Fody
         {
             var mMoveNext = tStateMachine.M_MoveNext;
 
-            mMoveNext.Def.DebuggerStepThrough(_methodDebuggerStepThroughCtorRef);
+            DebuggerStepThrough(mMoveNext.Def);
             mMoveNext.Def.Clear();
 
             IteratorBuildMoveNextInternal(rouMethod, tStateMachine, mActualMethod);

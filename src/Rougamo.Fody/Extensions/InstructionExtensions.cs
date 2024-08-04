@@ -1,16 +1,186 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System;
+using MethodImplAttribute = System.Runtime.CompilerServices.MethodImplAttribute;
+using MethodImplOptions = System.Runtime.CompilerServices.MethodImplOptions;
 
 namespace Rougamo.Fody
 {
     internal static class InstructionExtensions
     {
-        public static bool IsRet(this Instruction instruction)
+        public static OpCode GetStElemCode(this TypeReference typeRef)
         {
-            if (instruction == null) throw new ArgumentNullException(nameof(instruction));
+            var typeDef = typeRef.Resolve();
+            if (typeDef.IsEnum(out TypeReference? underlying))
+                return underlying!.MetadataType.GetStElemCode();
+            if (typeRef.IsValueType)
+                return typeRef.MetadataType.GetStElemCode();
+            return OpCodes.Stelem_Ref;
+        }
 
-            return instruction.OpCode.Code == Code.Ret;
+        public static OpCode GetStElemCode(this MetadataType type)
+        {
+            switch (type)
+            {
+                case MetadataType.Boolean:
+                case MetadataType.Int32:
+                case MetadataType.UInt32:
+                    return OpCodes.Stelem_I4;
+                case MetadataType.Byte:
+                case MetadataType.SByte:
+                    return OpCodes.Stelem_I1;
+                case MetadataType.Char:
+                case MetadataType.Int16:
+                case MetadataType.UInt16:
+                    return OpCodes.Stelem_I2;
+                case MetadataType.Double:
+                    return OpCodes.Stelem_R8;
+                case MetadataType.Int64:
+                case MetadataType.UInt64:
+                    return OpCodes.Stelem_I8;
+                case MetadataType.Single:
+                    return OpCodes.Stelem_R4;
+                default:
+                    return OpCodes.Stelem_Ref;
+            }
+        }
+
+        public static OpCode GetLdElemCode(this TypeReference typeRef)
+        {
+            var typeDef = typeRef.Resolve();
+            if (typeDef.IsEnum(out TypeReference? underlying))
+                return underlying!.MetadataType.GetLdElemCode();
+            if (typeRef.IsValueType)
+                return typeRef.MetadataType.GetLdElemCode();
+            return OpCodes.Ldelem_Ref;
+        }
+
+        public static OpCode GetLdElemCode(this MetadataType type)
+        {
+            switch (type)
+            {
+                case MetadataType.Boolean:
+                case MetadataType.Int32:
+                case MetadataType.UInt32:
+                    return OpCodes.Ldelem_I4;
+                case MetadataType.Byte:
+                case MetadataType.SByte:
+                    return OpCodes.Ldelem_I1;
+                case MetadataType.Char:
+                case MetadataType.Int16:
+                case MetadataType.UInt16:
+                    return OpCodes.Ldelem_I2;
+                case MetadataType.Double:
+                    return OpCodes.Ldelem_R8;
+                case MetadataType.Int64:
+                case MetadataType.UInt64:
+                    return OpCodes.Ldelem_I8;
+                case MetadataType.Single:
+                    return OpCodes.Ldelem_R4;
+                default:
+                    return OpCodes.Ldelem_Ref;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Instruction Ldloc(this VariableDefinition variable)
+        {
+            return Instruction.Create(OpCodes.Ldloc, variable);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Instruction Ldloca(this VariableDefinition variable)
+        {
+            return Instruction.Create(OpCodes.Ldloca, variable);
+        }
+
+        public static Instruction LdlocAny(this VariableDefinition variable)
+        {
+            var opLdloc = variable.VariableType.IsValueType ? OpCodes.Ldloca : OpCodes.Ldloc;
+            return Instruction.Create(opLdloc, variable);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Instruction Stloc(this VariableDefinition variable)
+        {
+            return Instruction.Create(OpCodes.Stloc, variable);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Instruction Ldfld(this FieldReference fieldRef)
+        {
+            return Instruction.Create(OpCodes.Ldfld, fieldRef);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Instruction Ldflda(this FieldReference fieldRef)
+        {
+            return Instruction.Create(OpCodes.Ldflda, fieldRef);
+        }
+
+        public static Instruction LdfldAny(this FieldReference fieldRef)
+        {
+            var opLdfld = fieldRef.FieldType.IsValueType ? OpCodes.Ldflda : OpCodes.Ldfld;
+            return Instruction.Create(opLdfld, fieldRef);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static Instruction Stfld(this FieldReference fieldRef)
+        {
+            return Instruction.Create(OpCodes.Stfld, fieldRef);
+        }
+
+        public static Instruction CallAny(this MethodReference methodRef, MethodDefinition? methodDef = null)
+        {
+            methodDef ??= methodRef.Resolve();
+            if (methodDef.IsConstructor) return Instruction.Create(OpCodes.Newobj, methodRef);
+
+            var opCall = methodDef.IsVirtual && !methodDef.DeclaringType.IsValueType ? OpCodes.Callvirt : OpCodes.Call;
+            return Instruction.Create(opCall, methodRef);
+        }
+
+        public static Instruction Ldind(this TypeReference typeRef)
+        {
+            if (typeRef == null) throw new ArgumentNullException(nameof(typeRef), "Ldind argument null");
+            var typeDef = typeRef.Resolve();
+            if (typeDef == null) return Instruction.Create(OpCodes.Ldobj, typeRef);
+            if (!typeRef.IsValueType) return Instruction.Create(OpCodes.Ldind_Ref);
+            if (typeDef.Is(typeof(byte).FullName)) return Instruction.Create(OpCodes.Ldind_I1);
+            if (typeDef.Is(typeof(short).FullName)) return Instruction.Create(OpCodes.Ldind_I2);
+            if (typeDef.Is(typeof(int).FullName)) return Instruction.Create(OpCodes.Ldind_I4);
+            if (typeDef.Is(typeof(long).FullName)) return Instruction.Create(OpCodes.Ldind_I8);
+            if (typeDef.Is(typeof(sbyte).FullName)) return Instruction.Create(OpCodes.Ldind_U1);
+            if (typeDef.Is(typeof(ushort).FullName)) return Instruction.Create(OpCodes.Ldind_U2);
+            if (typeDef.Is(typeof(uint).FullName)) return Instruction.Create(OpCodes.Ldind_U4);
+            if (typeDef.Is(typeof(ulong).FullName)) return Instruction.Create(OpCodes.Ldind_I8);
+            if (typeDef.Is(typeof(float).FullName)) return Instruction.Create(OpCodes.Ldind_R4);
+            if (typeDef.Is(typeof(double).FullName)) return Instruction.Create(OpCodes.Ldind_R8);
+            if (typeDef.IsEnum)
+            {
+                if (typeDef.Fields.Count == 0) return Instruction.Create(OpCodes.Ldind_I);
+                return Ldind(typeDef.Fields[0].FieldType);
+            }
+            return Instruction.Create(OpCodes.Ldobj, typeRef); // struct & enum & generic parameter
+        }
+
+        public static Instruction Stind(this TypeReference typeRef)
+        {
+            if (typeRef == null) throw new ArgumentNullException(nameof(typeRef), "Stind argument null");
+            if (typeRef.IsGenericParameter) return Instruction.Create(OpCodes.Stobj, typeRef);
+            var typeDef = typeRef.Resolve();
+            if (!typeRef.IsValueType) return Instruction.Create(OpCodes.Stind_Ref);
+            if (typeDef.Is(typeof(byte).FullName) || typeDef.Is(typeof(sbyte).FullName)) return Instruction.Create(OpCodes.Stind_I1);
+            if (typeDef.Is(typeof(short).FullName) || typeDef.Is(typeof(ushort).FullName)) return Instruction.Create(OpCodes.Stind_I2);
+            if (typeDef.Is(typeof(int).FullName) || typeDef.Is(typeof(uint).FullName)) return Instruction.Create(OpCodes.Stind_I4);
+            if (typeDef.Is(typeof(long).FullName) || typeDef.Is(typeof(ulong).FullName)) return Instruction.Create(OpCodes.Stind_I8);
+            if (typeDef.Is(typeof(float).FullName)) return Instruction.Create(OpCodes.Stind_R4);
+            if (typeDef.Is(typeof(double).FullName)) return Instruction.Create(OpCodes.Stind_R8);
+            if (typeDef.IsEnum)
+            {
+                if (typeDef.Fields.Count == 0) return Instruction.Create(OpCodes.Stind_I);
+                return Stind(typeDef.Fields[0].FieldType);
+            }
+            return Instruction.Create(OpCodes.Stobj, typeRef); // struct & enum & generic parameter
         }
 
         public static bool IsLdtoken(this Instruction instruction, string @interface, out TypeReference? typeRef)
@@ -68,78 +238,6 @@ namespace Rougamo.Fody
             if (instruction.Operand is CallSite callSite) return Instruction.Create(instruction.OpCode, callSite);
             throw new RougamoException(
                 $"not support instruction Operand copy type: {instruction.Operand.GetType().FullName}");
-        }
-
-        public static Instruction ClosePreviousLdarg0(this Instruction instruction, MethodDefinition methodDef)
-        {
-            while ((instruction = instruction.Previous) != null && instruction.OpCode.Code != Code.Ldarg_0) { }
-            return instruction != null && instruction.OpCode.Code == Code.Ldarg_0 ? instruction : throw new RougamoException($"[{methodDef.FullName}] cannot find ldarg.0 from previouses");
-        }
-
-        public static Instruction Stloc2Ldloc(this Instruction instruction, string exceptionMessage)
-        {
-            switch (instruction.OpCode.Code)
-            {
-                case Code.Stloc_0:
-                    return Instruction.Create(OpCodes.Ldloc_0);
-                case Code.Stloc_1:
-                    return Instruction.Create(OpCodes.Ldloc_1);
-                case Code.Stloc_2:
-                    return Instruction.Create(OpCodes.Ldloc_2);
-                case Code.Stloc_3:
-                    return Instruction.Create(OpCodes.Ldloc_3);
-                case Code.Stloc:
-                    return Instruction.Create(OpCodes.Ldloc, (VariableDefinition)instruction.Operand);
-                case Code.Stloc_S:
-                    return Instruction.Create(OpCodes.Ldloc_S, (VariableDefinition)instruction.Operand);
-                default:
-                    throw new RougamoException(exceptionMessage);
-            }
-        }
-
-        public static Instruction Ldloc2Stloc(this Instruction instruction, string exceptionMessage)
-        {
-            switch (instruction.OpCode.Code)
-            {
-                case Code.Ldloc_0:
-                    return Instruction.Create(OpCodes.Stloc_0);
-                case Code.Ldloc_1:
-                    return Instruction.Create(OpCodes.Stloc_1);
-                case Code.Ldloc_2:
-                    return Instruction.Create(OpCodes.Stloc_2);
-                case Code.Ldloc_3:
-                    return Instruction.Create(OpCodes.Stloc_3);
-                case Code.Ldloc:
-                    return Instruction.Create(OpCodes.Stloc, (VariableDefinition)instruction.Operand);
-                case Code.Ldloc_S:
-                    return Instruction.Create(OpCodes.Stloc_S, (VariableDefinition)instruction.Operand);
-                default:
-                    throw new RougamoException(exceptionMessage);
-            }
-        }
-
-        public static TypeReference GetVariableType(this Instruction ldlocIns, MethodBody body)
-        {
-            switch (ldlocIns.OpCode.Code)
-            {
-                case Code.Ldloc_0:
-                    return body.Variables[0].VariableType;
-                case Code.Ldloc_1:
-                    return body.Variables[1].VariableType;
-                case Code.Ldloc_2:
-                    return body.Variables[2].VariableType;
-                case Code.Ldloc_3:
-                    return body.Variables[3].VariableType;
-                case Code.Ldloc:
-                case Code.Ldloc_S:
-                    return ((VariableDefinition)ldlocIns.Operand).VariableType;
-                case Code.Ldloca:
-                case Code.Ldloca_S:
-                    throw new RougamoException("need to take a research");
-                default:
-                    throw new RougamoException("can not get variable type from code: " + ldlocIns.OpCode.Code);
-
-            }
         }
 
         public static int? TryResolveInt32(this Instruction instruction)

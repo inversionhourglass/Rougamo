@@ -26,7 +26,7 @@ namespace Rougamo.Fody
         private void SyncBuildProxyMethod(RouMethod rouMethod, TsWeavingTarget tWeavingTarget)
         {
             tWeavingTarget.M_Proxy.Def.Clear();
-            tWeavingTarget.M_Proxy.Def.DebuggerStepThrough(_methodDebuggerStepThroughCtorRef);
+            DebuggerStepThrough(tWeavingTarget.M_Proxy.Def);
 
             SyncBuildProxyMethodInternal(rouMethod, tWeavingTarget);
 

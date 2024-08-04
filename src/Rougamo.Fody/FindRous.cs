@@ -37,7 +37,7 @@ namespace Rougamo.Fody
             foreach (var typeDef in types)
             {
                 if (typeDef.IsEnum || typeDef.IsInterface || typeDef.IsArray || typeDef.IsDelegate() || !typeDef.HasMethods || typeDef.CustomAttributes.Any(x => x.AttributeType.Is(Constants.TYPE_CompilerGeneratedAttribute) || x.AttributeType.Is(Constants.TYPE_Runtime_CompilerGeneratedAttribute))) continue;
-                if (typeDef.Implement(Constants.TYPE_IMo) || typeDef.DerivesFromAny(Constants.TYPE_MoRepulsion, Constants.TYPE_IgnoreMoAttribute, Constants.TYPE_MoProxyAttribute)) continue;
+                if (typeDef.Implement(Constants.TYPE_IMo) || typeDef.InheritAny(Constants.TYPE_MoRepulsion, Constants.TYPE_IgnoreMoAttribute, Constants.TYPE_MoProxyAttribute)) continue;
                 if (_config.ExceptTypePatterns.Any(x => x.IsMatch(typeDef.FullName))) continue;
 
                 var typeIgnores = ExtractIgnores(typeDef.CustomAttributes);
@@ -217,7 +217,7 @@ namespace Rougamo.Fody
                 {
                     ExtractMoAttributeUniq(directs, attribute);
                 }
-                else if (attribute.AttributeType.IsGeneric(Constants.TYPE_RougamoAttribute_1, out var genericTypeRefs))
+                else if (attribute.AttributeType.IsGeneric(Constants.TYPE_RougamoAttribute, 1, out var genericTypeRefs))
                 {
                     var moTypeRef = genericTypeRefs![0];
                     generics.TryAdd(moTypeRef.FullName, moTypeRef);
@@ -271,9 +271,9 @@ namespace Rougamo.Fody
         private RepulsionMo[] ExtractClassImplementations(TypeDefinition typeDef)
         {
             var mos = new List<RepulsionMo>();
-            var mosInterfaces = typeDef.GetGenericInterfaces(Constants.TYPE_IRougamo_1);
-            var repMosInterfaces = typeDef.GetGenericInterfaces(Constants.TYPE_IRougamo_2);
-            var multiRepMosInterfaces = typeDef.GetGenericInterfaces(Constants.TYPE_IRepulsionsRougamo);
+            var mosInterfaces = typeDef.GetGenericInterfaces(Constants.TYPE_IRougamo, 1);
+            var repMosInterfaces = typeDef.GetGenericInterfaces(Constants.TYPE_IRougamo, 2);
+            var multiRepMosInterfaces = typeDef.GetGenericInterfaces(Constants.TYPE_IRepulsionsRougamo, 2);
 
             mos.AddRange(mosInterfaces.Select(x => new RepulsionMo(x.GenericArguments[0], [])));
             mos.AddRange(repMosInterfaces.Select(x => new RepulsionMo(x.GenericArguments[0], [x.GenericArguments[1]])));
@@ -380,7 +380,7 @@ namespace Rougamo.Fody
                 {
                     ExtractMoAttributeUniq(mos, attribute);
                 }
-                else if (attribute.AttributeType.IsGeneric(Constants.TYPE_RougamoAttribute_1, out var genericTypeRefs))
+                else if (attribute.AttributeType.IsGeneric(Constants.TYPE_RougamoAttribute, 1, out var genericTypeRefs))
                 {
                     var moTypeRef = genericTypeRefs![0];
                     genericMos.TryAdd(moTypeRef.FullName, moTypeRef);
