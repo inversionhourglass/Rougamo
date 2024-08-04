@@ -81,10 +81,24 @@ namespace Rougamo.Fody
                 if (_rouTypes.Count == 0) return;
                 WeaveMos();
             }
+            catch (AggregateRougamoException e)
+            {
+                if (_testRun) throw;
+
+                foreach (var ex in e.Exceptions)
+                {
+                    WriteException(ex);
+                }
+            }
             catch (RougamoException e)
             {
                 if (_testRun) throw;
 
+                WriteException(e);
+            }
+
+            void WriteException(RougamoException e)
+            {
                 if (e.MethodDef == null)
                 {
                     WriteError(e.Message);
