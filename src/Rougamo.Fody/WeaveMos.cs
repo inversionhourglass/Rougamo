@@ -24,17 +24,14 @@ namespace Rougamo.Fody
 
                         if (rouMethod.IsIterator)
                         {
-                            //IteratorMethodWeave(rouMethod);
                             WeavingIteratorMethod(rouMethod);
                         }
                         else if (rouMethod.IsAsyncIterator)
                         {
-                            //AiteratorMethodWeave(rouMethod);
                             WeavingAsyncIteratorMethod(rouMethod);
                         }
                         else if (rouMethod.IsAsyncTaskOrValueTask)
                         {
-                            //AsyncTaskMethodWeave(rouMethod);
                             WeavingAsyncTaskMethod(rouMethod);
                         }
                         else if (!rouMethod.MethodDef.IsConstructor)
@@ -43,7 +40,6 @@ namespace Rougamo.Fody
                         }
                         else
                         {
-                            //SyncMethodWeave(rouMethod);
                             WeavingConstructor(rouMethod);
                         }
                     }
@@ -454,34 +450,6 @@ namespace Rougamo.Fody
                 }
             }
             return exceptionHandler ?? throw new RougamoException($"[{methodDef.FullName}] can not find outer exception handler");
-        }
-
-        private void SetTryCatchFinally(Feature features, MethodDefinition methodDef, ITryCatchFinallyAnchors anchors)
-        {
-            if (features.HasIntersection(Feature.OnException | Feature.OnSuccess | Feature.OnExit))
-            {
-                var exceptionHandler = new ExceptionHandler(ExceptionHandlerType.Catch)
-                {
-                    CatchType = _typeExceptionRef,
-                    TryStart = anchors.TryStart,
-                    TryEnd = anchors.CatchStart,
-                    HandlerStart = anchors.CatchStart,
-                    HandlerEnd = anchors.FinallyStart
-                };
-                methodDef.Body.ExceptionHandlers.Add(exceptionHandler);
-            }
-
-            if (features.HasIntersection(Feature.OnSuccess | Feature.OnExit))
-            {
-                var finallyHandler = new ExceptionHandler(ExceptionHandlerType.Finally)
-                {
-                    TryStart = anchors.TryStart,
-                    TryEnd = anchors.FinallyStart,
-                    HandlerStart = anchors.FinallyStart,
-                    HandlerEnd = anchors.FinallyEnd
-                };
-                methodDef.Body.ExceptionHandlers.Add(finallyHandler);
-            }
         }
 
         private void CheckRefStruct(RouMethod rouMethod)
