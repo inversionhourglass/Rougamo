@@ -17,10 +17,10 @@ namespace Rougamo.Fody
         private void WeavingAsyncIteratorMethod(RouMethod rouMethod)
         {
             var stateMachineTypeDef = rouMethod.MethodDef.ResolveStateMachine(Constants.TYPE_AsyncIteratorStateMachineAttribute);
-            var actualStateMachineTypeDef = ProxyStateMachineClone(stateMachineTypeDef);
+            var actualStateMachineTypeDef = StateMachineClone(stateMachineTypeDef);
             if (actualStateMachineTypeDef == null) return;
 
-            var actualMethodDef = ProxyStateMachineSetupMethodClone(rouMethod.MethodDef, stateMachineTypeDef, actualStateMachineTypeDef, Constants.TYPE_AsyncIteratorStateMachineAttribute);
+            var actualMethodDef = StateMachineSetupMethodClone(rouMethod.MethodDef, stateMachineTypeDef, actualStateMachineTypeDef, Constants.TYPE_AsyncIteratorStateMachineAttribute);
             rouMethod.MethodDef.DeclaringType.Methods.Add(actualMethodDef);
 
             var actualMoveNextDef = actualStateMachineTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
@@ -28,26 +28,26 @@ namespace Rougamo.Fody
 
             _config.MoArrayThreshold = int.MaxValue;
             var fields = AiteratorResolveFields(rouMethod, stateMachineTypeDef);
-            ProxyIteratorSetAbsentFields(rouMethod, stateMachineTypeDef, fields, Constants.GenericPrefix(Constants.TYPE_IAsyncEnumerable), Constants.GenericSuffix(Constants.METHOD_GetAsyncEnumerator));
-            ProxyFieldCleanup(stateMachineTypeDef, fields);
+            IteratorSetAbsentFields(rouMethod, stateMachineTypeDef, fields, Constants.GenericPrefix(Constants.TYPE_IAsyncEnumerable), Constants.GenericSuffix(Constants.METHOD_GetAsyncEnumerator));
+            StateMachineFieldCleanup(stateMachineTypeDef, fields);
 
             var tStateMachine = stateMachineTypeDef.MakeReference().Simulate<TsAsyncIteratorStateMachine>(this).SetFields(fields);
             var mActualMethod = StateMachineResolveActualMethod<TsAsyncEnumerable>(tStateMachine, actualMethodDef);
-            AsyncIteratorBuildMoveNext(rouMethod, tStateMachine, mActualMethod);
+            AiteratorBuildMoveNext(rouMethod, tStateMachine, mActualMethod);
         }
 
-        private void AsyncIteratorBuildMoveNext(RouMethod rouMethod, TsAsyncIteratorStateMachine tStateMachine, MethodSimulation<TsAsyncEnumerable> mActualMethod)
+        private void AiteratorBuildMoveNext(RouMethod rouMethod, TsAsyncIteratorStateMachine tStateMachine, MethodSimulation<TsAsyncEnumerable> mActualMethod)
         {
             var mMoveNext = tStateMachine.M_MoveNext;
             mMoveNext.Def.Clear();
 
             if (tStateMachine.F_MoArray == null)
             {
-                AsyncIteratorBuildMosMoveNext(rouMethod, tStateMachine, mActualMethod);
+                AiteratorBuildMosMoveNext(rouMethod, tStateMachine, mActualMethod);
             }
             else
             {
-                AsyncIteratorBuildMoArrayMoveNext(rouMethod, tStateMachine, mActualMethod);
+                AiteratorBuildMoArrayMoveNext(rouMethod, tStateMachine, mActualMethod);
             }
 
             DebuggerStepThrough(mMoveNext.Def);
@@ -55,7 +55,7 @@ namespace Rougamo.Fody
             mMoveNext.Def.Body.OptimizePlus();
         }
 
-        private void AsyncIteratorBuildMosMoveNext(RouMethod rouMethod, TsAsyncIteratorStateMachine tStateMachine, MethodSimulation<TsAsyncEnumerable> mActualMethod)
+        private void AiteratorBuildMosMoveNext(RouMethod rouMethod, TsAsyncIteratorStateMachine tStateMachine, MethodSimulation<TsAsyncEnumerable> mActualMethod)
         {
             var mMoveNext = tStateMachine.M_MoveNext;
             var instructions = mMoveNext.Def.Body.Instructions;
@@ -209,7 +209,7 @@ namespace Rougamo.Fody
                         if (vPersistentInnerException != null)
                         {
                             // .if (persistentInnerException != null) ExceptionDispatchInfo.Capture(persistentInnerException).Throw();
-                            instructions.Add(AsyncIteratorThrowPersistentException(vPersistentInnerException));
+                            instructions.Add(AiteratorThrowPersistentException(vPersistentInnerException));
                         }
                         // goto END;
                         instructions.Add(Create(OpCodes.Leave, context.AnchorEnd));
@@ -260,12 +260,12 @@ namespace Rougamo.Fody
             SetTryCatch(mMoveNext.Def, outerTryStart, outerCatchStart, outerCatchEnd);
         }
 
-        private void AsyncIteratorBuildMoArrayMoveNext(RouMethod rouMethod, TsAsyncIteratorStateMachine tStateMachine, MethodSimulation<TsAsyncEnumerable> mActualMethod)
+        private void AiteratorBuildMoArrayMoveNext(RouMethod rouMethod, TsAsyncIteratorStateMachine tStateMachine, MethodSimulation<TsAsyncEnumerable> mActualMethod)
         {
             throw new NotImplementedException($"Currently, async methods are not allowed to use array to save the Mos. Contact the author to get support.");
         }
 
-        private IList<Instruction> AsyncIteratorThrowPersistentException(VariableSimulation vPersistentInnerException)
+        private IList<Instruction> AiteratorThrowPersistentException(VariableSimulation vPersistentInnerException)
         {
             // .if (persistentInnerException != null)
             return vPersistentInnerException.IsEqual(new Null(this)).IfNot(anchor => [

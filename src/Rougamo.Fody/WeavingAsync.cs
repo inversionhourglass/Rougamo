@@ -4,7 +4,6 @@ using System.Linq;
 using Mono.Cecil.Cil;
 using Mono.Cecil;
 using Rougamo.Fody.Contexts;
-using Rougamo.Fody.Contexts;
 using Rougamo.Fody.Simulations;
 using Rougamo.Fody.Simulations.Operations;
 using Rougamo.Fody.Simulations.PlainValues;
@@ -23,10 +22,10 @@ namespace Rougamo.Fody
             MethodDefinition actualMethodDef;
             if (rouMethod.MethodDef.TryResolveStateMachine(Constants.TYPE_AsyncStateMachineAttribute, out var stateMachineTypeDef))
             {
-                var actualStateMachineTypeDef = ProxyStateMachineClone(stateMachineTypeDef);
+                var actualStateMachineTypeDef = StateMachineClone(stateMachineTypeDef);
                 if (actualStateMachineTypeDef == null) return;
                 
-                actualMethodDef = ProxyStateMachineSetupMethodClone(rouMethod.MethodDef, stateMachineTypeDef, actualStateMachineTypeDef, Constants.TYPE_AsyncStateMachineAttribute);
+                actualMethodDef = StateMachineSetupMethodClone(rouMethod.MethodDef, stateMachineTypeDef, actualStateMachineTypeDef, Constants.TYPE_AsyncStateMachineAttribute);
                 rouMethod.MethodDef.DeclaringType.Methods.Add(actualMethodDef);
 
                 var actualMoveNextDef = actualStateMachineTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
@@ -45,8 +44,8 @@ namespace Rougamo.Fody
 
             _config.MoArrayThreshold = int.MaxValue;
             var fields = AsyncResolveFields(rouMethod, stateMachineTypeDef);
-            ProxyAsyncSetAbsentFields(rouMethod, stateMachineTypeDef, fields);
-            ProxyFieldCleanup(stateMachineTypeDef, fields);
+            AsyncSetAbsentFields(rouMethod, stateMachineTypeDef, fields);
+            StateMachineFieldCleanup(stateMachineTypeDef, fields);
 
             var tStateMachine = stateMachineTypeDef.MakeReference().Simulate<TsAsyncStateMachine>(this).SetFields(fields);
             var mActualMethod = StateMachineResolveActualMethod<TsAwaitable>(tStateMachine, actualMethodDef);
@@ -754,9 +753,9 @@ namespace Rougamo.Fody
         private AsyncFields AsyncResolveFields(RouMethod rouMethod, TypeDefinition stateMachineTypeDef)
         {
             var asyncableTypeRef = rouMethod.MethodDef.ReturnType;
-            var awaiterTypeRef = asyncableTypeRef.Resolve().Methods.Single(x => x.Name == Constants.METHOD_GetAwaiter).ReturnType;
+            var awaiterTypeRef = asyncableTypeRef.GetMethod(Constants.METHOD_GetAwaiter, false).ReturnType;
             awaiterTypeRef = stateMachineTypeDef.Import(asyncableTypeRef, awaiterTypeRef);
-            var resultTypeRef = awaiterTypeRef.Resolve().Methods.Single(x => x.Name == Constants.METHOD_GetResult).ReturnType;
+            var resultTypeRef = awaiterTypeRef.GetMethod(Constants.METHOD_GetResult, false).ReturnType;
             resultTypeRef = awaiterTypeRef.Import(resultTypeRef);
 
             FieldDefinition? moArray = null;
@@ -833,7 +832,7 @@ namespace Rougamo.Fody
             return parameterFieldDefs;
         }
 
-        private TypeDefinition? ProxyStateMachineClone(TypeDefinition stateMachineTypeDef)
+        private TypeDefinition? StateMachineClone(TypeDefinition stateMachineTypeDef)
         {
             var typeName = $"$Rougamo_{stateMachineTypeDef.Name}";
             if (stateMachineTypeDef.DeclaringType.NestedTypes.Any(x => x.Name == typeName)) return null;
@@ -844,11 +843,11 @@ namespace Rougamo.Fody
             return actualTypeDef;
         }
 
-        private MethodDefinition ProxyStateMachineSetupMethodClone(MethodDefinition methodDef, TypeDefinition stateMachineTypeDef, TypeDefinition clonedStateMachineTypeDef, string stateMachineAttributeTypeName)
+        private MethodDefinition StateMachineSetupMethodClone(MethodDefinition methodDef, TypeDefinition stateMachineTypeDef, TypeDefinition clonedStateMachineTypeDef, string stateMachineAttributeTypeName)
         {
             var clonedMethodDef = methodDef.Clone($"$Rougamo_{methodDef.Name}");
 
-            ProxyStateMachineAttributeClone(clonedMethodDef, clonedStateMachineTypeDef, stateMachineAttributeTypeName);
+            StateMachineAttributeClone(clonedMethodDef, clonedStateMachineTypeDef, stateMachineAttributeTypeName);
 
             var genericMap = methodDef.DeclaringType.GenericParameters.ToDictionary(x => x.Name, x => (TypeReference)x);
             genericMap.AddRange(clonedMethodDef.GenericParameters.ToDictionary(x => x.Name, x => (TypeReference)x));
@@ -915,7 +914,7 @@ namespace Rougamo.Fody
             return clonedMethodDef;
         }
 
-        private void ProxyStateMachineAttributeClone(MethodDefinition clonedMethodDef, TypeDefinition clonedStateMachineTypeDef, string stateMachineAttributeTypeName)
+        private void StateMachineAttributeClone(MethodDefinition clonedMethodDef, TypeDefinition clonedStateMachineTypeDef, string stateMachineAttributeTypeName)
         {
             var stateMachineAttribute = clonedMethodDef.CustomAttributes.Single(x => x.Is(stateMachineAttributeTypeName));
             clonedMethodDef.CustomAttributes.Clear();
@@ -930,7 +929,7 @@ namespace Rougamo.Fody
             clonedMethodDef.CustomAttributes.Add(stateMachineAttribute);
         }
 
-        private void ProxyFieldCleanup(TypeDefinition stateMachineTypeDef, IStateMachineFields fields)
+        private void StateMachineFieldCleanup(TypeDefinition stateMachineTypeDef, IStateMachineFields fields)
         {
             var fieldNames = new Dictionary<string, object?>();
             foreach (var prop in fields.GetType().GetProperties())
@@ -955,19 +954,19 @@ namespace Rougamo.Fody
             }
         }
 
-        private void ProxyAsyncSetAbsentFields(RouMethod rouMethod, TypeDefinition stateMachineTypeDef, AsyncFields fields)
+        private void AsyncSetAbsentFields(RouMethod rouMethod, TypeDefinition stateMachineTypeDef, AsyncFields fields)
         {
             var instructions = rouMethod.MethodDef.Body.Instructions;
             var setState = instructions.Single(x => (x.OpCode.Code == Code.Ldc_I4_M1 || x.OpCode.Code == Code.Ldc_I4 && x.Operand is int v && v == -1) && x.Next.OpCode.Code == Code.Stfld && x.Next.Operand is FieldReference fr && fr.Resolve() == fields.State.Resolve());
             var vStateMachine = rouMethod.MethodDef.Body.Variables.Single(x => x.VariableType.Resolve() == stateMachineTypeDef);
             var genericMap = stateMachineTypeDef.GenericParameters.ToDictionary(x => x.Name, x => (TypeReference)x);
 
-            ProxyAddAbsentField(stateMachineTypeDef, ProxySetAbsentFieldThis(rouMethod, fields, vStateMachine.VariableType, vStateMachine.LdlocAny(), setState, genericMap));
+            stateMachineTypeDef.AddFields(StateMachineSetAbsentFieldThis(rouMethod, fields, vStateMachine.VariableType, vStateMachine.LdlocAny(), setState, genericMap));
 
-            ProxyAddAbsentField(stateMachineTypeDef, ProxySetAbsentFieldParameters(rouMethod, fields, vStateMachine.VariableType, vStateMachine.LdlocAny(), setState, genericMap));
+            stateMachineTypeDef.AddFields(StateMachineSetAbsentFieldParameters(rouMethod, fields, vStateMachine.VariableType, vStateMachine.LdlocAny(), setState, genericMap));
         }
 
-        private IEnumerable<FieldDefinition> ProxySetAbsentFieldThis(RouMethod rouMethod, IStateMachineFields fields, TypeReference stateMachineTypeRef, Instruction loadStateMachine, Instruction anchor, Dictionary<string, TypeReference> genericMap)
+        private IEnumerable<FieldDefinition> StateMachineSetAbsentFieldThis(RouMethod rouMethod, IStateMachineFields fields, TypeReference stateMachineTypeRef, Instruction loadStateMachine, Instruction anchor, Dictionary<string, TypeReference> genericMap)
         {
             if (rouMethod.MethodDef.IsStatic || fields.DeclaringThis != null) yield break;
 
@@ -986,7 +985,7 @@ namespace Rougamo.Fody
             yield return thisFieldDef;
         }
 
-        private IEnumerable<FieldDefinition> ProxySetAbsentFieldParameters(RouMethod rouMethod, IStateMachineFields fields, TypeReference stateMachineTypeRef, Instruction loadStateMachine, Instruction anchor, Dictionary<string, TypeReference> genericMap)
+        private IEnumerable<FieldDefinition> StateMachineSetAbsentFieldParameters(RouMethod rouMethod, IStateMachineFields fields, TypeReference stateMachineTypeRef, Instruction loadStateMachine, Instruction anchor, Dictionary<string, TypeReference> genericMap)
         {
             if (fields.Parameters.All(x => x != null)) yield break;
 
@@ -1012,14 +1011,6 @@ namespace Rougamo.Fody
                 ]);
 
                 yield return parameterFieldDef;
-            }
-        }
-
-        private void ProxyAddAbsentField(TypeDefinition typeDef, IEnumerable<FieldDefinition> fieldDefs)
-        {
-            foreach (var fieldDef in fieldDefs)
-            {
-                typeDef.Fields.Add(fieldDef);
             }
         }
     }

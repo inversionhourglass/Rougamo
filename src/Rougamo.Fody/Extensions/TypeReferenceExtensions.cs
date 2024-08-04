@@ -59,6 +59,16 @@ namespace Rougamo.Fody
 
             return typeDef;
         }
+
+        public static TypeDefinition AddFields(this TypeDefinition typeDef, IEnumerable<FieldDefinition> fieldDefs)
+        {
+            foreach (var fieldDef in fieldDefs)
+            {
+                typeDef.Fields.Add(fieldDef);
+            }
+
+            return typeDef;
+        }
         #endregion Field
 
         #region Property
