@@ -88,6 +88,8 @@ namespace Rougamo.Fody
         #region Method
         public static MethodDefinition GetMethod(this TypeReference typeRef, string name, bool recursion) => typeRef.GetMethod(recursion, md => md.Name == name) ?? throw new RougamoException($"Cannot find the method {name} from {typeRef}");
 
+        public static MethodDefinition GetStaticMethod(this TypeReference typeRef, string name, bool recursion) => typeRef.GetMethod(recursion, md => md.Name == name && md.IsStatic) ?? throw new RougamoException($"Cannot find the static method {name} from {typeRef}");
+
         public static MethodDefinition? GetMethod(this TypeReference typeRef, bool recursion, Func<MethodDefinition, bool> predicate)
         {
             if (typeRef is not TypeDefinition typeDef) typeDef = typeRef.Resolve();
@@ -115,6 +117,8 @@ namespace Rougamo.Fody
 
             return methodDef;
         }
+
+        public static MethodDefinition GetCtor(this TypeReference typeRef, int parameterCount) => typeRef.GetMethod(false, x => x.IsConstructor && !x.IsStatic && x.Parameters.Count == parameterCount) ?? throw new RougamoException($"Cannot find ctor from {typeRef} with {parameterCount} parameter(s).");
         #endregion Method
 
         #region Generic

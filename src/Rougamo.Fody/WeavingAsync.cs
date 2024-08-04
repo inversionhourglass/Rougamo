@@ -70,7 +70,7 @@ namespace Rougamo.Fody
 
             DebuggerStepThrough(mMoveNext.Def);
             mMoveNext.Def.Body.InitLocals = true;
-            mMoveNext.Def.Body.OptimizePlus(EmptyInstructions);
+            mMoveNext.Def.Body.OptimizePlus();
         }
 
         private void AsyncBuildMosMoveNext(RouMethod rouMethod, TsAsyncStateMachine tStateMachine, MethodSimulation<TsAwaitable> mActualMethod)
@@ -81,13 +81,13 @@ namespace Rougamo.Fody
             var context = new AsyncContext(rouMethod);
 
             VariableSimulation? vExceptionHandled = null;
-            var vState = mMoveNext.CreateVariable(_typeIntRef);
-            var vMoValueTask = mMoveNext.CreateVariable<TsAwaitable>(_typeValueTaskRef);
+            var vState = mMoveNext.CreateVariable(_tInt32Ref);
+            var vMoValueTask = mMoveNext.CreateVariable<TsAwaitable>(_tValueTaskRef);
             var vAwaiter = mMoveNext.CreateVariable<TsAwaiter>(tStateMachine.F_Awaiter.Value);
             var vMoAwaiter = tStateMachine.F_MoAwaiter == tStateMachine.F_Awaiter ? vAwaiter : mMoveNext.CreateVariable<TsAwaiter>(tStateMachine.F_MoAwaiter.Value);
-            var vException = mMoveNext.CreateVariable(_typeExceptionRef);
-            var vInnerException = rouMethod.Features.HasIntersection(Feature.OnException | Feature.OnExit) ? mMoveNext.CreateVariable(_typeExceptionRef) : null;
-            var vPersistentInnerException = vInnerException == null || context.OnExceptionAllInSync && context.OnExitAllInSync ? null : mMoveNext.CreateVariable(_typeExceptionRef);
+            var vException = mMoveNext.CreateVariable(_tExceptionRef);
+            var vInnerException = rouMethod.Features.HasIntersection(Feature.OnException | Feature.OnExit) ? mMoveNext.CreateVariable(_tExceptionRef) : null;
+            var vPersistentInnerException = vInnerException == null || context.OnExceptionAllInSync && context.OnExitAllInSync ? null : mMoveNext.CreateVariable(_tExceptionRef);
 
             Instruction? outerTryStart = null, outerCatchStart = null, outerCatchEnd = null, innerTryStart = null, innerCatchStart = null, innerCatchEnd = Create(OpCodes.Nop);
             var switches = Create(OpCodes.Switch, []);
@@ -283,8 +283,8 @@ namespace Rougamo.Fody
 
         private IList<Instruction> StateMachineInitMethodContext(RouMethod rouMethod, TsStateMachine tStateMachine)
         {
-            var tMoArray = _typeIMoArrayRef.Simulate<TsArray>(this);
-            var tObjectArray = _typeObjectArrayRef.Simulate<TsArray>(this);
+            var tMoArray = _tIMoArrayRef.Simulate<TsArray>(this);
+            var tObjectArray = _tObjectArrayRef.Simulate<TsArray>(this);
             IParameterSimulation?[] arguments = [
                 tStateMachine.F_DeclaringThis?.Typed(_simulations.Object),
                 new SystemType(rouMethod.MethodDef.DeclaringType, this),
@@ -353,7 +353,7 @@ namespace Rougamo.Fody
             return tStateMachine.F_MethodContext.Value.P_RewriteArguments.If(anchor =>
             {
                 var instructions = new List<Instruction>();
-                var vArguments = tStateMachine.M_MoveNext.CreateVariable<TsArray>(_typeObjectArrayRef);
+                var vArguments = tStateMachine.M_MoveNext.CreateVariable<TsArray>(_tObjectArrayRef);
 
                 // .var args = _context.Arguments;
                 instructions.Add(vArguments.Assign(tStateMachine.F_MethodContext.Value.P_Arguments));
@@ -475,7 +475,7 @@ namespace Rougamo.Fody
 
             var instructions = new List<Instruction>();
 
-            vExceptionHandled ??= tStateMachine.M_MoveNext.CreateVariable(_typeBoolRef);
+            vExceptionHandled ??= tStateMachine.M_MoveNext.CreateVariable(_tBooleanRef);
 
             // .exceptionHandled = _context.ExceptionHandled;
             instructions.Add(vExceptionHandled.Assign(tStateMachine.F_MethodContext.Value.P_ExceptionHandled));
@@ -510,13 +510,13 @@ namespace Rougamo.Fody
             // .ExceptionDispatchInfo.Capture(persistentInnerException).Throw();
             IList<Instruction> instructions = [
                 .. vPersistentInnerException.Load(),
-                Create(OpCodes.Call, _methodExceptionDispatchInfoCaptureRef),
-                Create(OpCodes.Callvirt, _methodExceptionDispatchInfoThrowRef)
+                Create(OpCodes.Call, _mExceptionDispatchInfoCaptureRef),
+                Create(OpCodes.Callvirt, _mExceptionDispatchInfoThrowRef)
             ];
 
             if (rouMethod.Features.Contains(Feature.ExceptionHandle) && !rouMethod.MethodContextOmits.Contains(Omit.ReturnValue))
             {
-                vExceptionHandled = tStateMachine.M_MoveNext.CreateVariable(_typeBoolRef);
+                vExceptionHandled = tStateMachine.M_MoveNext.CreateVariable(_tBooleanRef);
                 // .if (exceptionHandled) { ... }
                 instructions = vExceptionHandled.IfNot(anchor => instructions);
             }
@@ -597,12 +597,12 @@ namespace Rougamo.Fody
             map[methodDef] = null;
 
             var attribute = TypeAttributes.NestedPrivate | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit;
-            var baseTypeRef = _debugMode ? _typeObjectRef : _typeValueTypeRef;
+            var baseTypeRef = _debugMode ? _tObjectRef : _tValueTypeRef;
             var stateMachineTypeDef = new TypeDefinition(methodDef.DeclaringType.Namespace, $"<{methodDef.Name}>r__{map.Count}", attribute, baseTypeRef);
-            stateMachineTypeDef.Interfaces.Add(new(_typeIAsyncStateMachineRef));
+            stateMachineTypeDef.Interfaces.Add(new(_tIAsyncStateMachineRef));
             stateMachineTypeDef.DeclaringType = methodDef.DeclaringType;
             methodDef.DeclaringType.NestedTypes.Add(stateMachineTypeDef);
-            stateMachineTypeDef.CustomAttributes.Add(new(_methodCompilerGeneratedAttributeCtorRef));
+            stateMachineTypeDef.CustomAttributes.Add(new(_ctorCompilerGeneratedAttributeRef));
 
             if (methodDef.DeclaringType.HasGenericParameters)
             {
@@ -615,7 +615,7 @@ namespace Rougamo.Fody
 
             var builderTypeRef = AsyncGetBuilderType(methodDef, stateMachineTypeDef);
             var fBuilder = new FieldDefinition(Constants.FIELD_Builder, FieldAttributes.Public, builderTypeRef);
-            var fState = new FieldDefinition(Constants.FIELD_State, FieldAttributes.Public, _typeIntRef);
+            var fState = new FieldDefinition(Constants.FIELD_State, FieldAttributes.Public, _tInt32Ref);
             stateMachineTypeDef.AddUniqueField(fBuilder).AddUniqueField(fState);
 
             if (_debugMode) stateMachineTypeDef.Methods.Add(AsyncBuildStateMachineCtor());
@@ -628,7 +628,7 @@ namespace Rougamo.Fody
         private MethodDefinition AsyncBuildStateMachineCtor()
         {
             var attribute = MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName;
-            var methodDef = new MethodDefinition(Constants.METHOD_Ctor, attribute, _typeVoidRef);
+            var methodDef = new MethodDefinition(Constants.METHOD_Ctor, attribute, _tVoidRef);
             methodDef.HasThis = true;
             methodDef.ExplicitThis = false;
             methodDef.CallingConvention = MethodCallingConvention.Default;
@@ -636,7 +636,7 @@ namespace Rougamo.Fody
             methodDef.Body.InitLocals = true;
             methodDef.Body.Instructions.Add([
                 Create(OpCodes.Ldarg_0),
-                Create(OpCodes.Call, _methodObjectCtorRef),
+                Create(OpCodes.Call, _ctorObjectRef),
                 Create(OpCodes.Ret)
             ]);
 
@@ -646,11 +646,11 @@ namespace Rougamo.Fody
         private MethodDefinition AsyncBuildStateMachineMethodMoveNext(MethodDefinition kickOffMethodDef)
         {
             var attribute = MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.Virtual | MethodAttributes.HideBySig | MethodAttributes.NewSlot;
-            var methodDef = new MethodDefinition(Constants.METHOD_MoveNext, attribute, _typeVoidRef);
+            var methodDef = new MethodDefinition(Constants.METHOD_MoveNext, attribute, _tVoidRef);
             methodDef.HasThis = true;
             methodDef.ExplicitThis = false;
             methodDef.CallingConvention = MethodCallingConvention.Default;
-            methodDef.Overrides.Add(_methodIAsyncStateMachineMoveNextRef);
+            methodDef.Overrides.Add(_mIAsyncStateMachineMoveNextRef);
             methodDef.DebugInformation.StateMachineKickOffMethod = kickOffMethodDef;
             methodDef.Body.InitLocals = true;
 
@@ -660,13 +660,13 @@ namespace Rougamo.Fody
         private MethodDefinition AsyncBuildStateMachineMethodSetStateMachine()
         {
             var attribute = MethodAttributes.Private | MethodAttributes.Final | MethodAttributes.Virtual | MethodAttributes.HideBySig | MethodAttributes.NewSlot;
-            var methodDef = new MethodDefinition(Constants.METHOD_SetStateMachine, attribute, _typeVoidRef);
+            var methodDef = new MethodDefinition(Constants.METHOD_SetStateMachine, attribute, _tVoidRef);
             methodDef.HasThis = true;
             methodDef.ExplicitThis = false;
             methodDef.CallingConvention = MethodCallingConvention.Default;
-            methodDef.CustomAttributes.Add(new(_methodDebuggerHiddenAttributeCtorRef));
-            methodDef.Overrides.Add(_methodIAsyncStateMachineSetStateMachineRef);
-            methodDef.Parameters.Add(new("stateMachine", ParameterAttributes.None, _typeIAsyncStateMachineRef));
+            methodDef.CustomAttributes.Add(new(_ctorDebuggerHiddenAttributeRef));
+            methodDef.Overrides.Add(_mIAsyncStateMachineSetStateMachineRef);
+            methodDef.Parameters.Add(new("stateMachine", ParameterAttributes.None, _tIAsyncStateMachineRef));
             methodDef.Body.InitLocals = true;
 
             return methodDef;
@@ -689,8 +689,8 @@ namespace Rougamo.Fody
         {
             methodDef.Clear();
             methodDef.Body.InitLocals = true;
-            var stateMachineAttribute = new CustomAttribute(_methodAsyncStateMachineAttributeCtorRef);
-            stateMachineAttribute.ConstructorArguments.Add(new(_typeSystemRef, stateMachineTypeDef));
+            var stateMachineAttribute = new CustomAttribute(_ctorAsyncStateMachineAttributeRef);
+            stateMachineAttribute.ConstructorArguments.Add(new(_tTypeRef, stateMachineTypeDef));
             methodDef.CustomAttributes.Add(stateMachineAttribute);
 
             var stateMachineTypeRef = stateMachineTypeDef.ReplaceGenericArgs(methodDef.GetGenericMap());
@@ -722,8 +722,8 @@ namespace Rougamo.Fody
         private TypeReference AsyncGetBuilderType(MethodDefinition methodDef, TypeDefinition? stateMachineDef)
         {
             var returnTypeRef = methodDef.ReturnType;
-            if (returnTypeRef.IsTask()) return _typeAsyncTaskMethodBuilderRef;
-            if (returnTypeRef.IsGenericTask()) return GetGenericBuilderType(stateMachineDef, returnTypeRef, _typeAsyncTaskMethodBuilder1Ref);
+            if (returnTypeRef.IsTask()) return _tAsyncTaskMethodBuilderRef;
+            if (returnTypeRef.IsGenericTask()) return GetGenericBuilderType(stateMachineDef, returnTypeRef, _tAsyncTaskMethodBuilder1Ref);
 
             var builderAttribute = methodDef.ReturnType.Resolve().CustomAttributes.Single(x => x.Is(Constants.TYPE_AsyncMethodBuilderAttribute));
             var builderTypeRef = (TypeReference)builderAttribute.ConstructorArguments[0].Value;
@@ -763,7 +763,7 @@ namespace Rougamo.Fody
             var mos = new FieldDefinition[0];
             if (rouMethod.Mos.Length >= _config.MoArrayThreshold)
             {
-                moArray = new FieldDefinition(Constants.FIELD_RougamoMos, FieldAttributes.Public, _typeIMoArrayRef);
+                moArray = new FieldDefinition(Constants.FIELD_RougamoMos, FieldAttributes.Public, _tIMoArrayRef);
                 stateMachineTypeDef.AddUniqueField(moArray);
             }
             else
@@ -775,9 +775,9 @@ namespace Rougamo.Fody
                     stateMachineTypeDef.AddUniqueField(mos[i]);
                 }
             }
-            var methodContext = new FieldDefinition(Constants.FIELD_RougamoContext, FieldAttributes.Public, _typeMethodContextRef);
+            var methodContext = new FieldDefinition(Constants.FIELD_RougamoContext, FieldAttributes.Public, _tMethodContextRef);
             var awaiter = new FieldDefinition(Constants.FIELD_Awaiter, FieldAttributes.Private, this.Import(awaiterTypeRef));
-            var moAwaiter = asyncableTypeRef.Is(Constants.TYPE_ValueTask) ? null : new FieldDefinition(Constants.FIELD_MoAwaiter, FieldAttributes.Private, _typeValueTaskAwaiterRef);
+            var moAwaiter = asyncableTypeRef.Is(Constants.TYPE_ValueTask) ? null : new FieldDefinition(Constants.FIELD_MoAwaiter, FieldAttributes.Private, _tValueTaskAwaiterRef);
             var result = resultTypeRef.Is(Constants.TYPE_Void) ? null : new FieldDefinition(Constants.FIELD_Result, FieldAttributes.Private, this.Import(resultTypeRef));
             var builder = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_Builder);
             var state = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_State);
@@ -926,7 +926,7 @@ namespace Rougamo.Fody
                 _stateMachineCtorRefs[stateMachineAttributeTypeName] = ctor;
             }
             stateMachineAttribute = new CustomAttribute(ctor);
-            stateMachineAttribute.ConstructorArguments.Add(new CustomAttributeArgument(_typeSystemRef, clonedStateMachineTypeDef));
+            stateMachineAttribute.ConstructorArguments.Add(new CustomAttributeArgument(_tTypeRef, clonedStateMachineTypeDef));
             clonedMethodDef.CustomAttributes.Add(stateMachineAttribute);
         }
 

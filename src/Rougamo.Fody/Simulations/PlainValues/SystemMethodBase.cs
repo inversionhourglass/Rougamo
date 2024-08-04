@@ -15,7 +15,7 @@ namespace Rougamo.Fody.Simulations.PlainValues
             return [
                 Instruction.Create(OpCodes.Ldtoken, methodDef),
                 Instruction.Create(OpCodes.Ldtoken, methodDef.DeclaringType),
-                Instruction.Create(OpCodes.Call, ModuleWeaver._methodGetMethodFromHandleRef)
+                Instruction.Create(OpCodes.Call, ModuleWeaver._mGetMethodFromHandleRef)
             ];
         }
     }

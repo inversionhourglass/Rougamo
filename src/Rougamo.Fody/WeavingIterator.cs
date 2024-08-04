@@ -44,7 +44,7 @@ namespace Rougamo.Fody
             IteratorBuildMoveNextInternal(rouMethod, tStateMachine, mActualMethod);
 
             mMoveNext.Def.Body.InitLocals = true;
-            mMoveNext.Def.Body.OptimizePlus(EmptyInstructions);
+            mMoveNext.Def.Body.OptimizePlus();
         }
 
         private void IteratorBuildMoveNextInternal(RouMethod rouMethod, TsIteratorStateMachine tStateMachine, MethodSimulation<TsEnumerable> mActualMethod)
@@ -54,9 +54,9 @@ namespace Rougamo.Fody
 
             var context = new IteratorContext();
 
-            var vState = mMoveNext.CreateVariable(_typeIntRef);
-            var vHasNext = mMoveNext.CreateVariable(_typeBoolRef);
-            var vException = rouMethod.Features.HasIntersection(Feature.OnException | Feature.OnExit) ? mMoveNext.CreateVariable(_typeExceptionRef) : null;
+            var vState = mMoveNext.CreateVariable(_tInt32Ref);
+            var vHasNext = mMoveNext.CreateVariable(_tBooleanRef);
+            var vException = rouMethod.Features.HasIntersection(Feature.OnException | Feature.OnExit) ? mMoveNext.CreateVariable(_tExceptionRef) : null;
 
             Instruction? tryStart = null, catchStart = null, catchEnd = Create(OpCodes.Nop);
 
@@ -170,7 +170,7 @@ namespace Rougamo.Fody
             var mos = new FieldDefinition[0];
             if (rouMethod.Mos.Length >= _config.MoArrayThreshold)
             {
-                moArray = new FieldDefinition(Constants.FIELD_RougamoMos, FieldAttributes.Public, _typeIMoArrayRef);
+                moArray = new FieldDefinition(Constants.FIELD_RougamoMos, FieldAttributes.Public, _tIMoArrayRef);
                 stateMachineTypeDef.AddUniqueField(moArray);
             }
             else
@@ -182,7 +182,7 @@ namespace Rougamo.Fody
                     stateMachineTypeDef.AddUniqueField(mos[i]);
                 }
             }
-            var methodContext = new FieldDefinition(Constants.FIELD_RougamoContext, FieldAttributes.Public, _typeMethodContextRef);
+            var methodContext = new FieldDefinition(Constants.FIELD_RougamoContext, FieldAttributes.Public, _tMethodContextRef);
             var state = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_State);
             var current = stateMachineTypeDef.Fields.Single(m => m.Name.EndsWith(Constants.FIELD_Current_Suffix));
             var initialThreadId = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_InitialThreadId);
@@ -192,7 +192,7 @@ namespace Rougamo.Fody
             var parameters = IteratorGetPrivateParameterFields(getEnumeratorMethodDef, transitParameters);
             if (_config.RecordingIteratorReturns && rouMethod.Features.HasIntersection(Feature.OnSuccess | Feature.OnExit) && !rouMethod.MethodContextOmits.Contains(Omit.ReturnValue))
             {
-                var listReturnsRef = new GenericInstanceType(_typeListRef);
+                var listReturnsRef = new GenericInstanceType(_tListRef);
                 listReturnsRef.GenericArguments.Add(((GenericInstanceType)rouMethod.MethodDef.ReturnType).GenericArguments[0]);
                 recordedReturn = new FieldDefinition(Constants.FIELD_IteratorReturnList, FieldAttributes.Public, listReturnsRef);
                 stateMachineTypeDef.AddUniqueField(recordedReturn);

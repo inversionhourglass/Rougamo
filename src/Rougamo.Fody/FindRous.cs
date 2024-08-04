@@ -82,9 +82,8 @@ namespace Rougamo.Fody
             if(_rouTypes.Count > 0)
             {
                 var sampleMo = _rouTypes.First().Methods.First().Mos.First();
-                var imoTypeDef = sampleMo.MoTypeDef.GetInterfaceDefinition(Constants.TYPE_IMo);
-                _methodIMosRef = new Dictionary<string, MethodReference>(4);
-                foreach (var methodDef in imoTypeDef!.Methods)
+                var iMoTypeDef = sampleMo.MoTypeDef.GetInterfaceDefinition(Constants.TYPE_IMo);
+                foreach (var methodDef in iMoTypeDef!.Methods)
                 {
                     if(methodDef.Name == Constants.METHOD_OnEntry ||
                         methodDef.Name == Constants.METHOD_OnSuccess ||
@@ -95,35 +94,18 @@ namespace Rougamo.Fody
                         methodDef.Name == Constants.METHOD_OnExceptionAsync ||
                         methodDef.Name == Constants.METHOD_OnExitAsync)
                     {
-                        _methodIMosRef.Add(methodDef.Name, this.Import(methodDef));
-                        if (_typeMethodContextRef == null)
+                        if (_tMethodContextRef == null)
                         {
-                            _typeMethodContextRef = this.Import(methodDef.Parameters.First().ParameterType);
+                            _tMethodContextRef = this.Import(methodDef.Parameters.First().ParameterType);
                         }
-                        if (_typeValueTaskAwaiterRef == null && methodDef.ReturnType.Is(Constants.TYPE_ValueTask))
+                        if (_tValueTaskAwaiterRef == null && methodDef.ReturnType.Is(Constants.TYPE_ValueTask))
                         {
-                            _typeValueTaskRef = this.Import(methodDef.ReturnType);
-                            _typeValueTaskAwaiterRef = this.Import(methodDef.ReturnType.Resolve().Methods.Single(x => x.Name == Constants.METHOD_GetAwaiter).ReturnType);
+                            _tValueTaskRef = this.Import(methodDef.ReturnType);
+                            _tValueTaskAwaiterRef = this.Import(methodDef.ReturnType.Resolve().Methods.Single(x => x.Name == Constants.METHOD_GetAwaiter).ReturnType);
                         }
                     }
                 }
-                _typeIMoRef = this.Import(imoTypeDef);
-                _typeIMoArrayRef = new ArrayType(_typeIMoRef);
-                var typeMethodContextDef = _typeMethodContextRef.Resolve();
-                _methodMethodContextCtorRef = this.Import(typeMethodContextDef.GetConstructors().First(x => x.Parameters.Count == 8));
-                _methodMethodContext3CtorRef = this.Import(typeMethodContextDef.GetConstructors().First(x => x.Parameters.Count == 5));
-                _methodMethodContextSetExceptionRef = this.Import(typeMethodContextDef.GetPropertySetterDef(Constants.PROP_Exception));
-                _methodMethodContextSetReturnValueRef = this.Import(typeMethodContextDef.GetPropertySetterDef(Constants.PROP_ReturnValue));
-                _methodMethodContextGetReturnValueRef = this.Import(typeMethodContextDef.GetPropertyGetterDef(Constants.PROP_ReturnValue));
-                _methodMethodContextGetExceptionHandledRef = this.Import(typeMethodContextDef.GetPropertyGetterDef(Constants.PROP_ExceptionHandled));
-                _methodMethodContextGetReturnValueReplacedRef = this.Import(typeMethodContextDef.GetPropertyGetterDef(Constants.PROP_ReturnValueReplaced));
-                _methodMethodContextGetArgumentsRef = this.Import(typeMethodContextDef.GetPropertyGetterDef(Constants.PROP_Arguments));
-                _methodMethodContextGetRewriteArgumentsRef = this.Import(typeMethodContextDef.GetPropertyGetterDef(Constants.PROP_RewriteArguments));
-                _methodMethodContextGetRetryCountRef = this.Import(typeMethodContextDef.GetPropertyGetterDef(Constants.PROP_RetryCount));
-                // Private fields cannot be accessed externally even using IL
-                //_fieldMethodContextExceptionRef = typeMethodContextDef.Fields.Single(x => x.Name == Constants.FIELD_Exception).ImportInto(ModuleDefinition);
-                //_fieldMethodContextReturnValueRef = typeMethodContextDef.Fields.Single(x => x.Name == Constants.FIELD_ReturnValue).ImportInto(ModuleDefinition);
-                _methodMethodContextGetHasExceptionRef = this.Import(typeMethodContextDef.GetPropertyGetterDef(Constants.PROP_HasException));
+                _tIMoArrayRef = new ArrayType(this.Import(iMoTypeDef));
             }
         }
 

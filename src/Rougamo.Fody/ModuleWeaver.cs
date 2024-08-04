@@ -14,57 +14,37 @@ namespace Rougamo.Fody
         private readonly bool _testRun;
         private bool _debugMode;
 
-        internal TypeDefinition _typeListDef;
-        internal TypeDefinition _typeSystemDef;
-        internal TypeDefinition _typeMethodBaseDef;
+        internal TypeReference _tValueTypeRef;
+        internal TypeReference _tObjectRef;
+        internal TypeReference _tVoidRef;
+        internal TypeReference _tInt32Ref;
+        internal TypeReference _tBooleanRef;
+        internal TypeReference _tObjectArrayRef;
+        internal TypeReference _tTypeRef;
+        internal TypeReference _tMethodBaseRef;
+        internal TypeReference _tListRef;
+        internal TypeReference _tExceptionRef;
+        internal TypeReference _tCancellationTokenRef;
+        internal TypeReference _tIAsyncStateMachineRef;
+        internal TypeReference _tAsyncTaskMethodBuilderRef;
+        internal TypeReference _tAsyncTaskMethodBuilder1Ref;
+        internal TypeReference _tValueTaskRef;
+        internal TypeReference _tValueTaskAwaiterRef;
+        internal TypeReference _tIMoArrayRef;
+        internal TypeReference _tMethodContextRef;
 
-        internal TypeReference _typeVoidRef;
-        internal TypeReference _typeSystemRef;
-        internal TypeReference _typeMethodBaseRef;
-        internal TypeReference _typeIntRef;
-        internal TypeReference _typeBoolRef;
-        internal TypeReference _typeObjectRef;
-        internal TypeReference _typeObjectArrayRef;
-        internal TypeReference _typeValueTypeRef;
-        internal TypeReference _typeExceptionRef;
-        internal TypeReference _typeCancellationTokenRef;
-        internal TypeReference _typeListRef;
-        internal TypeReference _typeIAsyncStateMachineRef;
-        internal TypeReference _typeValueTaskRef;
-        internal TypeReference _typeValueTaskAwaiterRef;
-        internal TypeReference _typeIMoRef;
-        internal TypeReference _typeMethodContextRef;
-        internal TypeReference _typeIMoArrayRef;
-        internal TypeReference _typeDebuggerStepThroughAttributeRef;
-        internal TypeReference _typeAsyncTaskMethodBuilderRef;
-        internal TypeReference _typeAsyncTaskMethodBuilder1Ref;
+        internal MethodReference _ctorObjectRef;
+        internal MethodReference _ctorDebuggerStepThroughRef;
+        internal MethodReference _ctorCompilerGeneratedAttributeRef;
+        internal MethodReference _ctorDebuggerHiddenAttributeRef;
+        internal MethodReference _ctorAsyncStateMachineAttributeRef;
 
-        internal MethodReference _methodGetTypeFromHandleRef;
-        internal MethodReference _methodGetMethodFromHandleRef;
-        internal MethodReference _methodListAddRef;
-        internal MethodReference _methodListToArrayRef;
-        internal MethodReference _methodIEnumeratorMoveNextRef;
-        internal MethodReference _methodObjectCtorRef;
-        internal MethodReference _methodDebuggerStepThroughCtorRef;
-        internal MethodReference _methodAsyncStateMachineAttributeCtorRef;
-        internal MethodReference _methodCompilerGeneratedAttributeCtorRef;
-        internal MethodReference _methodDebuggerHiddenAttributeCtorRef;
-        internal MethodReference _methodExceptionDispatchInfoCaptureRef;
-        internal MethodReference _methodIAsyncStateMachineSetStateMachineRef;
-        internal MethodReference _methodIAsyncStateMachineMoveNextRef;
-        internal MethodReference _methodExceptionDispatchInfoThrowRef;
-        internal MethodReference _methodMethodContextCtorRef;
-        internal MethodReference _methodMethodContext3CtorRef;
-        internal MethodReference _methodMethodContextSetExceptionRef;
-        internal MethodReference _methodMethodContextSetReturnValueRef;
-        internal MethodReference _methodMethodContextGetReturnValueRef;
-        internal MethodReference _methodMethodContextGetHasExceptionRef;
-        internal MethodReference _methodMethodContextGetExceptionHandledRef;
-        internal MethodReference _methodMethodContextGetReturnValueReplacedRef;
-        internal MethodReference _methodMethodContextGetArgumentsRef;
-        internal MethodReference _methodMethodContextGetRewriteArgumentsRef;
-        internal MethodReference _methodMethodContextGetRetryCountRef;
-        internal Dictionary<string, MethodReference> _methodIMosRef;
+        internal MethodReference _mGetTypeFromHandleRef;
+        internal MethodReference _mGetMethodFromHandleRef;
+        internal MethodReference _mExceptionDispatchInfoCaptureRef;
+        internal MethodReference _mIAsyncStateMachineMoveNextRef;
+        internal MethodReference _mIAsyncStateMachineSetStateMachineRef;
+        internal MethodReference _mExceptionDispatchInfoThrowRef;
         internal Dictionary<string, MethodReference> _stateMachineCtorRefs;
 
 #if DEBUG
@@ -76,7 +56,6 @@ namespace Rougamo.Fody
         private List<RouType> _rouTypes;
         private Config _config;
 
-        private readonly Instruction[] EmptyInstructions = [];
 
         public ModuleWeaver() : this(false) { }
 

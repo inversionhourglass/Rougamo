@@ -1,6 +1,5 @@
 ﻿using Mono.Cecil;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -15,50 +14,46 @@ namespace Rougamo.Fody
     {
         void LoadBasicReference()
         {
-            _typeListDef = FindTypeDefinition(typeof(List<>).FullName);
-            _typeSystemDef = FindTypeDefinition(typeof(Type).FullName);
-            _typeMethodBaseDef = FindTypeDefinition(typeof(MethodBase).FullName);
+            _tValueTypeRef = FindAndImportType(typeof(ValueType).FullName);
+            _tObjectRef = FindAndImportType(typeof(object).FullName);
+            _tVoidRef = FindAndImportType(typeof(void).FullName);
+            _tInt32Ref = FindAndImportType(typeof(int).FullName);
+            _tBooleanRef = FindAndImportType(typeof(bool).FullName);
+            _tTypeRef = FindAndImportType(typeof(Type).FullName);
+            _tMethodBaseRef = FindAndImportType(typeof(MethodBase).FullName);
+            _tListRef = FindAndImportType(typeof(List<>).FullName);
+            _tExceptionRef = FindAndImportType(typeof(Exception).FullName);
+            _tCancellationTokenRef = FindAndImportType(typeof(CancellationToken).FullName);
+            _tIAsyncStateMachineRef = FindAndImportType(typeof(IAsyncStateMachine).FullName);
+            _tAsyncTaskMethodBuilderRef = FindAndImportType(typeof(AsyncTaskMethodBuilder).FullName);
+            _tAsyncTaskMethodBuilder1Ref = FindAndImportType(typeof(AsyncTaskMethodBuilder<>).FullName);
+            _tObjectArrayRef = new ArrayType(_tObjectRef);
 
-            _typeVoidRef = FindTypeDefinition(typeof(void).FullName).ImportInto(ModuleDefinition);
-            _typeSystemRef = _typeSystemDef.ImportInto(ModuleDefinition);
-            _typeMethodBaseRef = _typeMethodBaseDef.ImportInto(ModuleDefinition);
-            _typeIntRef = FindTypeDefinition(typeof(int).FullName).ImportInto(ModuleDefinition);
-            _typeBoolRef = FindTypeDefinition(typeof(bool).FullName).ImportInto(ModuleDefinition);
-            _typeObjectRef = FindTypeDefinition(typeof(object).FullName).ImportInto(ModuleDefinition);
-            _typeObjectArrayRef = new ArrayType(_typeObjectRef);
-            _typeValueTypeRef = FindTypeDefinition(typeof(ValueType).FullName).ImportInto(ModuleDefinition);
-            _typeExceptionRef = FindTypeDefinition(typeof(Exception).FullName).ImportInto(ModuleDefinition);
-            _typeCancellationTokenRef = FindTypeDefinition(typeof(CancellationToken).FullName).ImportInto(ModuleDefinition);
-            _typeDebuggerStepThroughAttributeRef = FindTypeDefinition(typeof(DebuggerStepThroughAttribute).FullName).ImportInto(ModuleDefinition);
-            _typeListRef = _typeListDef.ImportInto(ModuleDefinition);
-            _typeIAsyncStateMachineRef = FindTypeDefinition(typeof(IAsyncStateMachine).FullName).ImportInto(ModuleDefinition);
-            _typeAsyncTaskMethodBuilderRef = FindTypeDefinition(typeof(AsyncTaskMethodBuilder).FullName).ImportInto(ModuleDefinition);
-            _typeAsyncTaskMethodBuilder1Ref = FindTypeDefinition(typeof(AsyncTaskMethodBuilder<>).FullName).ImportInto(ModuleDefinition);
-            var typeAsyncStateMachineAttributeRef = FindTypeDefinition(typeof(AsyncStateMachineAttribute).FullName).ImportInto(ModuleDefinition);
-            var typeIteratorStateMachineAttributeRef = FindTypeDefinition(typeof(IteratorStateMachineAttribute).FullName).ImportInto(ModuleDefinition);
+            var typeDebuggerStepThroughAttributeRef = FindAndImportType(typeof(DebuggerStepThroughAttribute).FullName);
+            var typeAsyncStateMachineAttributeRef = FindAndImportType(typeof(AsyncStateMachineAttribute).FullName);
+            var typeIteratorStateMachineAttributeRef = FindAndImportType(typeof(IteratorStateMachineAttribute).FullName);
             var typeExceptionDispatchInfoDef = FindTypeDefinition(typeof(ExceptionDispatchInfo).FullName);
             var typeCompilerGeneratedAttributeDef = FindTypeDefinition(typeof(CompilerGeneratedAttribute).FullName);
             var typeDebuggerHiddenAttributeDef = FindTypeDefinition(typeof(DebuggerHiddenAttribute).FullName);
 
-            _methodGetTypeFromHandleRef = _typeSystemDef.Methods.Single(x => x.Name == Constants.METHOD_GetTypeFromHandle).ImportInto(ModuleDefinition);
-            _methodGetMethodFromHandleRef = _typeMethodBaseDef.Methods.Single(x => x.Name == Constants.METHOD_GetMethodFromHandle && x.Parameters.Count == 2).ImportInto(ModuleDefinition);
-            _methodListAddRef = _typeListDef.Methods.Single(x => x.Name == Constants.METHOD_Add && x.Parameters.Count == 1 && x.Parameters[0].ParameterType == _typeListDef.GenericParameters[0]);
-            _methodListToArrayRef = _typeListDef.Methods.Single(x => x.Name == Constants.METHOD_ToArray && !x.HasParameters);
-            _methodIEnumeratorMoveNextRef = FindTypeDefinition(typeof(IEnumerator).FullName).Methods.Single(x => x.Name == Constants.METHOD_MoveNext).ImportInto(ModuleDefinition);
-            _methodObjectCtorRef = _typeObjectRef.GetMethod(false, x => x.IsConstructor && !x.IsStatic && x.Parameters.Count == 0)!.ImportInto(ModuleDefinition);
-            _methodDebuggerStepThroughCtorRef = _typeDebuggerStepThroughAttributeRef.Resolve().Methods.Single(x => x.IsConstructor && !x.IsStatic && !x.Parameters.Any()).ImportInto(ModuleDefinition);
-            _methodCompilerGeneratedAttributeCtorRef = typeCompilerGeneratedAttributeDef.GetMethod(false, x => x.IsConstructor && !x.IsStatic && x.Parameters.Count == 0)!.ImportInto(ModuleDefinition);
-            _methodDebuggerHiddenAttributeCtorRef = typeDebuggerHiddenAttributeDef.GetMethod(false, x => x.IsConstructor && !x.IsStatic && x.Parameters.Count == 0)!.ImportInto(ModuleDefinition);
-            _methodExceptionDispatchInfoCaptureRef = typeExceptionDispatchInfoDef.Methods.Single(x => x.IsStatic && x.Name == Constants.METHOD_Capture).ImportInto(ModuleDefinition);
-            _methodExceptionDispatchInfoThrowRef = typeExceptionDispatchInfoDef.Methods.Single(x => x.Parameters.Count == 0 && x.Name == Constants.METHOD_Throw).ImportInto(ModuleDefinition);
-            _methodIAsyncStateMachineSetStateMachineRef = _typeIAsyncStateMachineRef.GetMethod(Constants.METHOD_SetStateMachine, false)!.ImportInto(ModuleDefinition);
-            _methodIAsyncStateMachineMoveNextRef = _typeIAsyncStateMachineRef.GetMethod(Constants.METHOD_MoveNext, false)!.ImportInto(ModuleDefinition);
-            _methodAsyncStateMachineAttributeCtorRef = typeAsyncStateMachineAttributeRef.Resolve().Methods.Single(x => x.IsConstructor && !x.IsStatic && x.Parameters.Single().ParameterType.Is(Constants.TYPE_Type)).ImportInto(ModuleDefinition);
-            var iteratorStateMachineAttributeCtorRef = typeIteratorStateMachineAttributeRef.Resolve().Methods.Single(x => x.IsConstructor && !x.IsStatic && x.Parameters.Single().ParameterType.Is(Constants.TYPE_Type)).ImportInto(ModuleDefinition);
+            _ctorObjectRef = _tObjectRef.GetCtor(0).ImportInto(this);
+            _ctorDebuggerStepThroughRef = typeDebuggerStepThroughAttributeRef.GetCtor(0).ImportInto(this);
+            _ctorCompilerGeneratedAttributeRef = typeCompilerGeneratedAttributeDef.GetCtor(0).ImportInto(this);
+            _ctorDebuggerHiddenAttributeRef = typeDebuggerHiddenAttributeDef.GetCtor(0).ImportInto(this);
+            _ctorAsyncStateMachineAttributeRef = typeAsyncStateMachineAttributeRef.GetMethod(false, x => x.IsConstructor && !x.IsStatic && x.Parameters.Single().ParameterType.Is(Constants.TYPE_Type))!.ImportInto(this);
+
+            _mGetTypeFromHandleRef = _tTypeRef.GetMethod(Constants.METHOD_GetTypeFromHandle, false).ImportInto(this);
+            _mGetMethodFromHandleRef = _tMethodBaseRef.GetMethod(false, x => x.Name == Constants.METHOD_GetMethodFromHandle && x.Parameters.Count == 2)!.ImportInto(this);
+            _mExceptionDispatchInfoCaptureRef = typeExceptionDispatchInfoDef.GetStaticMethod(Constants.METHOD_Capture, false).ImportInto(this);
+            _mExceptionDispatchInfoThrowRef = typeExceptionDispatchInfoDef.GetMethod(false, x => x.Parameters.Count == 0 && x.Name == Constants.METHOD_Throw)!.ImportInto(this);
+            _mIAsyncStateMachineMoveNextRef = _tIAsyncStateMachineRef.GetMethod(Constants.METHOD_MoveNext, false)!.ImportInto(this);
+            _mIAsyncStateMachineSetStateMachineRef = _tIAsyncStateMachineRef.GetMethod(Constants.METHOD_SetStateMachine, false)!.ImportInto(this);
+            
+            var iteratorStateMachineAttributeCtorRef = typeIteratorStateMachineAttributeRef.GetMethod(false, x => x.IsConstructor && !x.IsStatic && x.Parameters.Single().ParameterType.Is(Constants.TYPE_Type))!.ImportInto(this);
 
             _stateMachineCtorRefs = new()
             {
-                { Constants.TYPE_AsyncStateMachineAttribute, _methodAsyncStateMachineAttributeCtorRef },
+                { Constants.TYPE_AsyncStateMachineAttribute, _ctorAsyncStateMachineAttributeRef },
                 { Constants.TYPE_IteratorStateMachineAttribute, iteratorStateMachineAttributeCtorRef }
             };
 
@@ -66,6 +61,11 @@ namespace Rougamo.Fody
             var debuggerTypeRef = this.Import(FindTypeDefinition(typeof(Debugger).FullName));
             _methodDebuggerBreakRef = this.Import(debuggerTypeRef.GetMethod(false, x => x.IsStatic && x.Name == "Break")!);
 #endif
+        }
+
+        private TypeReference FindAndImportType(string fullName)
+        {
+            return ModuleDefinition.ImportReference(FindTypeDefinition(fullName));
         }
     }
 }

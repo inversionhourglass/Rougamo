@@ -31,7 +31,7 @@ namespace Rougamo.Fody
             SyncBuildProxyMethodInternal(rouMethod, tWeavingTarget);
 
             tWeavingTarget.M_Proxy.Def.Body.InitLocals = true;
-            tWeavingTarget.M_Proxy.Def.Body.OptimizePlus(EmptyInstructions);
+            tWeavingTarget.M_Proxy.Def.Body.OptimizePlus();
         }
 
         private void SyncBuildProxyMethodInternal(RouMethod rouMethod, TsWeavingTarget tWeavingTarget)
@@ -41,14 +41,14 @@ namespace Rougamo.Fody
             var context = new SyncContext();
 
             var args = tWeavingTarget.M_Proxy.Def.Parameters.Select(x => x.Simulate(this)).ToArray();
-            var vException = rouMethod.Features.HasIntersection(Feature.OnException | Feature.OnExit) ? tWeavingTarget.M_Proxy.CreateVariable(_typeExceptionRef) : null;
+            var vException = rouMethod.Features.HasIntersection(Feature.OnException | Feature.OnExit) ? tWeavingTarget.M_Proxy.CreateVariable(_tExceptionRef) : null;
             var vResult = tWeavingTarget.M_Proxy.Result.Ref.IsVoid() ? null : tWeavingTarget.M_Proxy.CreateVariable(tWeavingTarget.M_Proxy.Result);
-            var vContext = tWeavingTarget.M_Proxy.CreateVariable<TsMethodContext>(_typeMethodContextRef);
+            var vContext = tWeavingTarget.M_Proxy.CreateVariable<TsMethodContext>(_tMethodContextRef);
             VariableSimulation<TsMo>[]? vMos = null;
             VariableSimulation<TsArray<TsMo>>? vMoArray = null;
             if (rouMethod.Mos.Length > _config.MoArrayThreshold)
             {
-                vMoArray = tWeavingTarget.M_Proxy.CreateVariable<TsArray<TsMo>>(_typeIMoArrayRef);
+                vMoArray = tWeavingTarget.M_Proxy.CreateVariable<TsArray<TsMo>>(_tIMoArrayRef);
             }
             else
             {
@@ -164,8 +164,8 @@ namespace Rougamo.Fody
 
         private IList<Instruction> SyncInitMethodContext(RouMethod rouMethod, TsWeavingTarget tWeavingTarget, ArgumentSimulation[] args, VariableSimulation<TsMethodContext> vContext, VariableSimulation<TsMo>[]? vMos, VariableSimulation<TsArray<TsMo>>? vMoArray)
         {
-            var tMoArray = _typeIMoArrayRef.Simulate<TsArray>(this);
-            var tObjectArray = _typeObjectArrayRef.Simulate<TsArray>(this);
+            var tMoArray = _tIMoArrayRef.Simulate<TsArray>(this);
+            var tObjectArray = _tObjectArrayRef.Simulate<TsArray>(this);
             IParameterSimulation[] arguments = [
                 tWeavingTarget.M_Proxy.Def.IsStatic ? new Null(this) : new This(_simulations.Object),
                 new SystemType(rouMethod.MethodDef.DeclaringType, this),
@@ -210,7 +210,7 @@ namespace Rougamo.Fody
             return vContext.Value.P_RewriteArguments.If(anchor =>
             {
                 var instructions = new List<Instruction>();
-                var vArguments = tWeavingTarget.M_Proxy.CreateVariable<TsArray>(_typeObjectArrayRef);
+                var vArguments = tWeavingTarget.M_Proxy.CreateVariable<TsArray>(_tObjectArrayRef);
 
                 // .var args = _context.Arguments;
                 instructions.Add(vArguments.Assign(vContext.Value.P_Arguments));
@@ -254,7 +254,7 @@ namespace Rougamo.Fody
             if (count > 1)
             {
                 // var arguments = context.Arguments;
-                vArguments = tWeavingTarget.M_Proxy.CreateVariable<TsArray>(_typeObjectArrayRef);
+                vArguments = tWeavingTarget.M_Proxy.CreateVariable<TsArray>(_tObjectArrayRef);
                 instructions.Add(vArguments.Assign(vContext.Value.P_Arguments));
             }
 
@@ -301,7 +301,7 @@ namespace Rougamo.Fody
 
             var instructions = new List<Instruction>();
 
-            vExceptionHandled = tWeavingTarget.M_Proxy.CreateVariable(_typeBoolRef);
+            vExceptionHandled = tWeavingTarget.M_Proxy.CreateVariable(_tBooleanRef);
 
             // .exceptionHandled = context.ExceptionHandled;
             instructions.Add(vExceptionHandled.Assign(vContext.Value.P_ExceptionHandled));
@@ -398,7 +398,7 @@ namespace Rougamo.Fody
             if (tMoArray != null)
             {
                 Eq featureMatch;
-                var vFlag = mHost.CreateVariable(_typeIntRef);
+                var vFlag = mHost.CreateVariable(_tInt32Ref);
                 if (executeSequence == -1)
                 {
                     // .(moArray[flag].Feature & feature) != 0

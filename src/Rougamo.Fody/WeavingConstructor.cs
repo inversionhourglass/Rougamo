@@ -22,7 +22,7 @@ namespace Rougamo.Fody
             CtorBuildMethodInternal(rouMethod, tWeavingTarget);
 
             tWeavingTarget.M_Actual.Def.Body.InitLocals = true;
-            tWeavingTarget.M_Actual.Def.Body.OptimizePlus(EmptyInstructions);
+            tWeavingTarget.M_Actual.Def.Body.OptimizePlus();
         }
 
         private void CtorBuildMethodInternal(RouMethod rouMethod, TsWeavingTarget tWeavingTarget)
@@ -35,13 +35,13 @@ namespace Rougamo.Fody
             var context = new SyncContext();
 
             var args = tWeavingTarget.M_Proxy.Def.Parameters.Select(x => x.Simulate(this)).ToArray();
-            var vException = rouMethod.Features.HasIntersection(Feature.OnException | Feature.OnExit) ? tWeavingTarget.M_Proxy.CreateVariable(_typeExceptionRef) : null;
-            var vContext = tWeavingTarget.M_Proxy.CreateVariable<TsMethodContext>(_typeMethodContextRef);
+            var vException = rouMethod.Features.HasIntersection(Feature.OnException | Feature.OnExit) ? tWeavingTarget.M_Proxy.CreateVariable(_tExceptionRef) : null;
+            var vContext = tWeavingTarget.M_Proxy.CreateVariable<TsMethodContext>(_tMethodContextRef);
             VariableSimulation<TsMo>[]? vMos = null;
             VariableSimulation<TsArray<TsMo>>? vMoArray = null;
             if (rouMethod.Mos.Length > _config.MoArrayThreshold)
             {
-                vMoArray = tWeavingTarget.M_Proxy.CreateVariable<TsArray<TsMo>>(_typeIMoArrayRef);
+                vMoArray = tWeavingTarget.M_Proxy.CreateVariable<TsArray<TsMo>>(_tIMoArrayRef);
             }
             else
             {

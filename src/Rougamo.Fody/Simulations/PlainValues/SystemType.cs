@@ -12,7 +12,7 @@ namespace Rougamo.Fody.Simulations.PlainValues
 
         public override IList<Instruction> Load()
         {
-            return [Instruction.Create(OpCodes.Ldtoken, typeRef), Instruction.Create(OpCodes.Call, ModuleWeaver._methodGetTypeFromHandleRef)];
+            return [Instruction.Create(OpCodes.Ldtoken, typeRef), Instruction.Create(OpCodes.Call, ModuleWeaver._mGetTypeFromHandleRef)];
         }
     }
 }

@@ -55,7 +55,7 @@ namespace Rougamo.Fody
         {
             if (tryStart == null || catchStart == null || catchEnd == null) return;
 
-            catchType ??= _typeExceptionRef;
+            catchType ??= _tExceptionRef;
 
             methodDef.Body.ExceptionHandlers.Add(new(ExceptionHandlerType.Catch)
             {
@@ -107,7 +107,7 @@ namespace Rougamo.Fody
 
         private void DebuggerStepThrough(MethodDefinition methodDef)
         {
-            methodDef.CustomAttributes.Add(new CustomAttribute(_methodDebuggerStepThroughCtorRef));
+            methodDef.CustomAttributes.Add(new CustomAttribute(_ctorDebuggerStepThroughRef));
         }
 
     }
