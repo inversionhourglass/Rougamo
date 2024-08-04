@@ -42,7 +42,7 @@ namespace Rougamo.Fody
                 buildSetStateMachine = true;
             }
 
-            _config.MoArrayThreshold = int.MaxValue;
+            using var _ = _config.ChangeMoArrayThresholdTemporarily(int.MaxValue);
             var fields = AsyncResolveFields(rouMethod, stateMachineTypeDef);
             AsyncSetAbsentFields(rouMethod, stateMachineTypeDef, fields);
             StateMachineFieldCleanup(stateMachineTypeDef, fields);

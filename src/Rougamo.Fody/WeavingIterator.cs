@@ -24,6 +24,7 @@ namespace Rougamo.Fody
             var actualMoveNextDef = actualStateMachineTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
             actualMoveNextDef.DebugInformation.StateMachineKickOffMethod = actualMethodDef;
 
+            using var _ = _config.ChangeMoArrayThresholdTemporarily(int.MaxValue);
             var fields = IteratorResolveFields(rouMethod, stateMachineTypeDef);
             IteratorSetAbsentFields(rouMethod, stateMachineTypeDef, fields, Constants.GenericPrefix(Constants.TYPE_IEnumerable), Constants.GenericSuffix(Constants.METHOD_GetEnumerator));
             StateMachineFieldCleanup(stateMachineTypeDef, fields);
