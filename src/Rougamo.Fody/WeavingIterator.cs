@@ -1,7 +1,7 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
-using Rougamo.Fody.Enhances;
-using Rougamo.Fody.Enhances.Iterator;
+using Rougamo.Fody.Contexts;
+using Rougamo.Fody.Contexts;
 using Rougamo.Fody.Simulations;
 using Rougamo.Fody.Simulations.Operations;
 using Rougamo.Fody.Simulations.Types;

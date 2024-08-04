@@ -1,6 +1,6 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
-using Rougamo.Fody.Enhances.Sync;
+using Rougamo.Fody.Contexts;
 using Rougamo.Fody.Simulations;
 using Rougamo.Fody.Simulations.Types;
 using System.Linq;
@@ -32,7 +32,7 @@ namespace Rougamo.Fody
             var firstInstruction = LocateAfterSelfOrBaseCtorCalling(rouMethod.MethodDef);
             var returns = instructions.Where(x => x.OpCode.Code == Code.Ret).ToArray();
 
-            var context = new CtorContext();
+            var context = new SyncContext();
 
             var args = tWeavingTarget.M_Proxy.Def.Parameters.Select(x => x.Simulate(this)).ToArray();
             var vException = rouMethod.Features.HasIntersection(Feature.OnException | Feature.OnExit) ? tWeavingTarget.M_Proxy.CreateVariable(_typeExceptionRef) : null;

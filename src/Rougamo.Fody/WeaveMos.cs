@@ -1,7 +1,7 @@
 ﻿using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Collections.Generic;
-using Rougamo.Fody.Enhances;
+using Rougamo.Fody.Contexts;
 using System;
 using System.Collections.Generic;
 using System.Linq;

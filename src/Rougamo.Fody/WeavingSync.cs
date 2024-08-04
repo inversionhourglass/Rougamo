@@ -1,5 +1,5 @@
 ﻿using Mono.Cecil.Cil;
-using Rougamo.Fody.Enhances.Sync;
+using Rougamo.Fody.Contexts;
 using Rougamo.Fody.Simulations;
 using Rougamo.Fody.Simulations.Operations;
 using Rougamo.Fody.Simulations.PlainValues;

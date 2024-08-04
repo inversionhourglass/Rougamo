@@ -1,6 +1,6 @@
 ﻿using Mono.Cecil;
 
-namespace Rougamo.Fody.Enhances.Iterator
+namespace Rougamo.Fody.Contexts
 {
     internal class IteratorFields(
         FieldDefinition? moArray, FieldDefinition[] mos,

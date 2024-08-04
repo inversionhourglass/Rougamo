@@ -1,7 +1,7 @@
 ﻿using Mono.Cecil.Cil;
 using static Mono.Cecil.Cil.Instruction;
 
-namespace Rougamo.Fody.Enhances.Sync
+namespace Rougamo.Fody.Contexts
 {
     internal class SyncContext
     {

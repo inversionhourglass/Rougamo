@@ -1,6 +1,6 @@
 ﻿using Mono.Cecil.Cil;
 
-namespace Rougamo.Fody.Enhances.Iterator
+namespace Rougamo.Fody.Contexts
 {
     internal class IteratorContext
     {

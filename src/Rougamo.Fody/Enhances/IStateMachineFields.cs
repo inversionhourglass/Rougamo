@@ -1,6 +1,6 @@
 ﻿using Mono.Cecil;
 
-namespace Rougamo.Fody.Enhances
+namespace Rougamo.Fody.Contexts
 {
     internal interface IStateMachineFields
     {

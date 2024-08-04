@@ -1,5 +1,5 @@
 ﻿using Mono.Cecil;
-using Rougamo.Fody.Enhances.Iterator;
+using Rougamo.Fody.Contexts;
 using System.Linq;
 
 namespace Rougamo.Fody.Simulations.Types

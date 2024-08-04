@@ -1,7 +1,7 @@
 ﻿using Mono.Cecil.Cil;
 using System.Collections.Generic;
 
-namespace Rougamo.Fody.Enhances
+namespace Rougamo.Fody.Contexts
 {
     internal interface IAsyncContext
     {

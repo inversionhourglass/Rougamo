@@ -1,6 +1,6 @@
 ﻿using Mono.Cecil;
 
-namespace Rougamo.Fody.Enhances.Async
+namespace Rougamo.Fody.Contexts
 {
     internal class AsyncFields : IStateMachineFields
     {

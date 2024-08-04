@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Rougamo.Fody.Enhances.Async
+namespace Rougamo.Fody.Contexts
 {
     internal class AsyncContext(RouMethod rouMethod) : IAsyncContext
     {

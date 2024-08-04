@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using static Mono.Cecil.Cil.Instruction;
 
-namespace Rougamo.Fody.Enhances.AsyncIterator
+namespace Rougamo.Fody.Contexts
 {
     internal class AiteratorContext(RouMethod rouMethod) : IAsyncContext
     {
