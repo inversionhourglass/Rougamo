@@ -132,14 +132,12 @@ namespace Rougamo.Fody
 #if DEBUG
             var recordingIteratorReturns = true;
 #else
-            var recordingIteratorReturns = "true".Equals(GetConfigValue("false", "iterator-returns", "enumerable-returns"), StringComparison.OrdinalIgnoreCase);
+            var recordingIteratorReturns = "true".Equals(GetConfigValue("false", "iterator-returns"), StringComparison.OrdinalIgnoreCase);
 #endif
-            var reverseCallNonEntry = "true".Equals(GetConfigValue("true", "reverse-call-nonentry", "reverse-call-ending"), StringComparison.OrdinalIgnoreCase);
-            var proxyCalling = "true".Equals(GetConfigValue("true", "proxy-calling"), StringComparison.OrdinalIgnoreCase);
-            var forceAsyncSyntax = "true".Equals(GetConfigValue("true", "force-async-syntax"), StringComparison.OrdinalIgnoreCase);
+            var reverseCallNonEntry = "true".Equals(GetConfigValue("true", "reverse-call-nonentry"), StringComparison.OrdinalIgnoreCase);
             var exceptTypePatterns = GetConfigValue(string.Empty, "except-type-patterns").Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
 
-            _config = new Config(enabled, compositeAccessibility, moArrayThreshold, recordingIteratorReturns, reverseCallNonEntry, proxyCalling, forceAsyncSyntax, exceptTypePatterns);
+            _config = new(enabled, compositeAccessibility, moArrayThreshold, recordingIteratorReturns, reverseCallNonEntry, exceptTypePatterns);
         }
 
         private string GetConfigValue(string defaultValue, params string[] configKeys)

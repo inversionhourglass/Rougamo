@@ -3,35 +3,36 @@ using System.Text.RegularExpressions;
 
 namespace Rougamo.Fody.Models
 {
-    internal class Config
+    internal class Config(bool enabled, bool compositeAccessibility, int moArrayThreshold, bool recordingIteratorReturns, bool reverseCallNonEntry, string[] exceptTypePatterns)
     {
-        public Config(bool enabled, bool compositeAccessibility, int moArrayThreshold,  bool recordingIteratorReturns, bool reverseCallNonEntry, bool proxyCalling, bool forceAsyncSyntax, string[] exceptTypePatterns)
-        {
-            Enabled = enabled;
-            CompositeAccessibility = compositeAccessibility;
-            MoArrayThreshold = moArrayThreshold;
-            RecordingIteratorReturns = recordingIteratorReturns;
-            ReverseCallNonEntry = reverseCallNonEntry;
-            ProxyCalling = proxyCalling;
-            ForceAsyncSyntax = forceAsyncSyntax;
-            ExceptTypePatterns = exceptTypePatterns.Select(x => new Regex(x)).ToArray();
+        /// <summary>
+        /// 是否启用肉夹馍
+        /// </summary>
+        public bool Enabled { get; } = enabled;
 
-        }
+        /// <summary>
+        /// 方法是否使用 类+方法 组合可访问性
+        /// </summary>
+        public bool CompositeAccessibility { get; } = compositeAccessibility;
 
-        public bool Enabled { get; }
+        /// <summary>
+        /// 当方法上IMo的数量超过该值时将使用数组保存所有IMo
+        /// </summary>
+        public int MoArrayThreshold { get; set; } = moArrayThreshold;
 
-        public bool CompositeAccessibility { get; }
+        /// <summary>
+        /// 是否将iterator的所有返回值暂存并在方法完成时存入MethodContext.ReturnValue中
+        /// </summary>
+        public bool RecordingIteratorReturns { get; } = recordingIteratorReturns;
 
-        public int MoArrayThreshold { get; set; }
+        /// <summary>
+        /// OnEntry以外的方法是否以相反的顺序调用
+        /// </summary>
+        public bool ReverseCallNonEntry { get; } = reverseCallNonEntry;
 
-        public bool RecordingIteratorReturns { get; }
-
-        public bool ReverseCallNonEntry { get; }
-
-        public bool ProxyCalling { get; }
-
-        public bool ForceAsyncSyntax { get; set; }
-
-        public Regex[] ExceptTypePatterns { get; }
+        /// <summary>
+        /// 类型的全名称与正则表达式匹配的类型将忽略所有IMo
+        /// </summary>
+        public Regex[] ExceptTypePatterns { get; } = exceptTypePatterns.Select(x => new Regex(x)).ToArray();
     }
 }
