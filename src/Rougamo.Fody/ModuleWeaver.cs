@@ -87,7 +87,7 @@ namespace Rougamo.Fody
 
                 foreach (var ex in e.Exceptions)
                 {
-                    WriteException(ex);
+                    WriteException(ex, e.MethodDef);
                 }
             }
             catch (RougamoException e)
@@ -97,15 +97,20 @@ namespace Rougamo.Fody
                 WriteException(e);
             }
 
-            void WriteException(RougamoException e)
+            void WriteException(RougamoException e, MethodDefinition? methodDef = null)
             {
-                if (e.MethodDef == null)
+                if (e.MethodDef != null)
+                {
+                    methodDef = e.MethodDef;
+                }
+
+                if (methodDef == null)
                 {
                     WriteError(e.Message);
                 }
                 else
                 {
-                    WriteError(e.Message, e.MethodDef);
+                    WriteError(e.Message, methodDef);
                 }
             }
         }

@@ -236,8 +236,7 @@ namespace Rougamo.Fody
             if (instruction.Operand is Instruction[] instructions)
                 return Instruction.Create(instruction.OpCode, instructions);
             if (instruction.Operand is CallSite callSite) return Instruction.Create(instruction.OpCode, callSite);
-            throw new RougamoException(
-                $"not support instruction Operand copy type: {instruction.Operand.GetType().FullName}");
+            throw new RougamoException($"Unsupported operand type of instruction[offset: {instruction.Offset}]: {instruction.Operand.GetType().FullName}");
         }
 
         public static int? TryResolveInt32(this Instruction instruction)
