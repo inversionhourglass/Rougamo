@@ -1,4 +1,5 @@
-﻿using Mono.Cecil.Cil;
+﻿using Mono.Cecil;
+using Mono.Cecil.Cil;
 using Rougamo.Fody.Contexts;
 using Rougamo.Fody.Simulations;
 using Rougamo.Fody.Simulations.Operations;
@@ -17,7 +18,12 @@ namespace Rougamo.Fody
         {
             var actualMethodDef = rouMethod.MethodDef.Clone($"$Rougamo_{rouMethod.MethodDef.Name}");
             rouMethod.MethodDef.DeclaringType.Methods.Add(actualMethodDef);
-            actualMethodDef.CustomAttributes.Clear();
+            var asyncStateMachineAttribute = SyncClearCustomAttributes(actualMethodDef);
+            if (asyncStateMachineAttribute != null)
+            {
+                rouMethod.MethodDef.CustomAttributes.Remove(asyncStateMachineAttribute);
+                actualMethodDef.CustomAttributes.Add(asyncStateMachineAttribute);
+            }
 
             var tWeavingTarget = rouMethod.MethodDef.DeclaringType.Simulate<TsWeavingTarget>(this).SetMethods(actualMethodDef, rouMethod.MethodDef);
             SyncBuildProxyMethod(rouMethod, tWeavingTarget);
@@ -445,6 +451,24 @@ namespace Rougamo.Fody
             }
 
             return instructions;
+        }
+
+        private CustomAttribute? SyncClearCustomAttributes(MethodDefinition methodDef)
+        {
+            CustomAttribute? asyncStateMachineAttribute = null;
+            foreach (var attribute in methodDef.CustomAttributes)
+            {
+                if (attribute.Is(Constants.TYPE_AsyncStateMachineAttribute))
+                {
+                    if (!methodDef.ReturnType.IsVoid()) throw new RougamoException("Found AsyncStateMachineAttribute but the return type is not void", methodDef);
+
+                    WriteWarning("The async void method may not be able to execute OnSuccess and OnExit at the right time, and may not be able to execute OnException when an exception occurs.", methodDef);
+                    asyncStateMachineAttribute = attribute;
+                }
+            }
+            methodDef.CustomAttributes.Clear();
+
+            return asyncStateMachineAttribute;
         }
     }
 }
