@@ -379,6 +379,7 @@ namespace Rougamo.Fody
 
             var reverseCall = feature != Feature.OnEntry && _config.ReverseCallNonEntry;
             var executeSequence = 0;
+            var executingAll = true;
 
             if (tMoArray != null && rouMethod.Mos.Length > 31)
             {
@@ -388,7 +389,11 @@ namespace Rougamo.Fody
             {
                 var j = reverseCall ? rouMethod.Mos.Length - i - 1 : i;
                 var mo = rouMethod.Mos[j];
-                if (!mo.Features.Contains(feature)) continue;
+                if (!mo.Features.Contains(feature))
+                {
+                    executingAll = false;
+                    continue;
+                }
 
                 if (tMos != null)
                 {
@@ -403,17 +408,21 @@ namespace Rougamo.Fody
 
             if (tMoArray != null)
             {
-                Eq featureMatch;
                 var vFlag = mHost.CreateVariable(_tInt32Ref);
-                if (executeSequence == -1)
+                // .moArray[flag].OnXxx(context);
+                var callingInsts = methodFactory(tMoArray[vFlag].Value).Call(mHost, pContext);
+                if (!executingAll)
                 {
-                    // .(moArray[flag].Feature & feature) != 0
-                    featureMatch = tMoArray[vFlag].Value.P_Features.And((int)feature).IsEqual(0);
-                }
-                else
-                {
-                    // .(executeSequence & flag) != 0
-                    featureMatch = new Int32Value(1, this).ShiftLeft(vFlag).And(executeSequence).IsEqual(0);
+                    if (executeSequence == -1)
+                    {
+                        // .if ((moArray[flag].Feature & feature) != 0) moArray[flag].OnXxx(context);
+                        callingInsts = tMoArray[vFlag].Value.P_Features.And((int)feature).IsEqual(0).IfNot(anchor => callingInsts);
+                    }
+                    else
+                    {
+                        // .if ((executeSequence & flag) != 0) moArray[flag].OnXxx(context);
+                        callingInsts = new Int32Value(1, this).ShiftLeft(vFlag).And(executeSequence).IsEqual(0).IfNot(anchor => callingInsts);
+                    }
                 }
                 var loopFirst = Create(OpCodes.Nop);
 
@@ -425,7 +434,7 @@ namespace Rougamo.Fody
                     // .if (flag >= 0) { .. }
                     instructions.Add(vFlag.Lt(0).IfNot(anchor => [
                         // .moArray[flag].OnXxx(context);
-                        .. featureMatch.IfNot(anchor => methodFactory(tMoArray[vFlag].Value).Call(mHost, pContext)),
+                        .. callingInsts,
                         // flag -= 1;
                         .. vFlag.Assign(target => [.. vFlag.Load(), Create(OpCodes.Ldc_I4_1), Create(OpCodes.Sub)]),
                         Create(OpCodes.Br, loopFirst)
@@ -439,7 +448,7 @@ namespace Rougamo.Fody
                     // .if (flag < MO_ARRAY_LENGTH) { .. }
                     instructions.Add(vFlag.Lt(rouMethod.Mos.Length).If(anchor => [
                         // .moArray[flag].OnXxx(context);
-                        .. featureMatch.IfNot(anchor => methodFactory(tMoArray[vFlag].Value).Call(mHost, pContext)),
+                        .. callingInsts,
                         // flag += 1;
                         .. vFlag.Assign(target => [.. vFlag.Load(), Create(OpCodes.Ldc_I4_1), Create(OpCodes.Add)]),
                         Create(OpCodes.Br, loopFirst)
