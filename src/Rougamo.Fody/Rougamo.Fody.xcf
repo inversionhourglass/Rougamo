@@ -1,0 +1,33 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<xs:complexType xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:attribute name="enabled" type="xs:boolean">
+    <xs:annotation>
+      <xs:documentation>Set to false to disable Rougamo. The default is true.</xs:documentation>
+    </xs:annotation>
+  </xs:attribute>
+  <xs:attribute name="composite-accessibility" type="xs:boolean">
+    <xs:annotation>
+      <xs:documentation>Set to true to use the type and method composite accessibility. The default is false. Etc, an internal type has a public method, public for default(false) and internal for true.</xs:documentation>
+    </xs:annotation>
+  </xs:attribute>
+  <xs:attribute name="moarray-threshold" type="xs:integer">
+    <xs:annotation>
+      <xs:documentation>In a single method, if the count of weaving IMo instances is greater than this value, Rougamo will use an array to save all of the IMo instances. The default is 4.</xs:documentation>
+    </xs:annotation>
+  </xs:attribute>
+  <xs:attribute name="iterator-returns" type="xs:boolean" >
+    <xs:annotation>
+      <xs:documentation>Set to true to save the items that the iterator returns. This will take up additional memory space. The default is false.</xs:documentation>
+    </xs:annotation>
+  </xs:attribute>
+  <xs:attribute name="reverse-call-nonentry" type="xs:boolean" >
+    <xs:annotation>
+      <xs:documentation>Set to false to make the execution order of the OnSuccess, OnException, and OnExit methods the same as OnEntry. The default is true.</xs:documentation>
+    </xs:annotation>
+  </xs:attribute>
+  <xs:attribute name="except-type-patterns" type="xs:string" >
+    <xs:annotation>
+      <xs:documentation>Regex expressions for the type's full name, separated by ',' or ';'. All types matching any of these regex expressions will be ignored by Rougamo.</xs:documentation>
+    </xs:annotation>
+  </xs:attribute>
+</xs:complexType>
