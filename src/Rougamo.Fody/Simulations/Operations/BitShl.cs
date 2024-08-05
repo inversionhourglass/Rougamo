@@ -1,10 +1,13 @@
-﻿using Mono.Cecil;
-using Mono.Cecil.Cil;
+﻿using Mono.Cecil.Cil;
+using Mono.Cecil;
 using System.Collections.Generic;
 
 namespace Rougamo.Fody.Simulations.Operations
 {
-    internal class BitAnd(ILoadable value1, ILoadable value2) : ILoadable
+    /// <summary>
+    /// Shift left. (x &lt;&lt; y)
+    /// </summary>
+    internal class BitShl(ILoadable value1, ILoadable value2) : ILoadable
     {
         public ModuleWeaver ModuleWeaver => value1.ModuleWeaver ?? value2.ModuleWeaver;
 
@@ -21,7 +24,7 @@ namespace Rougamo.Fody.Simulations.Operations
 
         public IList<Instruction> Load()
         {
-            return [.. value1.Load(), .. value2.Load(), Instruction.Create(OpCodes.And)];
+            return [.. value1.Load(), .. value2.Load(), Instruction.Create(OpCodes.Shl)];
         }
     }
 }

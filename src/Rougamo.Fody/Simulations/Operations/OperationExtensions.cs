@@ -21,5 +21,13 @@ namespace Rougamo.Fody.Simulations.Operations
         public static BitAnd And(this ILoadable value1, ILoadable value2) => new(value1, value2);
 
         public static BitAnd And(this ILoadable value1, int value2) => value1.And(new Int32Value(value2, value1.ModuleWeaver));
+
+        public static Add Add(this ILoadable value1, ILoadable value2) => new(value1, value2);
+
+        public static Add Add(this ILoadable value1, int value2) => value1.Add(new Int32Value(value2, value1.ModuleWeaver));
+
+        public static BitShl ShiftLeft(this ILoadable value1, ILoadable value2) => new(value1, value2);
+
+        public static BitShl ShiftLeft(this ILoadable value1, int value2) => value1.ShiftLeft(new Int32Value(value2, value1.ModuleWeaver));
     }
 }

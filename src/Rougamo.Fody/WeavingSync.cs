@@ -156,8 +156,8 @@ namespace Rougamo.Fody
                 }
                 else if (vMoArray != null)
                 {
-                    var tMo = mo.MoTypeDef.Simulate<TsMo>(this);
-                    loadables.Add(new RawValue(vMoArray.Value.ElementType, tMo.New(tWeavingTarget.M_Proxy, mo)));
+                    var tMo = mo.MoTypeRef.Simulate<TsMo>(this);
+                    loadables.Add(new RawValue(tMo, tMo.New(tWeavingTarget.M_Proxy, mo)));
                 }
             }
             if (vMoArray != null)
@@ -413,40 +413,37 @@ namespace Rougamo.Fody
                 else
                 {
                     // .(executeSequence & flag) != 0
-                    featureMatch = vFlag.And(executeSequence).IsEqual(0);
+                    featureMatch = new Int32Value(1, this).ShiftLeft(vFlag).And(executeSequence).IsEqual(0);
                 }
-                Instruction updateFlag = Create(OpCodes.Nop), loopFirst = Create(OpCodes.Nop);
-
-                var forInstructions = featureMatch.IfNot(vFlag.Load().Single(), ldFlag =>
-                {
-                    return [
-                        // .moArray[flag].OnXxx(context);
-                        .. methodFactory(tMoArray[vFlag].Value).Call(mHost, pContext),
-                        // .flag += 1; / flag -= 1;
-                        .. vFlag.Assign(target => [ldFlag, Create(OpCodes.Ldc_I4_1), updateFlag]),
-                        Create(OpCodes.Br, loopFirst)
-                    ];
-                });
+                var loopFirst = Create(OpCodes.Nop);
 
                 if (reverseCall)
                 {
-                    updateFlag.Set(OpCodes.Sub);
-
                     // .flag = MO_ARRAY_LENGTH - 1;
                     instructions.Add(vFlag.Assign(rouMethod.Mos.Length - 1));
                     instructions.Add(loopFirst);
                     // .if (flag >= 0) { .. }
-                    instructions.Add(vFlag.Lt(0).IfNot(anchor => forInstructions));
+                    instructions.Add(vFlag.Lt(0).IfNot(anchor => [
+                        // .moArray[flag].OnXxx(context);
+                        .. featureMatch.IfNot(anchor => methodFactory(tMoArray[vFlag].Value).Call(mHost, pContext)),
+                        // flag -= 1;
+                        .. vFlag.Assign(target => [.. vFlag.Load(), Create(OpCodes.Ldc_I4_1), Create(OpCodes.Sub)]),
+                        Create(OpCodes.Br, loopFirst)
+                    ]));
                 }
                 else
                 {
-                    updateFlag.Set(OpCodes.Add);
-
                     // .flag = 0;
                     instructions.Add(vFlag.Assign(0));
                     instructions.Add(loopFirst);
                     // .if (flag < MO_ARRAY_LENGTH) { .. }
-                    instructions.Add(vFlag.Lt(rouMethod.Mos.Length).If(anchor => forInstructions));
+                    instructions.Add(vFlag.Lt(rouMethod.Mos.Length).If(anchor => [
+                        // .moArray[flag].OnXxx(context);
+                        .. featureMatch.IfNot(anchor => methodFactory(tMoArray[vFlag].Value).Call(mHost, pContext)),
+                        // flag += 1;
+                        .. vFlag.Assign(target => [.. vFlag.Load(), Create(OpCodes.Ldc_I4_1), Create(OpCodes.Add)]),
+                        Create(OpCodes.Br, loopFirst)
+                    ]));
                 }
             }
 
