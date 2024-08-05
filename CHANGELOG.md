@@ -1,3 +1,14 @@
-
+- 新增异步切面功能
+	- `IMo`新增系列方法`OnEntryAsync`, `OnExceptionAsync`, `OnSuccessAsync`, `OnExitAsync`，当将肉夹馍应用到异步方法上时将调用对应的`OnXxxAsync`异步切面方法
+	- 新增`AsyncMoAttribute`，原有的`MoAttribute`提供了默认的`OnXxxAsync`实现并且不支持重写，而`AsyncMoAttribute`相反的提供了`OnXxx`的默认实现，同时可以重写`OnXxxAsync`系列方法
+	- 新增`RawMoAttribute`，同时支持重写同步切面的`OnXxx`和异步切面的`OnXxxAsync`，但需要自己注意同步切面方法与异步切面方法的调用关系，不可产生递归调用
+	- 新增`RawMo`, `Mo`, `AsyncMo`，对应`RawMoAttribute`, `MoAttribute`, `AsyncMoAttribute`，区别在于前者仅实现`IMo`接口，没有继承`Attribute`
+	- `IMo`新增`ForceSync`属性，可用于指定在异步方法上强制执行同步切面方法，用于性能优化
+- [[#68](https://github.com/inversionhourglass/Rougamo/issues/68)] 在async void上应用Rougamo时，编译时在输出告警信息到MSBuild，目前还无法输出告警信息到错误列表（Error List）
+- 异步方法在编织时将忽略`moarray-threshold`配置项，无论存在多少个`IMo`对象，都不会使用数组进行存储，因为异步切面的代码并不会因为使用数组而得到优化，反而会产生更多的操作指令。该配置对于同步方法依旧生效
+- 优化ref struct参数/返回值的报错提示，一次编译会检查所有方法，并产生多个错误信息到错误列表（Error List）
+- 肉夹馍产生的错误列表（Error List）中的错误信息都可以直接双击定位到对应产生该错误的方法，方便排查和反馈问题
+- 删除`MethodContext`中的`IsAsync`, `IsIterator`, `MosNonEntryFIFO`, `Data`属性，将`RealReturnType`标记为过时并隐藏，同时新增`TaskReturnType`属性，该属性与`RealReturnType`具有类似功能
+- 增加xcf文件，为`FodyWeavers.xml`中的`Rougamo`节点增加智能提示功能
 
 ---
