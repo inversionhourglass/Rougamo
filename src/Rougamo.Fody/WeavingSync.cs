@@ -468,7 +468,7 @@ namespace Rougamo.Fody
                 {
                     if (!methodDef.ReturnType.IsVoid()) throw new RougamoException("Found AsyncStateMachineAttribute but the return type is not void", methodDef);
 
-                    WriteWarning("The async void method may not be able to execute OnSuccess and OnExit at the right time, and may not be able to execute OnException when an exception occurs.", methodDef);
+                    WriteWarning($"[{methodDef}] The async void method may not be able to execute OnSuccess and OnExit at the right time, and may not be able to execute OnException when an exception occurs.", methodDef);
                     asyncStateMachineAttribute = attribute;
                 }
             }
