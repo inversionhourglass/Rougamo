@@ -44,7 +44,7 @@ namespace Rougamo.Fody
             }
         }
 
-        public Omit MethodContextOmits => _omit ??= Mos.Aggregate(Omit.None, (x, y) => x | y.MethodContextOmits);
+        public Omit MethodContextOmits => _omit ??= Mos.Aggregate(Omit.All, (x, y) => x & y.MethodContextOmits);
 
         public void AddMo(Mo mo)
         {
