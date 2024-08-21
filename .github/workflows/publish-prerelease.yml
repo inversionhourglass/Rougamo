@@ -31,13 +31,13 @@ jobs:
         run: dotnet restore ${{ env.SOLUTION }}
         
       - name: Build Solution
-        run: dotnet build --configuration Release --no-restore ${{ env.SOLUTION }} --version-suffix priview-${{ env.TIMESTAMP }}
+        run: dotnet build --configuration Release --no-restore ${{ env.SOLUTION }} --version-suffix preview-${{ env.TIMESTAMP }}
 
       - name: Delete exists packages
         run: rm -r -fo nugets
 
       - name: Pack Solution
-        run: dotnet pack ${{ env.SOLUTION }} --configuration Release --no-build --version-suffix priview-${{ env.TIMESTAMP }}
+        run: dotnet pack ${{ env.SOLUTION }} --configuration Release --no-build --version-suffix preview-${{ env.TIMESTAMP }}
 
       - name: Publish
         run: dotnet nuget push nugets/**.nupkg -k ${{ secrets.API_KEY }} -s https://api.nuget.org/v3/index.json
