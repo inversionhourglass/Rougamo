@@ -1,0 +1,3 @@
+[submodule "shared/Fody.Simulations"]
+	path = shared/Fody.Simulations
+	url = https://github.com/inversionhourglass/Shared.Fody.Simulations.git
