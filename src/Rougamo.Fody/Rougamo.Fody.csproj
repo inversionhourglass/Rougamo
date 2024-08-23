@@ -19,6 +19,6 @@
     <PackageReference Include="FodyHelpers" Version="6.8.1" />
   </ItemGroup>
 
-  <Import Project="..\Fody.Simulations\Fody.Simulations.projitems" Label="Shared" />
+  <Import Project="..\..\shared\Fody.Simulations\Fody.Simulations.projitems" Label="Shared" />
 
 </Project>
