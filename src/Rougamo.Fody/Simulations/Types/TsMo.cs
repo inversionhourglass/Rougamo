@@ -1,12 +1,15 @@
-﻿using Mono.Cecil;
+﻿using Fody;
+using Fody.Simulations;
+using Fody.Simulations.PlainValues;
+using Fody.Simulations.Types;
+using Mono.Cecil;
 using Mono.Cecil.Cil;
-using Rougamo.Fody.Simulations.PlainValues;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Rougamo.Fody.Simulations.Types
 {
-    internal class TsMo(TypeReference typeRef, IHost? host, ModuleWeaver moduldeWeaver) : TypeSimulation(typeRef, host, moduldeWeaver)
+    internal class TsMo(TypeReference typeRef, IHost? host, SimulationModuleWeaver moduldeWeaver) : TypeSimulation(typeRef, host, moduldeWeaver)
     {
         public PropertySimulation P_IsCompleted => PropertySimulate(Constants.PROP_IsCompleted, true);
 

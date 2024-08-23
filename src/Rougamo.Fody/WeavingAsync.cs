@@ -1,13 +1,15 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using Fody;
+using Fody.Simulations;
+using Fody.Simulations.Operations;
+using Fody.Simulations.PlainValues;
+using Fody.Simulations.Types;
 using Mono.Cecil.Cil;
 using Mono.Cecil;
 using Rougamo.Fody.Contexts;
-using Rougamo.Fody.Simulations;
-using Rougamo.Fody.Simulations.Operations;
-using Rougamo.Fody.Simulations.PlainValues;
 using Rougamo.Fody.Simulations.Types;
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using static Mono.Cecil.Cil.Instruction;
 
 namespace Rougamo.Fody
@@ -592,7 +594,7 @@ namespace Rougamo.Fody
                 map = [];
                 _stateMachineComputeMap[typeDef] = map;
             }
-            if (map.ContainsKey(methodDef)) throw new RougamoException($"Try build a duplicate state machine type for {methodDef}", methodDef);
+            if (map.ContainsKey(methodDef)) throw new FodyWeavingException($"Try build a duplicate state machine type for {methodDef}", methodDef);
             map[methodDef] = null;
 
             var attribute = TypeAttributes.NestedPrivate | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit;
@@ -727,7 +729,7 @@ namespace Rougamo.Fody
             var builderAttribute = methodDef.ReturnType.Resolve().CustomAttributes.Single(x => x.Is(Constants.TYPE_AsyncMethodBuilderAttribute));
             var builderTypeRef = (TypeReference)builderAttribute.ConstructorArguments[0].Value;
             if (builderTypeRef is GenericInstanceType) return this.Import(builderTypeRef);
-            if (builderTypeRef is not TypeDefinition typeDef) throw new RougamoException($"Unrecognized async method builder type {builderTypeRef}", methodDef);
+            if (builderTypeRef is not TypeDefinition typeDef) throw new FodyWeavingException($"Unrecognized async method builder type {builderTypeRef}", methodDef);
             if (!typeDef.HasGenericParameters) return this.Import(typeDef);
 
             return GetGenericBuilderType(stateMachineDef, returnTypeRef, this.Import(typeDef));
@@ -821,7 +823,7 @@ namespace Rougamo.Fody
                 else if (code == Code.Ldarg || code == Code.Ldarg_S)
                 {
                     index = rouMethod.MethodDef.Parameters.IndexOf((ParameterDefinition)instruction.Operand);
-                    if (index == -1) throw new RougamoException($"{rouMethod.MethodDef.FullName} can not locate the index of parameter {((ParameterDefinition)instruction.Operand).Name}");
+                    if (index == -1) throw new FodyWeavingException($"{rouMethod.MethodDef.FullName} can not locate the index of parameter {((ParameterDefinition)instruction.Operand).Name}");
                 }
                 if (index != -1)
                 {

@@ -1,4 +1,5 @@
-﻿using Mono.Cecil;
+﻿using Fody;
+using Mono.Cecil;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

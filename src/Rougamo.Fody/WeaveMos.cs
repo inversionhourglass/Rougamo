@@ -1,4 +1,5 @@
-﻿using Mono.Cecil;
+﻿using Fody;
+using Mono.Cecil;
 using Mono.Cecil.Cil;
 using System;
 using System.Collections.Generic;
@@ -41,14 +42,14 @@ namespace Rougamo.Fody
                             WeavingConstructor(rouMethod);
                         }
                     }
-                    catch (RougamoException ex)
+                    catch (FodyWeavingException ex)
                     {
                         ex.MethodDef ??= rouMethod.MethodDef;
                         throw;
                     }
                     catch (Exception ex)
                     {
-                        throw new RougamoException(ex.ToString(), rouMethod.MethodDef);
+                        throw new FodyWeavingException(ex.ToString(), rouMethod.MethodDef);
                     }
                 }
             }
@@ -72,7 +73,7 @@ namespace Rougamo.Fody
 
         private void CheckRefStruct()
         {
-            var exceptions = new List<RougamoException>();
+            var exceptions = new List<FodyWeavingException>();
             foreach (var rouType in _rouTypes)
             {
                 foreach (var rouMethod in rouType.Methods)
@@ -83,10 +84,10 @@ namespace Rougamo.Fody
 
             if (exceptions.Count == 0) return;
             if (exceptions.Count == 1) throw exceptions[0];
-            throw new AggregateRougamoException(exceptions);
+            throw new FodyAggregateWeavingException(exceptions);
         }
 
-        private void CheckRefStruct(RouMethod rouMethod, List<RougamoException> exceptions)
+        private void CheckRefStruct(RouMethod rouMethod, List<FodyWeavingException> exceptions)
         {
             TypeDefinition typeDef;
             if ((rouMethod.MethodContextOmits & Omit.ReturnValue) == 0 && (typeDef = rouMethod.MethodDef.ReturnType.Resolve()) != null && typeDef.CustomAttributes.Any(x => x.Is(Constants.TYPE_IsByRefLikeAttribute)))
@@ -103,7 +104,7 @@ namespace Rougamo.Fody
                 builder.Length -= 2;
                 builder.Append("]. For more information: https://github.com/inversionhourglass/Rougamo/issues/61");
 
-                exceptions.Add(new RougamoException(builder.ToString(), rouMethod.MethodDef));
+                exceptions.Add(new FodyWeavingException(builder.ToString(), rouMethod.MethodDef));
             }
 
             if ((rouMethod.MethodContextOmits & Omit.Arguments) == 0 && rouMethod.MethodDef.Parameters.Any(x => (typeDef = x.ParameterType.Resolve()) != null && typeDef.CustomAttributes.Any(y => y.Is(Constants.TYPE_IsByRefLikeAttribute))))
@@ -120,7 +121,7 @@ namespace Rougamo.Fody
                 builder.Length -= 2;
                 builder.Append("]. For more information: https://github.com/inversionhourglass/Rougamo/issues/61");
 
-                exceptions.Add(new RougamoException(builder.ToString(), rouMethod.MethodDef));
+                exceptions.Add(new FodyWeavingException(builder.ToString(), rouMethod.MethodDef));
             }
         }
 

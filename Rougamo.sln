@@ -38,7 +38,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IndirectDependency1", "test
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "IndirectDependency2", "test\TestAssemblies\IndirectDependency2\IndirectDependency2.csproj", "{F20C2790-1837-43F0-8E66-B35E82144DFF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebApis", "test\TestAssemblies\WebApis\WebApis.csproj", "{2C81F5A2-362A-4383-98A4-43AD03E90312}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "WebApis", "test\TestAssemblies\WebApis\WebApis.csproj", "{2C81F5A2-362A-4383-98A4-43AD03E90312}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Fody.Simulations", "src\Fody.Simulations\Fody.Simulations.shproj", "{A4AAE133-ECEF-48FC-B04C-015811E24C6D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -102,8 +104,13 @@ Global
 		{0D0B8C0F-8ED3-4280-8D57-7EFACF0EA185} = {400088B1-D25F-49FE-887E-E9E2FE62B3CB}
 		{F20C2790-1837-43F0-8E66-B35E82144DFF} = {400088B1-D25F-49FE-887E-E9E2FE62B3CB}
 		{2C81F5A2-362A-4383-98A4-43AD03E90312} = {400088B1-D25F-49FE-887E-E9E2FE62B3CB}
+		{A4AAE133-ECEF-48FC-B04C-015811E24C6D} = {E99BBF2A-FEAE-4CA4-BD18-646D1ACAB543}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0BD0178E-76E0-4736-A036-89B1AA268A05}
+	EndGlobalSection
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		src\Fody.Simulations\Fody.Simulations.projitems*{191b2987-a3a5-4916-be4b-2657854dff39}*SharedItemsImports = 5
+		src\Fody.Simulations\Fody.Simulations.projitems*{a4aae133-ecef-48fc-b04c-015811e24c6d}*SharedItemsImports = 13
 	EndGlobalSection
 EndGlobal

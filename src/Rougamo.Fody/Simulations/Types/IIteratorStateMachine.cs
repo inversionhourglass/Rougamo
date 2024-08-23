@@ -1,4 +1,7 @@
-﻿namespace Rougamo.Fody.Simulations.Types
+﻿using Fody.Simulations;
+using Fody.Simulations.Types;
+
+namespace Rougamo.Fody.Simulations.Types
 {
     internal interface IIteratorStateMachine : IStateMachine
     {

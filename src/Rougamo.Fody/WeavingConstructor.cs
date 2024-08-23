@@ -1,8 +1,11 @@
-﻿using Mono.Cecil;
+﻿using Fody;
+using Fody.Simulations;
+using Fody.Simulations.Types;
+using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Rougamo.Fody.Contexts;
-using Rougamo.Fody.Simulations;
 using Rougamo.Fody.Simulations.Types;
+using System;
 using System.Linq;
 using static Mono.Cecil.Cil.Instruction;
 
@@ -130,7 +133,7 @@ namespace Rougamo.Fody
                 }
             }
 
-            throw new RougamoException("Cannot find the self or base's constructor calling instruction. ", methodDef);
+            throw new FodyWeavingException("Cannot find the self or base's constructor calling instruction. ", methodDef);
         }
     }
 }

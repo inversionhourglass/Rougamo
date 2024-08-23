@@ -1,10 +1,12 @@
-﻿using Mono.Cecil;
+﻿using Fody;
+using Fody.Simulations;
+using Mono.Cecil;
 using System.Linq;
 
 namespace Rougamo.Fody.Simulations.Types
 {
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-    internal class TsWeavingTarget(TypeReference typeRef, IHost? host, ModuleWeaver moduleWeaver) : TypeSimulation(typeRef, host, moduleWeaver)
+    internal class TsWeavingTarget(TypeReference typeRef, IHost? host, SimulationModuleWeaver moduleWeaver) : TypeSimulation(typeRef, host, moduleWeaver)
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
     {
         public MethodSimulation M_Actual { get; set; }

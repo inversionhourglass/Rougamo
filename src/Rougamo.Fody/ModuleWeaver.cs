@@ -9,19 +9,14 @@ using System.Linq;
 
 namespace Rougamo.Fody
 {
-    public partial class ModuleWeaver : BaseModuleWeaver
+    public partial class ModuleWeaver : SimulationModuleWeaver
     {
         private readonly bool _testRun;
         private bool _debugMode;
 
         internal TypeReference _tValueTypeRef;
-        internal TypeReference _tObjectRef;
         internal TypeReference _tVoidRef;
-        internal TypeReference _tInt32Ref;
-        internal TypeReference _tBooleanRef;
         internal TypeReference _tObjectArrayRef;
-        internal TypeReference _tTypeRef;
-        internal TypeReference _tMethodBaseRef;
         internal TypeReference _tListRef;
         internal TypeReference _tExceptionRef;
         internal TypeReference _tCancellationTokenRef;
@@ -39,8 +34,6 @@ namespace Rougamo.Fody
         internal MethodReference _ctorDebuggerHiddenAttributeRef;
         internal MethodReference _ctorAsyncStateMachineAttributeRef;
 
-        internal MethodReference _mGetTypeFromHandleRef;
-        internal MethodReference _mGetMethodFromHandleRef;
         internal MethodReference _mExceptionDispatchInfoCaptureRef;
         internal MethodReference _mIAsyncStateMachineMoveNextRef;
         internal MethodReference _mIAsyncStateMachineSetStateMachineRef;
@@ -50,8 +43,6 @@ namespace Rougamo.Fody
 #if DEBUG
         internal MethodReference _methodDebuggerBreakRef;
 #endif
-
-        internal GlobalSimulations _simulations;
 
         private List<RouType> _rouTypes;
         private Config _config;
@@ -81,7 +72,7 @@ namespace Rougamo.Fody
                 if (_rouTypes.Count == 0) return;
                 WeaveMos();
             }
-            catch (AggregateRougamoException e)
+            catch (FodyAggregateWeavingException e)
             {
                 if (_testRun) throw;
 
@@ -90,14 +81,14 @@ namespace Rougamo.Fody
                     WriteException(ex, e.MethodDef);
                 }
             }
-            catch (RougamoException e)
+            catch (FodyWeavingException e)
             {
                 if (_testRun) throw;
 
                 WriteException(e);
             }
 
-            void WriteException(RougamoException e, MethodDefinition? methodDef = null)
+            void WriteException(FodyWeavingException e, MethodDefinition? methodDef = null)
             {
                 if (e.MethodDef != null)
                 {

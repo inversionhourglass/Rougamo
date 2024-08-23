@@ -1,9 +1,12 @@
-﻿using Mono.Cecil;
+﻿using Fody;
+using Fody.Simulations;
+using Fody.Simulations.Operations;
+using Fody.Simulations.Types;
+using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Rougamo.Fody.Contexts;
-using Rougamo.Fody.Simulations;
-using Rougamo.Fody.Simulations.Operations;
 using Rougamo.Fody.Simulations.Types;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using static Mono.Cecil.Cil.Instruction;
@@ -268,7 +271,7 @@ namespace Rougamo.Fody
                 }
             }
 
-            throw new RougamoException($"Cannot find {stateMachineTypeDef} init instruction from {methodDef}");
+            throw new FodyWeavingException($"Cannot find {stateMachineTypeDef} init instruction from {methodDef}");
         }
 
         private void IteratorSetAbsentFieldThis(TypeDefinition stateMachineTypeDef, MethodDefinition getEnumeratorMethodDef, IIteratorFields fields)
@@ -290,7 +293,7 @@ namespace Rougamo.Fody
                 }
             }
 
-            if (stloc == null) throw new RougamoException($"Cannot find new operation of {stateMachineTypeDef} in method {getEnumeratorMethodDef}");
+            if (stloc == null) throw new FodyWeavingException($"Cannot find new operation of {stateMachineTypeDef} in method {getEnumeratorMethodDef}");
 
             var vStateMachine = stloc.ResolveVariable(getEnumeratorMethodDef);
 
