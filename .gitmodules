@@ -1,3 +1,6 @@
 [submodule "shared/Fody.Simulations"]
 	path = shared/Fody.Simulations
 	url = https://github.com/inversionhourglass/Shared.Fody.Simulations.git
+[submodule "shared/Cecil.AspectN"]
+	path = shared/Cecil.AspectN
+	url = https://github.com/inversionhourglass/Shared.Cecil.AspectN.git
