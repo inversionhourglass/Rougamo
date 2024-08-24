@@ -44,6 +44,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "shared", "shared", "{075CC4
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Fody.Simulations", "shared\Fody.Simulations\Fody.Simulations.shproj", "{A4AAE133-ECEF-48FC-B04C-015811E24C6D}"
 EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Cecil.AspectN", "src\Cecil.AspectN\Cecil.AspectN.shproj", "{DA6B6E9A-B485-4391-9934-CF0CFF653BB8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -107,12 +109,15 @@ Global
 		{F20C2790-1837-43F0-8E66-B35E82144DFF} = {400088B1-D25F-49FE-887E-E9E2FE62B3CB}
 		{2C81F5A2-362A-4383-98A4-43AD03E90312} = {400088B1-D25F-49FE-887E-E9E2FE62B3CB}
 		{A4AAE133-ECEF-48FC-B04C-015811E24C6D} = {075CC441-9BF3-4520-93D3-AE00A6758C2D}
+		{DA6B6E9A-B485-4391-9934-CF0CFF653BB8} = {E99BBF2A-FEAE-4CA4-BD18-646D1ACAB543}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0BD0178E-76E0-4736-A036-89B1AA268A05}
 	EndGlobalSection
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		shared\Fody.Simulations\Fody.Simulations.projitems*{191b2987-a3a5-4916-be4b-2657854dff39}*SharedItemsImports = 5
+		src\Cecil.AspectN\Cecil.AspectN.projitems*{191b2987-a3a5-4916-be4b-2657854dff39}*SharedItemsImports = 5
 		shared\Fody.Simulations\Fody.Simulations.projitems*{a4aae133-ecef-48fc-b04c-015811e24c6d}*SharedItemsImports = 13
+		src\Cecil.AspectN\Cecil.AspectN.projitems*{da6b6e9a-b485-4391-9934-cf0cff653bb8}*SharedItemsImports = 13
 	EndGlobalSection
 EndGlobal

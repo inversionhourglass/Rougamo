@@ -1,7 +1,7 @@
 ﻿using Fody;
 using Mono.Cecil;
 using Mono.Cecil.Rocks;
-using Rougamo.Fody.Signature;
+using Cecil.AspectN;
 using System.Linq;
 using Xunit;
 

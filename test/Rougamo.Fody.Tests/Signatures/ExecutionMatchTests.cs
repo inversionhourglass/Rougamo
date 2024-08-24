@@ -2,7 +2,7 @@
 using Mono.Cecil;
 using Mono.Cecil.Rocks;
 using Rougamo.Fody;
-using Rougamo.Fody.Signature;
+using Cecil.AspectN;
 using System;
 using System.Collections.Generic;
 using System.Linq;

@@ -1,5 +1,5 @@
-﻿using Rougamo.Fody.Signature.Patterns;
-using Rougamo.Fody.Signature.Tokens;
+﻿using Cecil.AspectN.Patterns;
+using Cecil.AspectN.Tokens;
 using System;
 using Xunit;
 

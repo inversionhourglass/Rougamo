@@ -21,4 +21,6 @@
 
   <Import Project="..\..\shared\Fody.Simulations\Fody.Simulations.projitems" Label="Shared" />
 
+  <Import Project="..\Cecil.AspectN\Cecil.AspectN.projitems" Label="Shared" />
+
 </Project>

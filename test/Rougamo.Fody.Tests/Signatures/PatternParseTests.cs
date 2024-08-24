@@ -1,8 +1,8 @@
-﻿using Rougamo.Fody.Signature;
-using Rougamo.Fody.Signature.Matchers;
-using Rougamo.Fody.Signature.Patterns;
-using Rougamo.Fody.Signature.Patterns.Parsers;
-using Rougamo.Fody.Signature.Tokens;
+﻿using Cecil.AspectN;
+using Cecil.AspectN.Matchers;
+using Cecil.AspectN.Patterns;
+using Cecil.AspectN.Patterns.Parsers;
+using Cecil.AspectN.Tokens;
 using Xunit;
 
 namespace Rougamo.Fody.Tests.Signatures

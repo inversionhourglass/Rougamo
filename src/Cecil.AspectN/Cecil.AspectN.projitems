@@ -1,0 +1,87 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects Condition="'$(MSBuildVersion)' == '' Or '$(MSBuildVersion)' &lt; '16.0'">$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>da6b6e9a-b485-4391-9934-cf0cff653bb8</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>Cecil.AspectN</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)AttributeSignatures.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CollectionCount.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GenericParameterTypeSignature.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)GenericSignature.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Matchers\AndMatcher.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Matchers\AttributeMatcher.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Matchers\ExecutionMatcher.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Matchers\GetterMatcher.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Matchers\IMatcher.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Matchers\MatcherFactory.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Matchers\MethodMatcher.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Matchers\NotMatcher.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Matchers\OrMatcher.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Matchers\PropertyMatcher.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Matchers\RegexMatcher.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Matchers\SetterMatcher.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)MethodSignature.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Modifier.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)PatternParser.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\AndTypePattern.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\AnyGenericNamePatterns.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\AnyNamespacePattern.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\AnyTypePattern.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\AnyTypePatterns.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\ArrayTypePattern.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\AsyncTypePattern.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\AttributePattern.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\CompiledTypePattern.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\DeclaringTypeMethodPattern.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\DefaultTypePattern.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\ExecutionPattern.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\GenericNamePattern.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\GenericNamePatterns.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\GenericParameterTypePattern.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\GenericPatternFactory.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\GetterPattern.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\IGenericNamePatterns.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\IIntermediateTypePattern.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\INamespacePattern.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\IntermediateTypePatterns.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\ITypePattern.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\ITypePatterns.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\MethodPattern.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\ModifierPattern.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\NamespacePattern.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\NoneTypePatterns.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\NotDeclaringTypeMethodPattern.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\NotTypePattern.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\NullableTypePattern.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\NullTypePattern.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\OnePlusTypePatterns.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\OrTypePattern.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\Parsers\AttributePatternParser.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\Parsers\ExecutionPatternParser.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\Parsers\GetterPatternParser.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\Parsers\MethodPatternParser.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\Parsers\Parser.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\Parsers\PropertyPatternParser.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\Parsers\SetterPatternParser.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\PatternExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\PropertyPattern.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\SetterPattern.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\SingleNonGenericNamePattern.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\SystemNamespacePattern.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\TupleTypePattern.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\TypePatterns.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Patterns\WildcardMatcher.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)PrimitiveExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)SignatureParser.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Tokens\StringOrChar.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Tokens\Token.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Tokens\TokenSource.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Tokens\TokenSourceBuilder.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)TypeSignature.cs" />
+  </ItemGroup>
+</Project>
