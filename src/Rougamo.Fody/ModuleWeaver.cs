@@ -1,8 +1,6 @@
 ﻿using Fody;
 using Mono.Cecil;
-using Mono.Cecil.Cil;
 using Rougamo.Fody.Models;
-using Rougamo.Fody.Simulations;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -11,11 +9,6 @@ namespace Rougamo.Fody
 {
     public partial class ModuleWeaver : SimulationModuleWeaver
     {
-        private readonly bool _testRun;
-        private bool _debugMode;
-
-        internal TypeReference _tValueTypeRef;
-        internal TypeReference _tVoidRef;
         internal TypeReference _tObjectArrayRef;
         internal TypeReference _tListRef;
         internal TypeReference _tExceptionRef;
@@ -40,79 +33,28 @@ namespace Rougamo.Fody
         internal MethodReference _mExceptionDispatchInfoThrowRef;
         internal Dictionary<string, MethodReference> _stateMachineCtorRefs;
 
-#if DEBUG
-        internal MethodReference _methodDebuggerBreakRef;
-#endif
-
         private List<RouType> _rouTypes;
         private Config _config;
 
-
-        public ModuleWeaver() : this(false) { }
-
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
-        public ModuleWeaver(bool testRun)
+
+        public ModuleWeaver() : base(false) { }
+
+        public ModuleWeaver(bool testRun) : base(testRun) { }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
+
+        protected override bool Enabled()
         {
-            _testRun = testRun;
+            ReadConfig();
+
+            return _config.Enabled;
         }
 
-        public override void Execute()
+        protected override void ExecuteInternal()
         {
-            _debugMode = IsDebugMode();
-
-            try
-            {
-                ReadConfig();
-                if (!_config.Enabled) return;
-
-                LoadBasicReference();
-                _simulations = new(this);
-                FindRous();
-                if (_rouTypes.Count == 0) return;
-                WeaveMos();
-            }
-            catch (FodyAggregateWeavingException e)
-            {
-                if (_testRun) throw;
-
-                foreach (var ex in e.Exceptions)
-                {
-                    WriteException(ex, e.MethodDef);
-                }
-            }
-            catch (FodyWeavingException e)
-            {
-                if (_testRun) throw;
-
-                WriteException(e);
-            }
-
-            void WriteException(FodyWeavingException e, MethodDefinition? methodDef = null)
-            {
-                if (e.MethodDef != null)
-                {
-                    methodDef = e.MethodDef;
-                }
-
-                if (methodDef == null)
-                {
-                    WriteError(e.Message);
-                }
-                else
-                {
-                    WriteError(e.Message, methodDef);
-                }
-            }
-        }
-
-        public override IEnumerable<string> GetAssembliesForScanning()
-        {
-            yield return "netstandard";
-            yield return "mscorlib";
-            yield return "System";
-            yield return "System.Runtime";
-            yield return "System.Core";
+            FindRous();
+            if (_rouTypes.Count == 0) return;
+            WeaveMos();
         }
 
         private void ReadConfig()
@@ -142,23 +84,6 @@ namespace Rougamo.Fody
             }
 
             return defaultValue;
-        }
-
-        public bool IsDebugMode()
-        {
-            var debuggableAttribute = ModuleDefinition.Assembly.CustomAttributes.SingleOrDefault(x => x.Is(Constants.TYPE_DebuggableAttribute));
-            if (debuggableAttribute == null) return false;
-            if (debuggableAttribute.ConstructorArguments.Count == 1 && debuggableAttribute.ConstructorArguments[0].Value is int modes) return (modes & 0x100) != 0;
-            if (debuggableAttribute.ConstructorArguments.Count == 2 && debuggableAttribute.ConstructorArguments[1].Value is bool isJITOptimizerDisabled) return isJITOptimizerDisabled;
-
-            return false;
-        }
-
-        private void Debugger(IList<Instruction> instructions, RouMethod rouMethod, string methodName)
-        {
-#if DEBUG
-            if (rouMethod.MethodDef.Name == methodName) instructions.Add(Instruction.Create(OpCodes.Call, _methodDebuggerBreakRef));
-#endif
         }
     }
 }
