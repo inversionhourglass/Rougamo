@@ -601,6 +601,7 @@ namespace Rougamo.Fody
 
             var attribute = TypeAttributes.NestedPrivate | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit;
             var baseTypeRef = _debugMode ? _tObjectRef : _tValueTypeRef;
+            // #77. 这里的类名由于本身不需要调试所以暂时不按官方的命名来，如果后续需要，将类名改为 $"<{methodDef.Name}>d__{methodDef.DeclaringType.Methods.Count - 1}" 即可
             var stateMachineTypeDef = new TypeDefinition(methodDef.DeclaringType.Namespace, $"<{methodDef.Name}>r__{map.Count}", attribute, baseTypeRef);
             stateMachineTypeDef.Interfaces.Add(new(_tIAsyncStateMachineRef));
             stateMachineTypeDef.DeclaringType = methodDef.DeclaringType;
