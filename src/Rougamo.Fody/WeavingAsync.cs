@@ -20,14 +20,16 @@ namespace Rougamo.Fody
 
         private void WeavingAsyncTaskMethod(RouMethod rouMethod)
         {
+            var methodName = $"$Rougamo_{rouMethod.MethodDef.Name}";
+            var typeName = $"<{methodName}>d__{rouMethod.MethodDef.DeclaringType.Methods.Count}";
             var buildSetStateMachine = false;
             MethodDefinition actualMethodDef;
             if (rouMethod.MethodDef.TryResolveStateMachine(Constants.TYPE_AsyncStateMachineAttribute, out var stateMachineTypeDef))
             {
-                var actualStateMachineTypeDef = StateMachineClone(stateMachineTypeDef);
+                var actualStateMachineTypeDef = StateMachineClone(stateMachineTypeDef, typeName);
                 if (actualStateMachineTypeDef == null) return;
                 
-                actualMethodDef = StateMachineSetupMethodClone(rouMethod.MethodDef, stateMachineTypeDef, actualStateMachineTypeDef, Constants.TYPE_AsyncStateMachineAttribute);
+                actualMethodDef = StateMachineSetupMethodClone(rouMethod.MethodDef, stateMachineTypeDef, actualStateMachineTypeDef, methodName, Constants.TYPE_AsyncStateMachineAttribute);
                 rouMethod.MethodDef.DeclaringType.Methods.Add(actualMethodDef);
 
                 var actualMoveNextDef = actualStateMachineTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
@@ -35,7 +37,7 @@ namespace Rougamo.Fody
             }
             else
             {
-                actualMethodDef = rouMethod.MethodDef.Clone($"$Rougamo_{rouMethod.MethodDef.Name}");
+                actualMethodDef = rouMethod.MethodDef.Clone(methodName);
                 rouMethod.MethodDef.DeclaringType.Methods.Add(actualMethodDef);
                 actualMethodDef.CustomAttributes.Clear();
 
@@ -834,9 +836,8 @@ namespace Rougamo.Fody
             return parameterFieldDefs;
         }
 
-        private TypeDefinition? StateMachineClone(TypeDefinition stateMachineTypeDef)
+        private TypeDefinition? StateMachineClone(TypeDefinition stateMachineTypeDef, string typeName)
         {
-            var typeName = $"$Rougamo_{stateMachineTypeDef.Name}";
             if (stateMachineTypeDef.DeclaringType.NestedTypes.Any(x => x.Name == typeName)) return null;
 
             var actualTypeDef = stateMachineTypeDef.Clone(typeName);
@@ -845,9 +846,9 @@ namespace Rougamo.Fody
             return actualTypeDef;
         }
 
-        private MethodDefinition StateMachineSetupMethodClone(MethodDefinition methodDef, TypeDefinition stateMachineTypeDef, TypeDefinition clonedStateMachineTypeDef, string stateMachineAttributeTypeName)
+        private MethodDefinition StateMachineSetupMethodClone(MethodDefinition methodDef, TypeDefinition stateMachineTypeDef, TypeDefinition clonedStateMachineTypeDef, string methodName, string stateMachineAttributeTypeName)
         {
-            var clonedMethodDef = methodDef.Clone($"$Rougamo_{methodDef.Name}");
+            var clonedMethodDef = methodDef.Clone(methodName);
 
             StateMachineAttributeClone(clonedMethodDef, clonedStateMachineTypeDef, stateMachineAttributeTypeName);
 

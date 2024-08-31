@@ -17,11 +17,13 @@ namespace Rougamo.Fody
     {
         private void WeavingIteratorMethod(RouMethod rouMethod)
         {
+            var methodName = $"$Rougamo_{rouMethod.MethodDef.Name}";
+            var typeName = $"<{methodName}>d__{rouMethod.MethodDef.DeclaringType.Methods.Count}";
             var stateMachineTypeDef = rouMethod.MethodDef.ResolveStateMachine(Constants.TYPE_IteratorStateMachineAttribute);
-            var actualStateMachineTypeDef = StateMachineClone(stateMachineTypeDef);
+            var actualStateMachineTypeDef = StateMachineClone(stateMachineTypeDef, typeName);
             if (actualStateMachineTypeDef == null) return;
 
-            var actualMethodDef = StateMachineSetupMethodClone(rouMethod.MethodDef, stateMachineTypeDef, actualStateMachineTypeDef, Constants.TYPE_IteratorStateMachineAttribute);
+            var actualMethodDef = StateMachineSetupMethodClone(rouMethod.MethodDef, stateMachineTypeDef, actualStateMachineTypeDef, methodName, Constants.TYPE_IteratorStateMachineAttribute);
             rouMethod.MethodDef.DeclaringType.Methods.Add(actualMethodDef);
 
             var actualMoveNextDef = actualStateMachineTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
