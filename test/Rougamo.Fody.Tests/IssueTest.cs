@@ -202,5 +202,13 @@ namespace Rougamo.Fody.Tests
 
             await (Task)instance.MAsync();
         }
+
+        [Fact]
+        public void Issue79Test()
+        {
+            var instance = GetInstance(nameof(Issue79));
+
+            instance.M();
+        }
     }
 }
