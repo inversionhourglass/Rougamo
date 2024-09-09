@@ -52,6 +52,9 @@ namespace Rougamo.Fody
                 {
                     if ((methodDef.Attributes & MethodAttributes.Abstract) != 0) continue;
 
+                    // Windows api. Extern method with DllImportAttribute
+                    if (methodDef.HasPInvokeInfo || methodDef.IsPInvokeImpl) continue;
+
                     if (!methodDef.IsGetter && !methodDef.IsSetter && methodDef.CustomAttributes.Any(x => x.AttributeType.Is(Constants.TYPE_CompilerGeneratedAttribute) || x.AttributeType.Is(Constants.TYPE_Runtime_CompilerGeneratedAttribute))) continue;
 
                     var attributes = new Collection<CustomAttribute>();
