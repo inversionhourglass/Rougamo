@@ -210,5 +210,13 @@ namespace Rougamo.Fody.Tests
 
             instance.M();
         }
+
+        [Fact]
+        public void Issue80Test()
+        {
+            var instance = GetInstance(nameof(Issue80));
+
+            instance.M();
+        }
     }
 }
