@@ -47,7 +47,7 @@ public class TestAttribute : MoAttribute
 
     public override void OnSuccess(MethodContext context)
     {
-        // OnSuccess对应方法抛出异常后
+        // OnSuccess对应方法执行成功后
     }
 
     public override void OnExit(MethodContext context)
