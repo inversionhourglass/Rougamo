@@ -72,18 +72,5 @@ namespace Rougamo.Fody
 
             _config = new(enabled, compositeAccessibility, moArrayThreshold, recordingIteratorReturns, reverseCallNonEntry, exceptTypePatterns);
         }
-
-        private string GetConfigValue(string defaultValue, params string[] configKeys)
-        {
-            if (Config == null) return defaultValue;
-
-            foreach (var configKey in configKeys)
-            {
-                var configAttribute = Config.Attributes(configKey).SingleOrDefault();
-                if (configAttribute != null) return configAttribute.Value;
-            }
-
-            return defaultValue;
-        }
     }
 }
