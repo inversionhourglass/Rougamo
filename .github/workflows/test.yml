@@ -6,6 +6,7 @@ on:
     paths:
       - 'src/**'
       - 'test/**'
+      - 'shared/**'
       - '.github/workflows/**'
 env:
   SOLUTION: Rougamo.sln
