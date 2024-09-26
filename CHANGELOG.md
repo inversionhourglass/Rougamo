@@ -1,4 +1,3 @@
-- 修复 [[#81](https://github.com/inversionhourglass/Rougamo/issues/81)]。支持矩形数组形式的多维数组（此前仅支持交错数组形式的多维数组）
-- 修复 [[#83](https://github.com/inversionhourglass/Rougamo/issues/83)]。修复特定场景下try..catch..的Catch Handle End为null无对应IL target
+- 修复 [[#86](https://github.com/inversionhourglass/Rougamo/issues/86)]。修复在调用泛型方法时，如果泛型参数类型为当前方法所在类型会抛出异常。
 
 ---
