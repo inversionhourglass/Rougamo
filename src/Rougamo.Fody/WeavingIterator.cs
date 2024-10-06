@@ -297,13 +297,13 @@ namespace Rougamo.Fody
 
             if (stloc == null) throw new FodyWeavingException($"Cannot find new operation of {stateMachineTypeDef} in method {getEnumeratorMethodDef}");
 
-            var vStateMachine = stloc.ResolveVariable(getEnumeratorMethodDef);
+            if (!stloc.TryResolveVariable(getEnumeratorMethodDef, out var vStateMachine)) throw new FodyWeavingException($"Unable resolve the StateMachine variable");
 
             instructions.InsertAfter(stloc, [
                 Create(OpCodes.Ldloc, vStateMachine),
                 Create(OpCodes.Ldarg_0),
                 Create(OpCodes.Ldfld, fields.DeclaringThis),
-                Create(OpCodes.Stfld, new FieldReference(fields.DeclaringThis!.Name, fields.DeclaringThis!.FieldType, vStateMachine.VariableType))
+                Create(OpCodes.Stfld, new FieldReference(fields.DeclaringThis!.Name, fields.DeclaringThis!.FieldType, vStateMachine!.VariableType))
             ]);
         }
 
@@ -315,7 +315,7 @@ namespace Rougamo.Fody
 
             var ldloc = instructions.Last().Previous;
 
-            var vStateMachine = ldloc.ResolveVariable(getEnumeratorMethodDef);
+            if (!ldloc.TryResolveVariable(getEnumeratorMethodDef, out var vStateMachine)) throw new FodyWeavingException($"Unable resolve the StateMachine variable");
 
             for (var i = fields.TransitParameters.Length - 1; i >= 0; i--)
             {
