@@ -16,13 +16,12 @@
     <RepositoryType>git</RepositoryType>
     <LangVersion>latest</LangVersion>
     <Nullable>enable</Nullable>
-    <PackageReleaseNotes>$([System.IO.File]::ReadAllText("$(SolutionDir)CHANGELOG.md"))</PackageReleaseNotes>
+    <PackageReleaseNotes Condition="'$(VersionSuffix)' == ''">For details: https://github.com/inversionhourglass/Rougamo/releases/tag/v$(VersionPrefix)</PackageReleaseNotes>
     <PackageReadmeFile>README_en.md</PackageReadmeFile>
   </PropertyGroup>
   <ItemGroup>
     <None Include="..\..\Rougamo.png" Pack="true" PackagePath="\" />
     <None Include="..\..\README_en.md" Pack="true" PackagePath="\" />
-    <None Include="..\..\CHANGELOG.md" Pack="true" PackagePath="\" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Fody" Version="6.8.1" PrivateAssets="none" />
