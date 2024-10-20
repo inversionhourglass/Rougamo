@@ -29,6 +29,10 @@
         public const string PROP_RewriteArguments = "RewriteArguments";
         public const string PROP_RetryCount = "RetryCount";
         public const string PROP_MethodContextOmits = "MethodContextOmits";
+        public const string PROP_Target = "Target";
+        public const string PROP_TargetType = "TargetType";
+        public const string PROP_Method = "Method";
+        public const string PROP_Mos = "Mos";
 
         public const string FIELD_Repulsions = "<Repulsions>k__BackingField";
         public const string FIELD_RougamoMo_Prefix = ">_<rougamo_mo_";

@@ -172,16 +172,40 @@ namespace Rougamo.Fody
 
         private IList<Instruction> SyncInitMethodContext(RouMethod rouMethod, TsWeavingTarget tWeavingTarget, ArgumentSimulation[] args, VariableSimulation<TsMethodContext> vContext, VariableSimulation<TsMo>[]? vMos, VariableSimulation<TsArray<TsMo>>? vMoArray)
         {
-            var tMoArray = _tIMoArrayRef.Simulate<TsArray>(this);
-            var tObjectArray = _tObjectArrayRef.Simulate<TsArray>(this);
-            IParameterSimulation[] arguments = [
-                tWeavingTarget.M_Proxy.Def.IsStatic ? new Null(this) : new This(_simulations.Object),
-                new SystemType(rouMethod.MethodDef.DeclaringType, this),
-                new SystemMethodBase(rouMethod.MethodDef, this),
-                rouMethod.MethodContextOmits.Contains(Omit.Mos) ? tMoArray.Null() : vMoArray ?? (IParameterSimulation)tMoArray.NewAsPlainValue(vMos!),
-                rouMethod.MethodContextOmits.Contains(Omit.Arguments) ? tObjectArray.Null() : tObjectArray.NewAsPlainValue(args)
-            ];
-            return vContext.AssignNew(arguments);
+            var instructions = new List<Instruction>();
+
+            // .var context = new MethodContext();
+            instructions.AddRange(vContext.AssignNew());
+            // .context.Mos = new Mo[] { ... };
+            if (!rouMethod.MethodContextOmits.Contains(Omit.Mos))
+            {
+                if (vMoArray == null)
+                {
+                    var tMoArray = _tIMoArrayRef.Simulate<TsArray>(this);
+                    instructions.AddRange(vContext.Value.P_Mos.Assign(tMoArray.NewAsPlainValue(vMos!)));
+                }
+                else
+                {
+                    instructions.AddRange(vContext.Value.P_Mos.Assign(vMoArray));
+                }
+            }
+            // .context.Target = this;
+            if (!tWeavingTarget.M_Proxy.Def.IsStatic)
+            {
+                instructions.AddRange(vContext.Value.P_Target.Assign(new This(_simulations.Object)));
+            }
+            // .context.TargeType = typeof(TARGET_TYPE);
+            instructions.AddRange(vContext.Value.P_TargetType.Assign(new SystemType(rouMethod.MethodDef.DeclaringType, this)));
+            // .context.Method = methodof(TARGET_METHOD);
+            instructions.AddRange(vContext.Value.P_Method.Assign(new SystemMethodBase(rouMethod.MethodDef, this)));
+            // .context.Arguments = new object[] { ... };
+            if (!rouMethod.MethodContextOmits.Contains(Omit.Arguments))
+            {
+                var tObjectArray = _tObjectArrayRef.Simulate<TsArray>(this);
+                instructions.AddRange(vContext.Value.P_Arguments.Assign(tObjectArray.NewAsPlainValue(args)));
+            }
+
+            return instructions;
         }
 
         private IList<Instruction>? SyncIfOnEntryReplacedReturn(RouMethod rouMethod, TsWeavingTarget tWeavingTarget, VariableSimulation<TsMethodContext> vContext, VariableSimulation<TsMo>[]? vMos, VariableSimulation<TsArray<TsMo>>? vMoArray, VariableSimulation? vResult)

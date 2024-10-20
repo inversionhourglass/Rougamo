@@ -286,16 +286,33 @@ namespace Rougamo.Fody
 
         private IList<Instruction> StateMachineInitMethodContext(RouMethod rouMethod, TsStateMachine tStateMachine)
         {
-            var tMoArray = _tIMoArrayRef.Simulate<TsArray>(this);
-            var tObjectArray = _tObjectArrayRef.Simulate<TsArray>(this);
-            IParameterSimulation?[] arguments = [
-                tStateMachine.F_DeclaringThis?.Typed(_simulations.Object),
-                new SystemType(rouMethod.MethodDef.DeclaringType, this),
-                new SystemMethodBase(rouMethod.MethodDef, this),
-                rouMethod.MethodContextOmits.Contains(Omit.Mos) ? tMoArray.Null() : tMoArray.NewAsPlainValue(tStateMachine.F_Mos!),
-                rouMethod.MethodContextOmits.Contains(Omit.Arguments) ? tObjectArray.Null() : tObjectArray.NewAsPlainValue(tStateMachine.F_Parameters)
-            ];
-            return tStateMachine.F_MethodContext.AssignNew(tStateMachine.M_MoveNext, arguments);
+            var instructions = new List<Instruction>();
+
+            // ._context = new MethodContext();
+            instructions.AddRange(tStateMachine.F_MethodContext.AssignNew(tStateMachine.M_MoveNext));
+            // ._context.Mos = new Mo[] { ... };
+            if (!rouMethod.MethodContextOmits.Contains(Omit.Mos))
+            {
+                var tMoArray = _tIMoArrayRef.Simulate<TsArray>(this);
+                instructions.AddRange(tStateMachine.F_MethodContext.Value.P_Mos.Assign(tMoArray.NewAsPlainValue(tStateMachine.F_Mos!)));
+            }
+            // ._context.Target = <>4__this;
+            if (tStateMachine.F_DeclaringThis != null)
+            {
+                instructions.AddRange(tStateMachine.F_MethodContext.Value.P_Target.Assign(tStateMachine.F_DeclaringThis.Typed(_simulations.Object)));
+            }
+            // ._context.TargetType = typeof(TARGET_TYPE);
+            instructions.AddRange(tStateMachine.F_MethodContext.Value.P_TargetType.Assign(new SystemType(rouMethod.MethodDef.DeclaringType, this)));
+            // ._context.Method = methodof(TARGET_METHOD);
+            instructions.AddRange(tStateMachine.F_MethodContext.Value.P_Method.Assign(new SystemMethodBase(rouMethod.MethodDef, this)));
+            // ._context.Arguments = new object[] { ... };
+            if (!rouMethod.MethodContextOmits.Contains(Omit.Arguments))
+            {
+                var tObjectArray = _tObjectArrayRef.Simulate<TsArray>(this);
+                instructions.AddRange(tStateMachine.F_MethodContext.Value.P_Arguments.Assign(tObjectArray.NewAsPlainValue(tStateMachine.F_Parameters)));
+            }
+            
+            return instructions;
         }
 
         private IList<Instruction> AsyncAwaitMoAwaiterIfNeed(RouMethod rouMethod, IAsyncStateMachine tStateMachine, VariableSimulation<TsAwaiter> vMoAwaiter, IAsyncContext context)

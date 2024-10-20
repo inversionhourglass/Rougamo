@@ -7,6 +7,14 @@ namespace Rougamo.Fody.Simulations.Types
 {
     internal class TsMethodContext(TypeReference typeRef, IHost? host, SimulationModuleWeaver moduldeWeaver) : TypeSimulation(typeRef, host, moduldeWeaver)
     {
+        public PropertySimulation P_Mos => PropertySimulate(Constants.PROP_Mos, false);
+
+        public PropertySimulation P_Target => PropertySimulate(Constants.PROP_Target, false);
+
+        public PropertySimulation P_TargetType => PropertySimulate(Constants.PROP_TargetType, false);
+
+        public PropertySimulation P_Method => PropertySimulate(Constants.PROP_Method, false);
+
         public PropertySimulation P_ReturnValueReplaced => PropertySimulate(Constants.PROP_ReturnValueReplaced, false);
 
         public PropertySimulation P_ReturnValue => PropertySimulate(Constants.PROP_ReturnValue, false);
