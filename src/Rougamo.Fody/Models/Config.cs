@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 
 namespace Rougamo.Fody.Models
 {
-    internal class Config(bool enabled, bool compositeAccessibility, int moArrayThreshold, bool recordingIteratorReturns, bool reverseCallNonEntry, string[] exceptTypePatterns)
+    internal class Config(bool enabled, bool compositeAccessibility, int moArrayThreshold, bool recordingIteratorReturns, bool reverseCallNonEntry, bool pureStackTrace, string[] exceptTypePatterns)
     {
         /// <summary>
         /// 是否启用肉夹馍
@@ -30,6 +30,15 @@ namespace Rougamo.Fody.Models
         /// OnEntry以外的方法是否以相反的顺序调用
         /// </summary>
         public bool ReverseCallNonEntry { get; } = reverseCallNonEntry;
+
+        /// <summary>
+        /// 是否使用纯净的StackTrace，默认true表示使用
+        /// </summary>
+        /// <remarks>
+        /// 肉夹馍使用的是代理模式，原始方法Xxx会迁移到$Rougamo_Xxx中，然后再Xxx方法中执行AOP并调用$Rougamo_Xxx。
+        /// 这样的设计会导致调用堆栈增加，在抛出异常时这些调用堆栈会显得冗余臃肿，所以默认使用纯净的StackTrace。
+        /// </remarks>
+        public bool PureStackTrace { get; } = pureStackTrace;
 
         /// <summary>
         /// 类型的全名称与正则表达式匹配的类型将忽略所有IMo

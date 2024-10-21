@@ -3,7 +3,6 @@ using Mono.Cecil;
 using Rougamo.Fody.Models;
 using System;
 using System.Collections.Generic;
-using System.Linq;
 
 namespace Rougamo.Fody
 {
@@ -26,6 +25,7 @@ namespace Rougamo.Fody
         internal MethodReference _ctorCompilerGeneratedAttributeRef;
         internal MethodReference _ctorDebuggerHiddenAttributeRef;
         internal MethodReference _ctorAsyncStateMachineAttributeRef;
+        internal MethodReference? _ctorStackTraceHiddenAttributeRef;
 
         internal MethodReference _mExceptionDispatchInfoCaptureRef;
         internal MethodReference _mIAsyncStateMachineMoveNextRef;
@@ -68,9 +68,17 @@ namespace Rougamo.Fody
             var recordingIteratorReturns = "true".Equals(GetConfigValue("false", "iterator-returns"), StringComparison.OrdinalIgnoreCase);
 #endif
             var reverseCallNonEntry = "true".Equals(GetConfigValue("true", "reverse-call-nonentry"), StringComparison.OrdinalIgnoreCase);
+            var pureStackTrace = "true".Equals(GetConfigValue("true", "pure-stacktrace"), StringComparison.OrdinalIgnoreCase);
             var exceptTypePatterns = GetConfigValue(string.Empty, "except-type-patterns").Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
 
-            _config = new(enabled, compositeAccessibility, moArrayThreshold, recordingIteratorReturns, reverseCallNonEntry, exceptTypePatterns);
+            _config = new(enabled, compositeAccessibility, moArrayThreshold, recordingIteratorReturns, reverseCallNonEntry, pureStackTrace, exceptTypePatterns);
+        }
+
+        private void StackTraceHidden(MethodDefinition methodDef)
+        {
+            if (_ctorStackTraceHiddenAttributeRef == null || !_config.PureStackTrace) return;
+
+            methodDef.CustomAttributes.Add(new(_ctorStackTraceHiddenAttributeRef));
         }
     }
 }

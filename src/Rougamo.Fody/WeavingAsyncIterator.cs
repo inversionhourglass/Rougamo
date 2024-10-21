@@ -54,6 +54,7 @@ namespace Rougamo.Fody
                 AiteratorBuildMoArrayMoveNext(rouMethod, tStateMachine, mActualMethod);
             }
 
+            StackTraceHidden(mMoveNext.Def);
             DebuggerStepThrough(mMoveNext.Def);
             mMoveNext.Def.Body.InitLocals = true;
             mMoveNext.Def.Body.OptimizePlus();

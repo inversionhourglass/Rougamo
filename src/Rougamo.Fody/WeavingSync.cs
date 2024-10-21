@@ -33,6 +33,8 @@ namespace Rougamo.Fody
 
         private void SyncBuildProxyMethod(RouMethod rouMethod, TsWeavingTarget tWeavingTarget)
         {
+            StackTraceHidden(rouMethod.MethodDef);
+
             tWeavingTarget.M_Proxy.Def.Clear();
             DebuggerStepThrough(tWeavingTarget.M_Proxy.Def);
 

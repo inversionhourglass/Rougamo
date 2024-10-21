@@ -2,6 +2,7 @@
 {
     internal static partial class Constants
     {
+        public const string TYPE_StackTraceHiddenAttribute = "System.Diagnostics.StackTraceHiddenAttribute";
         public const string TYPE_IMo = "Rougamo.IMo";
         public const string TYPE_RougamoAttribute = "Rougamo.RougamoAttribute";
         public const string TYPE_MoProxyAttribute = "Rougamo.MoProxyAttribute";

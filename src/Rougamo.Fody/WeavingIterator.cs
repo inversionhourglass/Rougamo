@@ -42,12 +42,12 @@ namespace Rougamo.Fody
         private void IteratorBuildMoveNext(RouMethod rouMethod, TsIteratorStateMachine tStateMachine, MethodSimulation<TsEnumerable> mActualMethod)
         {
             var mMoveNext = tStateMachine.M_MoveNext;
-
-            DebuggerStepThrough(mMoveNext.Def);
             mMoveNext.Def.Clear();
 
             IteratorBuildMoveNextInternal(rouMethod, tStateMachine, mActualMethod);
 
+            StackTraceHidden(mMoveNext.Def);
+            DebuggerStepThrough(mMoveNext.Def);
             mMoveNext.Def.Body.InitLocals = true;
             mMoveNext.Def.Body.OptimizePlus();
         }

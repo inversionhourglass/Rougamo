@@ -30,12 +30,14 @@ namespace Rougamo.Fody
             var typeExceptionDispatchInfoDef = FindTypeDefinition(typeof(ExceptionDispatchInfo).FullName);
             var typeCompilerGeneratedAttributeDef = FindTypeDefinition(typeof(CompilerGeneratedAttribute).FullName);
             var typeDebuggerHiddenAttributeDef = FindTypeDefinition(typeof(DebuggerHiddenAttribute).FullName);
+            TryFindTypeDefinition(Constants.TYPE_StackTraceHiddenAttribute, out var typeStackTraceHiddenAttributeDef);
 
             _ctorObjectRef = _tObjectRef.GetCtor(0).ImportInto(this);
             _ctorDebuggerStepThroughRef = typeDebuggerStepThroughAttributeRef.GetCtor(0).ImportInto(this);
             _ctorCompilerGeneratedAttributeRef = typeCompilerGeneratedAttributeDef.GetCtor(0).ImportInto(this);
             _ctorDebuggerHiddenAttributeRef = typeDebuggerHiddenAttributeDef.GetCtor(0).ImportInto(this);
             _ctorAsyncStateMachineAttributeRef = typeAsyncStateMachineAttributeRef.GetMethod(false, x => x.IsConstructor && !x.IsStatic && x.Parameters.Single().ParameterType.Is(Constants.TYPE_Type))!.ImportInto(this);
+            if (typeStackTraceHiddenAttributeDef != null) _ctorStackTraceHiddenAttributeRef = typeStackTraceHiddenAttributeDef.GetCtor(0).ImportInto(this);
 
             _mExceptionDispatchInfoCaptureRef = typeExceptionDispatchInfoDef.GetStaticMethod(Constants.METHOD_Capture, false).ImportInto(this);
             _mExceptionDispatchInfoThrowRef = typeExceptionDispatchInfoDef.GetMethod(false, x => x.Parameters.Count == 0 && x.Name == Constants.METHOD_Throw)!.ImportInto(this);
