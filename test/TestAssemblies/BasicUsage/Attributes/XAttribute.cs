@@ -1,27 +1,20 @@
 ﻿using Rougamo;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using Rougamo.Metadatas;
 
 namespace BasicUsage.Attributes
 {
+    [Pointcut("x")]
     internal class XAttribute : MoAttribute
     {
-        public override string Pattern => "x";
     }
 
+    [Pointcut("y")]
     internal class YAttribute : MoAttribute
     {
-        public YAttribute()
-        {
-            Pattern = "y";
-        }
-
-        public new string Pattern { get; set; }
     }
 
+    [Pointcut("z")]
     internal class ZAttribute : MoAttribute
     {
-        public override string Pattern { get; } = "z";
     }
 }

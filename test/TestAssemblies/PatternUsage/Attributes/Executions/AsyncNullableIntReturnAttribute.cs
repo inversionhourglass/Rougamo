@@ -1,7 +1,9 @@
-﻿namespace PatternUsage.Attributes.Executions
+﻿using Rougamo.Metadatas;
+
+namespace PatternUsage.Attributes.Executions
 {
+    [Pointcut("execution(async int? *(..))")]
     public class AsyncNullableIntReturnAttribute : SetOnEntryAttribute
     {
-        public override string? Pattern => "execution(async int? *(..))";
     }
 }

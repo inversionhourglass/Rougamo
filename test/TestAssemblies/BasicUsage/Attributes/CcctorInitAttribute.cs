@@ -1,13 +1,13 @@
 ﻿using Rougamo.Context;
 using Rougamo;
+using Rougamo.Metadatas;
 
 namespace BasicUsage.Attributes
 {
+    [Pointcut(AccessFlags.Static | AccessFlags.Constructor)]
     public class CcctorInitAttribute : MoAttribute
     {
         public const string FLAG = nameof(CcctorInitAttribute);
-
-        public override AccessFlags Flags => AccessFlags.Static | AccessFlags.Constructor;
 
         public override void OnEntry(MethodContext context)
         {

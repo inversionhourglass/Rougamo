@@ -1,7 +1,9 @@
-﻿namespace PatternUsage.Attributes.Getters
+﻿using Rougamo.Metadatas;
+
+namespace PatternUsage.Attributes.Getters
 {
+    [Pointcut("getter(Dictionary<..> *)")]
     public class ReturnsDictionaryGenericAttribute : SetOnEntryAttribute
     {
-        public override string? Pattern => "getter(Dictionary<..> *)";
     }
 }

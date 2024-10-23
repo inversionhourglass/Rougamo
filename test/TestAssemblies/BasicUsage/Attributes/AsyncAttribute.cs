@@ -1,13 +1,13 @@
 ﻿using Rougamo;
 using Rougamo.Context;
+using Rougamo.Metadatas;
 using System.Collections.Generic;
 
 namespace BasicUsage.Attributes
 {
+    [Pointcut(AccessFlags.All)]
     public class AsyncAttribute : MoAttribute
     {
-        public override AccessFlags Flags => AccessFlags.All;
-
         public override void OnEntry(MethodContext context)
         {
             var datas = (List<string>)context.Arguments[0];

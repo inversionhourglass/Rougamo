@@ -1,7 +1,9 @@
-﻿namespace PatternUsage.Attributes.Methods
+﻿using Rougamo.Metadatas;
+
+namespace PatternUsage.Attributes.Methods
 {
+    [Pointcut("method(async null *(..))")]
     public class NoGenericVoTaskReturnAttribute : SetOnEntryAttribute
     {
-        public override string? Pattern => "method(async null *(..))";
     }
 }

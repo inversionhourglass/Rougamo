@@ -1,7 +1,9 @@
-﻿namespace PatternUsage.Attributes.Attributes
+﻿using Rougamo.Metadatas;
+
+namespace PatternUsage.Attributes.Attributes
 {
+    [Pointcut("attr(para * PatternUsage.*.*.Label1Attribute)")]
     public class AnyParameterLabel1Attribute : SetOnEntryAttribute
     {
-        public override string? Pattern => "attr(para * PatternUsage.*.*.Label1Attribute)";
     }
 }

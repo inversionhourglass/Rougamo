@@ -1,7 +1,9 @@
-﻿namespace PatternUsage.Attributes.Regexes
+﻿using Rougamo.Metadatas;
+
+namespace PatternUsage.Attributes.Regexes
 {
+    [Pointcut(@"regex(\w+ (static )?\S+ \S+?\d\()")]
     public class NumberSuffixAttribute : SetOnEntryAttribute
     {
-        public override string? Pattern => @"regex(\w+ (static )?\S+ \S+?\d\()";
     }
 }

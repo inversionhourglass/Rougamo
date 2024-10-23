@@ -1,7 +1,9 @@
-﻿namespace PatternUsage.Attributes.Methods
+﻿using Rougamo.Metadatas;
+
+namespace PatternUsage.Attributes.Methods
 {
+    [Pointcut("method(* PatternUsage.X.NestedType/Inner.*(..))")]
     public class SpecificNestedTypeAttribute : SetOnEntryAttribute
     {
-        public override string? Pattern => "method(* PatternUsage.X.NestedType/Inner.*(..))";
     }
 }

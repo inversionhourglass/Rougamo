@@ -1,5 +1,6 @@
 ﻿using Rougamo;
 using Rougamo.Context;
+using Rougamo.Metadatas;
 using System.Collections.Generic;
 
 namespace BasicUsage.Attributes
@@ -23,28 +24,28 @@ namespace BasicUsage.Attributes
         }
     }
 
+    [Pointcut(AccessFlags.Method | AccessFlags.All)]
     public class MethodOnlyAttribute : AccessableAttribute
     {
-        public override AccessFlags Flags => AccessFlags.Method | AccessFlags.All;
     }
 
+    [Pointcut(AccessFlags.Property | AccessFlags.All)]
     public class PropertyOnlyAttribute : AccessableAttribute
     {
-        public override AccessFlags Flags => AccessFlags.Property | AccessFlags.All;
     }
 
+    [Pointcut(AccessFlags.Method | AccessFlags.PropertySetter | AccessFlags.All)]
     public class MethodSetterAttribute : AccessableAttribute
     {
-        public override AccessFlags Flags => AccessFlags.Method | AccessFlags.PropertySetter | AccessFlags.All;
     }
 
+    [Pointcut(AccessFlags.Method | AccessFlags.PropertyGetter | AccessFlags.All)]
     public class MethodGetterAttribute : AccessableAttribute
     {
-        public override AccessFlags Flags => AccessFlags.Method | AccessFlags.PropertyGetter | AccessFlags.All;
     }
 
+    [Pointcut(AccessFlags.Method | AccessFlags.Property | AccessFlags.All)]
     public class MethodPropertyAttribute : AccessableAttribute
     {
-        public override AccessFlags Flags => AccessFlags.Method | AccessFlags.Property | AccessFlags.All;
     }
 }

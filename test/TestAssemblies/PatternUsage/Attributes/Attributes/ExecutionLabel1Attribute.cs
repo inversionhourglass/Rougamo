@@ -1,7 +1,9 @@
-﻿namespace PatternUsage.Attributes.Attributes
+﻿using Rougamo.Metadatas;
+
+namespace PatternUsage.Attributes.Attributes
 {
+    [Pointcut("attr(exec PatternUsage..Label1Attribute)")]
     public class ExecutionLabel1Attribute : SetOnEntryAttribute
     {
-        public override string? Pattern => "attr(exec PatternUsage..Label1Attribute)";
     }
 }

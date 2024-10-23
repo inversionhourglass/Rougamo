@@ -1,7 +1,9 @@
-﻿namespace PatternUsage.Attributes
+﻿using Rougamo.Metadatas;
+
+namespace PatternUsage.Attributes
 {
+    [Pointcut(@"regex(\w+ (static )?\S+ \S+?\d\() && method(* *(,))")]
     public class IntegrativeAttribute : SetOnEntryAttribute
     {
-        public override string? Pattern => @"regex(\w+ (static )?\S+ \S+?\d\() && method(* *(,))";
     }
 }

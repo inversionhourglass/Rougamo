@@ -1,7 +1,9 @@
-﻿namespace PatternUsage.Attributes.Executions
+﻿using Rougamo.Metadatas;
+
+namespace PatternUsage.Attributes.Executions
 {
+    [Pointcut("execution((int,string) *(..))")]
     public class SpecificTupleReturnAttribute : SetOnEntryAttribute
     {
-        public override string? Pattern => "execution((int,string) *(..))";
     }
 }

@@ -1,7 +1,9 @@
-﻿namespace PatternUsage.Attributes.Methods
+﻿using Rougamo.Metadatas;
+
+namespace PatternUsage.Attributes.Methods
 {
+    [Pointcut("method(public static * *(..))")]
     public class PublicStaticAttribute : SetOnEntryAttribute
     {
-        public override string Pattern => "method(public static * *(..))";
     }
 }

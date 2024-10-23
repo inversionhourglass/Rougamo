@@ -1,7 +1,9 @@
-﻿namespace PatternUsage.Attributes.Methods
+﻿using Rougamo.Metadatas;
+
+namespace PatternUsage.Attributes.Methods
 {
+    [Pointcut("method(* *(,,int))")]
     public class IntAtTheLastOfThreeParameterAttribute : SetOnEntryAttribute
     {
-        public override string? Pattern => "method(* *(,,int))";
     }
 }

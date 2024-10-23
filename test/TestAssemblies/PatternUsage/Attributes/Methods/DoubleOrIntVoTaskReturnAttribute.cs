@@ -1,7 +1,9 @@
-﻿namespace PatternUsage.Attributes.Methods
+﻿using Rougamo.Metadatas;
+
+namespace PatternUsage.Attributes.Methods
 {
+    [Pointcut("method(async double||int *(..))")]
     public class DoubleOrIntVoTaskReturnAttribute : SetOnEntryAttribute
     {
-        public override string? Pattern => "method(async double||int *(..))";
     }
 }

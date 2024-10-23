@@ -1,7 +1,9 @@
-﻿namespace PatternUsage.Attributes.Executions
+﻿using Rougamo.Metadatas;
+
+namespace PatternUsage.Attributes.Executions
 {
+    [Pointcut("execution(* InterfaceA+.*(..))")]
     public class ChildOfInterfaceAWidlyAttribute : SetOnEntryAttribute
     {
-        public override string? Pattern => "execution(* InterfaceA+.*(..))";
     }
 }

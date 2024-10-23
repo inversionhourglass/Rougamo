@@ -1,7 +1,9 @@
-﻿namespace PatternUsage.Attributes.Executions
+﻿using Rougamo.Metadatas;
+
+namespace PatternUsage.Attributes.Executions
 {
+    [Pointcut("execution(* *<,>.*(..))")]
     public class DoubleTypeGenericAttribute : SetOnEntryAttribute
     {
-        public override string? Pattern => "execution(* *<,>.*(..))";
     }
 }

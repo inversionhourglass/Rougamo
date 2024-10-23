@@ -1,7 +1,9 @@
-﻿namespace PatternUsage.Attributes.Methods
+﻿using Rougamo.Metadatas;
+
+namespace PatternUsage.Attributes.Methods
 {
+    [Pointcut("method(* *(,double,))")]
     public class DoubleAtTheSecondOfThreeParameterAttribute : SetOnEntryAttribute
     {
-        public override string? Pattern => "method(* *(,double,))";
     }
 }

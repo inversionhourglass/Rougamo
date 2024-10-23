@@ -1,7 +1,9 @@
-﻿namespace PatternUsage.Attributes.Properties
+﻿using Rougamo.Metadatas;
+
+namespace PatternUsage.Attributes.Properties
 {
+    [Pointcut("property(IDictionary<string,string>+||IList<string>+ *)")]
     public class ReturnsChildOfDicOrListAttribute : SetOnEntryAttribute
     {
-        public override string? Pattern => "property(IDictionary<string,string>+||IList<string>+ *)";
     }
 }

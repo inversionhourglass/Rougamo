@@ -1,7 +1,9 @@
-﻿namespace PatternUsage.Attributes.Setters
+﻿using Rougamo.Metadatas;
+
+namespace PatternUsage.Attributes.Setters
 {
+    [Pointcut("setter(System.Collections.IDictionary+ *)")]
     public class ReturnsChildOfIDictionaryAttribute : SetOnEntryAttribute
     {
-        public override string? Pattern => "setter(System.Collections.IDictionary+ *)";
     }
 }
