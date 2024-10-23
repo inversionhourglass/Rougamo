@@ -1,5 +1,8 @@
 - [x] 重构`MethodContext`以支持Pooling
 - [ ] 将`IMo`编译时用到的属性提取到Attribute中，减少`IMo`的成员，
+
+    - 将`IMo`的`Flags`属性和`Pattern`属性提取到`PointcutAttribute`中，同时新增`IFlexibleModifierPointcut`和`IFlexiblePatternPointcut`用于支持Attribute应用时指定切入点
+
 - [x] AspectN新增`ctor`和`cctor`
 - [x] [[#82](https://github.com/inversionhourglass/Rougamo/issues/82)]。可通过配置排除代理方法/类的调用堆栈信息，用于消除`Exception.StackTrace/Environment.StackTrace`中的冗余信息
 

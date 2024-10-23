@@ -9,16 +9,6 @@ namespace Rougamo
     public interface IMo
     {
         /// <summary>
-        /// Weavable method type, this attribute has no effect when applied at the method level.
-        /// </summary>
-        AccessFlags Flags { get; }
-
-        /// <summary>
-        /// Method matched with this pattern will be weaving. This attribute has no effect when applied at the method level. It has a higher priority than <see cref="Flags"/>
-        /// </summary>
-        string? Pattern { get; }
-
-        /// <summary>
         /// Which features will be weaving.
         /// </summary>
         Feature Features { get; }

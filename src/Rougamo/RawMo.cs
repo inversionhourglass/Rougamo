@@ -8,12 +8,6 @@ namespace Rougamo
     public abstract class RawMo : IMo
     {
         /// <inheritdoc/>
-        public virtual AccessFlags Flags { get; }
-
-        /// <inheritdoc/>
-        public virtual string? Pattern { get; }
-
-        /// <inheritdoc/>
         public virtual Feature Features { get; }
 
         /// <inheritdoc/>
