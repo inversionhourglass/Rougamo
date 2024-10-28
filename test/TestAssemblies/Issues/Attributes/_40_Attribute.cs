@@ -1,13 +1,14 @@
 ﻿using Rougamo;
 using Rougamo.Context;
+using Rougamo.Flexibility;
 
 namespace Issues.Attributes
 {
-    public class _40_Attribute : MoAttribute
+    public class _40_Attribute : MoAttribute, IFlexibleModifierPointcut
     {
         public static int ReplacedValue = -1;
 
-        public new AccessFlags Flags { get; set; } = AccessFlags.NonPublic;
+        public AccessFlags Flags { get; set; } = AccessFlags.NonPublic;
 
         public override void OnEntry(MethodContext context)
         {

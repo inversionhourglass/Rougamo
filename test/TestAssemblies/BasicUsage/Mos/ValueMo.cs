@@ -1,15 +1,13 @@
 ﻿using Rougamo;
 using Rougamo.Context;
+using Rougamo.Metadatas;
 using System.Threading.Tasks;
 
 namespace BasicUsage.Mos
 {
+    [Pointcut(AccessFlags.All)]
     public struct ValueMo : IMo
     {
-        public AccessFlags Flags => AccessFlags.All;
-
-        public string Pattern => null;
-
         public Feature Features => Feature.OnEntry;
 
         public double Order => 1;

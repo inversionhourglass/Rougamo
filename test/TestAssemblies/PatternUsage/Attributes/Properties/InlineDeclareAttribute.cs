@@ -1,7 +1,9 @@
-﻿namespace PatternUsage.Attributes.Properties
+﻿using Rougamo.Flexibility;
+
+namespace PatternUsage.Attributes.Properties
 {
-    public class InlineDeclareAttribute : SetOnEntryAttribute
+    public class InlineDeclareAttribute : SetOnEntryAttribute, IFlexiblePatternPointcut
     {
-        public new string? Pattern { get; set; } = "property(* *)";
+        public string? Pattern { get; set; } = "property(* *)";
     }
 }

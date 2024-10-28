@@ -1,6 +1,5 @@
 ﻿using Rougamo;
 using Rougamo.Context;
-using System.Collections.Generic;
 using System.Threading;
 
 namespace Issues.Attributes

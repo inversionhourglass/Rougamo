@@ -1,15 +1,13 @@
 ﻿using Rougamo;
 using Rougamo.Context;
+using Rougamo.Metadatas;
 using System.Threading.Tasks;
 
 namespace BasicUsage.Mos
 {
+    [Pointcut("execution(* GenericMoUseCase.*(..))")]
     public struct ValueMo3 : IMo
     {
-        public AccessFlags Flags => AccessFlags.All;
-
-        public string Pattern => "execution(* GenericMoUseCase.*(..))";
-
         public Feature Features => Feature.OnEntry;
 
         public double Order => 1;

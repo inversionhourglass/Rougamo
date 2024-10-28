@@ -1,15 +1,13 @@
 ﻿using Rougamo.Context;
 using Rougamo;
 using System.Threading.Tasks;
+using Rougamo.Metadatas;
 
 namespace BasicUsage.Mos
 {
+    [Pointcut(AccessFlags.All)]
     public struct ValueOmitArgumentsButFeature : IMo
     {
-        public AccessFlags Flags => AccessFlags.All;
-
-        public string Pattern => null;
-
         public Feature Features => Feature.EntryReplace | Feature.RewriteArgs;
 
         public double Order => 1;

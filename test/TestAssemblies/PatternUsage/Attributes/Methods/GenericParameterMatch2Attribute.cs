@@ -1,7 +1,9 @@
-﻿namespace PatternUsage.Attributes.Methods
+﻿using Rougamo.Flexibility;
+
+namespace PatternUsage.Attributes.Methods
 {
-    public class GenericParameterMatch2Attribute : SetOnEntryAttribute
+    public class GenericParameterMatch2Attribute : SetOnEntryAttribute, IFlexiblePatternPointcut
     {
-        public new string? Pattern { get; } = "method(* *<TA,TB>.*<TC,TD>(TB,TA,TD,TC))";
+        public string? Pattern { get; set; } = "method(* *<TA,TB>.*<TC,TD>(TB,TA,TD,TC))";
     }
 }

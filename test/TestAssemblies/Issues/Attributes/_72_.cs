@@ -1,17 +1,15 @@
 ﻿using Rougamo;
 using Rougamo.Context;
+using Rougamo.Metadatas;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Issues.Attributes
 {
+    [Pointcut(AccessFlags.All)]
     public struct _72_ : IMo
     {
         public _72_() { }
-
-        public AccessFlags Flags { get; } = AccessFlags.All;
-
-        public string Pattern { get; } = null;
 
         public Feature Features { get; } = Feature.OnEntry;
 
