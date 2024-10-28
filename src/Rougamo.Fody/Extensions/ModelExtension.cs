@@ -20,13 +20,32 @@ namespace Rougamo.Fody
             var typeRef = mo.TypeRef;
             if (mo.Attribute != null)
             {
-                if (mo.Attribute.Properties.TryGet(Constants.PROP_Flags, out var property))
+                if (mo.Attribute.AttributeType.Implement(Constants.TYPE_IFlexibleModifierPointcut) && mo.Attribute.Properties.TryGet(Constants.PROP_Flags, out var property))
                 {
                     return (AccessFlags)Convert.ToInt32(property!.Value.Argument.Value);
                 }
                 typeRef = mo.Attribute.AttributeType;
             }
-            var flags = ExtractFromIl(typeRef!, Constants.PROP_Flags, Constants.TYPE_AccessFlags, ParseFlags);
+            var typeDef = typeRef!.ToDefinition();
+            var implementedInterface = typeDef.Implement(Constants.TYPE_IFlexibleModifierPointcut);
+            if (!implementedInterface && typeDef.Properties.Any(x => x.Name == Constants.PROP_Flags && x.PropertyType.IsEnum(out var ptFlag) && ptFlag!.IsInt32()))
+            {
+                throw new FodyWeavingException($"[{typeDef}] Since version 5.0.0, the Flags property has been removed from the IMo interface. Use PointcutAttribute instead. For more information, see https://github.com/inversionhourglass/Rougamo/releases/tag/v5.0.0");
+            }
+            var pointcutAttribute = typeDef.CustomAttributes.FirstOrDefault(x => x.Is(Constants.TYPE_PointcutAttribute));
+            if (pointcutAttribute != null && pointcutAttribute.ConstructorArguments.Count == 1)
+            {
+                var arg = pointcutAttribute.ConstructorArguments[0];
+                if (!arg.Type.IsString())
+                {
+                    return (AccessFlags)Convert.ToInt32(arg.Value);
+                }
+            }
+            AccessFlags? flags = null;
+            if (implementedInterface)
+            {
+                flags = ExtractFromIl(typeRef!, Constants.PROP_Flags, Constants.TYPE_AccessFlags, ParseFlags);
+            }
             return flags ?? AccessFlags.InstancePublic;
         }
 
@@ -49,13 +68,28 @@ namespace Rougamo.Fody
             var typeRef = mo.TypeRef;
             if (mo.Attribute != null)
             {
-                if (mo.Attribute.Properties.TryGet(Constants.PROP_Pattern, out var property))
+                if (mo.Attribute.AttributeType.Implement(Constants.TYPE_IFlexiblePatternPointcut) && mo.Attribute.Properties.TryGet(Constants.PROP_Pattern, out var property))
                 {
                     return (string)property!.Value.Argument.Value;
                 }
                 typeRef = mo.Attribute.AttributeType;
             }
-            return ExtractFromIl(typeRef!, Constants.PROP_Pattern, Constants.TYPE_String, ParsePattern);
+            var typeDef = typeRef!.ToDefinition();
+            var implementedInterface = typeDef.Implement(Constants.TYPE_IFlexiblePatternPointcut);
+            if (!implementedInterface && typeDef.Properties.Any(x => x.Name == Constants.PROP_Pattern && x.PropertyType.IsString()))
+            {
+                throw new FodyWeavingException($"[{typeDef}] Since version 5.0.0, the Pattern property has been removed from the IMo interface. Use PointcutAttribute instead. For more information, see https://github.com/inversionhourglass/Rougamo/releases/tag/v5.0.0");
+            }
+            var pointcutAttribute = typeDef.CustomAttributes.FirstOrDefault(x => x.Is(Constants.TYPE_PointcutAttribute));
+            if (pointcutAttribute != null && pointcutAttribute.ConstructorArguments.Count == 1)
+            {
+                var arg = pointcutAttribute.ConstructorArguments[0];
+                if (arg.Type.IsString())
+                {
+                    return (string)arg.Value;
+                }
+            }
+            return implementedInterface ? ExtractFromIl(typeRef!, Constants.PROP_Pattern, Constants.TYPE_String, ParsePattern) : null;
         }
 
         private static string? ParsePattern(Instruction instruction)

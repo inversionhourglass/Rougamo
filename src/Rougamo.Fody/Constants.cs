@@ -14,6 +14,9 @@
         public const string TYPE_ForceSync = "Rougamo.ForceSync";
         public const string TYPE_IRougamo = "Rougamo.IRougamo";
         public const string TYPE_IRepulsionsRougamo = "Rougamo.IRepulsionsRougamo";
+        public const string TYPE_PointcutAttribute = "Rougamo.Metadatas.PointcutAttribute";
+        public const string TYPE_IFlexibleModifierPointcut = "Rougamo.Flexibility.IFlexibleModifierPointcut";
+        public const string TYPE_IFlexiblePatternPointcut = "Rougamo.Flexibility.IFlexiblePatternPointcut";
 
         public const string PROP_Flags = "Flags";
         public const string PROP_Pattern = "Pattern";
