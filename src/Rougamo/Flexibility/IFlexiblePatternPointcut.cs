@@ -11,6 +11,6 @@
         /// <remarks>
         /// https://github.com/inversionhourglass/Shared.Cecil.AspectN
         /// </remarks>
-        string? Pattern { get; }
+        string? Pattern { get; set; }
     }
 }
