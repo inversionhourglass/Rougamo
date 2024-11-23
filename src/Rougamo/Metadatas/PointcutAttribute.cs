@@ -6,7 +6,7 @@ namespace Rougamo.Metadatas
     /// Rougamo pointcut attribute
     /// </summary>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Struct)]
-    public class PointcutAttribute : Attribute
+    public sealed class PointcutAttribute : Attribute
     {
         /// <summary>
         /// </summary>

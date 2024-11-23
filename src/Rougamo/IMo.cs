@@ -9,11 +9,6 @@ namespace Rougamo
     public interface IMo
     {
         /// <summary>
-        /// Which features will be weaving.
-        /// </summary>
-        Feature Features { get; }
-
-        /// <summary>
         /// Execution order.
         /// </summary>
         double Order { get; }

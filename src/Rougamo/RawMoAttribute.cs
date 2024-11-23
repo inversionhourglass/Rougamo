@@ -10,9 +10,6 @@ namespace Rougamo
     public abstract class RawMoAttribute : Attribute, IMo
     {
         /// <inheritdoc/>
-        public virtual Feature Features { get; }
-
-        /// <inheritdoc/>
         public virtual double Order { get; }
 
         /// <inheritdoc/>
