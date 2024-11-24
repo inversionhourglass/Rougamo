@@ -14,16 +14,6 @@ namespace Rougamo
         double Order { get; }
 
         /// <summary>
-        /// If you declare a struct that implment IMo, then you can use this property to minimize boxing operation.
-        /// </summary>
-        Omit MethodContextOmits { get; }
-
-        /// <summary>
-        /// Which methods should be executed synchronously in an async method
-        /// </summary>
-        ForceSync ForceSync { get; }
-
-        /// <summary>
         /// Before the method executing.
         /// </summary>
         void OnEntry(MethodContext context);

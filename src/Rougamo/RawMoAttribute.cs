@@ -13,12 +13,6 @@ namespace Rougamo
         public virtual double Order { get; }
 
         /// <inheritdoc/>
-        public virtual Omit MethodContextOmits { get; }
-
-        /// <inheritdoc/>
-        public virtual ForceSync ForceSync { get; }
-
-        /// <inheritdoc/>
         public abstract void OnEntry(MethodContext context);
 
         /// <inheritdoc/>
