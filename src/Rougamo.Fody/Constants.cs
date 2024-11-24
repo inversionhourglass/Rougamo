@@ -15,6 +15,7 @@
         public const string TYPE_IRougamo = "Rougamo.IRougamo";
         public const string TYPE_IRepulsionsRougamo = "Rougamo.IRepulsionsRougamo";
         public const string TYPE_PointcutAttribute = "Rougamo.Metadatas.PointcutAttribute";
+        public const string TYPE_AdviceAttribute = "Rougamo.Metadatas.AdviceAttribute";
         public const string TYPE_IFlexibleModifierPointcut = "Rougamo.Flexibility.IFlexibleModifierPointcut";
         public const string TYPE_IFlexiblePatternPointcut = "Rougamo.Flexibility.IFlexiblePatternPointcut";
 

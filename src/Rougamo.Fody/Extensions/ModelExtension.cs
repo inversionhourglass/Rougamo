@@ -103,20 +103,20 @@ namespace Rougamo.Fody
 
         public static Feature ExtractFeatures(this Mo mo)
         {
-            var typeDef = mo.TypeRef;
-            if (mo.Attribute != null)
+            var typeRef = mo.Attribute == null ? mo.TypeRef : mo.Attribute.AttributeType;
+            var typeDef = typeRef!.ToDefinition();
+            if (typeDef.Properties.Any(x => x.Name == Constants.PROP_Features && x.PropertyType.IsEnum(out var ptFeature) && ptFeature!.IsInt32()))
             {
-                if (mo.Attribute.Properties.TryGet(Constants.PROP_Features, out var property))
-                {
-                    return (Feature)Convert.ToInt32(property!.Value.Argument.Value);
-                }
-                typeDef = mo.Attribute.AttributeType.Resolve();
+                throw new FodyWeavingException($"[{typeDef}] Since version 5.0.0, the Features property has been removed from the IMo interface. Use AdviceAttribute instead. For more information, see https://github.com/inversionhourglass/Rougamo/releases/tag/v5.0.0");
             }
-            var features = ExtractFromIl(typeDef!, Constants.PROP_Features, Constants.TYPE_Feature, ParseFeatures);
-            return features ?? Feature.All;
+            var adviceAttribute = typeDef.CustomAttributes.FirstOrDefault(x => x.Is(Constants.TYPE_AdviceAttribute));
+            if (adviceAttribute != null && adviceAttribute.ConstructorArguments.Count == 1)
+            {
+                var arg = adviceAttribute.ConstructorArguments[0];
+                return (Feature)Convert.ToInt32(arg.Value);
+            }
+            return Feature.All;
         }
-
-        private static Feature? ParseFeatures(Instruction instruction) => (Feature?)instruction.TryResolveInt32();
 
         #endregion Extract-Mo-Features
 
