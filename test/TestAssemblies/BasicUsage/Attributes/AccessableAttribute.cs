@@ -5,10 +5,9 @@ using System.Collections.Generic;
 
 namespace BasicUsage.Attributes
 {
+    [Advice(Feature.OnEntry)]
     public abstract class AccessableAttribute : MoAttribute
     {
-        public override Feature Features => Feature.OnEntry;
-
         public override void OnEntry(MethodContext context)
         {
             List<string> recording;

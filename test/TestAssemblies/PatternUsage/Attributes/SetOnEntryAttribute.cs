@@ -1,5 +1,6 @@
 ﻿using Rougamo;
 using Rougamo.Context;
+using Rougamo.Metadatas;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -7,12 +8,11 @@ using System.Reflection;
 
 namespace PatternUsage.Attributes
 {
+    [Advice(Feature.EntryReplace)]
     public abstract class SetOnEntryAttribute : MoAttribute
     {
         private const string LIST_KEY = nameof(LIST_KEY);
         private const string MAP_KEY = nameof(MAP_KEY);
-
-        public override Feature Features => Feature.EntryReplace;
 
         public virtual string Name => GetType().Name;
 

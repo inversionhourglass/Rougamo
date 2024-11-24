@@ -5,11 +5,10 @@ using System.Threading.Tasks;
 
 namespace BasicUsage.Mos
 {
+    [Advice(Feature.OnEntry)]
     [Pointcut("execution(async null *(..))")]
     public struct ValueMo1 : IMo
     {
-        public Feature Features => Feature.OnEntry;
-
         public double Order => 1;
 
         public Omit MethodContextOmits => Omit.None;

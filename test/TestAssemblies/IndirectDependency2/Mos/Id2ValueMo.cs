@@ -6,12 +6,6 @@ namespace IndirectDependency2.Mos
 {
     public struct Id2ValueMo : IMo
     {
-        public AccessFlags Flags => AccessFlags.InstancePublic;
-
-        public string Pattern => null;
-
-        public Feature Features => Feature.All;
-
         public double Order => 0;
 
         public Omit MethodContextOmits => Omit.None;
@@ -62,12 +56,6 @@ namespace IndirectDependency2.Mos
 
     public struct Id2ValueMo<T> : IMo
     {
-        public AccessFlags Flags => AccessFlags.InstancePublic;
-
-        public string Pattern => null;
-
-        public Feature Features => Feature.All;
-
         public double Order => 0;
 
         public Omit MethodContextOmits => Omit.None;

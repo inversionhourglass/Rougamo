@@ -5,11 +5,10 @@ using Rougamo.Metadatas;
 
 namespace BasicUsage.Mos
 {
+    [Advice(Feature.EntryReplace | Feature.RewriteArgs)]
     [Pointcut(AccessFlags.All)]
     public struct ValueOmitArgumentsButFeature : IMo
     {
-        public Feature Features => Feature.EntryReplace | Feature.RewriteArgs;
-
         public double Order => 1;
 
         public Omit MethodContextOmits => Omit.Arguments;

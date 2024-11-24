@@ -6,12 +6,11 @@ using System.Threading.Tasks;
 
 namespace Issues.Attributes
 {
+    [Advice(Feature.OnEntry)]
     [Pointcut(AccessFlags.All)]
     public struct _72_ : IMo
     {
         public _72_() { }
-
-        public Feature Features { get; } = Feature.OnEntry;
 
         public double Order { get; } = 1;
 

@@ -1,9 +1,11 @@
 ﻿using Rougamo;
 using Rougamo.Context;
+using Rougamo.Metadatas;
 using System;
 
 namespace BasicUsage.Attributes
 {
+    [Advice(Feature.Observe)]
     [AttributeUsage(AttributeTargets.Method, AllowMultiple = true)]
     public class FeatureIteratorAttribute : MoAttribute
     {
@@ -13,8 +15,6 @@ namespace BasicUsage.Attributes
         }
 
         public int Seed { get; }
-
-        public override Feature Features { get; } = Feature.Observe;
 
         public override void OnEntry(MethodContext context)
         {

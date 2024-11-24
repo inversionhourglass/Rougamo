@@ -1,5 +1,6 @@
 ﻿using Rougamo;
 using Rougamo.Context;
+using Rougamo.Metadatas;
 using System;
 
 namespace BasicUsage.Attributes
@@ -28,8 +29,8 @@ namespace BasicUsage.Attributes
         }
     }
 
+    [Advice((Feature.All ^ Feature.FreshArgs) & Feature.All)]
     public class NonFreshArgsAttribute : FreshArgsAttribute
     {
-        public override Feature Features => (Feature.All ^ Feature.FreshArgs) & Feature.All;
     }
 }
