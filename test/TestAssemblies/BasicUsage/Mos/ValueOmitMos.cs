@@ -5,15 +5,12 @@ using System.Threading.Tasks;
 
 namespace BasicUsage.Mos
 {
+    [Optimization(MethodContext = Omit.Mos)]
     [Advice(Feature.OnEntry)]
     [Pointcut(AccessFlags.All)]
     public struct ValueOmitMos : IMo
     {
         public double Order => 1;
-
-        public Omit MethodContextOmits => Omit.Mos;
-
-        public ForceSync ForceSync => ForceSync.None;
 
         public void OnEntry(MethodContext context)
         {

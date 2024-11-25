@@ -14,10 +14,6 @@ namespace Issues.Attributes
 
         public double Order { get; } = 1;
 
-        public Omit MethodContextOmits { get; } = Omit.None;
-
-        public ForceSync ForceSync => ForceSync.None;
-
         public void OnEntry(MethodContext context)
         {
             var list = (List<string>)context.Arguments[0];

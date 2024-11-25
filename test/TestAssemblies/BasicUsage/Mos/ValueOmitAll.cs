@@ -5,15 +5,12 @@ using Rougamo.Metadatas;
 
 namespace BasicUsage.Mos
 {
+    [Optimization(MethodContext = Omit.All)]
     [Advice(Feature.EntryReplace)]
     [Pointcut(AccessFlags.All)]
     public struct ValueOmitAll : IMo
     {
         public double Order => 1;
-
-        public Omit MethodContextOmits => Omit.All;
-
-        public ForceSync ForceSync => ForceSync.None;
 
         public void OnEntry(MethodContext context)
         {

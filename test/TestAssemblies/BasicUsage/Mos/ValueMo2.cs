@@ -11,10 +11,6 @@ namespace BasicUsage.Mos
     {
         public double Order => 1;
 
-        public Omit MethodContextOmits => Omit.None;
-
-        public ForceSync ForceSync => ForceSync.None;
-
         public void OnEntry(MethodContext context)
         {
             this.SetOnEntry(context);

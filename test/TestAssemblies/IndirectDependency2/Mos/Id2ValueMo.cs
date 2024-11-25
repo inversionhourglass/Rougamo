@@ -8,10 +8,6 @@ namespace IndirectDependency2.Mos
     {
         public double Order => 0;
 
-        public Omit MethodContextOmits => Omit.None;
-
-        public ForceSync ForceSync => ForceSync.None;
-
         public void OnEntry(MethodContext context)
         {
             this.SetOnEntry(context);
@@ -57,10 +53,6 @@ namespace IndirectDependency2.Mos
     public struct Id2ValueMo<T> : IMo
     {
         public double Order => 0;
-
-        public Omit MethodContextOmits => Omit.None;
-
-        public ForceSync ForceSync => ForceSync.None;
 
         public void OnEntry(MethodContext context)
         {
