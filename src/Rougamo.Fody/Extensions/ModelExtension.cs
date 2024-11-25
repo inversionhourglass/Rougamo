@@ -148,31 +148,18 @@ namespace Rougamo.Fody
 
         public static Omit ExtractOmits(this Mo mo)
         {
-            var typeDef = mo.TypeRef;
-            if (mo.Attribute != null)
+            var typeRef = mo.Attribute == null ? mo.TypeRef : mo.Attribute.AttributeType;
+            var typeDef = typeRef!.ToDefinition();
+            if (typeDef.Properties.Any(x => x.Name == Constants.PROP_MethodContextOmits && x.PropertyType.IsEnum(out var ptOmits) && ptOmits!.IsInt32()))
             {
-                if (mo.Attribute.Properties.TryGet(Constants.PROP_MethodContextOmits, out var property))
-                {
-                    return (Omit)Convert.ToInt32(property!.Value.Argument.Value);
-                }
-                typeDef = mo.Attribute.AttributeType.Resolve();
+                throw new FodyWeavingException($"[{typeDef}] Since version 5.0.0, the MethodContextOmits property has been removed from the IMo interface. Use OptimizationAttribute instead. For more information, see https://github.com/inversionhourglass/Rougamo/releases/tag/v5.0.0");
             }
-            var flags = ExtractFromIl(typeDef!, Constants.PROP_MethodContextOmits, Constants.TYPE_Omit, ParseOmits);
-            return flags ?? Omit.None;
-        }
-
-        private static Omit? ParseOmits(Instruction instruction)
-        {
-            var opCode = instruction.OpCode;
-            if (opCode == OpCodes.Ldc_I4_0) return Omit.None;
-            if (opCode == OpCodes.Ldc_I4_1) return Omit.Mos;
-            if (opCode == OpCodes.Ldc_I4_2) return Omit.Arguments;
-            if (opCode == OpCodes.Ldc_I4_3) return Omit.Mos | Omit.Arguments;
-            if (opCode == OpCodes.Ldc_I4_4) return Omit.ReturnValue;
-            if (opCode == OpCodes.Ldc_I4_5) return Omit.Mos | Omit.ReturnValue;
-            if (opCode == OpCodes.Ldc_I4_6) return Omit.Arguments | Omit.ReturnValue;
-            if (opCode == OpCodes.Ldc_I4_7) return Omit.All;
-            return null;
+            var optimizationAttribute = typeDef.CustomAttributes.FirstOrDefault(x => x.Is(Constants.TYPE_OptimizationAttribute));
+            if (optimizationAttribute != null && optimizationAttribute.Properties.TryGet(Constants.PROP_MethodContext, out var property))
+            {
+                return (Omit)Convert.ToInt32(property!.Value.Argument.Value);
+            }
+            return Omit.None;
         }
 
         #endregion Extract-Mo-MethodContextOmits
@@ -181,33 +168,18 @@ namespace Rougamo.Fody
 
         public static ForceSync ExtractForceSync(this Mo mo)
         {
-            var typeRef = mo.TypeRef;
-            if (mo.Attribute != null)
+            var typeRef = mo.Attribute == null ? mo.TypeRef : mo.Attribute.AttributeType;
+            var typeDef = typeRef!.ToDefinition();
+            if (typeDef.Properties.Any(x => x.Name == Constants.PROP_ForceSync && x.PropertyType.IsEnum(out var ptForceSync) && ptForceSync!.IsInt32()))
             {
-                if (mo.Attribute.Properties.TryGet(Constants.PROP_ForceSync, out var property))
-                {
-                    return (ForceSync)Convert.ToInt32(property!.Value.Argument.Value);
-                }
-                typeRef = mo.Attribute.AttributeType;
+                throw new FodyWeavingException($"[{typeDef}] Since version 5.0.0, the ForceSync property has been removed from the IMo interface. Use OptimizationAttribute instead. For more information, see https://github.com/inversionhourglass/Rougamo/releases/tag/v5.0.0");
             }
-            var flags = ExtractFromIl(typeRef!, Constants.PROP_ForceSync, Constants.TYPE_ForceSync, ParseForceSync);
-            return flags ?? ForceSync.None;
-        }
-
-        private static ForceSync? ParseForceSync(Instruction instruction)
-        {
-            var opCode = instruction.OpCode;
-            if (opCode == OpCodes.Ldc_I4_0) return ForceSync.None;
-            if (opCode == OpCodes.Ldc_I4_1) return ForceSync.OnEntry;
-            if (opCode == OpCodes.Ldc_I4_2) return ForceSync.OnSuccess;
-            if (opCode == OpCodes.Ldc_I4_3) return ForceSync.OnEntry | ForceSync.OnSuccess;
-            if (opCode == OpCodes.Ldc_I4_4) return ForceSync.OnException;
-            if (opCode == OpCodes.Ldc_I4_5) return ForceSync.OnEntry | ForceSync.OnException;
-            if (opCode == OpCodes.Ldc_I4_6) return ForceSync.OnSuccess | ForceSync.OnException;
-            if (opCode == OpCodes.Ldc_I4_7) return ForceSync.OnEntry | ForceSync.OnSuccess | ForceSync.OnException;
-            if (opCode == OpCodes.Ldc_I4_8) return ForceSync.OnExit;
-            if (opCode == OpCodes.Ldc_I4_S || opCode == OpCodes.Ldc_I4) return (ForceSync)Convert.ToInt32(instruction.Operand);
-            return null;
+            var optimizationAttribute = typeDef.CustomAttributes.FirstOrDefault(x => x.Is(Constants.TYPE_OptimizationAttribute));
+            if (optimizationAttribute != null && optimizationAttribute.Properties.TryGet(Constants.PROP_ForceSync, out var property))
+            {
+                return (ForceSync)Convert.ToInt32(property!.Value.Argument.Value);
+            }
+            return ForceSync.None;
         }
 
         #endregion Extract-Mo-ForceSync

@@ -16,6 +16,7 @@
         public const string TYPE_IRepulsionsRougamo = "Rougamo.IRepulsionsRougamo";
         public const string TYPE_PointcutAttribute = "Rougamo.Metadatas.PointcutAttribute";
         public const string TYPE_AdviceAttribute = "Rougamo.Metadatas.AdviceAttribute";
+        public const string TYPE_OptimizationAttribute = "Rougamo.Metadatas.OptimizationAttribute";
         public const string TYPE_IFlexibleModifierPointcut = "Rougamo.Flexibility.IFlexibleModifierPointcut";
         public const string TYPE_IFlexiblePatternPointcut = "Rougamo.Flexibility.IFlexiblePatternPointcut";
 
@@ -38,6 +39,7 @@
         public const string PROP_TargetType = "TargetType";
         public const string PROP_Method = "Method";
         public const string PROP_Mos = "Mos";
+        public const string PROP_MethodContext = "MethodContext";
 
         public const string FIELD_Repulsions = "<Repulsions>k__BackingField";
         public const string FIELD_RougamoMo_Prefix = ">_<rougamo_mo_";
