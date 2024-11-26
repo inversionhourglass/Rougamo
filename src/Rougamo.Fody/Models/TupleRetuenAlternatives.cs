@@ -12,13 +12,16 @@ namespace Rougamo.Fody
         public SimplifyGlobalMos() { }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
-        public SimplifyGlobalMos(CustomAttribute[] directs, TypeReference[] generics, Dictionary<string, TypeReference> proxies, string[] ignores)
+        public SimplifyGlobalMos(bool skipRefStruct, CustomAttribute[] directs, TypeReference[] generics, Dictionary<string, TypeReference> proxies, string[] ignores)
         {
+            SkipRefStruct = skipRefStruct;
             Directs = directs;
             Generics = generics;
             Proxies = proxies;
             Ignores = ignores;
         }
+
+        public bool SkipRefStruct { get; }
 
         public CustomAttribute[]? Directs { get; }
 
@@ -33,13 +36,16 @@ namespace Rougamo.Fody
 
     internal sealed class GlobalMos
     {
-        public GlobalMos(Dictionary<string, List<CustomAttribute>> directs, Dictionary<string, TypeReference> generics, Dictionary<string, TypeReference> proxies, Dictionary<string, TypeReference>? ignores)
+        public GlobalMos(bool skipRefStruct, Dictionary<string, List<CustomAttribute>> directs, Dictionary<string, TypeReference> generics, Dictionary<string, TypeReference> proxies, Dictionary<string, TypeReference>? ignores)
         {
+            SkipRefStruct = skipRefStruct;
             Directs = directs;
             Generics = generics;
             Proxies = proxies;
             Ignores = ignores;
         }
+
+        public bool SkipRefStruct { get; }
 
         public Dictionary<string, List<CustomAttribute>> Directs { get; }
 

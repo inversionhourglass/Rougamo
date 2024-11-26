@@ -47,6 +47,7 @@ namespace Rougamo.Fody
                 var rouType = new RouType(typeDef);
                 var implementations = ExtractClassImplementations(typeDef);
                 var classExtracts = ExtractAttributes(typeDef.CustomAttributes, globalMos.Proxies!);
+                var skipRefStruct = globalMos.SkipRefStruct || typeDef.CustomAttributes.Any(x => x.Is(Constants.TYPE_SkipRefStructAttribute));
 
                 foreach (var methodDef in typeDef.Methods)
                 {
@@ -69,7 +70,8 @@ namespace Rougamo.Fody
                     if (methodIgnores == null) continue;
 
                     var methodExtracts = ExtractAttributes(attributes, globalMos.Proxies!);
-                    rouType.Initialize(methodDef, globalMos.Directs!, globalMos.Generics, implementations, classExtracts.Mos, classExtracts.GenericMos, classExtracts.Proxied, methodExtracts.Mos, methodExtracts.GenericMos, methodExtracts.Proxied, globalMos.Ignores!, typeIgnores, methodIgnores, _config.CompositeAccessibility);
+                    var srf = skipRefStruct || methodDef.CustomAttributes.Any(x => x.Is(Constants.TYPE_SkipRefStructAttribute));
+                    rouType.Initialize(methodDef, globalMos.Directs!, globalMos.Generics, implementations, classExtracts.Mos, classExtracts.GenericMos, classExtracts.Proxied, methodExtracts.Mos, methodExtracts.GenericMos, methodExtracts.Proxied, globalMos.Ignores!, typeIgnores, methodIgnores, _config.CompositeAccessibility, srf);
                 }
                 if (rouType.HasMo)
                 {
@@ -175,7 +177,7 @@ namespace Rougamo.Fody
                 }
             }
 
-            return new SimplifyGlobalMos(assemblyMos.Directs.Values.SelectMany(x => x).ToArray(), assemblyMos.Generics.Values.ToArray(), assemblyMos.Proxies, assemblyMos.Ignores.Keys.ToArray());
+            return new SimplifyGlobalMos(assemblyMos.SkipRefStruct || moduleMos.SkipRefStruct, assemblyMos.Directs.Values.SelectMany(x => x).ToArray(), assemblyMos.Generics.Values.ToArray(), assemblyMos.Proxies, assemblyMos.Ignores.Keys.ToArray());
         }
 
         /// <summary>
@@ -191,6 +193,7 @@ namespace Rougamo.Fody
         /// </returns>
         private GlobalMos FindGlobalAttributes(Collection<CustomAttribute> attributes, string locationName)
         {
+            var skipRefStruct = false;
             var directs = new Dictionary<string, List<CustomAttribute>>();
             var generics = new Dictionary<string, TypeReference>();
             var proxies = new Dictionary<string, ProxyReleation>();
@@ -241,9 +244,13 @@ namespace Rougamo.Fody
                         break;
                     }
                 }
+                else if (attrType.Is(Constants.TYPE_SkipRefStructAttribute))
+                {
+                    skipRefStruct = true;
+                }
             }
 
-            return new GlobalMos(directs, generics, proxies.Values.ToDictionary(x => x.Origin.FullName, x => x.Proxy), ignores);
+            return new GlobalMos(skipRefStruct, directs, generics, proxies.Values.ToDictionary(x => x.Origin.FullName, x => x.Proxy), ignores);
         }
 
         /// <summary>

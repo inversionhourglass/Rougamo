@@ -7,6 +7,7 @@
         public const string TYPE_RougamoAttribute = "Rougamo.RougamoAttribute";
         public const string TYPE_MoProxyAttribute = "Rougamo.MoProxyAttribute";
         public const string TYPE_IgnoreMoAttribute = "Rougamo.IgnoreMoAttribute";
+        public const string TYPE_SkipRefStructAttribute = "Rougamo.SkipRefStructAttribute";
         public const string TYPE_MoRepulsion = "Rougamo.MoRepulsion";
         public const string TYPE_AccessFlags = "Rougamo.AccessFlags";
         public const string TYPE_Feature = "Rougamo.Feature";

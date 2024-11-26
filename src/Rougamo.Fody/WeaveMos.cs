@@ -90,7 +90,7 @@ namespace Rougamo.Fody
         private void CheckRefStruct(RouMethod rouMethod, List<FodyWeavingException> exceptions)
         {
             TypeDefinition typeDef;
-            if ((rouMethod.MethodContextOmits & Omit.ReturnValue) == 0 && (typeDef = rouMethod.MethodDef.ReturnType.Resolve()) != null && typeDef.CustomAttributes.Any(x => x.Is(Constants.TYPE_IsByRefLikeAttribute)))
+            if (!rouMethod.SkipRefStruct && !rouMethod.MethodContextOmits.Contains(Omit.ReturnValue) && (typeDef = rouMethod.MethodDef.ReturnType.Resolve()) != null && typeDef.CustomAttributes.Any(x => x.Is(Constants.TYPE_IsByRefLikeAttribute)))
             {
                 var builder = new StringBuilder("Cannot save a ref struct value as an object. Change the return value type or set the MethodContextOmits property for the listed types to Omit.ReturnValue: [");
                 foreach (var mo in rouMethod.Mos)
@@ -107,7 +107,7 @@ namespace Rougamo.Fody
                 exceptions.Add(new FodyWeavingException(builder.ToString(), rouMethod.MethodDef));
             }
 
-            if ((rouMethod.MethodContextOmits & Omit.Arguments) == 0 && rouMethod.MethodDef.Parameters.Any(x => (typeDef = x.ParameterType.Resolve()) != null && typeDef.CustomAttributes.Any(y => y.Is(Constants.TYPE_IsByRefLikeAttribute))))
+            if (!rouMethod.SkipRefStruct && !rouMethod.MethodContextOmits.Contains(Omit.Arguments) && rouMethod.MethodDef.Parameters.Any(x => (typeDef = x.ParameterType.Resolve()) != null && typeDef.CustomAttributes.Any(y => y.Is(Constants.TYPE_IsByRefLikeAttribute))))
             {
                 var builder = new StringBuilder("Cannot save a ref struct value as an object. Change the parameter type or set the MethodContextOmits property for the listed types to Omit.Arguments: [");
                 foreach (var mo in rouMethod.Mos)

@@ -296,13 +296,13 @@ namespace Rougamo.Fody
             CustomAttribute[] assemblyAttributes, TypeReference[] assemblyGenerics,
             RepulsionMo[] typeImplements, CustomAttribute[] typeAttributes, TypeReference[] typeGenerics, TypeReference[] typeProxies,
             CustomAttribute[] methodAttributes, TypeReference[] methodGenerics, TypeReference[] methodProxies,
-            string[] assemblyIgnores, string[] typeIgnores, string[] methodIgnores, bool compositeAccessibility)
+            string[] assemblyIgnores, string[] typeIgnores, string[] methodIgnores, bool compositeAccessibility, bool skipRefStruct)
         {
             var ignores = new HashSet<string>(assemblyIgnores);
             ignores.AddRange(typeIgnores);
             ignores.AddRange(methodIgnores);
 
-            var rouMethod = new RouMethod(rouType, methdDef);
+            var rouMethod = new RouMethod(rouType, methdDef, skipRefStruct);
 
             rouMethod.AddMo(methodAttributes.Where(x => !ignores.Contains(x.AttributeType.FullName)), MoFrom.Method, compositeAccessibility);
             rouMethod.AddMo(methodGenerics.Where(x => !ignores.Contains(x.FullName)), MoFrom.Method, compositeAccessibility);

@@ -3,35 +3,26 @@ using Mono.Cecil;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 
 namespace Rougamo.Fody
 {
-    internal sealed class RouMethod
+    internal sealed class RouMethod(RouType rouType, MethodDefinition methodDef, bool skipRefStruct)
     {
-        private static readonly BindingFlags _BindingFlags = BindingFlags.DeclaredOnly | BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
-
         private bool? _isAsync;
         private bool? _isIterator;
         private bool? _isAsyncIterator;
         private Feature? _feature;
         private Omit? _omit;
-        private readonly HashSet<Mo> _mos;
-        private readonly RouType _rouType;
+        private readonly HashSet<Mo> _mos = new HashSet<Mo>(Mo.Comparer);
         private Mo[]? _sortedMos;
 
         private AccessFlags _methodLevelAccessibility;
         private AccessFlags _typeLevelAccessibility;
         private AccessFlags? _methodCategory;
 
-        public RouMethod(RouType rouType, MethodDefinition methodDef)
-        {
-            _mos = new HashSet<Mo>(Mo.Comparer);
-            _rouType = rouType;
-            MethodDef = methodDef;
-        }
+        public MethodDefinition MethodDef { get; set; } = methodDef;
 
-        public MethodDefinition MethodDef { get; set; }
+        public bool SkipRefStruct { get; } = skipRefStruct;
 
         public Mo[] Mos
         {
@@ -79,7 +70,7 @@ namespace Rougamo.Fody
 
             var methodTarget = MethodDef.HasThis ? AccessFlags.Instance : AccessFlags.Static;
             _methodLevelAccessibility = (MethodDef.IsPublic ? AccessFlags.Public : AccessFlags.NonPublic) & methodTarget;
-            _typeLevelAccessibility = (MethodDef.IsPublic && _rouType.TypeDef.IsPublic ? AccessFlags.Public : AccessFlags.NonPublic) & methodTarget;
+            _typeLevelAccessibility = (MethodDef.IsPublic && rouType.TypeDef.IsPublic ? AccessFlags.Public : AccessFlags.NonPublic) & methodTarget;
 
             if (MethodDef.IsGetter)
             {

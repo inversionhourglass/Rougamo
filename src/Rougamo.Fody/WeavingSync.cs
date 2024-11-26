@@ -204,7 +204,8 @@ namespace Rougamo.Fody
             if (!rouMethod.MethodContextOmits.Contains(Omit.Arguments))
             {
                 var tObjectArray = _tObjectArrayRef.Simulate<TsArray>(this);
-                instructions.AddRange(vContext.Value.P_Arguments.Assign(tObjectArray.NewAsPlainValue(args)));
+                var exceptedRefStructArgs = args.Select(x => x.IsRefStruct() ? x.BeFake(new Null(this)) : x).ToArray();
+                instructions.AddRange(vContext.Value.P_Arguments.Assign(tObjectArray.NewAsPlainValue(exceptedRefStructArgs)));
             }
 
             return instructions;
@@ -212,7 +213,9 @@ namespace Rougamo.Fody
 
         private IList<Instruction>? SyncIfOnEntryReplacedReturn(RouMethod rouMethod, TsWeavingTarget tWeavingTarget, VariableSimulation<TsMethodContext> vContext, VariableSimulation<TsMo>[]? vMos, VariableSimulation<TsArray<TsMo>>? vMoArray, VariableSimulation? vResult)
         {
-            if (!rouMethod.Features.Contains(Feature.EntryReplace) || rouMethod.MethodContextOmits.Contains(Omit.ReturnValue)) return null;
+            if (!rouMethod.Features.Contains(Feature.EntryReplace) ||
+                rouMethod.MethodContextOmits.Contains(Omit.ReturnValue) ||
+                vResult != null && rouMethod.SkipRefStruct && vResult.IsRefStruct()) return null;
 
             // .if (context.ReturnValueReplaced)
             return vContext.Value.P_ReturnValueReplaced.If(anchor =>
@@ -250,15 +253,18 @@ namespace Rougamo.Fody
                 instructions.Add(vArguments.Assign(vContext.Value.P_Arguments));
                 for (var i = 0; i < args.Length; i++)
                 {
+                    var arg = args[i];
+                    if (arg.IsRefStruct()) continue;
+
                     // .if (args[i] == null)
                     instructions.Add(vArguments.Value[i].IsNull().If((a1, a2) =>
                     {
                         // ._parameters[i] = default;
-                        return args[i].AssignDefault();
+                        return arg.AssignDefault();
                     }, (a1, a2) =>
                     {// .else (args[i] != null)
                         // ._parameters[i] = args[i];
-                        return args[i].Assign(vArguments.Value[i]);
+                        return arg.Assign(vArguments.Value[i]);
                     }));
                 }
 
@@ -268,7 +274,10 @@ namespace Rougamo.Fody
 
         private IList<Instruction> SyncSaveResult(RouMethod rouMethod, TsWeavingTarget tWeavingTarget, VariableSimulation<TsMethodContext> vContext, VariableSimulation? vResult)
         {
-            if (vResult == null || !rouMethod.Features.HasIntersection(Feature.OnSuccess | Feature.OnExit) || rouMethod.MethodContextOmits.Contains(Omit.ReturnValue)) return [];
+            if (vResult == null ||
+                !rouMethod.Features.HasIntersection(Feature.OnSuccess | Feature.OnExit) ||
+                rouMethod.MethodContextOmits.Contains(Omit.ReturnValue) ||
+                rouMethod.SkipRefStruct && vResult.IsRefStruct()) return [];
 
             // .context.ReturnValue  = result;
             return vContext.Value.P_ReturnValue.Assign(vResult);
@@ -295,7 +304,7 @@ namespace Rougamo.Fody
             for (var i = 0; i < args.Length; i++)
             {
                 var arg = args[i];
-                if (checkByRef && !arg.IsByReference) continue;
+                if (checkByRef && !arg.IsByReference || arg.IsRefStruct()) continue;
 
                 // .context.Arguments[i] = arg_i;
                 if (vArguments == null)
@@ -331,7 +340,9 @@ namespace Rougamo.Fody
         private IList<Instruction> SyncSaveResultIfExceptionHandled(RouMethod rouMethod, TsWeavingTarget tWeavingTarget, VariableSimulation<TsMethodContext> vContext, VariableSimulation? vResult, out VariableSimulation? vExceptionHandled)
         {
             vExceptionHandled = null;
-            if (!rouMethod.Features.Contains(Feature.ExceptionHandle) || rouMethod.MethodContextOmits.Contains(Omit.ReturnValue)) return [];
+            if (!rouMethod.Features.Contains(Feature.ExceptionHandle) ||
+                rouMethod.MethodContextOmits.Contains(Omit.ReturnValue) ||
+                vResult != null && rouMethod.SkipRefStruct && vResult.IsRefStruct()) return [];
 
             var instructions = new List<Instruction>();
 
@@ -376,7 +387,10 @@ namespace Rougamo.Fody
 
         private IList<Instruction> SyncSaveResult(RouMethod rouMethod, VariableSimulation<TsMethodContext> vContext, VariableSimulation? vResult)
         {
-            if (vResult == null || !rouMethod.Features.HasIntersection(Feature.OnSuccess | Feature.OnExit) || rouMethod.MethodContextOmits.Contains(Omit.ReturnValue)) return [];
+            if (vResult == null ||
+                !rouMethod.Features.HasIntersection(Feature.OnSuccess | Feature.OnExit) ||
+                rouMethod.MethodContextOmits.Contains(Omit.ReturnValue) ||
+                rouMethod.SkipRefStruct && vResult.IsRefStruct()) return [];
 
             // .context.ReturnValue = result;
             return vContext.Value.P_ReturnValue.Assign(vResult);
@@ -384,7 +398,10 @@ namespace Rougamo.Fody
 
         private IList<Instruction> SyncSaveResultIfReturnValueReplaced(RouMethod rouMethod, TsWeavingTarget tWeavingTarget, VariableSimulation<TsMethodContext> vContext, VariableSimulation? vResult)
         {
-            if (vResult == null || !rouMethod.Features.Contains(Feature.SuccessReplace) || rouMethod.MethodContextOmits.Contains(Omit.ReturnValue)) return [];
+            if (vResult == null ||
+                !rouMethod.Features.Contains(Feature.SuccessReplace) ||
+                rouMethod.MethodContextOmits.Contains(Omit.ReturnValue) ||
+                rouMethod.SkipRefStruct && vResult.IsRefStruct()) return [];
 
             // .if (context.ReturnValueReplaced)
             return vContext.Value.P_ReturnValueReplaced.If(anchor =>
