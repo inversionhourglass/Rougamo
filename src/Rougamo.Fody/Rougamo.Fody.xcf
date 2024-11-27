@@ -15,6 +15,11 @@
       <xs:documentation>Set to true to skip saving ref struct parameters and return value into MethodContext. The default is false.</xs:documentation>
     </xs:annotation>
   </xs:attribute>
+  <xs:attribute name="pure-stacktrace" type="xs:boolean">
+    <xs:annotation>
+      <xs:documentation>Set to false to prevent generating the StackTraceHiddenAttribute for the proxy method. The default is true.</xs:documentation>
+    </xs:annotation>
+  </xs:attribute>
   <xs:attribute name="moarray-threshold" type="xs:integer">
     <xs:annotation>
       <xs:documentation>In a single method, if the count of weaving IMo instances is greater than this value, Rougamo will use an array to save all of the IMo instances. The default is 4.</xs:documentation>
