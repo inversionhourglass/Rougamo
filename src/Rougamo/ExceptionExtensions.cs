@@ -13,7 +13,7 @@ namespace System
     public static class ExceptionExtensions
     {
         // Exception._stackTraceString
-        private static readonly Action<Exception, string>? _ExceptionSetStackTraceString;
+        private static readonly Action<Exception, string?>? _ExceptionSetStackTraceString;
         // StackTrace._numOfFrames
         private static readonly Action<StackTrace, int>? _StackTraceSetNumOfFrames;
         // StackTrace._stackFrames
@@ -29,6 +29,10 @@ namespace System
         /// <summary>
         /// <see cref="Exception"/> ToString without Rougamo stack frames
         /// </summary>
+#if NET6_0_OR_GREATER
+        [ComponentModel.EditorBrowsable(ComponentModel.EditorBrowsableState.Never)]
+        [Obsolete("Since .NET 6.0, Rougamo stack traces are ignored by CLR, use ToString() instead.")]
+#endif
         public static string ToNonRougamoString(this Exception exception)
         {
             if (_ExceptionSetStackTraceString != null && _StackTraceSetNumOfFrames != null && _StackTraceSetStackFrames != null)
@@ -43,7 +47,11 @@ namespace System
         /// <summary>
         /// Get the stack trace without Rougamo stack frames from <paramref name="exception"/>
         /// </summary>
-        public static string GetNonRougamoStackTrace(this Exception exception)
+#if NET6_0_OR_GREATER
+        [ComponentModel.EditorBrowsable(ComponentModel.EditorBrowsableState.Never)]
+        [Obsolete("Since .NET 6.0, Rougamo stack traces are ignored by CLR, use StackTrace instead.")]
+#endif
+        public static string? GetNonRougamoStackTrace(this Exception exception)
         {
             if (_StackTraceSetNumOfFrames == null || _StackTraceSetStackFrames == null) return exception.StackTrace;
 
@@ -165,7 +173,7 @@ namespace System
             return stackTrace.ToString();
         }
 
-        private static Action<Exception, string>? ResolveExceptionSetStackTraceString()
+        private static Action<Exception, string?>? ResolveExceptionSetStackTraceString()
         {
             var field = typeof(Exception).GetField("_stackTraceString", BindingFlags.NonPublic | BindingFlags.Instance);
             if (field == null) return null;
@@ -176,7 +184,7 @@ namespace System
             var fieldAccess = Expression.Field(exceptionParam, field);
             var assign = Expression.Assign(fieldAccess, stackTraceStringParam);
 
-            return Expression.Lambda<Action<Exception, string>>(assign, exceptionParam, stackTraceStringParam).Compile();
+            return Expression.Lambda<Action<Exception, string?>>(assign, exceptionParam, stackTraceStringParam).Compile();
         }
 
         private static Action<StackTrace, int>? ResolveStackTraceSetNumOfFrames()
