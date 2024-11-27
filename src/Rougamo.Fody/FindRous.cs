@@ -47,7 +47,7 @@ namespace Rougamo.Fody
                 var rouType = new RouType(typeDef);
                 var implementations = ExtractClassImplementations(typeDef);
                 var classExtracts = ExtractAttributes(typeDef.CustomAttributes, globalMos.Proxies!);
-                var skipRefStruct = globalMos.SkipRefStruct || typeDef.CustomAttributes.Any(x => x.Is(Constants.TYPE_SkipRefStructAttribute));
+                var skipRefStruct = _config.SkipRefStruct || globalMos.SkipRefStruct || typeDef.CustomAttributes.Any(x => x.Is(Constants.TYPE_SkipRefStructAttribute));
 
                 foreach (var methodDef in typeDef.Methods)
                 {

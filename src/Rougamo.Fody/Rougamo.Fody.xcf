@@ -10,6 +10,11 @@
       <xs:documentation>Set to true to use the type and method composite accessibility. The default is false. Etc, an internal type has a public method, public for default(false) and internal for true.</xs:documentation>
     </xs:annotation>
   </xs:attribute>
+  <xs:attribute name="skip-ref-struct" type="xs:boolean">
+    <xs:annotation>
+      <xs:documentation>Set to true to skip saving ref struct parameters and return value into MethodContext. The default is false.</xs:documentation>
+    </xs:annotation>
+  </xs:attribute>
   <xs:attribute name="moarray-threshold" type="xs:integer">
     <xs:annotation>
       <xs:documentation>In a single method, if the count of weaving IMo instances is greater than this value, Rougamo will use an array to save all of the IMo instances. The default is 4.</xs:documentation>

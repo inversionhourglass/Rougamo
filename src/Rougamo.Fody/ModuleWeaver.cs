@@ -61,6 +61,7 @@ namespace Rougamo.Fody
         {
             var enabled = "true".Equals(GetConfigValue("true", "enabled"), StringComparison.OrdinalIgnoreCase);
             var compositeAccessibility = "true".Equals(GetConfigValue("false", "composite-accessibility"), StringComparison.OrdinalIgnoreCase);
+            var skipRefStruct = "true".Equals(GetConfigValue("false", "skip-ref-struct"), StringComparison.OrdinalIgnoreCase);
             var moArrayThreshold = int.Parse(GetConfigValue("4", "moarray-threshold"));
 #if DEBUG
             var recordingIteratorReturns = true;
@@ -71,7 +72,7 @@ namespace Rougamo.Fody
             var pureStackTrace = "true".Equals(GetConfigValue("true", "pure-stacktrace"), StringComparison.OrdinalIgnoreCase);
             var exceptTypePatterns = GetConfigValue(string.Empty, "except-type-patterns").Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
 
-            _config = new(enabled, compositeAccessibility, moArrayThreshold, recordingIteratorReturns, reverseCallNonEntry, pureStackTrace, exceptTypePatterns);
+            _config = new(enabled, compositeAccessibility, skipRefStruct, moArrayThreshold, recordingIteratorReturns, reverseCallNonEntry, pureStackTrace, exceptTypePatterns);
         }
 
         private void StackTraceHidden(MethodDefinition methodDef)

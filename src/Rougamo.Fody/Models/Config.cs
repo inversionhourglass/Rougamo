@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 
 namespace Rougamo.Fody.Models
 {
-    internal class Config(bool enabled, bool compositeAccessibility, int moArrayThreshold, bool recordingIteratorReturns, bool reverseCallNonEntry, bool pureStackTrace, string[] exceptTypePatterns)
+    internal class Config(bool enabled, bool compositeAccessibility, bool skipRefStruct, int moArrayThreshold, bool recordingIteratorReturns, bool reverseCallNonEntry, bool pureStackTrace, string[] exceptTypePatterns)
     {
         /// <summary>
         /// 是否启用肉夹馍
@@ -15,6 +15,11 @@ namespace Rougamo.Fody.Models
         /// 方法是否使用 类+方法 组合可访问性
         /// </summary>
         public bool CompositeAccessibility { get; } = compositeAccessibility;
+
+        /// <summary>
+        /// 是否默认忽略ref struct参数和返回值，该配置设置为true等同于在程序集上应用<see cref="SkipRefStructAttribute"/>
+        /// </summary>
+        public bool SkipRefStruct { get; } = skipRefStruct;
 
         /// <summary>
         /// 当方法上IMo的数量超过该值时将使用数组保存所有IMo
