@@ -20,6 +20,7 @@
         public const string TYPE_OptimizationAttribute = "Rougamo.Metadatas.OptimizationAttribute";
         public const string TYPE_IFlexibleModifierPointcut = "Rougamo.Flexibility.IFlexibleModifierPointcut";
         public const string TYPE_IFlexiblePatternPointcut = "Rougamo.Flexibility.IFlexiblePatternPointcut";
+        public const string TYPE_RougamoPool = "Rougamo.RougamoPool`1";
 
         public const string PROP_Flags = "Flags";
         public const string PROP_Pattern = "Pattern";
@@ -55,5 +56,7 @@
         public const string METHOD_OnSuccessAsync = "OnSuccessAsync";
         public const string METHOD_OnExceptionAsync = "OnExceptionAsync";
         public const string METHOD_OnExitAsync = "OnExitAsync";
+        public const string METHOD_Get = "Get";
+        public const string METHOD_Return = "Return";
     }
 }

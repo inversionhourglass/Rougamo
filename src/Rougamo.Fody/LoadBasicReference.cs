@@ -23,6 +23,7 @@ namespace Rougamo.Fody
             _tAsyncTaskMethodBuilderRef = FindAndImportType(typeof(AsyncTaskMethodBuilder).FullName);
             _tAsyncTaskMethodBuilder1Ref = FindAndImportType(typeof(AsyncTaskMethodBuilder<>).FullName);
             _tObjectArrayRef = new ArrayType(_tObjectRef);
+            _tPoolRef = FindAndImportType(Constants.TYPE_RougamoPool);
 
             var typeDebuggerStepThroughAttributeRef = FindAndImportType(typeof(DebuggerStepThroughAttribute).FullName);
             var typeAsyncStateMachineAttributeRef = FindAndImportType(typeof(AsyncStateMachineAttribute).FullName);
@@ -39,6 +40,8 @@ namespace Rougamo.Fody
             _ctorAsyncStateMachineAttributeRef = typeAsyncStateMachineAttributeRef.GetMethod(false, x => x.IsConstructor && !x.IsStatic && x.Parameters.Single().ParameterType.Is(Constants.TYPE_Type))!.ImportInto(this);
             if (typeStackTraceHiddenAttributeDef != null) _ctorStackTraceHiddenAttributeRef = typeStackTraceHiddenAttributeDef.GetCtor(0).ImportInto(this);
 
+            _mPoolGetRef = this.Import(_tPoolRef.GetMethod(Constants.METHOD_Get, false));
+            _mPoolReturnRef = this.Import(_tPoolRef.GetMethod(Constants.METHOD_Return, false));
             _mExceptionDispatchInfoCaptureRef = typeExceptionDispatchInfoDef.GetStaticMethod(Constants.METHOD_Capture, false).ImportInto(this);
             _mExceptionDispatchInfoThrowRef = typeExceptionDispatchInfoDef.GetMethod(false, x => x.Parameters.Count == 0 && x.Name == Constants.METHOD_Throw)!.ImportInto(this);
             _mIAsyncStateMachineMoveNextRef = _tIAsyncStateMachineRef.GetMethod(Constants.METHOD_MoveNext, false)!.ImportInto(this);
@@ -51,6 +54,16 @@ namespace Rougamo.Fody
                 { Constants.TYPE_AsyncStateMachineAttribute, _ctorAsyncStateMachineAttributeRef },
                 { Constants.TYPE_IteratorStateMachineAttribute, iteratorStateMachineAttributeCtorRef }
             };
+        }
+
+        public override IEnumerable<string> GetAssembliesForScanning()
+        {
+            foreach (var item in base.GetAssembliesForScanning())
+            {
+                yield return item;
+            }
+
+            yield return "Rougamo";
         }
     }
 }

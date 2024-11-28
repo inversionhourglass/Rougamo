@@ -19,6 +19,7 @@ namespace Rougamo.Fody
         internal TypeReference _tValueTaskAwaiterRef;
         internal TypeReference _tIMoArrayRef;
         internal TypeReference _tMethodContextRef;
+        internal TypeReference _tPoolRef;
 
         internal MethodReference _ctorObjectRef;
         internal MethodReference _ctorDebuggerStepThroughRef;
@@ -27,6 +28,8 @@ namespace Rougamo.Fody
         internal MethodReference _ctorAsyncStateMachineAttributeRef;
         internal MethodReference? _ctorStackTraceHiddenAttributeRef;
 
+        internal MethodReference _mPoolGetRef;
+        internal MethodReference _mPoolReturnRef;
         internal MethodReference _mExceptionDispatchInfoCaptureRef;
         internal MethodReference _mIAsyncStateMachineMoveNextRef;
         internal MethodReference _mIAsyncStateMachineSetStateMachineRef;
