@@ -5,6 +5,7 @@ using Fody.Simulations.PlainValues;
 using Fody.Simulations.Types;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Mono.Cecil.Rocks;
 using Rougamo.Fody.Contexts;
 using Rougamo.Fody.Simulations.Types;
 using System;
@@ -65,82 +66,100 @@ namespace Rougamo.Fody
                 vMos = rouMethod.Mos.Select(x => tWeavingTarget.M_Proxy.CreateVariable<TsMo>(x.MoTypeRef)).ToArray();
             }
 
+            Instruction poolTryStart = Create(OpCodes.Nop), poolFinallyStart = Create(OpCodes.Nop), poolFinallyEnd = Create(OpCodes.Nop);
             Instruction? tryStart = null, catchStart = null, catchEnd = Create(OpCodes.Nop);
 
             // .var mo = new Mo1Attributue(...);
             instructions.Add(SyncInitMos(rouMethod, tWeavingTarget, vMos, vMoArray));
             // .var context = new MethodContext(...);
             instructions.Add(SyncInitMethodContext(rouMethod, tWeavingTarget, args, vContext, vMos, vMoArray));
-            // .mo.OnEntry(context);
-            instructions.Add(SyncMosOn(rouMethod, tWeavingTarget, vContext, vMos, vMoArray, Feature.OnEntry, mo => mo.M_OnEntry));
-            // .if (context.ReturnValueReplaced) { .. }
-            instructions.Add(SyncIfOnEntryReplacedReturn(rouMethod, tWeavingTarget, vContext, vMos, vMoArray, vResult));
-            // .if (_context.RewriteArguments) { ... }
-            instructions.Add(SyncIfRewriteArguments(rouMethod, tWeavingTarget, args, vContext));
 
-            // .RETRY:
-            instructions.Add(context.AnchorRetry);
+            instructions.Add(poolTryStart);
             // .try
             {
-                if (vResult == null)
-                {
-                    // .actualMethod(...);
-                    tryStart = instructions.AddGetFirst(tWeavingTarget.M_Actual.Call(tWeavingTarget.M_Proxy, args));
-                }
-                else
-                {
-                    // .result = actualMethod(...);
-                    tryStart = instructions.AddGetFirst(vResult.Assign(target => tWeavingTarget.M_Actual.Call(tWeavingTarget.M_Proxy, args)));
-                }
-                // .context.ReturnValue = result;
-                SyncSaveResult(rouMethod, tWeavingTarget, vContext, vResult);
+                // .mo.OnEntry(context);
+                instructions.Add(SyncMosOn(rouMethod, tWeavingTarget, vContext, vMos, vMoArray, Feature.OnEntry, mo => mo.M_OnEntry));
+                // .if (context.ReturnValueReplaced) { .. }
+                instructions.Add(SyncIfOnEntryReplacedReturn(rouMethod, tWeavingTarget, vContext, vMos, vMoArray, vResult, poolFinallyEnd));
+                // .if (_context.RewriteArguments) { ... }
+                instructions.Add(SyncIfRewriteArguments(rouMethod, tWeavingTarget, args, vContext));
 
+                // .RETRY:
+                instructions.Add(context.AnchorRetry);
+                // .try
+                {
+                    if (vResult == null)
+                    {
+                        // .actualMethod(...);
+                        tryStart = instructions.AddGetFirst(tWeavingTarget.M_Actual.Call(tWeavingTarget.M_Proxy, args));
+                    }
+                    else
+                    {
+                        // .result = actualMethod(...);
+                        tryStart = instructions.AddGetFirst(vResult.Assign(target => tWeavingTarget.M_Actual.Call(tWeavingTarget.M_Proxy, args)));
+                    }
+                    // .context.ReturnValue = result;
+                    SyncSaveResult(rouMethod, tWeavingTarget, vContext, vResult);
+
+                    if (vException != null)
+                    {
+                        instructions.Add(Create(OpCodes.Leave, catchEnd));
+                    }
+                }
+                // .catch
                 if (vException != null)
                 {
-                    instructions.Add(Create(OpCodes.Leave, catchEnd));
+                    catchStart = instructions.AddGetFirst(vException.Assign(target => []));
+                    // .context.Exception = exception;
+                    instructions.Add(vContext.Value.P_Exception.Assign(vException));
+                    // .mo.OnException(context); ...
+                    instructions.Add(SyncMosOn(rouMethod, tWeavingTarget, vContext, vMos, vMoArray, Feature.OnException, mo => mo.M_OnException));
+                    // .arg_i = context.Arguments[i];
+                    instructions.Add(SyncRefreshArguments(rouMethod, tWeavingTarget, args, vContext, Feature.OnException));
+                    // .if (context.RetryCount > 0) goto RETRY;
+                    instructions.Add(SynCheckRetry(rouMethod, tWeavingTarget, vContext, context, Feature.OnException, true));
+                    // .if (exceptionHandled) result = context.ReturnValue;
+                    instructions.Add(SyncSaveResultIfExceptionHandled(rouMethod, tWeavingTarget, vContext, vResult, out var vExceptionHandled));
+                    // .mo.OnExit(context);
+                    instructions.Add(SyncMosOn(rouMethod, tWeavingTarget, vContext, vMos, vMoArray, Feature.OnExit, mo => mo.M_OnExit));
+                    // .if (exceptionHandled) return result;
+                    instructions.Add(SyncReturnIfExceptionHandled(rouMethod, tWeavingTarget, vExceptionHandled, context));
+                    instructions.Add(Create(OpCodes.Rethrow));
+
+                    instructions.Add(catchEnd);
                 }
-            }
-            // .catch
-            if (vException != null)
-            {
-                catchStart = instructions.AddGetFirst(vException.Assign(target => []));
-                // .context.Exception = exception;
-                instructions.Add(vContext.Value.P_Exception.Assign(vException));
-                // .mo.OnException(context); ...
-                instructions.Add(SyncMosOn(rouMethod, tWeavingTarget, vContext, vMos, vMoArray, Feature.OnException, mo => mo.M_OnException));
+
+                // .context.ReturnValue = result;
+                instructions.Add(SyncSaveResult(rouMethod, vContext, vResult));
+                // .mo.OnSuccess(context);
+                instructions.Add(SyncMosOn(rouMethod, tWeavingTarget, vContext, vMos, vMoArray, Feature.OnSuccess, mo => mo.M_OnSuccess));
                 // .arg_i = context.Arguments[i];
-                instructions.Add(SyncRefreshArguments(rouMethod, tWeavingTarget, args, vContext, Feature.OnException));
+                instructions.Add(SyncRefreshArguments(rouMethod, tWeavingTarget, args, vContext, Feature.OnSuccess));
                 // .if (context.RetryCount > 0) goto RETRY;
-                instructions.Add(SynCheckRetry(rouMethod, tWeavingTarget, vContext, context, Feature.OnException, true));
-                // .if (exceptionHandled) result = context.ReturnValue;
-                instructions.Add(SyncSaveResultIfExceptionHandled(rouMethod, tWeavingTarget, vContext, vResult, out var vExceptionHandled));
+                instructions.Add(SynCheckRetry(rouMethod, tWeavingTarget, vContext, context, Feature.OnSuccess, false));
+                // .if (returnValueReplaced) result = context.ReturnValue;
+                instructions.Add(SyncSaveResultIfReturnValueReplaced(rouMethod, tWeavingTarget, vContext, vResult));
                 // .mo.OnExit(context);
                 instructions.Add(SyncMosOn(rouMethod, tWeavingTarget, vContext, vMos, vMoArray, Feature.OnExit, mo => mo.M_OnExit));
-                // .if (exceptionHandled) return result;
-                instructions.Add(SyncReturnIfExceptionHandled(rouMethod, tWeavingTarget, vExceptionHandled, context));
-                instructions.Add(Create(OpCodes.Rethrow));
-
-                instructions.Add(catchEnd);
+                // .return result;
+                instructions.Add(context.AnchorReturnResult.Set(OpCodes.Leave, poolFinallyEnd));
             }
+            // .finally
+            {
+                instructions.Add(poolFinallyStart);
 
-            // .context.ReturnValue = result;
-            instructions.Add(SyncSaveResult(rouMethod, vContext, vResult));
-            // .mo.OnSuccess(context);
-            instructions.Add(SyncMosOn(rouMethod, tWeavingTarget, vContext, vMos, vMoArray, Feature.OnSuccess, mo => mo.M_OnSuccess));
-            // .arg_i = context.Arguments[i];
-            instructions.Add(SyncRefreshArguments(rouMethod, tWeavingTarget, args, vContext, Feature.OnSuccess));
-            // .if (context.RetryCount > 0) goto RETRY;
-            instructions.Add(SynCheckRetry(rouMethod, tWeavingTarget, vContext, context, Feature.OnSuccess, false));
-            // .if (returnValueReplaced) result = context.ReturnValue;
-            instructions.Add(SyncSaveResultIfReturnValueReplaced(rouMethod, tWeavingTarget, vContext, vResult));
-            // .mo.OnExit(context);
-            instructions.Add(SyncMosOn(rouMethod, tWeavingTarget, vContext, vMos, vMoArray, Feature.OnExit, mo => mo.M_OnExit));
+                // .RougamoPool<MethodContext>.Return(context);
+                instructions.Add(SyncReturnToPool(vContext));
+
+                instructions.Add(Create(OpCodes.Endfinally));
+                instructions.Add(poolFinallyEnd);
+            }
             // .return result;
-            instructions.Add(context.AnchorReturnResult);
             if (vResult != null) instructions.Add(vResult.Load());
             instructions.Add(Create(OpCodes.Ret));
 
             SetTryCatch(tWeavingTarget.M_Proxy.Def, tryStart, catchStart, catchEnd);
+            SetTryFinally(tWeavingTarget.M_Proxy.Def, poolTryStart, poolFinallyStart, poolFinallyEnd);
         }
 
         private IList<Instruction> SyncInitMos(RouMethod rouMethod, TsWeavingTarget tWeavingTarget, VariableSimulation<TsMo>[]? vMos, VariableSimulation<TsArray<TsMo>>? vMoArray)
@@ -176,8 +195,8 @@ namespace Rougamo.Fody
         {
             var instructions = new List<Instruction>();
 
-            // .var context = new MethodContext();
-            instructions.AddRange(vContext.AssignNew());
+            // .var context = RougamoPool<MethodContext>.Get();
+            instructions.AddRange(SyncAssignByPool(vContext));
             // .context.Mos = new Mo[] { ... };
             if (!rouMethod.MethodContextOmits.Contains(Omit.Mos))
             {
@@ -211,7 +230,7 @@ namespace Rougamo.Fody
             return instructions;
         }
 
-        private IList<Instruction>? SyncIfOnEntryReplacedReturn(RouMethod rouMethod, TsWeavingTarget tWeavingTarget, VariableSimulation<TsMethodContext> vContext, VariableSimulation<TsMo>[]? vMos, VariableSimulation<TsArray<TsMo>>? vMoArray, VariableSimulation? vResult)
+        private IList<Instruction>? SyncIfOnEntryReplacedReturn(RouMethod rouMethod, TsWeavingTarget tWeavingTarget, VariableSimulation<TsMethodContext> vContext, VariableSimulation<TsMo>[]? vMos, VariableSimulation<TsArray<TsMo>>? vMoArray, VariableSimulation? vResult, Instruction poolFinallyEnd)
         {
             if (!rouMethod.Features.Contains(Feature.EntryReplace) ||
                 rouMethod.MethodContextOmits.Contains(Omit.ReturnValue) ||
@@ -234,7 +253,7 @@ namespace Rougamo.Fody
                 {
                     instructions.Add(vResult.Load());
                 }
-                instructions.Add(Create(OpCodes.Ret));
+                instructions.Add(Create(OpCodes.Leave, poolFinallyEnd));
 
                 return instructions;
             });
@@ -502,6 +521,20 @@ namespace Rougamo.Fody
             }
 
             return instructions;
+        }
+
+        private IList<Instruction> SyncAssignByPool(VariableSimulation variable)
+        {
+            var tPool = _tPoolRef.MakeGenericInstanceType(variable.Type).Simulate(this);
+            var mGet = _mPoolGetRef.Simulate(tPool);
+            return variable.Assign(target => mGet.Call(variable.DeclaringMethod));
+        }
+
+        private IList<Instruction> SyncReturnToPool(VariableSimulation variable)
+        {
+            var tPool = _tPoolRef.MakeGenericInstanceType(variable.Type).Simulate(this);
+            var mReturn = _mPoolReturnRef.Simulate(tPool);
+            return mReturn.Call(variable.DeclaringMethod, variable);
         }
 
         private CustomAttribute? SyncClearCustomAttributes(MethodDefinition methodDef)

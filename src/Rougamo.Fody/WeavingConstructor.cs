@@ -51,70 +51,87 @@ namespace Rougamo.Fody
                 vMos = rouMethod.Mos.Select(x => tWeavingTarget.M_Proxy.CreateVariable<TsMo>(x.MoTypeRef)).ToArray();
             }
 
+            Instruction poolTryStart = Create(OpCodes.Nop), poolFinallyStart = Create(OpCodes.Nop), poolFinallyEnd = Create(OpCodes.Nop);
             Instruction? tryStart = null, catchStart = null, catchEnd = Create(OpCodes.Nop);
 
             // .var mo = new Mo1Attributue(...);
             instructions.InsertBefore(firstInstruction, SyncInitMos(rouMethod, tWeavingTarget, vMos, vMoArray));
             // .var context = new MethodContext(...);
             instructions.InsertBefore(firstInstruction, SyncInitMethodContext(rouMethod, tWeavingTarget, args, vContext, vMos, vMoArray));
-            // .mo.OnEntry(context);
-            instructions.InsertBefore(firstInstruction, SyncMosOn(rouMethod, tWeavingTarget, vContext, vMos, vMoArray, Feature.OnEntry, mo => mo.M_OnEntry));
-            // .if (context.ReturnValueReplaced) { .. }
-            instructions.InsertBefore(firstInstruction, SyncIfOnEntryReplacedReturn(rouMethod, tWeavingTarget, vContext, vMos, vMoArray, null));
-            // .if (_context.RewriteArguments) { ... }
-            instructions.InsertBefore(firstInstruction, SyncIfRewriteArguments(rouMethod, tWeavingTarget, args, vContext));
 
-            // .RETRY:
-            instructions.InsertBefore(firstInstruction, context.AnchorRetry);
+            instructions.InsertBefore(firstInstruction, poolTryStart);
             // .try
             {
-                tryStart = firstInstruction;
+                // .mo.OnEntry(context);
+                instructions.InsertBefore(firstInstruction, SyncMosOn(rouMethod, tWeavingTarget, vContext, vMos, vMoArray, Feature.OnEntry, mo => mo.M_OnEntry));
+                // .if (context.ReturnValueReplaced) { .. }
+                instructions.InsertBefore(firstInstruction, SyncIfOnEntryReplacedReturn(rouMethod, tWeavingTarget, vContext, vMos, vMoArray, null, poolFinallyEnd));
+                // .if (_context.RewriteArguments) { ... }
+                instructions.InsertBefore(firstInstruction, SyncIfRewriteArguments(rouMethod, tWeavingTarget, args, vContext));
 
+                // .RETRY:
+                instructions.InsertBefore(firstInstruction, context.AnchorRetry);
+                // .try
+                {
+                    tryStart = firstInstruction;
+
+                    if (vException != null)
+                    {
+                        instructions.Add(Create(OpCodes.Leave, catchEnd));
+                    }
+                }
+                // .catch
                 if (vException != null)
                 {
-                    instructions.Add(Create(OpCodes.Leave, catchEnd));
+                    catchStart = instructions.AddGetFirst(vException.Assign(target => []));
+                    // .context.Exception = exception;
+                    instructions.Add(vContext.Value.P_Exception.Assign(vException));
+                    // .mo.OnException(context); ...
+                    instructions.Add(SyncMosOn(rouMethod, tWeavingTarget, vContext, vMos, vMoArray, Feature.OnException, mo => mo.M_OnException));
+                    // .arg_i = context.Arguments[i];
+                    instructions.Add(SyncRefreshArguments(rouMethod, tWeavingTarget, args, vContext, Feature.OnException, false));
+                    // .if (context.RetryCount > 0) goto RETRY;
+                    instructions.Add(SynCheckRetry(rouMethod, tWeavingTarget, vContext, context, Feature.OnException, true));
+                    // .mo.OnExit(context);
+                    instructions.Add(SyncMosOn(rouMethod, tWeavingTarget, vContext, vMos, vMoArray, Feature.OnExit, mo => mo.M_OnExit));
+                    // .if (context.ExceptionHandled) return;
+                    instructions.Add(SyncReturnIfExceptionHandled(rouMethod, vContext, context));
+                    instructions.Add(Create(OpCodes.Rethrow));
                 }
-            }
-            // .catch
-            if (vException != null)
-            {
-                catchStart = instructions.AddGetFirst(vException.Assign(target => []));
-                // .context.Exception = exception;
-                instructions.Add(vContext.Value.P_Exception.Assign(vException));
-                // .mo.OnException(context); ...
-                instructions.Add(SyncMosOn(rouMethod, tWeavingTarget, vContext, vMos, vMoArray, Feature.OnException, mo => mo.M_OnException));
+                instructions.Add(catchEnd);
+
+                // .mo.OnSuccess(context);
+                instructions.Add(SyncMosOn(rouMethod, tWeavingTarget, vContext, vMos, vMoArray, Feature.OnSuccess, mo => mo.M_OnSuccess));
                 // .arg_i = context.Arguments[i];
-                instructions.Add(SyncRefreshArguments(rouMethod, tWeavingTarget, args, vContext, Feature.OnException, false));
+                instructions.Add(SyncRefreshArguments(rouMethod, tWeavingTarget, args, vContext, Feature.OnSuccess, false));
                 // .if (context.RetryCount > 0) goto RETRY;
-                instructions.Add(SynCheckRetry(rouMethod, tWeavingTarget, vContext, context, Feature.OnException, true));
+                instructions.Add(SynCheckRetry(rouMethod, tWeavingTarget, vContext, context, Feature.OnSuccess, false));
                 // .mo.OnExit(context);
                 instructions.Add(SyncMosOn(rouMethod, tWeavingTarget, vContext, vMos, vMoArray, Feature.OnExit, mo => mo.M_OnExit));
-                // .if (context.ExceptionHandled) return;
-                instructions.Add(SyncReturnIfExceptionHandled(rouMethod, vContext, context));
-                instructions.Add(Create(OpCodes.Rethrow));
 
-                instructions.Add(catchEnd);
+                // .return;
+                instructions.Add(context.AnchorReturnResult.Set(OpCodes.Leave, poolFinallyEnd));
             }
+            // .finally
+            {
+                instructions.Add(poolFinallyStart);
 
-            // .mo.OnSuccess(context);
-            instructions.Add(SyncMosOn(rouMethod, tWeavingTarget, vContext, vMos, vMoArray, Feature.OnSuccess, mo => mo.M_OnSuccess));
-            // .arg_i = context.Arguments[i];
-            instructions.Add(SyncRefreshArguments(rouMethod, tWeavingTarget, args, vContext, Feature.OnSuccess, false));
-            // .if (context.RetryCount > 0) goto RETRY;
-            instructions.Add(SynCheckRetry(rouMethod, tWeavingTarget, vContext, context, Feature.OnSuccess, false));
-            // .mo.OnExit(context);
-            instructions.Add(SyncMosOn(rouMethod, tWeavingTarget, vContext, vMos, vMoArray, Feature.OnExit, mo => mo.M_OnExit));
+                // .RougamoPool<MethodContext>.Return(context);
+                instructions.Add(SyncReturnToPool(vContext));
+
+                instructions.Add(Create(OpCodes.Endfinally));
+                instructions.Add(poolFinallyEnd);
+            }
             // .return;
-            instructions.Add(context.AnchorReturnResult.Set(OpCodes.Ret));
+            instructions.Add(Create(OpCodes.Ret));
 
             SetTryCatch(tWeavingTarget.M_Proxy.Def, tryStart, catchStart, catchEnd);
+            SetTryFinally(tWeavingTarget.M_Proxy.Def, poolTryStart, poolFinallyStart, poolFinallyEnd);
 
-            if (vException != null)
+            var opCode = vException == null ? OpCodes.Br : OpCodes.Leave;
+            foreach (var ret in returns)
             {
-                foreach (var ret in returns)
-                {
-                    ret.Set(OpCodes.Leave, catchEnd);
-                }
+                ret.Set(opCode, catchEnd);
             }
         }
 
