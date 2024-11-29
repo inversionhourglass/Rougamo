@@ -176,8 +176,8 @@ namespace Rougamo.Fody
                                 return [
                                     // ._context.Exception = persistentInnerException;
                                     .. tStateMachine.F_MethodContext.Value.P_Exception.Assign(vPersistentInnerException),
-                                // .goto ON_EXCEPTION;
-                                Create(OpCodes.Br, context.AnchorOnExceptionAsync)
+                                    // .goto ON_EXCEPTION;
+                                    Create(OpCodes.Br, context.AnchorOnExceptionAsync)
                                 ];
                             }));
                         }
@@ -233,7 +233,7 @@ namespace Rougamo.Fody
                     instructions.Add(Create(OpCodes.Endfinally));
                     instructions.Add(poolFinallyEnd);
                 }
-                //instructions.Add(Create(OpCodes.Leave, context.AnchorSetResult));
+                instructions.Add(Create(OpCodes.Leave, context.AnchorSetResult));
             }
             // .catch (Exception exception)
             {
@@ -465,6 +465,7 @@ namespace Rougamo.Fody
 
         private IList<Instruction> AsyncIsAwaiterCompleted(IAsyncStateMachine tStateMachine, FieldSimulation<TsAwaiter> fAwaiter, VariableSimulation<TsAwaiter> vAwaiter, VariableSimulation vState, IAsyncContext context)
         {
+            // .if (!awaiter.IsCompleted)
             return vAwaiter.Value.P_IsCompleted.IfNot(anchor => [
                 // .state = STATE;
                 .. vState.Assign(context.State),
