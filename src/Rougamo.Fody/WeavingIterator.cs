@@ -37,6 +37,7 @@ namespace Rougamo.Fody
             var tStateMachine = stateMachineTypeDef.MakeReference().Simulate<TsIteratorStateMachine>(this).SetFields(fields);
             var mActualMethod = StateMachineResolveActualMethod<TsEnumerable>(tStateMachine, actualMethodDef);
             IteratorBuildMoveNext(rouMethod, tStateMachine, mActualMethod);
+            IteratorBuildDispose(rouMethod, tStateMachine);
         }
 
         private void IteratorBuildMoveNext(RouMethod rouMethod, TsIteratorStateMachine tStateMachine, MethodSimulation<TsEnumerable> mActualMethod)
@@ -64,83 +65,130 @@ namespace Rougamo.Fody
             var vException = rouMethod.Features.HasIntersection(Feature.OnException | Feature.OnExit) ? mMoveNext.CreateVariable(_tExceptionRef) : null;
 
             Instruction? tryStart = null, catchStart = null, catchEnd = Create(OpCodes.Nop);
+            Instruction? faultTryStart = null, faultStart = null, faultEnd = Create(OpCodes.Nop);
 
-            // .var state = _state;
-            instructions.Add(vState.Assign(tStateMachine.F_State));
-            // .if (state == 0)
-            instructions.Add(vState.IsEqual(0).If(anchor => [
-                // ._items = new List<T>();
-                .. IteratorInitItems(rouMethod, tStateMachine),
-                // ._mo = new Mo1Attribute(..);
-                .. StateMachineInitMos(rouMethod, tStateMachine),
-                // ._context = new MethodContext(..);
-                .. StateMachineInitMethodContext(rouMethod, tStateMachine),
-                // ._mo.OnEntry(_context);
-                .. StateMachineSyncMosNo(rouMethod, tStateMachine, Feature.OnEntry, mo => mo.M_OnEntry),
-                // .if (_context.RewriteArguments) { .. }
-                .. StateMachineIfRewriteArguments(rouMethod, tStateMachine),
-                // ._iterator = ActualMethod(x, y, z).GetEnumerator();
-                .. tStateMachine.F_Iterator.Assign(target => [
-                    .. mActualMethod.Call(tStateMachine.M_MoveNext, tStateMachine.F_Parameters),
-                    .. mActualMethod.Result.M_GetEnumerator.Call(tStateMachine.M_MoveNext)
-                ]),
-                Create(OpCodes.Br, context.AnchorState1)
-            ]));
-            // .else if (state != 1)
-            instructions.Add(vState.IsEqual(1).IfNot(anchor => [
-                // return false;
-                Create(OpCodes.Ldc_I4_0),
-                Create(OpCodes.Ret)
-            ]));
-            instructions.Add(context.AnchorState1);
             // .try
             {
-                // .hasNext = _iterator.MoveNext();
-                tryStart = instructions.AddGetFirst(vHasNext.Assign(target => tStateMachine.F_Iterator.Value.M_MoveNext.Call(tStateMachine.M_MoveNext)));
-                if (vException != null) instructions.Add(Create(OpCodes.Leave, catchEnd));
-            }
-            // .catch (Exception ex)
-            if (vException != null)
-            {
-                catchStart = instructions.AddGetFirst(vException.Assign(target => []));
-                // ._context.Exception = ex;
-                instructions.Add(tStateMachine.F_MethodContext.Value.P_Exception.Assign(vException));
+                // .var state = _state;
+                faultTryStart = instructions.AddGetFirst(vState.Assign(tStateMachine.F_State));
+                // .if (state == 0)
+                instructions.Add(vState.IsEqual(0).If(anchor => [
+                    // ._items = new List<T>();
+                    .. IteratorInitItems(rouMethod, tStateMachine),
+                    // ._mo = new Mo1Attribute(..);
+                    .. StateMachineInitMos(rouMethod, tStateMachine),
+                    // ._context = new MethodContext(..);
+                    .. StateMachineInitMethodContext(rouMethod, tStateMachine),
+                    // ._mo.OnEntry(_context);
+                    .. StateMachineSyncMosNo(rouMethod, tStateMachine, Feature.OnEntry, mo => mo.M_OnEntry),
+                    // .if (_context.RewriteArguments) { .. }
+                    .. StateMachineIfRewriteArguments(rouMethod, tStateMachine),
+                    // ._iterator = ActualMethod(x, y, z).GetEnumerator();
+                    .. tStateMachine.F_Iterator.Assign(target => [
+                        .. mActualMethod.Call(tStateMachine.M_MoveNext, tStateMachine.F_Parameters),
+                        .. mActualMethod.Result.M_GetEnumerator.Call(tStateMachine.M_MoveNext)
+                    ]),
+                    Create(OpCodes.Br, context.AnchorState1)
+                ]));
+                // .else if (state != 1)
+                instructions.Add(vState.IsEqual(1).IfNot(anchor => [
+                    // return false;
+                    .. vHasNext.Assign(0),
+                    Create(OpCodes.Leave, faultEnd)
+                ]));
+                instructions.Add(context.AnchorState1);
+                // .try
+                {
+                    // .hasNext = _iterator.MoveNext();
+                    tryStart = instructions.AddGetFirst(vHasNext.Assign(target => tStateMachine.F_Iterator.Value.M_MoveNext.Call(tStateMachine.M_MoveNext)));
+                    if (vException != null) instructions.Add(Create(OpCodes.Leave, catchEnd));
+                }
+                // .catch (Exception ex)
+                if (vException != null)
+                {
+                    catchStart = instructions.AddGetFirst(vException.Assign(target => []));
+                    // ._context.Exception = ex;
+                    instructions.Add(tStateMachine.F_MethodContext.Value.P_Exception.Assign(vException));
+                    // ._state = -1;
+                    instructions.Add(tStateMachine.F_State.Assign(-1));
+                    // ._mo.OnException(_context);
+                    instructions.Add(StateMachineSyncMosNo(rouMethod, tStateMachine, Feature.OnException, mo => mo.M_OnException));
+                    // ._mo.OnExit(_context);
+                    instructions.Add(StateMachineSyncMosNo(rouMethod, tStateMachine, Feature.OnExit, mo => mo.M_OnExit));
+                    // throw;
+                    instructions.Add(Create(OpCodes.Rethrow));
+
+                    instructions.Add(catchEnd);
+                }
+                // .if (hasNext)
+                instructions.Add(vHasNext.If(anchor => [
+                    // ._current = _iterator.Current;
+                    .. tStateMachine.F_Current.Assign(tStateMachine.F_Iterator.Value.P_Current),
+                    // ._items.Add(_current);
+                    .. IteratorSaveItem(rouMethod, tStateMachine),
+                    // ._state = 1;
+                    .. tStateMachine.F_State.Assign(1),
+                    // .return true;
+                    .. vHasNext.Assign(1),
+                    Create(OpCodes.Leave, faultEnd)
+                ]));
                 // ._state = -1;
                 instructions.Add(tStateMachine.F_State.Assign(-1));
-                // ._mo.OnException(_context);
-                instructions.Add(StateMachineSyncMosNo(rouMethod, tStateMachine, Feature.OnException, mo => mo.M_OnException));
+                // ._context.ReturnValue = _items.ToArray();
+                instructions.Add(IteratorSaveReturnValue(rouMethod, tStateMachine));
+                // ._mo.OnSuccess(_context);
+                instructions.Add(StateMachineSyncMosNo(rouMethod, tStateMachine, Feature.OnSuccess, mo => mo.M_OnSuccess));
                 // ._mo.OnExit(_context);
                 instructions.Add(StateMachineSyncMosNo(rouMethod, tStateMachine, Feature.OnExit, mo => mo.M_OnExit));
-                // throw;
-                instructions.Add(Create(OpCodes.Rethrow));
-
-                instructions.Add(catchEnd);
+                // .this.Dispose();
+                instructions.Add(tStateMachine.M_Dispose.Call(mMoveNext));
+                // .return false;
+                instructions.Add(vHasNext.Assign(0));
+                instructions.Add(Create(OpCodes.Leave, faultEnd));
             }
-            // .if (hasNext)
-            instructions.Add(vHasNext.If(anchor => [
-                // ._current = _iterator.Current;
-                .. tStateMachine.F_Current.Assign(tStateMachine.F_Iterator.Value.P_Current),
-                // ._items.Add(_current);
-                .. IteratorSaveItem(rouMethod, tStateMachine),
-                // ._state = 1;
-                .. tStateMachine.F_State.Assign(1),
-                // .return true;
-                Create(OpCodes.Ldc_I4_1),
-                Create(OpCodes.Ret)
-            ]));
-            // ._state = -1;
-            instructions.Add(tStateMachine.F_State.Assign(-1));
-            // ._context.ReturnValue = _items.ToArray();
-            instructions.Add(IteratorSaveReturnValue(rouMethod, tStateMachine));
-            // ._mo.OnSuccess(_context);
-            instructions.Add(StateMachineSyncMosNo(rouMethod, tStateMachine, Feature.OnSuccess, mo => mo.M_OnSuccess));
-            // ._mo.OnExit(_context);
-            instructions.Add(StateMachineSyncMosNo(rouMethod, tStateMachine, Feature.OnExit, mo => mo.M_OnExit));
-            // .return false;
-            instructions.Add(Create(OpCodes.Ldc_I4_0));
+            // .fault
+            {
+                // .this.Dispose();
+                faultStart = instructions.AddGetFirst(tStateMachine.M_Dispose.Call(mMoveNext));
+
+                instructions.Add(Create(OpCodes.Endfinally));
+            }
+            instructions.Add(faultEnd);
+
+            // .return hasNext;
+            instructions.Add(vHasNext.Load());
             instructions.Add(Create(OpCodes.Ret));
 
-            SetTryCatch(tStateMachine.M_MoveNext.Def, tryStart, catchStart, catchEnd);
+            SetTryCatch(mMoveNext.Def, tryStart, catchStart, catchEnd);
+            SetTryFault(mMoveNext.Def, faultTryStart, faultStart, faultEnd);
+        }
+
+        private void IteratorBuildDispose(RouMethod rouMethod,TsIteratorStateMachine tStateMachine)
+        {
+            var mDispose = tStateMachine.M_Dispose;
+            mDispose.Def.Clear();
+
+            var instructions = mDispose.Def.Body.Instructions;
+
+            // .if (_state == -3) return;
+            instructions.Add(tStateMachine.F_State.IsEqual(-3).If(_ => [Create(OpCodes.Ret)]));
+
+            // ._state = -3;
+            instructions.Add(tStateMachine.F_State.Assign(-3));
+            // .if (_context != null)
+            instructions.Add(tStateMachine.F_MethodContext.IsNull().IfNot(_ =>
+            {
+                // .RougamoPool<MethodContext>.Return(_context);
+                return StateMachineReturnToPool(tStateMachine.F_MethodContext, mDispose);
+            }));
+            // ._iterator.Dispose();
+            instructions.Add(tStateMachine.F_Iterator.Value.M_Dispose.Call(mDispose));
+
+            // .return
+            instructions.Add(Create(OpCodes.Ret));
+
+            mDispose.Def.Body.InitLocals = true;
+            mDispose.Def.Body.OptimizePlus();
         }
 
         private IList<Instruction> IteratorInitItems(RouMethod rouMethod, IIteratorStateMachine tStateMachine)

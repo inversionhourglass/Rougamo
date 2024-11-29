@@ -84,6 +84,19 @@ namespace Rougamo.Fody
             });
         }
 
+        private void SetTryFault(MethodDefinition methodDef, Instruction? tryStart, Instruction? faultStart, Instruction? faultEnd)
+        {
+            if (tryStart == null || faultStart == null || faultEnd == null) return;
+
+            methodDef.Body.ExceptionHandlers.Add(new(ExceptionHandlerType.Fault)
+            {
+                TryStart = tryStart,
+                TryEnd = faultStart,
+                HandlerStart = faultStart,
+                HandlerEnd = faultEnd
+            });
+        }
+
         private void CheckRefStruct()
         {
             var exceptions = new List<FodyWeavingException>();
