@@ -480,12 +480,12 @@ namespace Rougamo.Fody
                     if (executeSequence == -1)
                     {
                         // .if ((moArray[flag].Feature & feature) != 0) moArray[flag].OnXxx(context);
-                        callingInsts = tMoArray[vFlag].Value.P_Features.And((int)feature).IsEqual(0).IfNot(anchor => callingInsts);
+                        callingInsts = tMoArray[vFlag].Value.P_Features.BitAnd((int)feature).IsEqual(0).IfNot(anchor => callingInsts);
                     }
                     else
                     {
                         // .if ((executeSequence & flag) != 0) moArray[flag].OnXxx(context);
-                        callingInsts = new Int32Value(1, this).ShiftLeft(vFlag).And(executeSequence).IsEqual(0).IfNot(anchor => callingInsts);
+                        callingInsts = new Int32Value(1, this).ShiftLeft(vFlag).BitAnd(executeSequence).IsEqual(0).IfNot(anchor => callingInsts);
                     }
                 }
                 var loopFirst = Create(OpCodes.Nop);
