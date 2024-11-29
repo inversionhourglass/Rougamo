@@ -9,7 +9,7 @@ namespace Rougamo.Context
     /// <summary>
     /// Method execution context
     /// </summary>
-    public class MethodContext
+    public class MethodContext : IResettable
     {
         private Type? _taskReturnType;
         private IDictionary? _datas;
@@ -159,6 +159,28 @@ namespace Rougamo.Context
             ReturnValueReplaced = true;
             ReturnValueModifier = modifier;
             RetryCount = 0;
+        }
+
+        /// <inheritdoc/>
+        public bool TryReset()
+        {
+            _taskReturnType = null;
+            _datas = null;
+            Mos = null!;
+            Target = null;
+            TargetType = null!;
+            Method = null!;
+            Arguments = null!;
+            RetryCount = 0;
+            RewriteArguments = false;
+            ReturnValue = null;
+            ReturnValueReplaced = false;
+            ReturnValueModifier = null;
+            Exception = null;
+            ExceptionHandled = false;
+            ExceptionHandler = null;
+
+            return true;
         }
     }
 }

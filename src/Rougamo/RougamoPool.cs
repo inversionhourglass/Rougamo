@@ -55,6 +55,8 @@ namespace Rougamo
         /// </summary>
         public static void Return(T value)
         {
+            if (value is IResettable resettable && !resettable.TryReset()) return;
+
             if (_FastItem != null || Interlocked.CompareExchange(ref _FastItem, value, null) != null)
             {
                 if (Interlocked.Increment(ref _NumItems) <= _MaxCapacity)
