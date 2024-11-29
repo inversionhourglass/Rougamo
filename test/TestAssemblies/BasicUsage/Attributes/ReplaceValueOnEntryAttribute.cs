@@ -1,14 +1,14 @@
-﻿using Rougamo.Context;
+﻿using Rougamo;
+using Rougamo.Context;
 
 namespace BasicUsage.Attributes
 {
-    public class ReplaceValueOnEntryAttribute : ContainerAttribute
+    public class ReplaceValueOnEntryAttribute : MoAttribute
     {
         public static string[] ArrayValue = new[] { nameof(ReplaceValueOnEntryAttribute), nameof(OnEntry) };
 
         public override void OnEntry(MethodContext context)
         {
-            base.OnEntry(context);
             if (context.TaskReturnType == typeof(string[]))
             {
                 context.ReplaceReturnValue(this, ArrayValue);

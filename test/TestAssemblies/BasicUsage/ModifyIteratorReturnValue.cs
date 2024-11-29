@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace BasicUsage
 {
-    public class ModifyIteratorReturnValue : MoDataContainer
+    public class ModifyIteratorReturnValue
     {
         [ReturnValueReplace]
         public IEnumerable<int> Succeed(int count, int min, int max)

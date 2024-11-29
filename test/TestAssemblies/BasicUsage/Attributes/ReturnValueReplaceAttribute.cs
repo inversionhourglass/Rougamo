@@ -1,9 +1,10 @@
-﻿using Rougamo.Context;
+﻿using Rougamo;
+using Rougamo.Context;
 using System.Collections.Generic;
 
 namespace BasicUsage.Attributes
 {
-    public class ReturnValueReplaceAttribute : ContainerAttribute
+    public class ReturnValueReplaceAttribute : MoAttribute
     {
         public static int IntValue = nameof(OnSuccess).Length;
 
@@ -13,7 +14,6 @@ namespace BasicUsage.Attributes
 
         public override void OnSuccess(MethodContext context)
         {
-            base.OnSuccess(context);
             if (context.TaskReturnType == typeof(int))
             {
                 context.ReplaceReturnValue(this, IntValue);

@@ -1,9 +1,10 @@
-﻿using Rougamo.Context;
+﻿using Rougamo;
+using Rougamo.Context;
 using System.Collections.Generic;
 
 namespace BasicUsage.Attributes
 {
-    public class ExceptionHandleAttribute : ContainerAttribute
+    public class ExceptionHandleAttribute : MoAttribute
     {
         public static int IntValue = nameof(OnException).Length;
 
@@ -13,7 +14,6 @@ namespace BasicUsage.Attributes
 
         public override void OnException(MethodContext context)
         {
-            base.OnException(context);
             if(context.TaskReturnType == typeof(int))
             {
                 context.HandledException(this, IntValue);

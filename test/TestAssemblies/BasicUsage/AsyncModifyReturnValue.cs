@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 namespace BasicUsage
 {
 #pragma warning disable CS1998 // Async method lacks 'await' operators and will run synchronously
-    public class AsyncModifyReturnValue : MoDataContainer
+    public class AsyncModifyReturnValue
     {
         [ExceptionHandle]
 #if NET461 || NET6

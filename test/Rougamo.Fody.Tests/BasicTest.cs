@@ -20,94 +20,6 @@ namespace Rougamo.Fody.Tests
         protected override string RootNamespace => "BasicUsage";
 
         [Fact]
-        public void InstanceSingleMethodTest()
-        {
-            var instance = GetInstance("InstanceSingleMethod");
-            var arrArg = new object[] { Guid.NewGuid(), 1.2, new object() };
-            instance.Entry(1, "2", arrArg);
-            Assert.Equal(instance.Context.Arguments.Length, 3);
-            for (var i = 0; i < arrArg.Length; i++)
-            {
-                Assert.Equal(arrArg[i], instance.Context.Arguments[2][i]);
-            }
-
-            instance.Context = null;
-            Assert.Throws<InvalidOperationException>(() => instance.Exception());
-            Assert.NotNull(instance.Context.Exception);
-            // Combine the following two steps will throws an exception.
-            IDictionary data = instance.Context.Exception.Data;
-            Assert.Equal(1, data.Count);
-
-            instance.Context = null;
-            var successValue = instance.Success();
-            Assert.Equal(successValue, instance.Context.ReturnValue);
-
-            instance.Context = null;
-            Assert.Throws<InvalidOperationException>(() => instance.ExitWithException());
-            Assert.Null(instance.Context.ReturnValue);
-            Assert.NotNull(instance.Context.Exception);
-
-            instance.Context = null;
-            var exitWithSuccessValue = instance.ExitWithSuccess();
-            Assert.Equal(exitWithSuccessValue, instance.Context.ReturnValue);
-            Assert.Null(instance.Context.Exception);
-        }
-
-        [Fact]
-        public async Task AsyncInstanceSingleMethodTest()
-        {
-            var instance = GetInstance("AsyncInstanceSingleMethod");
-            var arrArg = new object[] { Guid.NewGuid(), 1.2, new object() };
-#if NET461 || NET6
-            await (Task)instance.EntryAsync(1, "2", arrArg);
-#else
-            await (ValueTask<string>)instance.EntryAsync(1, "2", arrArg);
-#endif
-            Assert.Equal(instance.Context.Arguments.Length, 3);
-            for (var i = 0; i < arrArg.Length; i++)
-            {
-                Assert.Equal(arrArg[i], instance.Context.Arguments[2][i]);
-            }
-
-            instance.Context = null;
-#if NET461 || NET6
-            await Assert.ThrowsAsync<InvalidOperationException>(() => (Task)instance.ExceptionAsync());
-#else
-            await Assert.ThrowsAsync<InvalidOperationException>(() => ((ValueTask<string>)instance.ExceptionAsync()).AsTask());
-#endif
-            Assert.NotNull(instance.Context.Exception);
-            // Combine the following two steps will throws an exception.
-            IDictionary data = instance.Context.Exception.Data;
-            Assert.Equal(1, data.Count);
-
-            instance.Context = null;
-#if NET461 || NET6
-            var successValue = await (Task<int>)instance.SuccessAsync();
-#else
-            var successValue = await (ValueTask<int>)instance.SuccessAsync();
-#endif
-            Assert.Equal(successValue, instance.Context.ReturnValue);
-
-            instance.Context = null;
-#if NET461 || NET6
-            await Assert.ThrowsAsync<InvalidOperationException>(() => (Task)instance.ExitWithExceptionAsync());
-#else
-            await Assert.ThrowsAsync<InvalidOperationException>(() => ((ValueTask<string>)instance.ExitWithExceptionAsync()).AsTask());
-#endif
-            Assert.Null(instance.Context.ReturnValue);
-            Assert.NotNull(instance.Context.Exception);
-
-            instance.Context = null;
-#if NET461 || NET6
-            var exitWithSuccessValue = await (Task<string>)instance.ExitWithSuccessAsync();
-#else
-            var exitWithSuccessValue = await (ValueTask<string>)instance.ExitWithSuccessAsync();
-#endif
-            Assert.Equal(instance.Context.ReturnValue, exitWithSuccessValue);
-            Assert.Null(instance.Context.Exception);
-        }
-
-        [Fact]
         public void ModifyReturnValueTest()
         {
             var originInstance = new ModifyReturnValue();
@@ -679,6 +591,64 @@ namespace Rougamo.Fody.Tests
             executedMos.Clear();
             var tryCatchInstance = GetInstance(nameof(ConstructorTryCatch), false, null, [executedMos]);
             Assert.Equal(executedMos, executedMos);
+        }
+
+        [Fact]
+        public async Task LifetimeTest()
+        {
+            var instance = GetInstance(nameof(LifetimeUseCase));
+
+            var list = new List<object>();
+
+            list.Clear();
+            instance.SingletonNested(list);
+            Assert.Equal(2, list.Count);
+            Assert.Same(list[0], list[1]);
+            instance.Singleton(list);
+            Assert.Equal(3, list.Count);
+            Assert.Same(list[0], list[2]);
+
+            list.Clear();
+            await (Task)instance.SingletonNestedAsync(list);
+            Assert.Equal(2, list.Count);
+            Assert.Same(list[0], list[1]);
+            await (Task)instance.SingletonAsync(list);
+            Assert.Equal(3, list.Count);
+            Assert.Same(list[0], list[2]);
+
+            list.Clear();
+            instance.PooledNested(list);
+            Assert.Equal(2, list.Count);
+            Assert.NotSame(list[0], list[1]);
+            instance.Pooled(list);
+            Assert.Equal(3, list.Count);
+            Assert.True(list[0] == list[2] || list[1] == list[2]);
+
+            list.Clear();
+            await (Task)instance.PooledNestedAsync(list);
+            Assert.Equal(2, list.Count);
+            Assert.NotSame(list[0], list[1]);
+            await (Task)instance.PooledAsync(list);
+            Assert.Equal(3, list.Count);
+            Assert.True(list[0] == list[2] || list[1] == list[2]);
+
+            list.Clear();
+            instance.TransientNested(list);
+            Assert.Equal(2, list.Count);
+            Assert.NotSame(list[0], list[1]);
+            instance.Transient(list);
+            Assert.Equal(3, list.Count);
+            Assert.NotSame(list[0], list[2]);
+            Assert.NotSame(list[1], list[2]);
+
+            list.Clear();
+            await (Task)instance.TransientNestedAsync(list);
+            Assert.Equal(2, list.Count);
+            Assert.NotSame(list[0], list[1]);
+            await (Task)instance.TransientAsync(list);
+            Assert.Equal(3, list.Count);
+            Assert.NotSame(list[0], list[2]);
+            Assert.NotSame(list[1], list[2]);
         }
     }
 }

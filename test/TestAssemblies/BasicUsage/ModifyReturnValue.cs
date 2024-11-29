@@ -3,7 +3,7 @@ using System;
 
 namespace BasicUsage
 {
-    public class ModifyReturnValue : MoDataContainer
+    public class ModifyReturnValue
     {
         [ExceptionHandle]
         public string Exception(bool throwException = true)
