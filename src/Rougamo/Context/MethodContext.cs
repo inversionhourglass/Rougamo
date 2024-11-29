@@ -166,11 +166,11 @@ namespace Rougamo.Context
         {
             _taskReturnType = null;
             _datas = null;
-            Mos = null!;
+            Mos = [];
             Target = null;
             TargetType = null!;
             Method = null!;
-            Arguments = null!;
+            Arguments = [];
             RetryCount = 0;
             RewriteArguments = false;
             ReturnValue = null;
