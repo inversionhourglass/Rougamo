@@ -14,6 +14,7 @@ namespace Rougamo.Fody
         private double? _order;
         private Omit? _omit;
         private ForceSync? _forceSync;
+        private Lifetime? _lifetime;
 
         public Mo(CustomAttribute attribute, MoFrom from)
         {
@@ -111,6 +112,18 @@ namespace Rougamo.Fody
                     _forceSync = this.ExtractForceSync();
                 }
                 return _forceSync.Value;
+            }
+        }
+
+        public Lifetime Lifetime
+        {
+            get
+            {
+                if (!_lifetime.HasValue)
+                {
+                    _lifetime = this.ExtractLifetime();
+                }
+                return _lifetime.Value;
             }
         }
 

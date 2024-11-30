@@ -18,6 +18,7 @@
         public const string TYPE_PointcutAttribute = "Rougamo.Metadatas.PointcutAttribute";
         public const string TYPE_AdviceAttribute = "Rougamo.Metadatas.AdviceAttribute";
         public const string TYPE_OptimizationAttribute = "Rougamo.Metadatas.OptimizationAttribute";
+        public const string TYPE_LifetimeAttribute = "Rougamo.Metadatas.LifetimeAttribute";
         public const string TYPE_IFlexibleModifierPointcut = "Rougamo.Flexibility.IFlexibleModifierPointcut";
         public const string TYPE_IFlexiblePatternPointcut = "Rougamo.Flexibility.IFlexiblePatternPointcut";
         public const string TYPE_RougamoPool = "Rougamo.RougamoPool`1";
@@ -47,6 +48,7 @@
         public const string FIELD_RougamoMo_Prefix = ">_<rougamo_mo_";
         public const string FIELD_RougamoMos = ">_<rougamo_mos";
         public const string FIELD_RougamoContext = ">_<rougamo_context";
+        public const string FIELD_Singleton = ">_<Singleton";
 
         public const string METHOD_OnEntry = "OnEntry";
         public const string METHOD_OnSuccess = "OnSuccess";
@@ -56,6 +58,7 @@
         public const string METHOD_OnSuccessAsync = "OnSuccessAsync";
         public const string METHOD_OnExceptionAsync = "OnExceptionAsync";
         public const string METHOD_OnExitAsync = "OnExitAsync";
+        public const string METHOD__Singleton = "$Singleton";
         public const string METHOD_Get = "Get";
         public const string METHOD_Return = "Return";
     }

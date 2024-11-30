@@ -184,6 +184,24 @@ namespace Rougamo.Fody
 
         #endregion Extract-Mo-ForceSync
 
+        #region Extract-Mo-Lifetime
+
+        public static Lifetime ExtractLifetime(this Mo mo)
+        {
+            var typeRef = mo.Attribute == null ? mo.TypeRef : mo.Attribute.AttributeType;
+            var typeDef = typeRef!.ToDefinition();
+            var lifetimeAttribute = typeDef.CustomAttributes.FirstOrDefault(x => x.Is(Constants.TYPE_LifetimeAttribute));
+            if (lifetimeAttribute != null && lifetimeAttribute.ConstructorArguments.Count == 1)
+            {
+                var arg = lifetimeAttribute.ConstructorArguments[0];
+                return (Lifetime)Convert.ToInt32(arg.Value);
+            }
+
+            return Lifetime.Transient;
+        }
+
+        #endregion Extract-Mo-Lifetime
+
         #region Extract-Property-Value
 
         private static T? ExtractFromIl<T>(TypeReference typeRef, string propertyName, string propertyTypeFullName, Func<Instruction, T?> tryResolve) where T : struct

@@ -13,6 +13,7 @@
     <Compile Include="..\Rougamo\Context\Omit.cs" Link="Models\Omit.cs" />
     <Compile Include="..\Rougamo\Feature.cs" Link="Models\Feature.cs" />
     <Compile Include="..\Rougamo\ForceSync.cs" Link="Models\ForceSync.cs" />
+    <Compile Include="..\Rougamo\Lifetime.cs" Link="Models\Lifetime.cs" />
   </ItemGroup>
 
   <ItemGroup>
