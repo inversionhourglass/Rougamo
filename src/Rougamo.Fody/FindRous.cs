@@ -3,6 +3,7 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
 using Mono.Collections.Generic;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
@@ -38,7 +39,12 @@ namespace Rougamo.Fody
             foreach (var typeDef in types)
             {
                 if (typeDef.IsEnum || typeDef.IsInterface || typeDef.IsArray || typeDef.IsDelegate() || !typeDef.HasMethods || typeDef.CustomAttributes.Any(x => x.AttributeType.Is(Constants.TYPE_CompilerGeneratedAttribute) || x.AttributeType.Is(Constants.TYPE_Runtime_CompilerGeneratedAttribute))) continue;
-                if (typeDef.Implement(Constants.TYPE_IMo) || typeDef.InheritAny(Constants.TYPE_MoRepulsion, Constants.TYPE_IgnoreMoAttribute, Constants.TYPE_MoProxyAttribute)) continue;
+                if (typeDef.InheritAny(Constants.TYPE_MoRepulsion, Constants.TYPE_IgnoreMoAttribute, Constants.TYPE_MoProxyAttribute)) continue;
+                if (typeDef.Implement(Constants.TYPE_IMo))
+                {
+                    HandleMoLifetime(typeDef);
+                    continue;
+                }
                 if (_config.ExceptTypePatterns.Any(x => x.IsMatch(typeDef.FullName))) continue;
 
                 var typeIgnores = ExtractIgnores(typeDef.CustomAttributes);
@@ -78,6 +84,42 @@ namespace Rougamo.Fody
                     _rouTypes.Add(rouType);
                 }
             }
+        }
+
+        private void HandleMoLifetime(TypeDefinition tdMo)
+        {
+            var lifetimeAttribute = tdMo.CustomAttributes.FirstOrDefault(x => x.Is(Constants.TYPE_LifetimeAttribute));
+            if (lifetimeAttribute == null || lifetimeAttribute.ConstructorArguments.Count != 1) return;
+
+            var lifetime = (Lifetime)Convert.ToInt32(lifetimeAttribute.ConstructorArguments[0].Value);
+            var ctorNonArgs = tdMo.GetConstructors().FirstOrDefault(x => !x.IsStatic && x.Parameters.Count == 0);
+            if ((lifetime == Lifetime.Pooled || lifetime == Lifetime.Singleton) && ctorNonArgs == null) throw new FodyWeavingException($"{tdMo} has a {lifetime} lifetime but it does not have a parameterless constructor.");
+            if (lifetime != Lifetime.Singleton || tdMo.GetMethod(false, x => x.Name == Constants.METHOD__Singleton && x.IsStatic) != null) return;
+
+            var trMo = this.Import(tdMo);
+
+            var fdSingleton = tdMo.Fields.AddGet(new FieldDefinition(Constants.FIELD_Singleton, FieldAttributes.Private | FieldAttributes.Static | FieldAttributes.InitOnly, trMo));
+            var frSingleton = new FieldReference(fdSingleton.Name, fdSingleton.FieldType, trMo);
+
+            var cctor = tdMo.GetStaticConstructor();
+            Instruction[] initSingletonField = [Instruction.Create(OpCodes.Newobj, this.Import(ctorNonArgs)), Instruction.Create(OpCodes.Stsfld, frSingleton)];
+            if (cctor != null)
+            {
+                cctor.Body.Instructions.Insert(0, initSingletonField);
+            }
+            else
+            {
+                var cctorAttribute = MethodAttributes.Private | MethodAttributes.Static | MethodAttributes.HideBySig | MethodAttributes.SpecialName | MethodAttributes.RTSpecialName;
+                cctor = tdMo.Methods.AddGet(new MethodDefinition(".cctor", cctorAttribute, _tVoidRef));
+                cctor.Body.Instructions.Add(initSingletonField);
+                cctor.Body.Instructions.Add(Instruction.Create(OpCodes.Ret));
+            }
+
+            var mdSingleton = tdMo.Methods.AddGet(new MethodDefinition(Constants.METHOD__Singleton, MethodAttributes.Public | MethodAttributes.Static | MethodAttributes.HideBySig, trMo));
+            mdSingleton.Body.Instructions.Add([
+                Instruction.Create(OpCodes.Ldsfld, frSingleton),
+                Instruction.Create(OpCodes.Ret)
+            ]);
         }
 
         /// <summary>
