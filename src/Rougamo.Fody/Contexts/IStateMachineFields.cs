@@ -4,8 +4,6 @@ namespace Rougamo.Fody.Contexts
 {
     internal interface IStateMachineFields
     {
-        FieldDefinition? MoArray { get; }
-
         FieldDefinition[] Mos { get; }
 
         FieldDefinition MethodContext { get; }

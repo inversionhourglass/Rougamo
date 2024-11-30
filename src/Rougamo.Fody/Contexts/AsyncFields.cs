@@ -5,13 +5,12 @@ namespace Rougamo.Fody.Contexts
     internal class AsyncFields : IStateMachineFields
     {
         public AsyncFields(
-            FieldDefinition? moArray, FieldDefinition[] mos,
+            FieldDefinition[] mos,
             FieldDefinition methodContext, FieldDefinition state,
             FieldDefinition builder, FieldDefinition? declaringThis,
             FieldDefinition awaiter, FieldDefinition? moAwaiter,
             FieldDefinition? result, FieldDefinition?[] parameters)
         {
-            MoArray = moArray;
             Mos = mos;
             MethodContext = methodContext;
             State = state;
@@ -22,8 +21,6 @@ namespace Rougamo.Fody.Contexts
             MoAwaiter = moAwaiter ?? Awaiter;
             Result = result;
         }
-
-        public FieldDefinition? MoArray { get; }
 
         public FieldDefinition[] Mos { get; }
 

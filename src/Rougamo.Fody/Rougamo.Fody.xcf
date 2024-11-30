@@ -20,11 +20,6 @@
       <xs:documentation>Set to false to prevent generating the StackTraceHiddenAttribute for the proxy method. The default is true.</xs:documentation>
     </xs:annotation>
   </xs:attribute>
-  <xs:attribute name="moarray-threshold" type="xs:integer">
-    <xs:annotation>
-      <xs:documentation>In a single method, if the count of weaving IMo instances is greater than this value, Rougamo will use an array to save all of the IMo instances. The default is 4.</xs:documentation>
-    </xs:annotation>
-  </xs:attribute>
   <xs:attribute name="iterator-returns" type="xs:boolean" >
     <xs:annotation>
       <xs:documentation>Set to true to save the items that the iterator returns. This will take up additional memory space. The default is false.</xs:documentation>

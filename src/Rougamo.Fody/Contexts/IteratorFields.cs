@@ -3,15 +3,12 @@
 namespace Rougamo.Fody.Contexts
 {
     internal class IteratorFields(
-        FieldDefinition? moArray, FieldDefinition[] mos,
-        FieldDefinition methodContext,
+        FieldDefinition[] mos, FieldDefinition methodContext,
         FieldDefinition state, FieldDefinition current,
         FieldDefinition initialThreadId, FieldDefinition? recordedReturn,
         FieldDefinition? declaringThis, FieldDefinition iterator,
         FieldDefinition?[] transitParameters, FieldDefinition?[] parameters) : IIteratorFields
     {
-        public FieldDefinition? MoArray { get; } = moArray;
-
         public FieldDefinition[] Mos { get; } = mos;
 
         public FieldDefinition MethodContext { get; } = methodContext!;

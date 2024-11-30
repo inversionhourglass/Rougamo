@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 
 namespace Rougamo.Fody.Models
 {
-    internal class Config(bool enabled, bool compositeAccessibility, bool skipRefStruct, int moArrayThreshold, bool recordingIteratorReturns, bool reverseCallNonEntry, bool pureStackTrace, string[] exceptTypePatterns)
+    internal class Config(bool enabled, bool compositeAccessibility, bool skipRefStruct, bool recordingIteratorReturns, bool reverseCallNonEntry, bool pureStackTrace, string[] exceptTypePatterns)
     {
         /// <summary>
         /// 是否启用肉夹馍
@@ -20,11 +20,6 @@ namespace Rougamo.Fody.Models
         /// 是否默认忽略ref struct参数和返回值，该配置设置为true等同于在程序集上应用<see cref="SkipRefStructAttribute"/>
         /// </summary>
         public bool SkipRefStruct { get; } = skipRefStruct;
-
-        /// <summary>
-        /// 当方法上IMo的数量超过该值时将使用数组保存所有IMo
-        /// </summary>
-        public int MoArrayThreshold { get; private set; } = moArrayThreshold;
 
         /// <summary>
         /// 是否将iterator的所有返回值暂存并在方法完成时存入MethodContext.ReturnValue中
@@ -49,28 +44,5 @@ namespace Rougamo.Fody.Models
         /// 类型的全名称与正则表达式匹配的类型将忽略所有IMo
         /// </summary>
         public Regex[] ExceptTypePatterns { get; } = exceptTypePatterns.Select(x => new Regex(x)).ToArray();
-
-        /// <summary>
-        /// 临时修改MoArrayThreshold的值，在dispose时修改回来
-        /// </summary>
-        public IDisposable ChangeMoArrayThresholdTemporarily(int value) => new MoArrayThresholdTempScope(this, value);
-
-        class MoArrayThresholdTempScope : IDisposable
-        {
-            private readonly int _moArrayThreshold;
-            private readonly Config _config;
-
-            public MoArrayThresholdTempScope(Config config, int value)
-            {
-                _config = config;
-                _moArrayThreshold = config.MoArrayThreshold;
-                config.MoArrayThreshold = value;
-            }
-
-            public void Dispose()
-            {
-                _config.MoArrayThreshold = _moArrayThreshold;
-            }
-        }
     }
 }

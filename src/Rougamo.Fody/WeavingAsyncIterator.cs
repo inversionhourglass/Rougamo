@@ -30,7 +30,6 @@ namespace Rougamo.Fody
             var actualMoveNextDef = actualStateMachineTypeDef.Methods.Single(m => m.Name == Constants.METHOD_MoveNext);
             actualMoveNextDef.DebugInformation.StateMachineKickOffMethod = actualMethodDef;
 
-            using var _ = _config.ChangeMoArrayThresholdTemporarily(int.MaxValue);
             var fields = AiteratorResolveFields(rouMethod, stateMachineTypeDef);
             IteratorSetAbsentFields(rouMethod, stateMachineTypeDef, fields, Constants.GenericPrefix(Constants.TYPE_IAsyncEnumerable), Constants.GenericSuffix(Constants.METHOD_GetAsyncEnumerator));
             StateMachineFieldCleanup(stateMachineTypeDef, fields);
@@ -45,15 +44,7 @@ namespace Rougamo.Fody
             var mMoveNext = tStateMachine.M_MoveNext;
             mMoveNext.Def.Clear();
 
-            if (tStateMachine.F_MoArray == null)
-            {
-                AiteratorBuildMosMoveNext(rouMethod, tStateMachine, mActualMethod);
-            }
-            else
-            {
-                AiteratorBuildMoArrayMoveNext(rouMethod, tStateMachine, mActualMethod);
-            }
-
+            AiteratorBuildMosMoveNext(rouMethod, tStateMachine, mActualMethod);
             StackTraceHidden(mMoveNext.Def);
             DebuggerStepThrough(mMoveNext.Def);
             mMoveNext.Def.Body.InitLocals = true;
@@ -292,11 +283,6 @@ namespace Rougamo.Fody
             SetTryCatch(mMoveNext.Def, outerTryStart, outerCatchStart, outerCatchEnd);
         }
 
-        private void AiteratorBuildMoArrayMoveNext(RouMethod rouMethod, TsAsyncIteratorStateMachine tStateMachine, MethodSimulation<TsAsyncEnumerable> mActualMethod)
-        {
-            throw new NotImplementedException($"Currently, async methods are not allowed to use array to save the Mos. Contact the author to get support.");
-        }
-
         private IList<Instruction> AiteratorThrowPersistentException(VariableSimulation vPersistentInnerException)
         {
             // .if (persistentInnerException != null)
@@ -335,21 +321,11 @@ namespace Rougamo.Fody
         {
             var getEnumeratorMethodDef = stateMachineTypeDef.Methods.Single(x => x.Name.StartsWith(Constants.GenericPrefix(Constants.TYPE_IAsyncEnumerable)) && x.Name.EndsWith(Constants.GenericSuffix(Constants.METHOD_GetAsyncEnumerator)));
 
-            FieldDefinition? moArray = null;
-            var mos = new FieldDefinition[0];
-            if (rouMethod.Mos.Length >= _config.MoArrayThreshold)
+            var mos = new FieldDefinition[rouMethod.Mos.Length];
+            for (int i = 0; i < rouMethod.Mos.Length; i++)
             {
-                moArray = new FieldDefinition(Constants.FIELD_RougamoMos, FieldAttributes.Public, _tIMoArrayRef);
-                stateMachineTypeDef.AddUniqueField(moArray);
-            }
-            else
-            {
-                mos = new FieldDefinition[rouMethod.Mos.Length];
-                for (int i = 0; i < rouMethod.Mos.Length; i++)
-                {
-                    mos[i] = new FieldDefinition(Constants.FIELD_RougamoMo_Prefix + i, FieldAttributes.Public, this.Import(rouMethod.Mos[i].MoTypeRef));
-                    stateMachineTypeDef.AddUniqueField(mos[i]);
-                }
+                mos[i] = new FieldDefinition(Constants.FIELD_RougamoMo_Prefix + i, FieldAttributes.Public, this.Import(rouMethod.Mos[i].MoTypeRef));
+                stateMachineTypeDef.AddUniqueField(mos[i]);
             }
             var methodContext = new FieldDefinition(Constants.FIELD_RougamoContext, FieldAttributes.Public, _tMethodContextRef);
             var state = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_State);
@@ -386,7 +362,7 @@ namespace Rougamo.Fody
                 .AddUniqueField(awaiter)
                 .AddUniqueField(moAwaiter);
 
-            return new AiteratorFields(moArray, mos, methodContext, state, current, initialThreadId, disposed, builder, promise, recordedReturn, declaringThis, iterator, awaiter, moAwaiter, transitParameters, parameters);
+            return new AiteratorFields(mos, methodContext, state, current, initialThreadId, disposed, builder, promise, recordedReturn, declaringThis, iterator, awaiter, moAwaiter, transitParameters, parameters);
         }
     }
 }

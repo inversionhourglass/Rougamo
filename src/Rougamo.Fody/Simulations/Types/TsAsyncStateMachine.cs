@@ -27,7 +27,6 @@ namespace Rougamo.Fody.Simulations.Types
 
         public TsAsyncStateMachine SetFields(AsyncFields fields)
         {
-            F_MoArray = fields.MoArray?.Simulate<TsArray<TsMo>>(this);
             F_Mos = fields.Mos.Select(x => x.Simulate<TsMo>(this)).ToArray();
             F_MethodContext = fields.MethodContext.Simulate<TsMethodContext>(this);
             F_State = fields.State.Simulate(this);

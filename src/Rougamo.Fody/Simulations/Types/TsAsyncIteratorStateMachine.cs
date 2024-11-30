@@ -32,7 +32,6 @@ namespace Rougamo.Fody.Simulations.Types
         public TsAsyncIteratorStateMachine SetFields(AiteratorFields fields)
         {
             F_Disposed = fields.Disposed.Simulate(this);
-            F_MoArray = fields.MoArray?.Simulate<TsArray<TsMo>>(this);
             F_Mos = fields.Mos.Select(x => x.Simulate<TsMo>(this)).ToArray();
             F_MethodContext = fields.MethodContext.Simulate<TsMethodContext>(this);
             F_State = fields.State.Simulate(this);

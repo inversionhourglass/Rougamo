@@ -1,12 +1,9 @@
 ﻿using Fody.Simulations;
-using Fody.Simulations.Types;
 
 namespace Rougamo.Fody.Simulations.Types
 {
     internal interface IStateMachine : IParameterSimulation
     {
-        FieldSimulation<TsArray<TsMo>>? F_MoArray { get; }
-
         FieldSimulation<TsMo>[]? F_Mos { get; }
 
         FieldSimulation<TsMethodContext> F_MethodContext { get; }
