@@ -176,11 +176,12 @@ namespace Rougamo.Fody
             // ._state = -3;
             instructions.Add(tStateMachine.F_State.Assign(-3));
             // .if (_context != null)
-            instructions.Add(tStateMachine.F_MethodContext.IsNull().IfNot(_ =>
-            {
+            instructions.Add(tStateMachine.F_MethodContext.IsNull().IfNot(_ => [
                 // .RougamoPool<MethodContext>.Return(_context);
-                return StateMachineReturnToPool(tStateMachine.F_MethodContext, mDispose);
-            }));
+                .. StateMachineReturnToPool(tStateMachine.F_MethodContext, mDispose),
+                // ._context = null;
+                .. tStateMachine.F_MethodContext.AssignDefault()
+            ]));
             // ._iterator.Dispose();
             instructions.Add(tStateMachine.F_Iterator.Value.M_Dispose.Call(mDispose));
 

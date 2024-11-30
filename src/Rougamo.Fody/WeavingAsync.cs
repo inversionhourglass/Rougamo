@@ -223,11 +223,12 @@ namespace Rougamo.Fody
                     instructions.Add(vState.Lt(0).If(_ =>
                     {
                         // .if (_context != null)
-                        return tStateMachine.F_MethodContext.Value.IsNull().IfNot(_ =>
-                        {
+                        return tStateMachine.F_MethodContext.Value.IsNull().IfNot(_ => [
                             // .RougamoPool<MethodContext>.Return(_context);
-                            return StateMachineReturnToPool(tStateMachine.F_MethodContext, tStateMachine.M_MoveNext);
-                        });
+                            .. StateMachineReturnToPool(tStateMachine.F_MethodContext, tStateMachine.M_MoveNext),
+                            // ._context = null;
+                            .. tStateMachine.F_MethodContext.AssignDefault()
+                        ]);
                     }));
 
                     instructions.Add(Create(OpCodes.Endfinally));
