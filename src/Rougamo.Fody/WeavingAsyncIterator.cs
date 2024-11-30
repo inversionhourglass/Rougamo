@@ -198,6 +198,8 @@ namespace Rougamo.Fody
                                 .. tStateMachine.F_Current.Assign(tStateMachine.F_Iterator.Value.P_Current),
                                 // ._items.Add(_current);
                                 .. IteratorSaveItem(rouMethod, tStateMachine),
+                                // .state = -4;
+                                .. vState.Assign(-4),
                                 // ._state = -4;
                                 .. tStateMachine.F_State.Assign(-4),
                                 // goto YIELD;
@@ -237,11 +239,15 @@ namespace Rougamo.Fody
                     // .if (state < 0)
                     instructions.Add(vState.Lt(0).If(_ =>
                     {
-                        // .if (_context != null)
-                        return tStateMachine.F_MethodContext.Value.IsNull().IfNot(_ =>
+                        // .if (state != -4)
+                        return vState.IsEqual(-4).IfNot(_ =>
                         {
-                            // .RougamoPool<MethodContext>.Return(_context);
-                            return StateMachineReturnToPool(tStateMachine.F_MethodContext, tStateMachine.M_MoveNext);
+                            // .if (_context != null)
+                            return tStateMachine.F_MethodContext.Value.IsNull().IfNot(_ =>
+                            {
+                                // .RougamoPool<MethodContext>.Return(_context);
+                                return StateMachineReturnToPool(tStateMachine.F_MethodContext, tStateMachine.M_MoveNext);
+                            });
                         });
                     }));
 
