@@ -1,5 +1,6 @@
 ﻿using Rougamo;
 using Rougamo.Context;
+using Rougamo.Flexibility;
 using Rougamo.Metadatas;
 using System.Threading.Tasks;
 
@@ -9,8 +10,6 @@ namespace BasicUsage.Mos
     [Pointcut(AccessFlags.All)]
     public struct ValueMo : IMo
     {
-        public double Order => 1;
-
         public void OnEntry(MethodContext context)
         {
             this.SetOnEntry(context);

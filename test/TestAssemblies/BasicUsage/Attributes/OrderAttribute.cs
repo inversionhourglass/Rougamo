@@ -1,11 +1,12 @@
 ﻿using Rougamo;
 using Rougamo.Context;
+using Rougamo.Flexibility;
 
 namespace BasicUsage.Attributes
 {
-    public class OrderAttribute : MoAttribute
+    public class OrderAttribute : MoAttribute, IFlexibleOrderable
     {
-        public new virtual double Order { get; set; }
+        public virtual double Order { get; set; }
 
         public override void OnEntry(MethodContext context)
         {

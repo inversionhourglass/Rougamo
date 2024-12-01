@@ -1,5 +1,6 @@
 ﻿using Rougamo;
 using Rougamo.Context;
+using Rougamo.Flexibility;
 using Rougamo.Metadatas;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -8,7 +9,7 @@ namespace Issues.Attributes
 {
     [Advice(Feature.OnEntry)]
     [Pointcut(AccessFlags.All)]
-    public struct _72_ : IMo
+    public struct _72_ : IMo, IFlexibleOrderable
     {
         public _72_() { }
 

@@ -8,8 +8,6 @@ namespace BasicUsage.Mos
     [Pointcut(AccessFlags.Constructor | AccessFlags.All)]
     public struct CtorValueMo : IMo
     {
-        public double Order => 1;
-
         public void OnEntry(MethodContext context)
         {
         }

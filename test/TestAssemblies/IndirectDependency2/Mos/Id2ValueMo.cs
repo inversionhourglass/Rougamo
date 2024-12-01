@@ -6,8 +6,6 @@ namespace IndirectDependency2.Mos
 {
     public struct Id2ValueMo : IMo
     {
-        public double Order => 0;
-
         public void OnEntry(MethodContext context)
         {
             this.SetOnEntry(context);
@@ -52,8 +50,6 @@ namespace IndirectDependency2.Mos
 
     public struct Id2ValueMo<T> : IMo
     {
-        public double Order => 0;
-
         public void OnEntry(MethodContext context)
         {
             this.SetOnEntry(context);

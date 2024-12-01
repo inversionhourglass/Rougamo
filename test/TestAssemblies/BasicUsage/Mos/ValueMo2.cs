@@ -9,8 +9,6 @@ namespace BasicUsage.Mos
     [Pointcut(AccessFlags.All)]
     public struct ValueMo2 : IMo
     {
-        public double Order => 1;
-
         public void OnEntry(MethodContext context)
         {
             this.SetOnEntry(context);

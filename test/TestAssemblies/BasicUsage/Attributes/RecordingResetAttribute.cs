@@ -1,11 +1,12 @@
 ﻿using Rougamo;
 using Rougamo.Context;
+using Rougamo.Flexibility;
 
 namespace BasicUsage.Attributes
 {
-    public class RecordingResetAttribute : MoAttribute
+    public class RecordingResetAttribute : MoAttribute, IFlexibleOrderable
     {
-        public override double Order => double.MinValue;
+        public double Order => double.MinValue;
 
         public override void OnEntry(MethodContext context)
         {

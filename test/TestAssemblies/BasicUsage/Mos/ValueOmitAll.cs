@@ -10,8 +10,6 @@ namespace BasicUsage.Mos
     [Pointcut(AccessFlags.All)]
     public struct ValueOmitAll : IMo
     {
-        public double Order => 1;
-
         public void OnEntry(MethodContext context)
         {
             if (context.Arguments.Length == 0 && context.Mos.Count == 0)

@@ -9,8 +9,6 @@ namespace BasicUsage.Mos
     [Pointcut("execution(async null *(..))")]
     public struct ValueMo1 : IMo
     {
-        public double Order => 1;
-
         public void OnEntry(MethodContext context)
         {
             this.SetOnEntry(context);
