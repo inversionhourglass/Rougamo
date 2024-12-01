@@ -600,6 +600,7 @@ namespace Rougamo.Fody.Tests
 
             var list = new List<object>();
 
+            #region Singleton
             list.Clear();
             instance.SingletonNested(list);
             Assert.Equal(2, list.Count);
@@ -617,6 +618,24 @@ namespace Rougamo.Fody.Tests
             Assert.Same(list[0], list[2]);
 
             list.Clear();
+            ((IEnumerable<int>)instance.SingletonNestedIterator(list)).ToArray();
+            Assert.Equal(2, list.Count);
+            Assert.Same(list[0], list[1]);
+            ((IEnumerable<int>)instance.SingletonIterator(list)).ToArray();
+            Assert.Equal(3, list.Count);
+            Assert.Same(list[0], list[2]);
+
+            list.Clear();
+            await ((IAsyncEnumerable<int>)instance.SingletonNestedAiterator(list)).ToArrayAsync();
+            Assert.Equal(2, list.Count);
+            Assert.Same(list[0], list[1]);
+            await ((IAsyncEnumerable<int>)instance.SingletonAiterator(list)).ToArrayAsync();
+            Assert.Equal(3, list.Count);
+            Assert.Same(list[0], list[2]);
+            #endregion Singleton
+
+            #region Pooled
+            list.Clear();
             instance.PooledNested(list);
             Assert.Equal(2, list.Count);
             Assert.NotSame(list[0], list[1]);
@@ -632,6 +651,24 @@ namespace Rougamo.Fody.Tests
             Assert.Equal(3, list.Count);
             Assert.True(list[0] == list[2] || list[1] == list[2]);
 
+            list.Clear();
+            ((IEnumerable<int>)instance.PooledNestedIterator(list)).ToArray();
+            Assert.Equal(2, list.Count);
+            Assert.NotSame(list[0], list[1]);
+            ((IEnumerable<int>)instance.PooledIterator(list)).ToArray();
+            Assert.Equal(3, list.Count);
+            Assert.True(list[0] == list[2] || list[1] == list[2]);
+
+            list.Clear();
+            await ((IAsyncEnumerable<int>)instance.PooledNestedAiterator(list)).ToArrayAsync();
+            Assert.Equal(2, list.Count);
+            Assert.NotSame(list[0], list[1]);
+            await ((IAsyncEnumerable<int>)instance.PooledAiterator(list)).ToArrayAsync();
+            Assert.Equal(3, list.Count);
+            Assert.True(list[0] == list[2] || list[1] == list[2]);
+            #endregion Pooled
+
+            #region Transient
             list.Clear();
             instance.TransientNested(list);
             Assert.Equal(2, list.Count);
@@ -649,6 +686,32 @@ namespace Rougamo.Fody.Tests
             Assert.Equal(3, list.Count);
             Assert.NotSame(list[0], list[2]);
             Assert.NotSame(list[1], list[2]);
+
+            list.Clear();
+            ((IEnumerable<int>)instance.TransientNestedIterator(list)).ToArray();
+            Assert.Equal(2, list.Count);
+            Assert.NotSame(list[0], list[1]);
+            ((IEnumerable<int>)instance.TransientIterator(list)).ToArray();
+            Assert.Equal(3, list.Count);
+            Assert.NotSame(list[0], list[2]);
+            Assert.NotSame(list[1], list[2]);
+
+            list.Clear();
+            await ((IAsyncEnumerable<int>)instance.TransientNestedAiterator(list)).ToArrayAsync();
+            Assert.Equal(2, list.Count);
+            Assert.NotSame(list[0], list[1]);
+            await ((IAsyncEnumerable<int>)instance.TransientAiterator(list)).ToArrayAsync();
+            Assert.Equal(3, list.Count);
+            Assert.NotSame(list[0], list[2]);
+            Assert.NotSame(list[1], list[2]);
+            #endregion Transient
+
+            list.Clear();
+            instance.GenericPooled(list);
+            Assert.Single(list);
+            await (Task)instance.GenericPooledAsync(list);
+            Assert.Equal(2, list.Count);
+            Assert.Same(list[0], list[1]);
         }
     }
 }
