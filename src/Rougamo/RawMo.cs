@@ -8,9 +8,6 @@ namespace Rougamo
     public abstract class RawMo : IMo
     {
         /// <inheritdoc/>
-        public virtual double Order { get; }
-
-        /// <inheritdoc/>
         public abstract void OnEntry(MethodContext context);
 
         /// <inheritdoc/>

@@ -9,11 +9,6 @@ namespace Rougamo
     public interface IMo
     {
         /// <summary>
-        /// Execution order.
-        /// </summary>
-        double Order { get; }
-
-        /// <summary>
         /// Before the method executing.
         /// </summary>
         void OnEntry(MethodContext context);
