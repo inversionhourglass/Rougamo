@@ -23,6 +23,8 @@ namespace Rougamo.Fody
             var actualStateMachineTypeDef = StateMachineClone(stateMachineTypeDef, typeName);
             if (actualStateMachineTypeDef == null) return;
 
+            IteratorRemoveFinallyMethods(stateMachineTypeDef);
+
             var actualMethodDef = StateMachineSetupMethodClone(rouMethod.MethodDef, stateMachineTypeDef, actualStateMachineTypeDef, methodName, Constants.TYPE_IteratorStateMachineAttribute);
             rouMethod.MethodDef.DeclaringType.Methods.Add(actualMethodDef);
 
@@ -369,7 +371,7 @@ namespace Rougamo.Fody
 
                 var transitParameterFieldRef = fields.TransitParameters[i]!;
                 var parameterFieldDef = new FieldDefinition($">_<{transitParameterFieldRef.Name}", FieldAttributes.Private, transitParameterFieldRef.FieldType);
-                var parameterFieldRef = new FieldReference(parameterFieldDef.Name, parameterFieldDef.FieldType, vStateMachine.VariableType);
+                var parameterFieldRef = new FieldReference(parameterFieldDef.Name, parameterFieldDef.FieldType, vStateMachine!.VariableType);
 
                 fields.SetParameter(i, parameterFieldDef);
 
@@ -381,6 +383,15 @@ namespace Rougamo.Fody
                 ]);
 
                 yield return parameterFieldDef;
+            }
+        }
+
+        private void IteratorRemoveFinallyMethods(TypeDefinition stateMachineTypeDef)
+        {
+            var mdFinallys = stateMachineTypeDef.Methods.Where(x => x.Name.Contains("Finally")).ToArray();
+            foreach (var mdFinally in mdFinallys)
+            {
+                stateMachineTypeDef.Methods.Remove(mdFinally);
             }
         }
     }
