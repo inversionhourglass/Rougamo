@@ -231,8 +231,12 @@ namespace Rougamo.Fody
 
                     // .if (state >= 0) goto POOLING_END;
                     instructions.Add(vState.Lt(0).IfNot(_ => [Create(OpCodes.Br, poolingEnd)]));
-                    // .if (state == -4) goto POOLING_END;
-                    instructions.Add(vState.IsEqual(-4).If(_ => [Create(OpCodes.Br, poolingEnd)]));
+                    // .if (state == -4)
+                    instructions.Add(vState.IsEqual(-4).If(_ =>
+                    {
+                        // .if (hasNext) goto POOLING_END;
+                        return vHasNext.If(_ => [Create(OpCodes.Br, poolingEnd)]);
+                    }));
 
                     foreach (var pooledItem in pooledItems)
                     {
