@@ -86,8 +86,10 @@ namespace Rougamo.Fody
             var vPersistentInnerException = vInnerException == null || context.OnExceptionAllInSync && context.OnExitAllInSync ? null : mMoveNext.CreateVariable(_tExceptionRef);
 
             Instruction? outerTryStart = null, outerCatchStart = null, outerCatchEnd = null, innerTryStart = null, innerCatchStart = null, innerCatchEnd = Create(OpCodes.Nop);
-            Instruction poolFinallyStart = Create(OpCodes.Nop), poolFinallyEnd = Create(OpCodes.Nop);
+            Instruction poolFinallyStart = Create(OpCodes.Nop), poolFinallyEnd = Create(OpCodes.Nop), poolingEnd = Create(OpCodes.Nop);
             var switches = Create(OpCodes.Switch, []);
+
+            var pooledItems = new List<IParameterSimulation> { tStateMachine.F_MethodContext };
 
             // .var state = _state;
             instructions.Add(vState.Assign(tStateMachine.F_State));
@@ -101,7 +103,7 @@ namespace Rougamo.Fody
                     instructions.Add(switches);
                     {
                         // ._mo = new Mo1Attribute(..);
-                        instructions.Add(StateMachineInitMos(rouMethod, tStateMachine));
+                        instructions.Add(StateMachineInitMos(rouMethod, tStateMachine, pooledItems));
                         // ._context = new MethodContext(..);
                         instructions.Add(StateMachineInitMethodContext(rouMethod, tStateMachine));
                         // ._mo.OnEntry(_context); <--> _mo.OnEntryAsync(_context).GetAwaiter()...
@@ -210,18 +212,21 @@ namespace Rougamo.Fody
                 {
                     instructions.Add(poolFinallyStart);
 
-                    // .if (state < 0)
-                    instructions.Add(vState.Lt(0).If(_ =>
-                    {
-                        // .if (_context != null)
-                        return tStateMachine.F_MethodContext.Value.IsNull().IfNot(_ => [
-                            // .RougamoPool<MethodContext>.Return(_context);
-                            .. StateMachineReturnToPool(tStateMachine.F_MethodContext, tStateMachine.M_MoveNext),
-                            // ._context = null;
-                            .. tStateMachine.F_MethodContext.AssignDefault()
-                        ]);
-                    }));
+                    // .if (state >= 0) goto POOLING_END;
+                    instructions.Add(vState.Lt(0).IfNot(_ => [Create(OpCodes.Br, poolingEnd)]));
 
+                    foreach (var pooledItem in pooledItems)
+                    {
+                        // .if (pooledItem != null)
+                        instructions.Add(pooledItem.IsNull().IfNot(_ => [
+                            // .RougamoPool<..>.Return(..);
+                            .. ReturnToPool(pooledItem, mMoveNext),
+                            // .pooledItem = null;
+                            .. ((FieldSimulation)pooledItem).AssignDefault()
+                        ]));
+                    }
+
+                    instructions.Add(poolingEnd);
                     instructions.Add(Create(OpCodes.Endfinally));
                     instructions.Add(poolFinallyEnd);
                 }
@@ -283,7 +288,7 @@ namespace Rougamo.Fody
             return new TsWeavingTarget(declaringTypeRef, null, this);
         }
 
-        private IList<Instruction> StateMachineInitMos(RouMethod rouMethod, TsStateMachine tStateMachine)
+        private IList<Instruction> StateMachineInitMos(RouMethod rouMethod, TsStateMachine tStateMachine, List<IParameterSimulation> pooledItems)
         {
             var instructions = new List<Instruction>();
 
@@ -291,7 +296,7 @@ namespace Rougamo.Fody
             {
                 var mo = rouMethod.Mos[i];
                 var fMo = tStateMachine.F_Mos![i];
-                instructions.Add(fMo.Assign(target => fMo.Value.New(tStateMachine.M_MoveNext, mo)));
+                instructions.Add(fMo.Assign(target => NewMo(mo, fMo.Value, tStateMachine.M_MoveNext, pooledItems)));
             }
 
             return instructions;
@@ -302,7 +307,7 @@ namespace Rougamo.Fody
             var instructions = new List<Instruction>();
 
             // ._context = RougamoPool<MethodContext>.Get();
-            instructions.AddRange(StateMachineAssignByPool(tStateMachine.F_MethodContext, tStateMachine.M_MoveNext));
+            instructions.AddRange(AssignByPool(tStateMachine.F_MethodContext, tStateMachine.M_MoveNext));
             // ._context.Mos = new Mo[] { ... };
             if (!rouMethod.MethodContextOmits.Contains(Omit.Mos))
             {
@@ -627,19 +632,19 @@ namespace Rougamo.Fody
             return SyncMosOn(rouMethod, tStateMachine.M_MoveNext, tStateMachine.F_MethodContext, tStateMachine.F_Mos.Select(x => x.Value).ToArray(), feature, methodFactory);
         }
 
-        private IList<Instruction> StateMachineAssignByPool(FieldSimulation field, MethodSimulation executionMethod)
-        {
-            var tPool = _tPoolRef.MakeGenericInstanceType(field.Type).Simulate(this);
-            var mGet = _mPoolGetRef.Simulate(tPool);
-            return field.Assign(target => mGet.Call(executionMethod));
-        }
+        //private IList<Instruction> StateMachineAssignByPool(FieldSimulation field, MethodSimulation executionMethod)
+        //{
+        //    var tPool = _tPoolRef.MakeGenericInstanceType(field.Type).Simulate(this);
+        //    var mGet = _mPoolGetRef.Simulate(tPool);
+        //    return field.Assign(target => mGet.Call(executionMethod));
+        //}
 
-        private IList<Instruction> StateMachineReturnToPool(FieldSimulation field, MethodSimulation executionMethod)
-        {
-            var tPool = _tPoolRef.MakeGenericInstanceType(field.Type).Simulate(this);
-            var mReturn = _mPoolReturnRef.Simulate(tPool);
-            return mReturn.Call(executionMethod, field);
-        }
+        //private IList<Instruction> StateMachineReturnToPool(FieldSimulation field, MethodSimulation executionMethod)
+        //{
+        //    var tPool = _tPoolRef.MakeGenericInstanceType(field.Type).Simulate(this);
+        //    var mReturn = _mPoolReturnRef.Simulate(tPool);
+        //    return mReturn.Call(executionMethod, field);
+        //}
 
         private TypeDefinition AsyncBuildStateMachine(MethodDefinition methodDef)
         {

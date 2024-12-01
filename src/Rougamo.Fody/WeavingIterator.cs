@@ -35,16 +35,17 @@ namespace Rougamo.Fody
 
             var tStateMachine = stateMachineTypeDef.MakeReference().Simulate<TsIteratorStateMachine>(this).SetFields(fields);
             var mActualMethod = StateMachineResolveActualMethod<TsEnumerable>(tStateMachine, actualMethodDef);
-            IteratorBuildMoveNext(rouMethod, tStateMachine, mActualMethod);
-            IteratorBuildDispose(rouMethod, tStateMachine);
+            var pooledItems = new List<IParameterSimulation> { tStateMachine.F_MethodContext };
+            IteratorBuildMoveNext(rouMethod, tStateMachine, mActualMethod, pooledItems);
+            IteratorBuildDispose(rouMethod, tStateMachine, pooledItems);
         }
 
-        private void IteratorBuildMoveNext(RouMethod rouMethod, TsIteratorStateMachine tStateMachine, MethodSimulation<TsEnumerable> mActualMethod)
+        private void IteratorBuildMoveNext(RouMethod rouMethod, TsIteratorStateMachine tStateMachine, MethodSimulation<TsEnumerable> mActualMethod, List<IParameterSimulation> pooledItems)
         {
             var mMoveNext = tStateMachine.M_MoveNext;
             mMoveNext.Def.Clear();
 
-            IteratorBuildMoveNextInternal(rouMethod, tStateMachine, mActualMethod);
+            IteratorBuildMoveNextInternal(rouMethod, tStateMachine, mActualMethod, pooledItems);
 
             StackTraceHidden(mMoveNext.Def);
             DebuggerStepThrough(mMoveNext.Def);
@@ -52,7 +53,7 @@ namespace Rougamo.Fody
             mMoveNext.Def.Body.OptimizePlus();
         }
 
-        private void IteratorBuildMoveNextInternal(RouMethod rouMethod, TsIteratorStateMachine tStateMachine, MethodSimulation<TsEnumerable> mActualMethod)
+        private void IteratorBuildMoveNextInternal(RouMethod rouMethod, TsIteratorStateMachine tStateMachine, MethodSimulation<TsEnumerable> mActualMethod, List<IParameterSimulation> pooledItems)
         {
             var mMoveNext = tStateMachine.M_MoveNext;
             var instructions = mMoveNext.Def.Body.Instructions;
@@ -75,7 +76,7 @@ namespace Rougamo.Fody
                     // ._items = new List<T>();
                     .. IteratorInitItems(rouMethod, tStateMachine),
                     // ._mo = new Mo1Attribute(..);
-                    .. StateMachineInitMos(rouMethod, tStateMachine),
+                    .. StateMachineInitMos(rouMethod, tStateMachine, pooledItems),
                     // ._context = new MethodContext(..);
                     .. StateMachineInitMethodContext(rouMethod, tStateMachine),
                     // ._mo.OnEntry(_context);
@@ -162,7 +163,7 @@ namespace Rougamo.Fody
             SetTryFault(mMoveNext.Def, faultTryStart, faultStart, faultEnd);
         }
 
-        private void IteratorBuildDispose(RouMethod rouMethod,TsIteratorStateMachine tStateMachine)
+        private void IteratorBuildDispose(RouMethod rouMethod,TsIteratorStateMachine tStateMachine, List<IParameterSimulation> pooledItems)
         {
             var mDispose = tStateMachine.M_Dispose;
             mDispose.Def.Clear();
@@ -174,13 +175,18 @@ namespace Rougamo.Fody
 
             // ._state = -3;
             instructions.Add(tStateMachine.F_State.Assign(-3));
-            // .if (_context != null)
-            instructions.Add(tStateMachine.F_MethodContext.IsNull().IfNot(_ => [
-                // .RougamoPool<MethodContext>.Return(_context);
-                .. StateMachineReturnToPool(tStateMachine.F_MethodContext, mDispose),
-                // ._context = null;
-                .. tStateMachine.F_MethodContext.AssignDefault()
-            ]));
+
+            foreach (var pooledItem in pooledItems)
+            {
+                // .if (pooledItem != null)
+                instructions.Add(pooledItem.IsNull().IfNot(_ => [
+                    // .RougamoPool<..>.Return(..);
+                    .. ReturnToPool(pooledItem, mDispose),
+                    // .pooledItem = null;
+                    .. ((FieldSimulation)pooledItem).AssignDefault()
+                ]));
+            }
+
             // ._iterator.Dispose();
             instructions.Add(tStateMachine.F_Iterator.Value.M_Dispose.Call(mDispose));
 

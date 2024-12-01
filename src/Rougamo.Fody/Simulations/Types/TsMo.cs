@@ -31,6 +31,8 @@ namespace Rougamo.Fody.Simulations.Types
 
         public MethodSimulation<TsAwaitable> M_OnExitAsync => MethodSimulate<TsAwaitable>(Constants.METHOD_OnExitAsync, true);
 
+        public MethodSimulation M_Singleton => MethodSimulate(Constants.METHOD__Singleton, false, x => x.Name == Constants.METHOD__Singleton && x.IsStatic);
+
         public IList<Instruction> New(MethodSimulation host, Mo mo)
         {
             if (mo.Attribute != null)

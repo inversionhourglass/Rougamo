@@ -60,8 +60,10 @@ namespace Rougamo.Fody
             Instruction poolTryStart = Create(OpCodes.Nop), poolFinallyStart = Create(OpCodes.Nop), poolFinallyEnd = Create(OpCodes.Nop);
             Instruction? tryStart = null, catchStart = null, catchEnd = Create(OpCodes.Nop);
 
+            var pooledItems = new List<IParameterSimulation> { vContext };
+
             // .var mo = new Mo1Attributue(...);
-            instructions.Add(SyncInitMos(rouMethod, tWeavingTarget, vMos));
+            instructions.Add(SyncInitMos(rouMethod, tWeavingTarget, vMos, pooledItems));
             // .var context = new MethodContext(...);
             instructions.Add(SyncInitMethodContext(rouMethod, tWeavingTarget, args, vContext, vMos));
 
@@ -139,8 +141,11 @@ namespace Rougamo.Fody
             {
                 instructions.Add(poolFinallyStart);
 
-                // .RougamoPool<MethodContext>.Return(context);
-                instructions.Add(SyncReturnToPool(vContext));
+                // .RougamoPool<..>.Return(..);
+                foreach (var pooledItem in pooledItems)
+                {
+                    instructions.Add(ReturnToPool(pooledItem, tWeavingTarget.M_Proxy));
+                }
 
                 instructions.Add(Create(OpCodes.Endfinally));
                 instructions.Add(poolFinallyEnd);
@@ -153,7 +158,7 @@ namespace Rougamo.Fody
             SetTryFinally(tWeavingTarget.M_Proxy.Def, poolTryStart, poolFinallyStart, poolFinallyEnd);
         }
 
-        private IList<Instruction> SyncInitMos(RouMethod rouMethod, TsWeavingTarget tWeavingTarget, VariableSimulation<TsMo>[] vMos)
+        private IList<Instruction> SyncInitMos(RouMethod rouMethod, TsWeavingTarget tWeavingTarget, VariableSimulation<TsMo>[] vMos, List<IParameterSimulation> pooledItems)
         {
             var instructions = new List<Instruction>();
 
@@ -164,7 +169,7 @@ namespace Rougamo.Fody
                 var mo = rouMethod.Mos[i];
 
                 var vMo = vMos[i];
-                instructions.Add(vMo.Assign(target => vMo.Value.New(tWeavingTarget.M_Proxy, mo)));
+                instructions.Add(vMo.Assign(target => NewMo(mo, vMo.Value, tWeavingTarget.M_Proxy, pooledItems)));
             }
 
             return instructions;
@@ -175,7 +180,7 @@ namespace Rougamo.Fody
             var instructions = new List<Instruction>();
 
             // .var context = RougamoPool<MethodContext>.Get();
-            instructions.AddRange(SyncAssignByPool(vContext));
+            instructions.AddRange(AssignByPool(vContext));
             // .context.Mos = new Mo[] { ... };
             if (!rouMethod.MethodContextOmits.Contains(Omit.Mos))
             {
@@ -426,20 +431,6 @@ namespace Rougamo.Fody
             }
 
             return instructions;
-        }
-
-        private IList<Instruction> SyncAssignByPool(VariableSimulation variable)
-        {
-            var tPool = _tPoolRef.MakeGenericInstanceType(variable.Type).Simulate(this);
-            var mGet = _mPoolGetRef.Simulate(tPool);
-            return variable.Assign(target => mGet.Call(variable.DeclaringMethod));
-        }
-
-        private IList<Instruction> SyncReturnToPool(VariableSimulation variable)
-        {
-            var tPool = _tPoolRef.MakeGenericInstanceType(variable.Type).Simulate(this);
-            var mReturn = _mPoolReturnRef.Simulate(tPool);
-            return mReturn.Call(variable.DeclaringMethod, variable);
         }
 
         private CustomAttribute? SyncClearCustomAttributes(MethodDefinition methodDef)

@@ -69,8 +69,10 @@ namespace Rougamo.Fody
             var vPersistentInnerException = vInnerException == null ? null : mMoveNext.CreateVariable(_tExceptionRef);
 
             Instruction? outerTryStart = null, outerCatchStart = null, outerCatchEnd = null, innerTryStart = null, innerCatchStart = null, innerCatchEnd = Create(OpCodes.Nop);
-            Instruction? poolTryStart = null, poolFinallyStart = Create(OpCodes.Nop), poolFinallyEnd = Create(OpCodes.Nop);
+            Instruction? poolTryStart = null, poolFinallyStart = Create(OpCodes.Nop), poolFinallyEnd = Create(OpCodes.Nop), poolingEnd = Create(OpCodes.Nop);
             var switches = Create(OpCodes.Switch, []);
+
+            var pooledItems = new List<IParameterSimulation> { tStateMachine.F_MethodContext };
 
             // .var state = _state;
             instructions.Add(vState.Assign(tStateMachine.F_State));
@@ -106,7 +108,7 @@ namespace Rougamo.Fody
                             // ._items = new List<T>();
                             instructions.Add(IteratorInitItems(rouMethod, tStateMachine));
                             // ._mo = new Mo1Attribute(..);
-                            instructions.Add(StateMachineInitMos(rouMethod, tStateMachine));
+                            instructions.Add(StateMachineInitMos(rouMethod, tStateMachine, pooledItems));
                             // ._context = new MethodContext(..);
                             instructions.Add(StateMachineInitMethodContext(rouMethod, tStateMachine));
                             // ._mo.OnEntryAsync(context).GetAwaiater(); ...
@@ -227,22 +229,23 @@ namespace Rougamo.Fody
                 {
                     instructions.Add(poolFinallyStart);
 
-                    // .if (state < 0)
-                    instructions.Add(vState.Lt(0).If(_ =>
-                    {
-                        // .if (state != -4)
-                        return vState.IsEqual(-4).IfNot(_ =>
-                        {
-                            // .if (_context != null)
-                            return tStateMachine.F_MethodContext.Value.IsNull().IfNot(_ => [
-                                // .RougamoPool<MethodContext>.Return(_context);
-                                ..StateMachineReturnToPool(tStateMachine.F_MethodContext, tStateMachine.M_MoveNext),
-                                // ._context = null;
-                                .. tStateMachine.F_MethodContext.AssignDefault()
-                            ]);
-                        });
-                    }));
+                    // .if (state >= 0) goto POOLING_END;
+                    instructions.Add(vState.Lt(0).IfNot(_ => [Create(OpCodes.Br, poolingEnd)]));
+                    // .if (state == -4) goto POOLING_END;
+                    instructions.Add(vState.IsEqual(-4).If(_ => [Create(OpCodes.Br, poolingEnd)]));
 
+                    foreach (var pooledItem in pooledItems)
+                    {
+                        // .if (pooledItem != null)
+                        instructions.Add(pooledItem.IsNull().IfNot(_ => [
+                            // .RougamoPool<..>.Return(..);
+                            .. ReturnToPool(pooledItem, mMoveNext),
+                            // .pooledItem = null;
+                            .. ((FieldSimulation)pooledItem).AssignDefault()
+                        ]));
+                    }
+
+                    instructions.Add(poolingEnd);
                     instructions.Add(Create(OpCodes.Endfinally));
                     instructions.Add(poolFinallyEnd);
                 }

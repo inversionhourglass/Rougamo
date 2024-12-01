@@ -1,6 +1,9 @@
 ﻿using Fody;
+using Fody.Simulations;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Mono.Cecil.Rocks;
+using Rougamo.Fody.Simulations.Types;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -53,6 +56,48 @@ namespace Rougamo.Fody
                     }
                 }
             }
+        }
+
+        private IList<Instruction> NewMo(Mo mo, TsMo tMo, MethodSimulation executingMethod, List<IParameterSimulation> pooledItems)
+        {
+            switch (mo.Lifetime)
+            {
+                case Lifetime.Transient:
+                    return tMo.New(executingMethod, mo);
+                case Lifetime.Singleton:
+                    return tMo.M_Singleton.Call(executingMethod);
+                case Lifetime.Pooled:
+                    pooledItems.Add(tMo.Host);
+                    var tPool = _tPoolRef.MakeGenericInstanceType(tMo.Type).Simulate(this);
+                    var mGet = _mPoolGetRef.Simulate(tPool);
+                    return mGet.Call(executingMethod);
+                default:
+                    throw new FodyWeavingException($"Unknow lifetime {mo.Lifetime} of {mo.MoTypeDef}");
+            }
+        }
+
+        private IList<Instruction> AssignByPool(VariableSimulation variable)
+        {
+            return AssignByPool(variable, variable.DeclaringMethod);
+        }
+
+        private IList<Instruction> AssignByPool(IAssignable assignable, MethodSimulation executingMethod)
+        {
+            return assignable.Assign(target => GetFromPool(assignable, executingMethod));
+        }
+
+        private IList<Instruction> GetFromPool(IAnalysable analysable, MethodSimulation executingMethod)
+        {
+            var tPool = _tPoolRef.MakeGenericInstanceType(analysable.Type).Simulate(this);
+            var mGet = _mPoolGetRef.Simulate(tPool);
+            return mGet.Call(executingMethod);
+        }
+
+        private IList<Instruction> ReturnToPool(IParameterSimulation poolItem, MethodSimulation executingMethod)
+        {
+            var tPool = _tPoolRef.MakeGenericInstanceType(poolItem.Type).Simulate(this);
+            var mReturn = _mPoolReturnRef.Simulate(tPool);
+            return mReturn.Call(executingMethod, poolItem);
         }
 
         private void SetTryCatch(MethodDefinition methodDef, Instruction? tryStart, Instruction? catchStart, Instruction? catchEnd, TypeReference? catchType = null)

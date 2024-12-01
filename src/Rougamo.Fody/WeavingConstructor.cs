@@ -6,6 +6,7 @@ using Mono.Cecil.Cil;
 using Rougamo.Fody.Contexts;
 using Rougamo.Fody.Simulations.Types;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using static Mono.Cecil.Cil.Instruction;
 
@@ -45,8 +46,10 @@ namespace Rougamo.Fody
             Instruction poolTryStart = Create(OpCodes.Nop), poolFinallyStart = Create(OpCodes.Nop), poolFinallyEnd = Create(OpCodes.Nop);
             Instruction? tryStart = null, catchStart = null, catchEnd = Create(OpCodes.Nop);
 
+            var pooledItems = new List<IParameterSimulation> { vContext };
+
             // .var mo = new Mo1Attributue(...);
-            instructions.InsertBefore(firstInstruction, SyncInitMos(rouMethod, tWeavingTarget, vMos));
+            instructions.InsertBefore(firstInstruction, SyncInitMos(rouMethod, tWeavingTarget, vMos, pooledItems));
             // .var context = new MethodContext(...);
             instructions.InsertBefore(firstInstruction, SyncInitMethodContext(rouMethod, tWeavingTarget, args, vContext, vMos));
 
@@ -107,8 +110,11 @@ namespace Rougamo.Fody
             {
                 instructions.Add(poolFinallyStart);
 
-                // .RougamoPool<MethodContext>.Return(context);
-                instructions.Add(SyncReturnToPool(vContext));
+                // .RougamoPool<..>.Return(..);
+                foreach (var pooledItem in pooledItems)
+                {
+                    instructions.Add(ReturnToPool(pooledItem, tWeavingTarget.M_Proxy));
+                }
 
                 instructions.Add(Create(OpCodes.Endfinally));
                 instructions.Add(poolFinallyEnd);
