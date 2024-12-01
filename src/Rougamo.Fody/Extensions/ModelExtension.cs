@@ -124,17 +124,27 @@ namespace Rougamo.Fody
 
         public static double ExtractOrder(this Mo mo)
         {
-            var typeDef = mo.TypeRef;
+            var typeRef = mo.TypeRef;
             if (mo.Attribute != null)
             {
-                if (mo.Attribute.Properties.TryGet(Constants.PROP_Order, out var property))
+                if (mo.Attribute.AttributeType.Implement(Constants.TYPE_IFlexibleOrderable) && mo.Attribute.Properties.TryGet(Constants.PROP_Order, out var property))
                 {
                     return (double)property!.Value.Argument.Value;
                 }
-                typeDef = mo.Attribute.AttributeType.Resolve();
+                typeRef = mo.Attribute.AttributeType;
             }
-            var order = ExtractFromIl(typeDef!, Constants.PROP_Order, Constants.TYPE_Double, ParseOrder);
-            return order ?? 0;
+            var typeDef = typeRef!.ToDefinition();
+            var implementedInterface = typeDef.Implement(Constants.TYPE_IFlexibleOrderable);
+            if (!implementedInterface && typeDef.Properties.Any(x => x.Name == Constants.PROP_Order && x.PropertyType.IsDouble()))
+            {
+                throw new FodyWeavingException($"[{typeDef}] Since version 5.0.0, the Order property has been removed from the IMo interface. Implements IFlexibleOrderable instead. For more information, see https://github.com/inversionhourglass/Rougamo/releases/tag/v5.0.0");
+            }
+            if (implementedInterface)
+            {
+                var order = ExtractFromIl(typeRef!, Constants.PROP_Order, Constants.TYPE_Double, ParseOrder);
+                if (order.HasValue) return order.Value;
+            }
+            return 0;
         }
 
         private static double? ParseOrder(Instruction instruction)

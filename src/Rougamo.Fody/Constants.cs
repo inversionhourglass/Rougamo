@@ -21,6 +21,7 @@
         public const string TYPE_LifetimeAttribute = "Rougamo.Metadatas.LifetimeAttribute";
         public const string TYPE_IFlexibleModifierPointcut = "Rougamo.Flexibility.IFlexibleModifierPointcut";
         public const string TYPE_IFlexiblePatternPointcut = "Rougamo.Flexibility.IFlexiblePatternPointcut";
+        public const string TYPE_IFlexibleOrderable = "Rougamo.Flexibility.IFlexibleOrderable";
         public const string TYPE_RougamoPool = "Rougamo.RougamoPool`1";
 
         public const string PROP_Flags = "Flags";
