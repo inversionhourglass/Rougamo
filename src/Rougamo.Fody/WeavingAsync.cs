@@ -296,7 +296,7 @@ namespace Rougamo.Fody
             {
                 var mo = rouMethod.Mos[i];
                 var fMo = tStateMachine.F_Mos![i];
-                instructions.Add(fMo.Assign(target => NewMo(mo, fMo.Value, tStateMachine.M_MoveNext, pooledItems)));
+                instructions.Add(fMo.Assign(target => NewMo(rouMethod, mo, fMo.Value, tStateMachine.M_MoveNext, pooledItems)));
             }
 
             return instructions;

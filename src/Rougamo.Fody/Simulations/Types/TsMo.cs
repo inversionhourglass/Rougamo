@@ -43,18 +43,6 @@ namespace Rougamo.Fody.Simulations.Types
                 {
                     ctor.Call(host, arguments)
                 };
-                if (mo.Attribute.HasProperties)
-                {
-                    foreach (var property in mo.Attribute.Properties)
-                    {
-                        var propSimulation = OptionalPropertySimulate(property.Name, true);
-                        if (propSimulation?.Setter != null)
-                        {
-                            var propValue = new ObjectValue(property.Argument.Value, property.Argument.Type, ModuleWeaver);
-                            instructions.Add(propSimulation.Setter.DupCall(host, propValue));
-                        }
-                    }
-                }
 
                 return instructions;
             }

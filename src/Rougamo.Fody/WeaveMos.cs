@@ -1,5 +1,6 @@
 ﻿using Fody;
 using Fody.Simulations;
+using Fody.Simulations.PlainValues;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
@@ -58,22 +59,49 @@ namespace Rougamo.Fody
             }
         }
 
-        private IList<Instruction> NewMo(Mo mo, TsMo tMo, MethodSimulation executingMethod, List<IParameterSimulation> pooledItems)
+        private IList<Instruction> NewMo(RouMethod rouMethod, Mo mo, TsMo tMo, MethodSimulation executingMethod, List<IParameterSimulation> pooledItems)
         {
             switch (mo.Lifetime)
             {
                 case Lifetime.Transient:
-                    return tMo.New(executingMethod, mo);
+                    return [
+                        .. tMo.New(executingMethod, mo),
+                        .. SetMoProperties(mo, tMo, executingMethod)
+                    ];
                 case Lifetime.Singleton:
+                    if (mo.Attribute != null && mo.Attribute.HasProperties) throw new FodyWeavingException($"{mo.MoTypeDef} is applied to {rouMethod.MethodDef} with properties, but {mo.MoTypeDef} has a singleton lifetime that cannot has any property and constructor argument.");
+
                     return tMo.M_Singleton.Call(executingMethod);
                 case Lifetime.Pooled:
                     pooledItems.Add(tMo.Host);
                     var tPool = _tPoolRef.MakeGenericInstanceType(tMo.Type).Simulate(this);
                     var mGet = _mPoolGetRef.Simulate(tPool);
-                    return mGet.Call(executingMethod);
+                    return [
+                        .. mGet.Call(executingMethod),
+                        .. SetMoProperties(mo, tMo, executingMethod)
+                    ];
                 default:
                     throw new FodyWeavingException($"Unknow lifetime {mo.Lifetime} of {mo.MoTypeDef}");
             }
+        }
+
+        private IList<Instruction> SetMoProperties(Mo mo, TsMo tMo, MethodSimulation executingMethod)
+        {
+            if (mo.Attribute == null || !mo.Attribute.HasProperties) return [];
+
+            var instructions = new List<Instruction>();
+
+            foreach (var property in mo.Attribute.Properties)
+            {
+                var propSimulation = tMo.OptionalPropertySimulate(property.Name, true);
+                if (propSimulation?.Setter != null)
+                {
+                    var propValue = new ObjectValue(property.Argument.Value, property.Argument.Type, tMo.ModuleWeaver);
+                    instructions.Add(propSimulation.Setter.DupCall(executingMethod, propValue));
+                }
+            }
+
+            return instructions;
         }
 
         private IList<Instruction> AssignByPool(VariableSimulation variable)

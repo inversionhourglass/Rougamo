@@ -169,7 +169,7 @@ namespace Rougamo.Fody
                 var mo = rouMethod.Mos[i];
 
                 var vMo = vMos[i];
-                instructions.Add(vMo.Assign(target => NewMo(mo, vMo.Value, tWeavingTarget.M_Proxy, pooledItems)));
+                instructions.Add(vMo.Assign(target => NewMo(rouMethod, mo, vMo.Value, tWeavingTarget.M_Proxy, pooledItems)));
             }
 
             return instructions;
