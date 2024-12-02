@@ -588,7 +588,7 @@ namespace Rougamo.Fody
         {
             if (!rouMethod.Features.Contains(feature)) return [];
 
-            var reverseCall = feature != Feature.OnEntry && _config.ReverseCallNonEntry;
+            var reverseCall = feature != Feature.OnEntry && Configuration.ReverseCallNonEntry;
 
             var instructions = new List<Instruction>();
 

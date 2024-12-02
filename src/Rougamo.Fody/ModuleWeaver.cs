@@ -37,7 +37,17 @@ namespace Rougamo.Fody
         internal Dictionary<string, MethodReference> _stateMachineCtorRefs;
 
         private List<RouType> _rouTypes;
-        private Config _config;
+        private Config? _configuration;
+
+        private Config Configuration
+        {
+            get
+            {
+                _configuration ??= GetConfiguration();
+
+                return _configuration;
+            }
+        }
 
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
@@ -46,12 +56,7 @@ namespace Rougamo.Fody
         public ModuleWeaver(bool testRun) : base(testRun) { }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider declaring as nullable.
 
-        protected override bool Enabled()
-        {
-            ReadConfig();
-
-            return _config.Enabled;
-        }
+        protected override bool Enabled() => Configuration.Enabled;
 
         protected override void ExecuteInternal()
         {
@@ -60,7 +65,7 @@ namespace Rougamo.Fody
             WeaveMos();
         }
 
-        private void ReadConfig()
+        private Config GetConfiguration()
         {
             var enabled = "true".Equals(GetConfigValue("true", "enabled"), StringComparison.OrdinalIgnoreCase);
             var compositeAccessibility = "true".Equals(GetConfigValue("false", "composite-accessibility"), StringComparison.OrdinalIgnoreCase);
@@ -73,13 +78,30 @@ namespace Rougamo.Fody
             var reverseCallNonEntry = "true".Equals(GetConfigValue("true", "reverse-call-nonentry"), StringComparison.OrdinalIgnoreCase);
             var pureStackTrace = "true".Equals(GetConfigValue("true", "pure-stacktrace"), StringComparison.OrdinalIgnoreCase);
             var exceptTypePatterns = GetConfigValue(string.Empty, "except-type-patterns").Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+            var mos = new List<Config.Mo>();
+            var xMos = Config.Element("Mos");
+            if (xMos != null)
+            {
+                foreach (var xMo in xMos.Elements())
+                {
+                    if (xMo.Name != "Mo") continue;
 
-            _config = new(enabled, compositeAccessibility, skipRefStruct, recordingIteratorReturns, reverseCallNonEntry, pureStackTrace, exceptTypePatterns);
+                    var assembly = xMo.Attribute("assembly")?.Value;
+                    var type = xMo.Attribute("type")?.Value;
+                    var pattern = xMo.Attribute("pattern")?.Value;
+
+                    if (assembly == null || type == null) continue;
+
+                    mos.Add(new(assembly, type, pattern));
+                }
+            }
+
+            return new(enabled, compositeAccessibility, skipRefStruct, recordingIteratorReturns, reverseCallNonEntry, pureStackTrace, exceptTypePatterns, mos.ToArray());
         }
 
         private void StackTraceHidden(MethodDefinition methodDef)
         {
-            if (_ctorStackTraceHiddenAttributeRef == null || !_config.PureStackTrace) return;
+            if (_ctorStackTraceHiddenAttributeRef == null || !Configuration.PureStackTrace) return;
 
             methodDef.CustomAttributes.Add(new(_ctorStackTraceHiddenAttributeRef));
         }

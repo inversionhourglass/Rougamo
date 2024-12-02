@@ -45,7 +45,7 @@ namespace Rougamo.Fody
                     HandleMoLifetime(typeDef);
                     continue;
                 }
-                if (_config.ExceptTypePatterns.Any(x => x.IsMatch(typeDef.FullName))) continue;
+                if (Configuration.ExceptTypePatterns.Any(x => x.IsMatch(typeDef.FullName))) continue;
 
                 var typeIgnores = ExtractIgnores(typeDef.CustomAttributes);
                 if (typeIgnores == null) continue;
@@ -53,7 +53,7 @@ namespace Rougamo.Fody
                 var rouType = new RouType(typeDef);
                 var implementations = ExtractClassImplementations(typeDef);
                 var classExtracts = ExtractAttributes(typeDef.CustomAttributes, globalMos.Proxies!);
-                var skipRefStruct = _config.SkipRefStruct || globalMos.SkipRefStruct || typeDef.CustomAttributes.Any(x => x.Is(Constants.TYPE_SkipRefStructAttribute));
+                var skipRefStruct = Configuration.SkipRefStruct || globalMos.SkipRefStruct || typeDef.CustomAttributes.Any(x => x.Is(Constants.TYPE_SkipRefStructAttribute));
 
                 foreach (var methodDef in typeDef.Methods)
                 {
@@ -77,7 +77,7 @@ namespace Rougamo.Fody
 
                     var methodExtracts = ExtractAttributes(attributes, globalMos.Proxies!);
                     var srf = skipRefStruct || methodDef.CustomAttributes.Any(x => x.Is(Constants.TYPE_SkipRefStructAttribute));
-                    rouType.Initialize(methodDef, globalMos.Directs!, globalMos.Generics, implementations, classExtracts.Mos, classExtracts.GenericMos, classExtracts.Proxied, methodExtracts.Mos, methodExtracts.GenericMos, methodExtracts.Proxied, globalMos.Ignores!, typeIgnores, methodIgnores, _config.CompositeAccessibility, srf);
+                    rouType.Initialize(methodDef, globalMos.Directs!, globalMos.Generics, implementations, classExtracts.Mos, classExtracts.GenericMos, classExtracts.Proxied, methodExtracts.Mos, methodExtracts.GenericMos, methodExtracts.Proxied, globalMos.Ignores!, typeIgnores, methodIgnores, Configuration.CompositeAccessibility, srf);
                 }
                 if (rouType.HasMo)
                 {

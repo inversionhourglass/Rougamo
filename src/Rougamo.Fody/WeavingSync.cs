@@ -418,7 +418,7 @@ namespace Rougamo.Fody
 
             var instructions = new List<Instruction>();
 
-            var reverseCall = feature != Feature.OnEntry && _config.ReverseCallNonEntry;
+            var reverseCall = feature != Feature.OnEntry && Configuration.ReverseCallNonEntry;
 
             for (var i = 0; i < rouMethod.Mos.Length; i++)
             {
