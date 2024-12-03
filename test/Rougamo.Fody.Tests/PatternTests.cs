@@ -15,18 +15,19 @@ using System;
 
 namespace Rougamo.Fody.Tests
 {
-    public class PatternTests : TestBase
+    public class PatternTests
     {
-        public PatternTests() : base("PatternUsage.dll")
-        {
-        }
+        private static readonly WeavedAssembly Assembly;
 
-        protected override string RootNamespace => "PatternUsage";
+        static PatternTests()
+        {
+            Assembly = new("PatternUsage");
+        }
 
         [Fact]
         public async Task MethodGlobalModifierTest()
         {
-            var instance = GetInstance("Public");
+            var instance = Assembly.GetInstance("Public");
             var executedMos = new List<string>();
 
             executedMos.Clear();
@@ -65,7 +66,7 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task MethodIRougamoTest()
         {
-            var instance = GetInstance("Public");
+            var instance = Assembly.GetInstance("Public");
             var executedMos = new List<string>();
 
             executedMos.Clear();
@@ -104,7 +105,7 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task MethodFuzzyNameTest()
         {
-            var instance = GetInstance("Public");
+            var instance = Assembly.GetInstance("Public");
             var executedMos = new List<string>();
 
             executedMos.Clear();
@@ -143,12 +144,12 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task ExecutionChildFullyMatchTest()
         {
-            var clsA = GetInstance("PatternUsage.ClsA", true);
-            var clsAB = GetInstance("PatternUsage.ClsAB", true);
-            var xClsA = GetInstance("PatternUsage.X.XClsA", true);
-            var xClsAB = GetInstance("PatternUsage.X.XClsAB", true);
-            var innerClsAB = GetInstance("PatternUsage.X.InnerClsAB", true);
-            var pub = GetInstance("PatternUsage.Public", true);
+            var clsA = Assembly.GetInstance("PatternUsage.ClsA", true);
+            var clsAB = Assembly.GetInstance("PatternUsage.ClsAB", true);
+            var xClsA = Assembly.GetInstance("PatternUsage.X.XClsA", true);
+            var xClsAB = Assembly.GetInstance("PatternUsage.X.XClsAB", true);
+            var innerClsAB = Assembly.GetInstance("PatternUsage.X.InnerClsAB", true);
+            var pub = Assembly.GetInstance("PatternUsage.Public", true);
 
             List<string> returnValue;
             var executedMos = new List<string>();
@@ -267,12 +268,12 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task ExecutionChildNameMatchTest()
         {
-            var clsA = GetInstance("PatternUsage.ClsA", true);
-            var clsAB = GetInstance("PatternUsage.ClsAB", true);
-            var xClsA = GetInstance("PatternUsage.X.XClsA", true);
-            var xClsAB = GetInstance("PatternUsage.X.XClsAB", true);
-            var innerClsAB = GetInstance("PatternUsage.X.InnerClsAB", true);
-            var pub = GetInstance("PatternUsage.Public", true);
+            var clsA = Assembly.GetInstance("PatternUsage.ClsA", true);
+            var clsAB = Assembly.GetInstance("PatternUsage.ClsAB", true);
+            var xClsA = Assembly.GetInstance("PatternUsage.X.XClsA", true);
+            var xClsAB = Assembly.GetInstance("PatternUsage.X.XClsAB", true);
+            var innerClsAB = Assembly.GetInstance("PatternUsage.X.InnerClsAB", true);
+            var pub = Assembly.GetInstance("PatternUsage.Public", true);
 
             List<string> returnValue;
             var executedMos = new List<string>();
@@ -391,8 +392,8 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task GetterReturnsDictionaryGenericTest()
         {
-            var clsA = GetInstance("PatternUsage.ClsA", true);
-            var xClsAB = GetInstance("PatternUsage.X.XClsAB", true);
+            var clsA = Assembly.GetInstance("PatternUsage.ClsA", true);
+            var xClsAB = Assembly.GetInstance("PatternUsage.X.XClsAB", true);
 
             List<string> listReturn;
             IDictionary imapReturn;
@@ -462,8 +463,8 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task SetterReturnsChildOfIDictionaryTest()
         {
-            var clsA = GetInstance("PatternUsage.ClsA", true);
-            var xClsAB = GetInstance("PatternUsage.X.XClsAB", true);
+            var clsA = Assembly.GetInstance("PatternUsage.ClsA", true);
+            var xClsAB = Assembly.GetInstance("PatternUsage.X.XClsAB", true);
 
             List<string> listReturn;
             IDictionary imapReturn;
@@ -533,8 +534,8 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task PropertyReturnsChildOfDicOrListTest()
         {
-            var clsA = GetInstance("PatternUsage.ClsA", true);
-            var xClsAB = GetInstance("PatternUsage.X.XClsAB", true);
+            var clsA = Assembly.GetInstance("PatternUsage.ClsA", true);
+            var xClsAB = Assembly.GetInstance("PatternUsage.X.XClsAB", true);
 
             List<string> listReturn;
             IDictionary imapReturn;
@@ -604,8 +605,8 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task MethodAnyMethodGenericTest()
         {
-            var clsAB = GetInstance("PatternUsage.ClsAB", true);
-            var xClsA = GetInstance("PatternUsage.X.XClsA", true);
+            var clsAB = Assembly.GetInstance("PatternUsage.ClsAB", true);
+            var xClsA = Assembly.GetInstance("PatternUsage.X.XClsA", true);
 
             List<string> listReturn;
             var listArg = new List<string>();
@@ -630,7 +631,7 @@ namespace Rougamo.Fody.Tests
             await (Task)clsAB.Call("PublicSingleGenericAsync", listArg, typeof(int));
             Assert.Contains(nameof(AnyMethodGenericAttribute), listArg);
             listArg.Clear();
-            clsAB.Call("ProtectedStaticDoubleGeneric", listArg, typeof(DateTime), typeof(Guid));
+            await (ValueTask)clsAB.Call("ProtectedStaticDoubleGeneric", listArg, typeof(DateTime), typeof(Guid));
             Assert.Contains(nameof(AnyMethodGenericAttribute), listArg);
 
             listReturn = xClsA.Call("get_PublicProp", null);
@@ -653,15 +654,15 @@ namespace Rougamo.Fody.Tests
             await (Task)xClsA.Call("PublicSingleGenericAsync", listArg, typeof(int));
             Assert.Contains(nameof(AnyMethodGenericAttribute), listArg);
             listArg.Clear();
-            xClsA.Call("ProtectedStaticDoubleGeneric", listArg, typeof(DateTime), typeof(Guid));
+            await (ValueTask)xClsA.Call("ProtectedStaticDoubleGeneric", listArg, typeof(DateTime), typeof(Guid));
             Assert.Contains(nameof(AnyMethodGenericAttribute), listArg);
         }
 
         [Fact]
         public async Task ExecutionSingleMethodGenericTest()
         {
-            var clsAB = GetInstance("PatternUsage.ClsAB", true);
-            var xClsA = GetInstance("PatternUsage.X.XClsA", true);
+            var clsAB = Assembly.GetInstance("PatternUsage.ClsAB", true);
+            var xClsA = Assembly.GetInstance("PatternUsage.X.XClsA", true);
 
             List<string> listReturn;
             var listArg = new List<string>();
@@ -716,8 +717,8 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task ExecutionDoubleMethodGenericTest()
         {
-            var clsAB = GetInstance("PatternUsage.ClsAB", true);
-            var xClsA = GetInstance("PatternUsage.X.XClsA", true);
+            var clsAB = Assembly.GetInstance("PatternUsage.ClsAB", true);
+            var xClsA = Assembly.GetInstance("PatternUsage.X.XClsA", true);
 
             List<string> listReturn;
             var listArg = new List<string>();
@@ -772,9 +773,9 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task ExecutionSingleTypeGenericTest()
         {
-            var singleGeneric = GetInstance("PatternUsage.SingleGeneric`1", true, x => x.MakeGenericType(typeof(int)));
-            var doubleGeneric = GetInstance("PatternUsage.X.DoubleGeneric`2", true, x => x.MakeGenericType(typeof(string), typeof(double)));
-            var clsAB = GetInstance("PatternUsage.ClsAB", true);
+            var singleGeneric = Assembly.GetInstance("PatternUsage.SingleGeneric`1", true, x => x.MakeGenericType(typeof(int)));
+            var doubleGeneric = Assembly.GetInstance("PatternUsage.X.DoubleGeneric`2", true, x => x.MakeGenericType(typeof(string), typeof(double)));
+            var clsAB = Assembly.GetInstance("PatternUsage.ClsAB", true);
 
             List<string> returnValue;
             var executedMos = new List<string>();
@@ -822,9 +823,9 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task ExecutionDoubleTypeGenericTest()
         {
-            var singleGeneric = GetInstance("PatternUsage.SingleGeneric`1", true, x => x.MakeGenericType(typeof(int)));
-            var doubleGeneric = GetInstance("PatternUsage.X.DoubleGeneric`2", true, x => x.MakeGenericType(typeof(string), typeof(double)));
-            var clsAB = GetInstance("PatternUsage.ClsAB", true);
+            var singleGeneric = Assembly.GetInstance("PatternUsage.SingleGeneric`1", true, x => x.MakeGenericType(typeof(int)));
+            var doubleGeneric = Assembly.GetInstance("PatternUsage.X.DoubleGeneric`2", true, x => x.MakeGenericType(typeof(string), typeof(double)));
+            var clsAB = Assembly.GetInstance("PatternUsage.ClsAB", true);
 
             List<string> returnValue;
             var executedMos = new List<string>();
@@ -872,9 +873,9 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task ExecutionAnyTypeGenericTest()
         {
-            var singleGeneric = GetInstance("PatternUsage.SingleGeneric`1", true, x => x.MakeGenericType(typeof(int)));
-            var doubleGeneric = GetInstance("PatternUsage.X.DoubleGeneric`2", true, x => x.MakeGenericType(typeof(string), typeof(double)));
-            var clsAB = GetInstance("PatternUsage.ClsAB", true);
+            var singleGeneric = Assembly.GetInstance("PatternUsage.SingleGeneric`1", true, x => x.MakeGenericType(typeof(int)));
+            var doubleGeneric = Assembly.GetInstance("PatternUsage.X.DoubleGeneric`2", true, x => x.MakeGenericType(typeof(string), typeof(double)));
+            var clsAB = Assembly.GetInstance("PatternUsage.ClsAB", true);
 
             List<string> returnValue;
             var executedMos = new List<string>();
@@ -922,9 +923,9 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task ExecutionAnyTypeGenericNoneMethodGenericTest()
         {
-            var singleGeneric = GetInstance("PatternUsage.SingleGeneric`1", true, x => x.MakeGenericType(typeof(int)));
-            var doubleGeneric = GetInstance("PatternUsage.X.DoubleGeneric`2", true, x => x.MakeGenericType(typeof(string), typeof(double)));
-            var clsAB = GetInstance("PatternUsage.ClsAB", true);
+            var singleGeneric = Assembly.GetInstance("PatternUsage.SingleGeneric`1", true, x => x.MakeGenericType(typeof(int)));
+            var doubleGeneric = Assembly.GetInstance("PatternUsage.X.DoubleGeneric`2", true, x => x.MakeGenericType(typeof(string), typeof(double)));
+            var clsAB = Assembly.GetInstance("PatternUsage.ClsAB", true);
 
             List<string> returnValue;
             var executedMos = new List<string>();
@@ -972,9 +973,9 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task ExecutionNoneTypeGenericAnyMethodGenericTest()
         {
-            var singleGeneric = GetInstance("PatternUsage.SingleGeneric`1", true, x => x.MakeGenericType(typeof(int)));
-            var doubleGeneric = GetInstance("PatternUsage.X.DoubleGeneric`2", true, x => x.MakeGenericType(typeof(string), typeof(double)));
-            var clsAB = GetInstance("PatternUsage.ClsAB", true);
+            var singleGeneric = Assembly.GetInstance("PatternUsage.SingleGeneric`1", true, x => x.MakeGenericType(typeof(int)));
+            var doubleGeneric = Assembly.GetInstance("PatternUsage.X.DoubleGeneric`2", true, x => x.MakeGenericType(typeof(string), typeof(double)));
+            var clsAB = Assembly.GetInstance("PatternUsage.ClsAB", true);
 
             List<string> returnValue;
             var executedMos = new List<string>();
@@ -1022,9 +1023,9 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task MethodNestedTypeTest()
         {
-            var nestedType = GetInstance("PatternUsage.X.NestedType", true);
-            var nestedTypeInner = GetInstance("PatternUsage.X.NestedType+Inner", true);
-            var nestedTypeInnerDeeply = GetInstance("PatternUsage.X.NestedType+Inner+Deeply", true);
+            var nestedType = Assembly.GetInstance("PatternUsage.X.NestedType", true);
+            var nestedTypeInner = Assembly.GetInstance("PatternUsage.X.NestedType+Inner", true);
+            var nestedTypeInnerDeeply = Assembly.GetInstance("PatternUsage.X.NestedType+Inner+Deeply", true);
 
             var executedMos = new List<string>();
 
@@ -1052,7 +1053,7 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public void MethodArrayTest()
         {
-            var instance = GetInstance("Public");
+            var instance = Assembly.GetInstance("Public");
 
             var executedMos = new List<string>();
 
@@ -1064,7 +1065,7 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public void ParameterTest()
         {
-            var instance = GetInstance("Public");
+            var instance = Assembly.GetInstance("Public");
 
             var executedMos = new List<string>();
 
@@ -1108,7 +1109,7 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public void GenericParameterMatchTest()
         {
-            var instance = GetInstance("TheGeneric`2", false, t => t.MakeGenericType(typeof(char), typeof(string)));
+            var instance = Assembly.GetInstance("TheGeneric`2", false, t => t.MakeGenericType(typeof(char), typeof(string)));
 
             List<string> returnValue;
 
@@ -1124,7 +1125,7 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public void ExecutionTupleSyntaxTest()
         {
-            var instance = GetInstance("Public");
+            var instance = Assembly.GetInstance("Public");
 
             var executedMos = new List<string>();
             List<string> returnValue;
@@ -1148,7 +1149,7 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task MethodAsyncSyntaxTest()
         {
-            var instance = GetInstance("Async");
+            var instance = Assembly.GetInstance("Async");
 
             var executedMos = new List<string>();
 
@@ -1234,7 +1235,7 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task ExecutionNullableSyntaxTest()
         {
-            var instance = GetInstance("Public");
+            var instance = Assembly.GetInstance("Public");
 
             var executedMos = new List<string>();
 
@@ -1257,7 +1258,7 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task MethodNotSyntaxTest()
         {
-            var instance = GetInstance("Public");
+            var instance = Assembly.GetInstance("Public");
 
             var executedMos = new List<string>();
             List<string> returnValue;
@@ -1344,10 +1345,10 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task RegexTest()
         {
-            var pub = GetInstance("Public");
-            var nested = GetInstance("PatternUsage.X.NestedType", true);
-            var nestedInner = GetInstance("PatternUsage.X.NestedType+Inner", true);
-            var nestedInnerDeeply = GetInstance("PatternUsage.X.NestedType+Inner+Deeply", true);
+            var pub = Assembly.GetInstance("Public");
+            var nested = Assembly.GetInstance("PatternUsage.X.NestedType", true);
+            var nestedInner = Assembly.GetInstance("PatternUsage.X.NestedType+Inner", true);
+            var nestedInnerDeeply = Assembly.GetInstance("PatternUsage.X.NestedType+Inner+Deeply", true);
 
             var executedMos = new List<string>();
             var returnValue = new List<string>();
@@ -1411,7 +1412,7 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task InlineTest()
         {
-            var clsA = GetInstance("ClsA");
+            var clsA = Assembly.GetInstance("ClsA");
 
             List<string> listReturn;
             IDictionary imapReturn;
@@ -1452,7 +1453,7 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public void ApllyToMethodDirectlyTest()
         {
-            var instance = GetInstance("Public");
+            var instance = Assembly.GetInstance("Public");
 
             var executedMos = new List<string>();
 
@@ -1484,10 +1485,10 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task IntegrativeTest()
         {
-            var pub = GetInstance("Public");
-            var nested = GetInstance("PatternUsage.X.NestedType", true);
-            var nestedInner = GetInstance("PatternUsage.X.NestedType+Inner", true);
-            var nestedInnerDeeply = GetInstance("PatternUsage.X.NestedType+Inner+Deeply", true);
+            var pub = Assembly.GetInstance("Public");
+            var nested = Assembly.GetInstance("PatternUsage.X.NestedType", true);
+            var nestedInner = Assembly.GetInstance("PatternUsage.X.NestedType+Inner", true);
+            var nestedInnerDeeply = Assembly.GetInstance("PatternUsage.X.NestedType+Inner+Deeply", true);
 
             var executedMos = new List<string>();
             var returnValue = new List<string>();
@@ -1551,10 +1552,10 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task AttributeTest()
         {
-            var instance1 = GetInstance(nameof(AttributeCase1));
-            var sInstance1 = GetStaticInstance(nameof(AttributeCase1));
-            var instance2 = GetInstance(nameof(AttributeCase2));
-            var sInstance2 = GetStaticInstance(nameof(AttributeCase2));
+            var instance1 = Assembly.GetInstance(nameof(AttributeCase1));
+            var sInstance1 = Assembly.GetStaticInstance(nameof(AttributeCase1));
+            var instance2 = Assembly.GetInstance(nameof(AttributeCase2));
+            var sInstance2 = Assembly.GetStaticInstance(nameof(AttributeCase2));
 
             var executedMos = new List<string>();
             List<string> returnValue;

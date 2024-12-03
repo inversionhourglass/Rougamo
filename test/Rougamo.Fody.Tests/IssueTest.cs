@@ -8,18 +8,19 @@ using Xunit;
 
 namespace Rougamo.Fody.Tests
 {
-    public class IssueTest : TestBase
+    public class IssueTest
     {
-        public IssueTest() : base("Issues.dll")
-        {
-        }
+        private static readonly WeavedAssembly Assembly;
 
-        protected override string RootNamespace => "Issues";
+        static IssueTest()
+        {
+            Assembly = new("Issues");
+        }
 
         [Fact]
         public async Task Issue8Test()
         {
-            var instance = GetInstance(nameof(Issue8));
+            var instance = Assembly.GetInstance(nameof(Issue8));
 
             await (Task)instance.Command();
 
@@ -33,7 +34,7 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task Issue9Test()
         {
-            var instance = GetStaticInstance(nameof(Issue9));
+            var instance = Assembly.GetStaticInstance(nameof(Issue9));
 
             await Issue9.ManualTestAsync();
             await (Task)instance.WeaveTestAsync();
@@ -44,7 +45,7 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task Issue16Test()
         {
-            var instance = GetInstance(nameof(Issue16));
+            var instance = Assembly.GetInstance(nameof(Issue16));
 
             var items = new List<string>();
             await (Task)instance.TestAsync(items);
@@ -58,7 +59,7 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task Issue20Test()
         {
-            var instance = GetInstance(nameof(Issue20));
+            var instance = Assembly.GetInstance(nameof(Issue20));
             var expected = new[] { "OnEntry-1", "OnEntry-2", "OnExit-2", "OnExit-1" };
 
             var items = new List<string>();
@@ -69,7 +70,7 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task Issue25Test()
         {
-            var instance = GetInstance(nameof(Issue25));
+            var instance = Assembly.GetInstance(nameof(Issue25));
 
             instance.GenericMethod<System.IO.MemoryStream>();
             await (Task)instance.AsyncGenericMethod<System.IO.MemoryStream>();
@@ -78,7 +79,7 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task Issue27Test()
         {
-            var instance = GetInstance(nameof(Issue27));
+            var instance = Assembly.GetInstance(nameof(Issue27));
 
             instance.Get<object>();
             await (Task<object>)instance.GetAsync<object>();
@@ -89,7 +90,7 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task Issue29Test()
         {
-            var instancee = GetInstance(nameof(Issue29));
+            var instancee = Assembly.GetInstance(nameof(Issue29));
 
             await (Task)instancee.Test(null);
         }
@@ -98,7 +99,7 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task Issue30Test()
         {
-            var sInstance = GetStaticInstance(nameof(Issue30));
+            var sInstance = Assembly.GetStaticInstance(nameof(Issue30));
 
             var v = await (Task<string>)sInstance.Test(" 123");
             Assert.Equal("123", v);
@@ -107,8 +108,8 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public void Issue40Test()
         {
-            var instance = GetInstance(nameof(Issue40), false);
-            var sInstance = GetStaticInstance(nameof(Issue40), false);
+            var instance = Assembly.GetInstance(nameof(Issue40), false);
+            var sInstance = Assembly.GetStaticInstance(nameof(Issue40), false);
 
             var instanceValue = (int)instance.Instance();
             var staticValue = (int)sInstance.Static();
@@ -120,7 +121,7 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task Issue51Test()
         {
-            var sInstance = GetStaticInstance(nameof(Issue51), false);
+            var sInstance = Assembly.GetStaticInstance(nameof(Issue51), false);
 
             await (Task)sInstance.TestAsync();
         }
@@ -128,7 +129,7 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task Issue60Test()
         {
-            var instance = GetInstance(nameof(Issue60), false);
+            var instance = Assembly.GetInstance(nameof(Issue60), false);
 
             var items = new List<string>();
             await (ValueTask)instance.Async(items);
@@ -142,10 +143,10 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public void Issue61Test()
         {
-            object instance = GetInstance(nameof(Issue61), false);
+            object instance = Assembly.GetInstance(nameof(Issue61), false);
 
-            Issue61.In mReadOnlySpanIn = GetMethodDelegate<Issue61.In>(instance, nameof(Issue61.ReadOnlySpanIn));
-            Issue61.Out mReadOnlySpanOut = GetMethodDelegate<Issue61.Out>(instance, nameof(Issue61.ReadOnlySpanOut));
+            Issue61.In mReadOnlySpanIn = Assembly.GetMethodDelegate<Issue61.In>(instance, nameof(Issue61.ReadOnlySpanIn));
+            Issue61.Out mReadOnlySpanOut = Assembly.GetMethodDelegate<Issue61.Out>(instance, nameof(Issue61.ReadOnlySpanOut));
 
             var pIn = new ReadOnlySpan<char>("abc".ToCharArray());
             var pOut = "xyz";
@@ -158,8 +159,8 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async void Issue63Test()
         {
-            var instance = GetInstance(nameof(Issue63));
-            var sInstance = GetStaticInstance(nameof(Issue63));
+            var instance = Assembly.GetInstance(nameof(Issue63));
+            var sInstance = Assembly.GetStaticInstance(nameof(Issue63));
 
             var iIn = 1;
             var iOut = instance.WillBeReplaced(iIn);
@@ -177,14 +178,14 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public void Issue66Test()
         {
-            var instance = GetInstance("Issue66`2", false, t => t.MakeGenericType(typeof(int), typeof(int)));
+            var instance = Assembly.GetInstance("Issue66`2", false, t => t.MakeGenericType(typeof(int), typeof(int)));
             instance.M();
         }
 
         [Fact]
         public void Issue72Test()
         {
-            var instance = GetInstance(nameof(Issue72));
+            var instance = Assembly.GetInstance(nameof(Issue72));
             var logs = new List<string>();
             instance.Plus(logs, 1, 2);
 
@@ -194,7 +195,7 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task Issue73Test()
         {
-            var instance = GetInstance("Issue73", false, t =>
+            var instance = Assembly.GetInstance("Issue73", false, t =>
             {
                 var nt = t.GetNestedTypes().Single(x => x.Name == "Cls`1");
                 return nt.MakeGenericType(typeof(int));
@@ -206,7 +207,7 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public void Issue79Test()
         {
-            var instance = GetInstance(nameof(Issue79));
+            var instance = Assembly.GetInstance(nameof(Issue79));
 
             instance.M();
         }
@@ -214,7 +215,7 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public void Issue80Test()
         {
-            var instance = GetInstance(nameof(Issue80));
+            var instance = Assembly.GetInstance(nameof(Issue80));
 
             instance.M();
         }
@@ -222,7 +223,7 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public void Issue81Test()
         {
-            var instance = GetInstance(nameof(Issue81));
+            var instance = Assembly.GetInstance(nameof(Issue81));
 
             instance.M();
         }
@@ -230,7 +231,7 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public void Issue83Test()
         {
-            var instance = GetInstance(nameof(Issue83));
+            var instance = Assembly.GetInstance(nameof(Issue83));
 
             Assert.Throws<Exception>(() => instance.M());
         }
@@ -238,7 +239,7 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public void Issue86Test()
         {
-            var instance = GetInstance(nameof(Issue86));
+            var instance = Assembly.GetInstance(nameof(Issue86));
 
             instance.M();
         }

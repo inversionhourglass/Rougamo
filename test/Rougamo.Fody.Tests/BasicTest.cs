@@ -1,7 +1,6 @@
 using BasicUsage;
 using BasicUsage.Attributes;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Data;
 using System.Linq;
@@ -10,20 +9,78 @@ using Xunit;
 
 namespace Rougamo.Fody.Tests
 {
-    [Collection(nameof(BasicUsage))]
-    public class BasicTest : TestBase
+    public class BasicTest
     {
-        public BasicTest() : base("BasicUsage.dll")
+        private static readonly WeavedAssembly Assembly;
+
+        static BasicTest()
         {
+            //#if NET461
+            //Assembly = new("../../Release/net461/BasicUsage.dll", "BasicUsage");
+            //#elif NET48
+            //Assembly = new("../../Release/net48/BasicUsage.dll", "BasicUsage");
+            //#elif NETCOREAPP3_1
+            //Assembly = new("../../Release/netcoreapp3.1/BasicUsage.dll", "BasicUsage");
+            //#elif NET6_0
+            //Assembly = new("../../Release/net6.0/BasicUsage.dll", "BasicUsage");
+            //#elif NET7_0
+            //Assembly = new("../../Release/net7.0/BasicUsage.dll", "BasicUsage");
+            //#elif NET8_0
+            //Assembly = new("../../Release/net8.0/BasicUsage.dll", "BasicUsage");
+            //#elif NET9_0
+            //Assembly = new("../../Release/net9.0/BasicUsage.dll", "BasicUsage");
+            //#endif
+            Assembly = new("BasicUsage");
         }
 
-        protected override string RootNamespace => "BasicUsage";
+        [Fact]
+        public async Task MethodPropertyTest()
+        {
+            var instance = Assembly.GetInstance(nameof(AccessableUseCase));
+            var staticInstance = Assembly.GetStaticInstance(nameof(AccessableUseCase));
+            var type = (Type)instance.GetType();
+
+            var recording = (List<string>)instance.Recording;
+            var staticRecording = (List<string>)type.GetProperty("StaticRecording").GetValue(null);
+
+            recording.Clear();
+            staticRecording.Clear();
+            instance.IntItem = 2;
+            Assert.Equal(AccessableUseCase.Expected_Property_Set, recording);
+
+            recording.Clear();
+            staticRecording.Clear();
+            var intItem = (int)instance.IntItem;
+            Assert.Equal(AccessableUseCase.Expected_Property_Get, recording);
+            Assert.NotEqual(int.MinValue, intItem);
+
+            recording.Clear();
+            staticRecording.Clear();
+            instance.Transfer(3);
+            Assert.Equal(AccessableUseCase.Expected_Method, recording);
+
+            recording.Clear();
+            staticRecording.Clear();
+            type.GetProperty("StringItem").SetValue(null, "ok");
+            Assert.Equal(AccessableUseCase.Expected_Property_Set, staticRecording);
+
+            recording.Clear();
+            staticRecording.Clear();
+            var stringItem = (string)type.GetProperty("StringItem").GetValue(null);
+            Assert.Equal(AccessableUseCase.Expected_Property_Get, staticRecording);
+            Assert.NotNull(stringItem);
+
+            recording.Clear();
+            staticRecording.Clear();
+            await (Task<int>)staticInstance.TransferAsync(1);
+            Assert.Equal(AccessableUseCase.Expected_Method, staticRecording);
+        }
 
         [Fact]
         public void ModifyReturnValueTest()
         {
             var originInstance = new ModifyReturnValue();
-            var instance = GetInstance("ModifyReturnValue");
+            var instance = Assembly.GetInstance("ModifyReturnValue");
 
             Assert.Throws<InvalidOperationException>(() => originInstance.Exception());
             var exceptionHandledValue = instance.Exception();
@@ -73,7 +130,7 @@ namespace Rougamo.Fody.Tests
         public async Task AsyncModifyReturnValueTest()
         {
             var originInstance = new AsyncModifyReturnValue();
-            var instance = GetInstance("AsyncModifyReturnValue");
+            var instance = Assembly.GetInstance("AsyncModifyReturnValue");
 
 #if NET461 || NET6
             await Assert.ThrowsAsync<InvalidOperationException>(() => originInstance.ExceptionAsync());
@@ -161,7 +218,7 @@ namespace Rougamo.Fody.Tests
         {
             // iterator can not handle exception and modify return value
             var originInstance = new ModifyIteratorReturnValue();
-            var instance = GetInstance("ModifyIteratorReturnValue");
+            var instance = Assembly.GetInstance("ModifyIteratorReturnValue");
 
             var min = 5;
             var max = 30;
@@ -189,7 +246,7 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public void SyncTest()
         {
-            var instance = GetInstance("SyncExecution");
+            var instance = Assembly.GetInstance("SyncExecution");
 
             string flag;
             flag = instance.Call("get_InstanceProp1", null);
@@ -236,7 +293,7 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task AsyncTest()
         {
-            var instance = GetInstance("AsyncExecution");
+            var instance = Assembly.GetInstance("AsyncExecution");
 
             var input = new List<string>();
             await (Task)instance.Void1(input);
@@ -281,8 +338,8 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task ArgumentRewriteTest()
         {
-            var instance = GetInstance(nameof(ModifyArguments));
-            var attribute = GetStaticInstance(typeof(RewriteArgsAttribute).FullName, true);
+            var instance = Assembly.GetInstance(nameof(ModifyArguments));
+            var attribute = Assembly.GetStaticInstance(typeof(RewriteArgsAttribute).FullName, true);
 
             string a = string.Empty;
             sbyte b = 1;
@@ -342,8 +399,8 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task RetryTest()
         {
-            var instance = GetInstance(nameof(SyncExecution));
-            var asyncInstance = GetInstance(nameof(AsyncExecution));
+            var instance = Assembly.GetInstance(nameof(SyncExecution));
+            var asyncInstance = Assembly.GetInstance(nameof(AsyncExecution));
 
             var datas = new List<int>();
 
@@ -380,7 +437,7 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task OrderTest()
         {
-            var instance = GetInstance(nameof(OrderUseCase));
+            var instance = Assembly.GetInstance(nameof(OrderUseCase));
 
             string[] expected;
             List<string> actual;
@@ -399,7 +456,7 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public void FreshArgsTest()
         {
-            var instance = GetInstance(nameof(FreshArguments));
+            var instance = Assembly.GetInstance(nameof(FreshArguments));
 
             var x = 0;
             var y = 0;
@@ -418,7 +475,7 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task RougamoTest()
         {
-            var instance = GetInstance(nameof(RougamoUsage));
+            var instance = Assembly.GetInstance(nameof(RougamoUsage));
 
             var executedMos = new List<string>();
 
@@ -436,7 +493,7 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task GenericMoTest()
         {
-            var instance = GetInstance(nameof(GenericMoUseCase));
+            var instance = Assembly.GetInstance(nameof(GenericMoUseCase));
 
             var executedMos = new List<string>();
 
@@ -460,8 +517,8 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task OmitTest()
         {
-            var instance = GetInstance(nameof(OmitUseCase));
-            var sInstance = GetStaticInstance(nameof(OmitUseCase));
+            var instance = Assembly.GetInstance(nameof(OmitUseCase));
+            var sInstance = Assembly.GetStaticInstance(nameof(OmitUseCase));
 
             var executedMos = new List<string>();
             List<string> returnMos;
@@ -552,8 +609,8 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public async Task IndirectDependencyTest()
         {
-            var instance = GetInstance(nameof(IndirectDependencyUseCase));
-            var sInstance = GetStaticInstance(nameof(IndirectDependencyUseCase));
+            var instance = Assembly.GetInstance(nameof(IndirectDependencyUseCase));
+            var sInstance = Assembly.GetStaticInstance(nameof(IndirectDependencyUseCase));
 
             var mos = new List<string>();
 
@@ -569,9 +626,9 @@ namespace Rougamo.Fody.Tests
         [Fact]
         public void CtorTest()
         {
-            var sEmptyInstance = GetStaticInstance(nameof(ConstructorEmpty));
-            var sThrowsInstance = GetStaticInstance(nameof(ConstructorThrows));
-            var sTryCatchInstance = GetStaticInstance(nameof(ConstructorTryCatch));
+            var sEmptyInstance = Assembly.GetStaticInstance(nameof(ConstructorEmpty));
+            var sThrowsInstance = Assembly.GetStaticInstance(nameof(ConstructorThrows));
+            var sTryCatchInstance = Assembly.GetStaticInstance(nameof(ConstructorTryCatch));
 
             string[] expected = ["CtorValueMo"];
             Assert.Equal(expected, sEmptyInstance.GetExecutedMos());
@@ -581,22 +638,22 @@ namespace Rougamo.Fody.Tests
             var executedMos = new List<string>();
 
             executedMos.Clear();
-            var emptyInstance = GetInstance(nameof(ConstructorEmpty), false, null, [executedMos]);
+            var emptyInstance = Assembly.GetInstance(nameof(ConstructorEmpty), false, null, [executedMos]);
             Assert.Equal(executedMos, executedMos);
 
             executedMos.Clear();
-            var throwsInstance = GetInstance(nameof(ConstructorThrows), false, null, [executedMos]);
+            var throwsInstance = Assembly.GetInstance(nameof(ConstructorThrows), false, null, [executedMos]);
             Assert.Equal(executedMos, executedMos);
 
             executedMos.Clear();
-            var tryCatchInstance = GetInstance(nameof(ConstructorTryCatch), false, null, [executedMos]);
+            var tryCatchInstance = Assembly.GetInstance(nameof(ConstructorTryCatch), false, null, [executedMos]);
             Assert.Equal(executedMos, executedMos);
         }
 
         [Fact]
         public async Task LifetimeTest()
         {
-            var instance = GetInstance(nameof(LifetimeUseCase));
+            var instance = Assembly.GetInstance(nameof(LifetimeUseCase));
 
             var list = new List<object>();
 

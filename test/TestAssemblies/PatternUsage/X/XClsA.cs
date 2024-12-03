@@ -20,7 +20,7 @@ namespace PatternUsage.X
             executedMos.Add(Convert.ToString(default(T)));
         }
 
-        protected static async void ProtectedStaticDoubleGeneric<T1, T2>(List<string> executedMos)
+        protected static async ValueTask ProtectedStaticDoubleGeneric<T1, T2>(List<string> executedMos)
         {
             executedMos.Add(Convert.ToString(default(T1)));
             await Task.Yield();
