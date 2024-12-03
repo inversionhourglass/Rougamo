@@ -23,6 +23,8 @@
         public const string TYPE_IFlexiblePatternPointcut = "Rougamo.Flexibility.IFlexiblePatternPointcut";
         public const string TYPE_IFlexibleOrderable = "Rougamo.Flexibility.IFlexibleOrderable";
         public const string TYPE_RougamoPool = "Rougamo.RougamoPool`1";
+        public const string TYPE_ISyncMo = "Rougamo.ISyncMo";
+        public const string TYPE_IAsyncMo = "Rougamo.IAsyncMo";
 
         public const string PROP_Flags = "Flags";
         public const string PROP_Pattern = "Pattern";
