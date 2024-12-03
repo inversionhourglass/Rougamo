@@ -9,7 +9,7 @@ using Xunit;
 
 namespace Rougamo.Fody.Tests
 {
-    public class BasicTest
+    public partial class BasicTest
     {
         private static readonly WeavedAssembly Assembly;
 
