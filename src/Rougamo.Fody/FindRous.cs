@@ -3,6 +3,7 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
 using Mono.Collections.Generic;
+using Rougamo.Fody.Models;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -14,7 +15,7 @@ namespace Rougamo.Fody
     {
         private void FindRous()
         {
-            _rouTypes = new List<RouType>();
+            _rouTypes = [];
             FullScan();
             ExtractTypeReferences();
         }
@@ -33,6 +34,8 @@ namespace Rougamo.Fody
             var globalMos = FindGlobalAttributes();
 
             if (globalMos.GlobalIgnore) return;
+
+            var configuredMos = ResolveConfiguredMos();
 
             var types = new List<TypeDefinition>();
             ExpandTypes(ModuleDefinition.Types, types);
@@ -77,7 +80,7 @@ namespace Rougamo.Fody
 
                     var methodExtracts = ExtractAttributes(attributes, globalMos.Proxies!);
                     var srf = skipRefStruct || methodDef.CustomAttributes.Any(x => x.Is(Constants.TYPE_SkipRefStructAttribute));
-                    rouType.Initialize(methodDef, globalMos.Directs!, globalMos.Generics, implementations, classExtracts.Mos, classExtracts.GenericMos, classExtracts.Proxied, methodExtracts.Mos, methodExtracts.GenericMos, methodExtracts.Proxied, globalMos.Ignores!, typeIgnores, methodIgnores, Configuration.CompositeAccessibility, srf);
+                    rouType.Initialize(methodDef, configuredMos, globalMos.Directs!, globalMos.Generics, implementations, classExtracts.Mos, classExtracts.GenericMos, classExtracts.Proxied, methodExtracts.Mos, methodExtracts.GenericMos, methodExtracts.Proxied, globalMos.Ignores!, typeIgnores, methodIgnores, Configuration.CompositeAccessibility, srf);
                 }
                 if (rouType.HasMo)
                 {
@@ -220,6 +223,20 @@ namespace Rougamo.Fody
             }
 
             return new SimplifyGlobalMos(assemblyMos.SkipRefStruct || moduleMos.SkipRefStruct, assemblyMos.Directs.Values.SelectMany(x => x).ToArray(), assemblyMos.Generics.Values.ToArray(), assemblyMos.Proxies, assemblyMos.Ignores.Keys.ToArray());
+        }
+
+        private ConfiguredMo[] ResolveConfiguredMos()
+        {
+            var configuredMos = new List<ConfiguredMo>();
+
+            foreach (var mo in Configuration.Mos)
+            {
+                var typeRef = FindAndImportType(mo.Type);
+
+                configuredMos.Add(new(typeRef, mo.Pattern));
+            }
+
+            return configuredMos.ToArray();
         }
 
         /// <summary>

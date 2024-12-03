@@ -64,6 +64,12 @@ namespace Rougamo.Fody
             }
 
             yield return "Rougamo";
+
+            var assemblies = Configuration.Mos.Select(x => x.Assembly).Distinct();
+            foreach (var assembly in assemblies)
+            {
+                yield return assembly;
+            }
         }
     }
 }

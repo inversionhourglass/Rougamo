@@ -9,7 +9,7 @@ namespace Rougamo.Fody
     internal static class ModelExtension
     {
         public static void Initialize(this RouType rouType, MethodDefinition methdDef,
-            CustomAttribute[] assemblyAttributes, TypeReference[] assemblyGenerics,
+            ConfiguredMo[] configuredMos, CustomAttribute[] assemblyAttributes, TypeReference[] assemblyGenerics,
             RepulsionMo[] typeImplements, CustomAttribute[] typeAttributes, TypeReference[] typeGenerics, TypeReference[] typeProxies,
             CustomAttribute[] methodAttributes, TypeReference[] methodGenerics, TypeReference[] methodProxies,
             string[] assemblyIgnores, string[] typeIgnores, string[] methodIgnores, bool compositeAccessibility, bool skipRefStruct)
@@ -38,6 +38,7 @@ namespace Rougamo.Fody
 
             rouMethod.AddMo(assemblyAttributes.Where(x => !ignores.Contains(x.AttributeType.FullName)), MoFrom.Assembly, compositeAccessibility);
             rouMethod.AddMo(assemblyGenerics.Where(x => !ignores.Contains(x.FullName)), MoFrom.Assembly, compositeAccessibility);
+            rouMethod.AddMo(configuredMos.Where(x => MatchMo(rouMethod, x, MoFrom.Assembly, compositeAccessibility)));
 
             if (rouMethod.MosAny())
             {
