@@ -33,27 +33,6 @@ namespace Rougamo.Fody.Simulations.Types
 
         public MethodSimulation M_Singleton => MethodSimulate(Constants.METHOD__Singleton, false, x => x.Name == Constants.METHOD__Singleton && x.IsStatic);
 
-        public IList<Instruction> New(MethodSimulation host, Mo mo)
-        {
-            if (mo.Attribute != null)
-            {
-                var ctor = mo.Attribute.Constructor.Simulate(this);
-                var arguments = mo.Attribute.ConstructorArguments.Select(x => x.Simulate(ModuleWeaver)).ToArray();
-                var instructions = new List<Instruction>
-                {
-                    ctor.Call(host, arguments)
-                };
-
-                return instructions;
-            }
-
-            if (mo.IsStruct)
-            {
-                var vThis = host.CreateVariable<TsMo>(this);
-                return [.. vThis.AssignNew(), .. vThis.Load()];
-            }
-
-            return New(host);
-        }
+        public IList<Instruction> New(MethodSimulation host, Mo mo) => mo.New(this, host);
     }
 }

@@ -4,6 +4,7 @@ using Fody.Simulations.PlainValues;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
+using Rougamo.Fody.Models;
 using Rougamo.Fody.Simulations.Types;
 using System;
 using System.Collections.Generic;
@@ -69,7 +70,7 @@ namespace Rougamo.Fody
                         .. SetMoProperties(mo, tMo, executingMethod)
                     ];
                 case Lifetime.Singleton:
-                    if (mo.Attribute != null && mo.Attribute.HasProperties) throw new FodyWeavingException($"{mo.MoTypeDef} is applied to {rouMethod.MethodDef} with properties, but {mo.MoTypeDef} has a singleton lifetime that cannot has any property and constructor argument.");
+                    if (mo.HasProperties) throw new FodyWeavingException($"{mo.MoTypeDef} is applied to {rouMethod.MethodDef} with properties, but {mo.MoTypeDef} has a singleton lifetime that cannot has any property and constructor argument.");
 
                     return tMo.M_Singleton.Call(executingMethod);
                 case Lifetime.Pooled:
@@ -87,11 +88,11 @@ namespace Rougamo.Fody
 
         private IList<Instruction> SetMoProperties(Mo mo, TsMo tMo, MethodSimulation executingMethod)
         {
-            if (mo.Attribute == null || !mo.Attribute.HasProperties) return [];
+            if (mo is not CustomAttributeMo caMo || !caMo.HasProperties) return [];
 
             var instructions = new List<Instruction>();
 
-            foreach (var property in mo.Attribute.Properties)
+            foreach (var property in caMo.Attribute.Properties)
             {
                 var propSimulation = tMo.OptionalPropertySimulate(property.Name, true);
                 if (propSimulation?.Setter != null)

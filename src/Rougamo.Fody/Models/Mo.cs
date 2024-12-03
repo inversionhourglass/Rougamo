@@ -1,11 +1,18 @@
-﻿using Mono.Cecil;
+﻿using Fody;
+using Fody.Simulations;
+using Mono.Cecil;
+using Mono.Cecil.Cil;
+using Mono.Cecil.Rocks;
 using Mono.Collections.Generic;
+using Rougamo.Fody.Models;
+using Rougamo.Fody.Simulations.Types;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
 namespace Rougamo.Fody
 {
-    internal sealed class Mo
+    internal abstract class Mo(TypeReference moTypeRef, MoFrom from)
     {
         private AccessFlags? _flags;
         private string? _pattern;
@@ -16,31 +23,15 @@ namespace Rougamo.Fody
         private ForceSync? _forceSync;
         private Lifetime? _lifetime;
 
-        public Mo(CustomAttribute attribute, MoFrom from)
-        {
-            Attribute = attribute;
-            MoTypeDef = attribute.AttributeType.Resolve();
-            From = from;
-            IsStruct = false;
-        }
-
-        public Mo(TypeReference typeRef, MoFrom from)
-        {
-            TypeRef = typeRef;
-            MoTypeDef = typeRef.Resolve();
-            From = from;
-            IsStruct = MoTypeDef.IsValueType;
-        }
-
         public static IEqualityComparer<Mo> Comparer { get; } = new EqualityComparer();
 
-        public CustomAttribute? Attribute { get; }
+        public MoFrom From => from;
 
-        public TypeReference? TypeRef { get; }
+        public abstract bool IsStruct { get; }
 
-        public MoFrom From { get; }
+        public abstract bool HasArguments { get; }
 
-        public bool IsStruct { get; }
+        public abstract bool HasProperties { get; }
 
         public AccessFlags Flags
         {
@@ -48,7 +39,7 @@ namespace Rougamo.Fody
             {
                 if (!_flags.HasValue)
                 {
-                    _flags = this.ExtractFlags();
+                    _flags = ExtractFlags();
                 }
                 return _flags.Value;
             }
@@ -60,7 +51,7 @@ namespace Rougamo.Fody
             {
                 if (!_patternSet)
                 {
-                    _pattern = this.ExtractPattern();
+                    _pattern = ExtractPattern();
                     _patternSet = true;
                 }
                 return _pattern;
@@ -73,7 +64,7 @@ namespace Rougamo.Fody
             {
                 if (!_features.HasValue)
                 {
-                    _features = this.ExtractFeatures();
+                    _features = ExtractFeatures();
                 }
                 return _features.Value;
             }
@@ -85,7 +76,7 @@ namespace Rougamo.Fody
             {
                 if (!_order.HasValue)
                 {
-                    _order = this.ExtractOrder();
+                    _order = ExtractOrder();
                 }
                 return _order.Value;
             }
@@ -97,7 +88,7 @@ namespace Rougamo.Fody
             {
                 if (!_omit.HasValue)
                 {
-                    _omit = this.ExtractOmits();
+                    _omit = ExtractOmits();
                 }
                 return _omit.Value;
             }
@@ -109,7 +100,7 @@ namespace Rougamo.Fody
             {
                 if (!_forceSync.HasValue)
                 {
-                    _forceSync = this.ExtractForceSync();
+                    _forceSync = ExtractForceSync();
                 }
                 return _forceSync.Value;
             }
@@ -121,25 +112,268 @@ namespace Rougamo.Fody
             {
                 if (!_lifetime.HasValue)
                 {
-                    _lifetime = this.ExtractLifetime();
+                    _lifetime = ExtractLifetime();
                 }
                 return _lifetime.Value;
             }
         }
 
-        public TypeDefinition MoTypeDef { get; }
+        public TypeDefinition MoTypeDef { get; } = moTypeRef.ToDefinition();
 
-        public TypeReference MoTypeRef => TypeRef ?? Attribute!.AttributeType;
+        public TypeReference MoTypeRef => moTypeRef;
 
-        public string FullName => Attribute?.AttributeType?.FullName ?? TypeRef!.FullName;
+        public string FullName => moTypeRef.FullName;
+
+        public abstract IList<Instruction> New(TsMo tMo, MethodSimulation host);
+
+        protected virtual AccessFlags ExtractFlags()
+        {
+            var implementedInterface = MoTypeDef.Implement(Constants.TYPE_IFlexibleModifierPointcut);
+            if (!implementedInterface && MoTypeDef.Properties.Any(x => x.Name == Constants.PROP_Flags && x.PropertyType.IsEnum(out var ptFlag) && ptFlag!.IsInt32()))
+            {
+                throw new FodyWeavingException($"[{MoTypeDef}] Since version 5.0.0, the Flags property has been removed from the IMo interface. Use PointcutAttribute instead. For more information, see https://github.com/inversionhourglass/Rougamo/releases/tag/v5.0.0");
+            }
+            var pointcutAttribute = MoTypeDef.CustomAttributes.FirstOrDefault(x => x.Is(Constants.TYPE_PointcutAttribute));
+            if (pointcutAttribute != null && pointcutAttribute.ConstructorArguments.Count == 1)
+            {
+                var arg = pointcutAttribute.ConstructorArguments[0];
+                if (!arg.Type.IsString())
+                {
+                    return (AccessFlags)Convert.ToInt32(arg.Value);
+                }
+            }
+            AccessFlags? flags = null;
+            if (implementedInterface)
+            {
+                flags = ExtractFromIl(MoTypeRef, Constants.PROP_Flags, Constants.TYPE_AccessFlags, ParseFlags);
+            }
+            return flags ?? AccessFlags.InstancePublic;
+
+            static AccessFlags? ParseFlags(Instruction instruction)
+            {
+                var opCode = instruction.OpCode;
+                if (opCode == OpCodes.Ldc_I4_3) return AccessFlags.Public;
+                if (opCode == OpCodes.Ldc_I4_6) return AccessFlags.Instance;
+                if (opCode == OpCodes.Ldc_I4_7) return AccessFlags.Instance | AccessFlags.Public;
+                if (opCode == OpCodes.Ldc_I4_S || opCode == OpCodes.Ldc_I4) return (AccessFlags)Convert.ToInt32(instruction.Operand);
+                return null;
+            }
+        }
+
+        protected virtual string? ExtractPattern()
+        {
+            var implementedInterface = MoTypeDef.Implement(Constants.TYPE_IFlexiblePatternPointcut);
+            if (!implementedInterface && MoTypeDef.Properties.Any(x => x.Name == Constants.PROP_Pattern && x.PropertyType.IsString()))
+            {
+                throw new FodyWeavingException($"[{MoTypeDef}] Since version 5.0.0, the Pattern property has been removed from the IMo interface. Use PointcutAttribute instead. For more information, see https://github.com/inversionhourglass/Rougamo/releases/tag/v5.0.0");
+            }
+            var pointcutAttribute = MoTypeDef.CustomAttributes.FirstOrDefault(x => x.Is(Constants.TYPE_PointcutAttribute));
+            if (pointcutAttribute != null && pointcutAttribute.ConstructorArguments.Count == 1)
+            {
+                var arg = pointcutAttribute.ConstructorArguments[0];
+                if (arg.Type.IsString())
+                {
+                    return (string)arg.Value;
+                }
+            }
+            return implementedInterface ? ExtractFromIl(MoTypeRef, Constants.PROP_Pattern, Constants.TYPE_String, ParsePattern) : null;
+
+            static string? ParsePattern(Instruction instruction)
+            {
+                return instruction.OpCode.Code == Code.Ldstr ? (string)instruction.Operand : null;
+            }
+        }
+
+        protected virtual Feature ExtractFeatures()
+        {
+            if (MoTypeDef.Properties.Any(x => x.Name == Constants.PROP_Features && x.PropertyType.IsEnum(out var ptFeature) && ptFeature!.IsInt32()))
+            {
+                throw new FodyWeavingException($"[{MoTypeDef}] Since version 5.0.0, the Features property has been removed from the IMo interface. Use AdviceAttribute instead. For more information, see https://github.com/inversionhourglass/Rougamo/releases/tag/v5.0.0");
+            }
+            var adviceAttribute = MoTypeDef.CustomAttributes.FirstOrDefault(x => x.Is(Constants.TYPE_AdviceAttribute));
+            if (adviceAttribute != null && adviceAttribute.ConstructorArguments.Count == 1)
+            {
+                var arg = adviceAttribute.ConstructorArguments[0];
+                return (Feature)Convert.ToInt32(arg.Value);
+            }
+            return Feature.All;
+        }
+
+        protected virtual double ExtractOrder()
+        {
+            var implementedInterface = MoTypeDef.Implement(Constants.TYPE_IFlexibleOrderable);
+            if (!implementedInterface && MoTypeDef.Properties.Any(x => x.Name == Constants.PROP_Order && x.PropertyType.IsDouble()))
+            {
+                throw new FodyWeavingException($"[{MoTypeDef}] Since version 5.0.0, the Order property has been removed from the IMo interface. Implements IFlexibleOrderable instead. For more information, see https://github.com/inversionhourglass/Rougamo/releases/tag/v5.0.0");
+            }
+            if (implementedInterface)
+            {
+                var order = ExtractFromIl(MoTypeRef, Constants.PROP_Order, Constants.TYPE_Double, ParseOrder);
+                if (order.HasValue) return order.Value;
+            }
+            return 0;
+
+            static double? ParseOrder(Instruction instruction)
+            {
+                return instruction.OpCode.Code == Code.Ldc_R8 ? (double)instruction.Operand : null;
+            }
+        }
+
+        protected virtual Omit ExtractOmits()
+        {
+            if (MoTypeDef.Properties.Any(x => x.Name == Constants.PROP_MethodContextOmits && x.PropertyType.IsEnum(out var ptOmits) && ptOmits!.IsInt32()))
+            {
+                throw new FodyWeavingException($"[{MoTypeDef}] Since version 5.0.0, the MethodContextOmits property has been removed from the IMo interface. Use OptimizationAttribute instead. For more information, see https://github.com/inversionhourglass/Rougamo/releases/tag/v5.0.0");
+            }
+            var optimizationAttribute = MoTypeDef.CustomAttributes.FirstOrDefault(x => x.Is(Constants.TYPE_OptimizationAttribute));
+            if (optimizationAttribute != null && optimizationAttribute.Properties.TryGet(Constants.PROP_MethodContext, out var property))
+            {
+                return (Omit)Convert.ToInt32(property!.Value.Argument.Value);
+            }
+            return Omit.None;
+        }
+
+        protected virtual ForceSync ExtractForceSync()
+        {
+            if (MoTypeDef.Properties.Any(x => x.Name == Constants.PROP_ForceSync && x.PropertyType.IsEnum(out var ptForceSync) && ptForceSync!.IsInt32()))
+            {
+                throw new FodyWeavingException($"[{MoTypeDef}] Since version 5.0.0, the ForceSync property has been removed from the IMo interface. Use OptimizationAttribute instead. For more information, see https://github.com/inversionhourglass/Rougamo/releases/tag/v5.0.0");
+            }
+            var optimizationAttribute = MoTypeDef.CustomAttributes.FirstOrDefault(x => x.Is(Constants.TYPE_OptimizationAttribute));
+            if (optimizationAttribute != null && optimizationAttribute.Properties.TryGet(Constants.PROP_ForceSync, out var property))
+            {
+                return (ForceSync)Convert.ToInt32(property!.Value.Argument.Value);
+            }
+            return ForceSync.None;
+        }
+
+        protected virtual Lifetime ExtractLifetime()
+        {
+            var lifetimeAttribute = MoTypeDef.CustomAttributes.FirstOrDefault(x => x.Is(Constants.TYPE_LifetimeAttribute));
+            if (lifetimeAttribute != null && lifetimeAttribute.ConstructorArguments.Count == 1)
+            {
+                var arg = lifetimeAttribute.ConstructorArguments[0];
+                return (Lifetime)Convert.ToInt32(arg.Value);
+            }
+
+            return Lifetime.Transient;
+        }
+
+        #region Extract-Property-Value
+
+        private static T? ExtractFromIl<T>(TypeReference typeRef, string propertyName, string propertyTypeFullName, Func<Instruction, T?> tryResolve) where T : struct
+        {
+            return ExtractFromProp(typeRef, propertyName, tryResolve) ??
+                ExtractFromCtor(typeRef, propertyTypeFullName, propertyName, tryResolve);
+        }
+
+        private static T? ExtractFromProp<T>(TypeReference typeRef, string propName, Func<Instruction, T?> tryResolve) where T : struct
+        {
+            var typeDef = typeRef.Resolve();
+            while (typeDef != null)
+            {
+                var property = typeDef.Properties.FirstOrDefault(prop => prop.Name == propName);
+                if (property != null)
+                {
+                    var instructions = property.GetMethod.Body.Instructions;
+                    for (int i = instructions.Count - 1; i >= 0; i--)
+                    {
+                        var value = tryResolve(instructions[i]);
+                        if (value.HasValue) return value.Value;
+                    }
+                    // 一旦在类定义中找到了属性定义，即使没有查找到对应初始化代码，也没有必要继续往父类查找了
+                    // 因为已经override的属性，父类的赋值操作没有意义，直接进行后续的构造方法查找即可
+                    return null;
+                }
+                typeDef = typeDef.BaseType?.Resolve();
+            }
+            return null;
+        }
+
+        private static T? ExtractFromCtor<T>(TypeReference typeRef, string propTypeFullName, string propertyName, Func<Instruction, T?> tryResolve) where T : struct
+        {
+            var propFieldName = string.Format(Constants.FIELD_Format, propertyName);
+            var setterName = Constants.Setter(propertyName);
+            var typeDef = typeRef.Resolve();
+            while (typeDef != null)
+            {
+                var nonCtor = typeDef.GetConstructors().FirstOrDefault(ctor => !ctor.HasParameters);
+                if (nonCtor != null)
+                {
+                    foreach (var instruction in nonCtor.Body.Instructions)
+                    {
+                        if (instruction.IsStfld(propFieldName, propTypeFullName) || instruction.IsCallAny(setterName))
+                        {
+                            return tryResolve(instruction.Previous);
+                        }
+                    }
+                }
+                typeDef = typeDef.BaseType?.Resolve();
+            }
+            return null;
+        }
+
+        private static T? ExtractFromIl<T>(TypeReference typeRef, string propertyName, string propertyTypeFullName, Func<Instruction, T?> tryResolve) where T : class
+        {
+            return ExtractFromProp(typeRef, propertyName, tryResolve) ??
+                ExtractFromCtor(typeRef, propertyTypeFullName, propertyName, tryResolve);
+        }
+
+        private static T? ExtractFromProp<T>(TypeReference typeRef, string propName, Func<Instruction, T?> tryResolve) where T : class
+        {
+            var typeDef = typeRef.Resolve();
+            while (typeDef != null)
+            {
+                var property = typeDef.Properties.FirstOrDefault(prop => prop.Name == propName);
+                if (property != null)
+                {
+                    var instructions = property.GetMethod.Body.Instructions;
+                    for (int i = instructions.Count - 1; i >= 0; i--)
+                    {
+                        var value = tryResolve(instructions[i]);
+                        if (value != null) return value;
+                    }
+                    // 一旦在类定义中找到了属性定义，即使没有查找到对应初始化代码，也没有必要继续往父类查找了
+                    // 因为已经override的属性，父类的赋值操作没有意义，直接进行后续的构造方法查找即可
+                    return null;
+                }
+                typeDef = typeDef.BaseType?.Resolve();
+            }
+            return null;
+        }
+
+        private static T? ExtractFromCtor<T>(TypeReference typeRef, string propTypeFullName, string propertyName, Func<Instruction, T?> tryResolve) where T : class
+        {
+            var propFieldName = string.Format(Constants.FIELD_Format, propertyName);
+            var setterName = Constants.Setter(propertyName);
+            var typeDef = typeRef.Resolve();
+            while (typeDef != null)
+            {
+                var nonCtor = typeDef.GetConstructors().FirstOrDefault(ctor => !ctor.HasParameters);
+                if (nonCtor != null)
+                {
+                    foreach (var instruction in nonCtor.Body.Instructions)
+                    {
+                        if (instruction.IsStfld(propFieldName, propTypeFullName) || instruction.IsCallAny(setterName))
+                        {
+                            return tryResolve(instruction.Previous);
+                        }
+                    }
+                }
+                typeDef = typeDef.BaseType?.Resolve();
+            }
+            return null;
+        }
+
+        #endregion Extract-Property-Value
 
         class EqualityComparer : IEqualityComparer<Mo>
         {
             public bool Equals(Mo x, Mo y)
             {
-                var argsX = ExtractTypeArgs(x, out var typeX);
-                var argsY = ExtractTypeArgs(y, out var typeY);
-                if (typeX.FullName != typeY.FullName || argsX.Count != argsY.Count) return false;
+                var argsX = ExtractTypeArgs(x);
+                var argsY = ExtractTypeArgs(y);
+                if (x.MoTypeRef.FullName != y.MoTypeRef.FullName || argsX.Count != argsY.Count) return false;
                 for (var i = 0; i < argsX.Count; i++)
                 {
                     if (!Equals(argsY[i], argsX[i])) return false;
@@ -159,9 +393,9 @@ namespace Rougamo.Fody
 
             public int GetHashCode(Mo obj)
             {
-                var args = ExtractTypeArgs(obj, out var type);
+                var args = ExtractTypeArgs(obj);
                 var props = ExtractTypeProperties(obj);
-                var hash = type.GetHashCode();
+                var hash = obj.MoTypeRef.GetHashCode();
                 unchecked
                 {
                     foreach (var arg in args)
@@ -204,20 +438,14 @@ namespace Rougamo.Fody
                 return hash;
             }
 
-            private Collection<CustomAttributeArgument> ExtractTypeArgs(Mo mo, out TypeReference typeRef)
+            private Collection<CustomAttributeArgument> ExtractTypeArgs(Mo mo)
             {
-                if (mo.Attribute != null)
-                {
-                    typeRef = mo.Attribute.AttributeType;
-                    return mo.Attribute.ConstructorArguments;
-                }
-                typeRef = mo.TypeRef!;
-                return [];
+                return mo is CustomAttributeMo caMo ? caMo.Attribute.ConstructorArguments : [];
             }
 
             private Collection<CustomAttributeNamedArgument> ExtractTypeProperties(Mo mo)
             {
-                return mo.Attribute == null ? [] : mo.Attribute.Properties;
+                return mo is CustomAttributeMo caMo ? caMo.Attribute.Properties : [];
             }
 
             private bool Equals(CustomAttributeArgument arg1, CustomAttributeArgument arg2)
