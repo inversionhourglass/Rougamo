@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net461;net48;netcoreapp3.1;net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
+    <IsPackable>false</IsPackable>
+    <DisableFody>true</DisableFody>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\IndependentMos\IndependentMos.csproj" />
+  </ItemGroup>
+
+</Project>
