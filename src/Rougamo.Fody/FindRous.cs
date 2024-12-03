@@ -91,6 +91,8 @@ namespace Rougamo.Fody
 
         private void HandleMoLifetime(TypeDefinition tdMo)
         {
+            if (tdMo.IsValueType) return;
+
             var lifetimeAttribute = tdMo.CustomAttributes.FirstOrDefault(x => x.Is(Constants.TYPE_LifetimeAttribute));
             if (lifetimeAttribute == null || lifetimeAttribute.ConstructorArguments.Count != 1) return;
 

@@ -249,6 +249,8 @@ namespace Rougamo.Fody
 
         protected virtual Lifetime ExtractLifetime()
         {
+            if (IsStruct) return Lifetime.Transient;
+
             var lifetimeAttribute = MoTypeDef.CustomAttributes.FirstOrDefault(x => x.Is(Constants.TYPE_LifetimeAttribute));
             if (lifetimeAttribute != null && lifetimeAttribute.ConstructorArguments.Count == 1)
             {
