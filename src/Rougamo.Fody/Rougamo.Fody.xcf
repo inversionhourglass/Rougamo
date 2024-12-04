@@ -1,5 +1,32 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
 <xs:complexType xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:all>
+    <xs:element name="Mos" minOccurs="0" maxOccurs="1">
+      <xs:complexType>
+        <xs:sequence>
+          <xs:element name="Mo" minOccurs="0" maxOccurs="unbounded">
+            <xs:complexType>
+              <xs:attribute name="assembly" type="xs:string" >
+                <xs:annotation>
+                  <xs:documentation>The assembly name of the aspect type, which does not contain the '.dll' suffix.</xs:documentation>
+                </xs:annotation>
+              </xs:attribute>
+              <xs:attribute name="type" type="xs:string" >
+                <xs:annotation>
+                  <xs:documentation>The aspect type full name.</xs:documentation>
+                </xs:annotation>
+              </xs:attribute>
+              <xs:attribute name="pattern" type="xs:string" >
+                <xs:annotation>
+                  <xs:documentation>An AspectN pattern. Apply the aspect type to methods matched by the pattern. This pattern will override the pointcut settings of the aspect type.</xs:documentation>
+                </xs:annotation>
+              </xs:attribute>
+            </xs:complexType>
+          </xs:element>
+        </xs:sequence>
+      </xs:complexType>
+    </xs:element>
+  </xs:all>
   <xs:attribute name="enabled" type="xs:boolean">
     <xs:annotation>
       <xs:documentation>Set to false to disable Rougamo. The default is true.</xs:documentation>
