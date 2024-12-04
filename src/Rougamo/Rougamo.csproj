@@ -25,16 +25,33 @@
     <Nullable>enable</Nullable>
     <PackageReleaseNotes Condition="'$(VersionSuffix)' == ''">For details: https://github.com/inversionhourglass/Rougamo/releases/tag/v$(VersionPrefix)</PackageReleaseNotes>
     <PackageReadmeFile>README_en.md</PackageReadmeFile>
+    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
+	<TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddAnalyzersToOutput</TargetsForTfmSpecificContentInPackage>
   </PropertyGroup>
+	
   <ItemGroup>
     <None Include="..\..\Rougamo.png" Pack="true" PackagePath="\" />
     <None Include="..\..\README_en.md" Pack="true" PackagePath="\" />
+    <None Include="tools\*.ps1" Pack="true" PackagePath="\tools" />
   </ItemGroup>
+	
   <ItemGroup>
     <PackageReference Include="Fody" Version="6.8.1" PrivateAssets="none" />
     <PackageReference Include="FodyPackaging" Version="6.8.1" PrivateAssets="All" />
   </ItemGroup>
+	
   <ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
     <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
   </ItemGroup>
+	
+  <ItemGroup>
+    <ProjectReference Include="..\Rougamo.Analyzers\Rougamo.Analyzers.csproj" />
+  </ItemGroup>
+
+  <Target Name="_AddAnalyzersToOutput">
+    <ItemGroup>
+      <TfmSpecificPackageFile Include="$(OutputPath)\Rougamo.Analyzers.dll" PackagePath="analyzers/dotnet/cs" />
+    </ItemGroup>
+  </Target>
+	
 </Project>

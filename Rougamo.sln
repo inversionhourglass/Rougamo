@@ -50,6 +50,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "IndependentMos", "test\Test
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConfiguredMoUsage", "test\TestAssemblies\ConfiguredMoUsage\ConfiguredMoUsage.csproj", "{94D7B258-5B12-48A4-BFBB-56E0521C7A82}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rougamo.Analyzers", "src\Rougamo.Analyzers\Rougamo.Analyzers.csproj", "{D7FB77AC-0E0F-4AF5-8F01-4C1E1574428B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -104,6 +106,10 @@ Global
 		{94D7B258-5B12-48A4-BFBB-56E0521C7A82}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{94D7B258-5B12-48A4-BFBB-56E0521C7A82}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{94D7B258-5B12-48A4-BFBB-56E0521C7A82}.Release|Any CPU.Build.0 = Release|Any CPU
+		{D7FB77AC-0E0F-4AF5-8F01-4C1E1574428B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D7FB77AC-0E0F-4AF5-8F01-4C1E1574428B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D7FB77AC-0E0F-4AF5-8F01-4C1E1574428B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D7FB77AC-0E0F-4AF5-8F01-4C1E1574428B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -124,6 +130,7 @@ Global
 		{DA6B6E9A-B485-4391-9934-CF0CFF653BB8} = {075CC441-9BF3-4520-93D3-AE00A6758C2D}
 		{07E14215-ABEA-4A0B-A9BB-D8000CE8AEFC} = {400088B1-D25F-49FE-887E-E9E2FE62B3CB}
 		{94D7B258-5B12-48A4-BFBB-56E0521C7A82} = {400088B1-D25F-49FE-887E-E9E2FE62B3CB}
+		{D7FB77AC-0E0F-4AF5-8F01-4C1E1574428B} = {E99BBF2A-FEAE-4CA4-BD18-646D1ACAB543}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0BD0178E-76E0-4736-A036-89B1AA268A05}
