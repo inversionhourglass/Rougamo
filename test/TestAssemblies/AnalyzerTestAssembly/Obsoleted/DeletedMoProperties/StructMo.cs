@@ -3,7 +3,7 @@ using Rougamo.Context;
 
 namespace AnalyzerTestAssembly.Obsoleted.DeletedMoProperties
 {
-    internal class StructMo : IMo
+    internal struct StructMo : IMo
     {
         public AccessFlags Flags => AccessFlags.All;
 
