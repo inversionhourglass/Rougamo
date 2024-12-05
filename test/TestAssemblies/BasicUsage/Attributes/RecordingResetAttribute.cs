@@ -6,7 +6,7 @@ namespace BasicUsage.Attributes
 {
     public class RecordingResetAttribute : MoAttribute, IFlexibleOrderable
     {
-        public double Order => double.MinValue;
+        public double Order { get; set; } = double.MinValue;
 
         public override void OnEntry(MethodContext context)
         {

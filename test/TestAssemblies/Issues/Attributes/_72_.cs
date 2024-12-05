@@ -13,7 +13,7 @@ namespace Issues.Attributes
     {
         public _72_() { }
 
-        public double Order { get; } = 1;
+        public double Order { get; set; } = 1;
 
         public void OnEntry(MethodContext context)
         {

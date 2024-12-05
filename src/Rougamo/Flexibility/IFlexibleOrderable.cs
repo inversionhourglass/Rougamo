@@ -8,6 +8,6 @@
         /// <summary>
         /// Execution order.
         /// </summary>
-        double Order { get; }
+        double Order { get; set; }
     }
 }
