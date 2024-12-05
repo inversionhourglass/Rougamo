@@ -52,6 +52,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConfiguredMoUsage", "test\T
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rougamo.Analyzers", "src\Rougamo.Analyzers\Rougamo.Analyzers.csproj", "{D7FB77AC-0E0F-4AF5-8F01-4C1E1574428B}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Rougamo.Analyzers.Tests", "test\Rougamo.Analyzers.Tests\Rougamo.Analyzers.Tests.csproj", "{604AD044-3D7F-4C68-B4E5-CF84ACC176C2}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AnalyzerTestAssembly", "test\TestAssemblies\AnalyzerTestAssembly\AnalyzerTestAssembly.csproj", "{30BF5A10-C352-438A-B9B3-DF6B730AECE2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -110,6 +114,14 @@ Global
 		{D7FB77AC-0E0F-4AF5-8F01-4C1E1574428B}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D7FB77AC-0E0F-4AF5-8F01-4C1E1574428B}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D7FB77AC-0E0F-4AF5-8F01-4C1E1574428B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{604AD044-3D7F-4C68-B4E5-CF84ACC176C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{604AD044-3D7F-4C68-B4E5-CF84ACC176C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{604AD044-3D7F-4C68-B4E5-CF84ACC176C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{604AD044-3D7F-4C68-B4E5-CF84ACC176C2}.Release|Any CPU.Build.0 = Release|Any CPU
+		{30BF5A10-C352-438A-B9B3-DF6B730AECE2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{30BF5A10-C352-438A-B9B3-DF6B730AECE2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{30BF5A10-C352-438A-B9B3-DF6B730AECE2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{30BF5A10-C352-438A-B9B3-DF6B730AECE2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -131,6 +143,8 @@ Global
 		{07E14215-ABEA-4A0B-A9BB-D8000CE8AEFC} = {400088B1-D25F-49FE-887E-E9E2FE62B3CB}
 		{94D7B258-5B12-48A4-BFBB-56E0521C7A82} = {400088B1-D25F-49FE-887E-E9E2FE62B3CB}
 		{D7FB77AC-0E0F-4AF5-8F01-4C1E1574428B} = {E99BBF2A-FEAE-4CA4-BD18-646D1ACAB543}
+		{604AD044-3D7F-4C68-B4E5-CF84ACC176C2} = {8C9FFBEC-F477-4037-B3FE-BAF02ED3A16C}
+		{30BF5A10-C352-438A-B9B3-DF6B730AECE2} = {400088B1-D25F-49FE-887E-E9E2FE62B3CB}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {0BD0178E-76E0-4736-A036-89B1AA268A05}
