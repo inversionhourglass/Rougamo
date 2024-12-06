@@ -10,7 +10,10 @@ namespace Rougamo.Analyzers.Upgradation.PropertyRules
         private static readonly LocalizableString _FlexibleMessageFormat = R.S(nameof(Resources.PatternFlexibleRuleMessage));
         private static readonly LocalizableString _Description = R.S(nameof(Resources.PatternRuleDescription));
 
-        public string PropertyName => "Pattern";
+        public const string NAME = "Pattern";
+        public static readonly AttributeName Attribute = "Rougamo.Metadatas.PointcutAttribute";
+
+        public string PropertyName => NAME;
 
         public SimpleSymbolType PropertyType => SpecialType.System_String;
 

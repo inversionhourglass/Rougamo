@@ -17,7 +17,7 @@ namespace Rougamo.Analyzers
         {
             var leadingTrivia = typeDeclaration.GetLeadingTrivia();
             var attributeList = SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(attribute));
-            return attributeList.WithLeadingTrivia(leadingTrivia).WithTrailingTrivia(SyntaxFactory.CarriageReturnLineFeed);
+            return attributeList;//.WithLeadingTrivia(leadingTrivia).WithTrailingTrivia(SyntaxFactory.CarriageReturnLineFeed);
         }
     }
 }

@@ -15,6 +15,9 @@ namespace Rougamo.Analyzers.Upgradation
     [ExportCodeFixProvider(LanguageNames.CSharp, Name = nameof(Version4To5CodeFixProvider)), Shared]
     public class Version4To5CodeFixProvider : CodeFixProvider
     {
+        private const string FIX_REPLACE_WITH_ATTRIBUTE = "Replace with Attribute";
+        private const string FIX_REPLACE_WITH_FLEXIBLE_INTERFACE = "Replace with flexible interface";
+
         public override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(Version4To5Analyzer.Rules.Select(x => x.GetRules()).SelectMany(x => x).Select(x => x.Id).ToArray());
 
         public override FixAllProvider GetFixAllProvider()
@@ -35,7 +38,7 @@ namespace Rougamo.Analyzers.Upgradation
                 switch (diagnostic.Id)
                 {
                     case IDs.OBSOLETED_IMO_PATTERN:
-                        context.RegisterCodeFix(CodeAction.Create("Fix obsoleted property", c => ReplacePatternAsync(context.Document, declaration, c)), diagnostic);
+                        context.RegisterCodeFix(CodeAction.Create(FIX_REPLACE_WITH_ATTRIBUTE, c => ReplacePatternAsync(context.Document, declaration, c)), diagnostic);
                         break;
                     case IDs.OBSOLETED_IMO_PATTERN_FLEXIBLE:
                         break;
@@ -62,48 +65,36 @@ namespace Rougamo.Analyzers.Upgradation
             var root = await document.GetSyntaxRootAsync(cancellationToken);
             var semanticModel = await document.GetSemanticModelAsync(cancellationToken);
 
-            var patternDeclaration = typeDeclaration.GetProperty("Pattern");
+            var patternDeclaration = typeDeclaration.GetProperty(PatternRule.NAME);
 
             if (patternDeclaration == null) return document;
 
-            SyntaxToken? patternSyntaxToken = null;
-            if (patternDeclaration.Initializer?.Value is LiteralExpressionSyntax les)
-            {// public string Pattern { get; set; } = "";
-                patternSyntaxToken = les.Token;
-            }
-            else if (patternDeclaration.ExpressionBody?.Expression is LiteralExpressionSyntax les2)
-            {// public string Pattern => "";
-                patternSyntaxToken = les2.Token;
-            }
+            var patternSyntaxToken = patternDeclaration.GetDefaultValue();
 
             var newTypeDeclaration = typeDeclaration.RemoveNode(patternDeclaration, SyntaxRemoveOptions.KeepNoTrivia);
-            var hasValue = patternSyntaxToken.HasValue && patternSyntaxToken.Value.Value != null;
-            if (hasValue)
+            var addAttribute = patternSyntaxToken.HasValue && patternSyntaxToken.Value.Value != null;
+            if (addAttribute)
             {
                 var patternValue = patternSyntaxToken!.Value.ValueText;
                 var attributeArgument = SyntaxFactoryPlus.StringLiteralExpression(patternValue).AsAttributeArgument();
-                var attribute = typeDeclaration.GetAttribute("Rougamo.Metadatas.PointcutAttribute", semanticModel);
-                var attributeLists = typeDeclaration.AttributeLists;
-                SyntaxList<AttributeListSyntax> newAttributeLists;
+                var attribute = typeDeclaration.GetAttribute(PatternRule.Attribute, semanticModel);
+
                 if (attribute != null)
                 {
-                    var attributeList = (AttributeListSyntax)attribute.Parent;
                     var newAttribute = attribute.WithSingleArgument(attributeArgument);
-                    var newAttributeList = attributeList.ReplaceNode(attribute, newAttribute);
-                    newAttributeLists = attributeLists.Replace(attributeList, newAttributeList);
+                    var attributeLists = typeDeclaration.AttributeLists.Replace(attribute, newAttribute);
+                    newTypeDeclaration = newTypeDeclaration.WithAttributeLists(attributeLists);
                 }
                 else
                 {
-                    attribute = SyntaxFactoryPlus.Attribute("Pointcut", attributeArgument);
-                    var attributeList = SyntaxFactoryPlus.AlignedAttributeList(typeDeclaration, attribute);
-                    newAttributeLists = typeDeclaration.AttributeLists.Insert(0, attributeList);
+                    attribute = SyntaxFactoryPlus.Attribute(PatternRule.Attribute.ShortName, attributeArgument);
+                    newTypeDeclaration = newTypeDeclaration.AddAttribute(attribute);
                 }
-                newTypeDeclaration = newTypeDeclaration.WithAttributeLists(newAttributeLists);
             }
 
             var newRoot = root.ReplaceNode(typeDeclaration, newTypeDeclaration);
 
-            if (hasValue) newRoot = newRoot.AddNamespace("Rougamo.Metadatas");
+            if (addAttribute) newRoot = newRoot.AddNamespace(PatternRule.Attribute.Namespace);
 
             return document.WithSyntaxRoot(newRoot);
         }
