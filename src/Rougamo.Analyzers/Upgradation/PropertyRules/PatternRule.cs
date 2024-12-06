@@ -12,6 +12,7 @@ namespace Rougamo.Analyzers.Upgradation.PropertyRules
 
         public const string NAME = "Pattern";
         public static readonly AttributeName Attribute = "Rougamo.Metadatas.PointcutAttribute";
+        public static readonly TypeName FlexibleInterface = "Rougamo.Flexibility.IFlexiblePatternPointcut";
 
         public string PropertyName => NAME;
 
@@ -21,6 +22,6 @@ namespace Rougamo.Analyzers.Upgradation.PropertyRules
 
         public DiagnosticDescriptor? FlexibleRule => new(IDs.OBSOLETED_IMO_PATTERN_FLEXIBLE, _Title, _FlexibleMessageFormat, CATEGORY, DiagnosticSeverity.Error, true, _Description, RELEASE_5_URI);
 
-        public string FlexibleInterfaceName => "Rougamo.Flexibility.IFlexiblePatternPointcut";
+        public string FlexibleInterfaceName => FlexibleInterface;
     }
 }

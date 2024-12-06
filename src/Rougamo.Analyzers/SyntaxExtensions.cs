@@ -22,12 +22,13 @@ namespace Rougamo.Analyzers
             return typeDeclaration.WithAttributeLists(attributeLists);
         }
 
-        public static TypeDeclarationSyntax ReplaceAttribute(this TypeDeclarationSyntax typeDeclaration, AttributeSyntax oldAttribute, AttributeSyntax newAttribute)
+        public static TypeDeclarationSyntax AddInterface(this TypeDeclarationSyntax typeDeclaration, TypeName interfaceName)
         {
-            var attributeLists = typeDeclaration.AttributeLists;
-            attributeLists = attributeLists.Replace(oldAttribute, newAttribute);
+            var interfaceType = SyntaxFactory.SimpleBaseType(SyntaxFactory.IdentifierName(interfaceName.Name));
+            var baseList = typeDeclaration.BaseList ?? SyntaxFactory.BaseList();
+            var newBaseList = baseList.AddTypes(interfaceType);
 
-            return typeDeclaration.WithAttributeLists(attributeLists);
+            return  typeDeclaration.WithBaseList(newBaseList);
         }
 
         public static PropertyDeclarationSyntax? GetProperty(this TypeDeclarationSyntax typeDeclaration, string propertyName)
@@ -72,6 +73,12 @@ namespace Rougamo.Analyzers
             if (propertyDeclaration.ExpressionBody?.Expression is LiteralExpressionSyntax les2) return les2.Token;
 
             return null;
+        }
+
+        public static PropertyDeclarationSyntax RemoveKeywords(this PropertyDeclarationSyntax propertyDeclaration, params SyntaxKind[] keywords)
+        {
+            var newModifiers = propertyDeclaration.Modifiers.Where(x => !keywords.Contains(x.Kind()));
+            return propertyDeclaration.WithModifiers(SyntaxFactory.TokenList(newModifiers));
         }
     }
 }
