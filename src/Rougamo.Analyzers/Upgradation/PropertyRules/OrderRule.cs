@@ -13,10 +13,14 @@ namespace Rougamo.Analyzers.Upgradation.PropertyRules
 
         public SimpleSymbolType PropertyType => SpecialType.System_Double;
 
-        public DiagnosticDescriptor Rule => FlexibleRule!;
+        public DiagnosticDescriptor? Rule => null;
 
         public DiagnosticDescriptor? FlexibleRule => new(IDs.OBSOLETED_IMO_ORDER_FLEXIBLE, _Title, _FlexibleMessageFormat, CATEGORY, DiagnosticSeverity.Error, true, _Description, RELEASE_5_URI);
 
-        public string FlexibleInterfaceName => "Rougamo.Flexibility.IFlexibleModifierPointcut";
+        public TypeName? FlexibleInterfaceName => "Rougamo.Flexibility.IFlexibleOrderable";
+
+        public AttributeName? AttributeName => null;
+
+        public IAttributeActivator? AttributeActivator => null;
     }
 }

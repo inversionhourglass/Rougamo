@@ -45,7 +45,11 @@ namespace Rougamo.Analyzers.Upgradation
 
                     if (typeSymbol.AllInterfaces.Any(x => x.ToString() == rule.FlexibleInterfaceName)) continue;
 
-                    var dd = rule.FlexibleRule != null && propertyDeclaration.Modifiers.Any(SyntaxKind.NewKeyword) ? rule.FlexibleRule : rule.Rule;
+                    var dd = rule.Rule;
+                    if (dd == null || (rule.FlexibleRule != null && propertyDeclaration.Modifiers.Any(SyntaxKind.NewKeyword)))
+                    {
+                        dd = rule.FlexibleRule;
+                    }
                     var diagnostic = Diagnostic.Create(dd, propertySymbol.Locations[0], typeDeclaration.Identifier.Text);
                     context.ReportDiagnostic(diagnostic);
                 }

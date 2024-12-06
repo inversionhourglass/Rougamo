@@ -5,6 +5,7 @@ using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Rougamo.Analyzers.Upgradation.PropertyRules;
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Composition;
 using System.Linq;
@@ -30,93 +31,94 @@ namespace Rougamo.Analyzers.Upgradation
         {
             var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
 
+            var ruleMap = Version4To5Analyzer.Rules.Select(x =>
+            {
+                var list = new List<FixRule>();
+                if (x.Rule != null) list.Add(new(x.Rule.Id, FixRuleType.Attribute, x));
+                if (x.FlexibleRule != null) list.Add(new(x.FlexibleRule.Id, FixRuleType.Interface, x));
+                return list;
+            }).SelectMany(x => x).ToDictionary(x => x.Id, x => x);
             foreach (var diagnostic in context.Diagnostics)
             {
                 var diagnosticSpan = diagnostic.Location.SourceSpan;
 
                 var declaration = root.FindToken(diagnosticSpan.Start).Parent.AncestorsAndSelf().OfType<TypeDeclarationSyntax>().First();
 
-                switch (diagnostic.Id)
+                if (!ruleMap.TryGetValue(diagnostic.Id, out var rule)) throw new InvalidOperationException($"Unexpected diagnostic id: {diagnostic.Id}");
+
+                if (rule.Type == FixRuleType.Attribute)
                 {
-                    case IDs.OBSOLETED_IMO_PATTERN:
-                        context.RegisterCodeFix(CodeAction.Create(FIX_REPLACE_WITH_ATTRIBUTE, token => FixPatternWithAttributeAsync(context.Document, declaration, token)), diagnostic);
-                        break;
-                    case IDs.OBSOLETED_IMO_PATTERN_FLEXIBLE:
-                        context.RegisterCodeFix(CodeAction.Create(FIX_REPLACE_WITH_FLEXIBLE_INTERFACE, token => FixPatternWithFlexibleInterfaceAsync(context.Document, declaration, token)), diagnostic);
-                        break;
-                    case IDs.OBSOLETED_IMO_FLAGS:
-                        break;
-                    case IDs.OBSOLETED_IMO_FLAGS_FLEXIBLE:
-                        break;
-                    case IDs.OBSOLETED_IMO_ORDER_FLEXIBLE:
-                        break;
-                    case IDs.OBSOLETED_IMO_FEATURES:
-                        break;
-                    case IDs.OBSOLETED_IMO_OMITS:
-                        break;
-                    case IDs.OBSOLETED_IMO_FORCESYNC:
-                        break;
-                    default:
-                        throw new InvalidOperationException($"Unexpected diagnostic id: {diagnostic.Id}");
+                    context.RegisterCodeFix(CodeAction.Create(FIX_REPLACE_WITH_ATTRIBUTE, token => FixWithAttributeAsync(context.Document, declaration, rule.PropertyRule, token)), diagnostic);
+                }
+                else
+                {
+                    context.RegisterCodeFix(CodeAction.Create(FIX_REPLACE_WITH_FLEXIBLE_INTERFACE, token => FixWithFlexibleInterfaceAsync(context.Document, declaration, rule.PropertyRule, token)), diagnostic);
                 }
             }
         }
 
-        private async Task<Document> FixPatternWithAttributeAsync(Document document, TypeDeclarationSyntax typeDeclaration, CancellationToken cancellationToken)
+        private async Task<Document> FixWithAttributeAsync(Document document, TypeDeclarationSyntax typeDeclaration, IPropertyRule rule, CancellationToken cancellationToken)
         {
             var root = await document.GetSyntaxRootAsync(cancellationToken);
             var semanticModel = await document.GetSemanticModelAsync(cancellationToken);
 
-            var patternDeclaration = typeDeclaration.GetProperty(PatternRule.NAME);
+            var propertyDeclaration = typeDeclaration.GetProperty(rule.PropertyName);
 
-            if (patternDeclaration == null) return document;
+            if (propertyDeclaration == null) return document;
 
-            var patternSyntaxToken = patternDeclaration.GetDefaultValue();
+            var attributeName = rule.AttributeName!.Value;
+            var propertyValue = propertyDeclaration.Initializer?.Value ?? propertyDeclaration.ExpressionBody?.Expression;
 
-            var newTypeDeclaration = typeDeclaration.RemoveNode(patternDeclaration, SyntaxRemoveOptions.KeepNoTrivia);
-            var addAttribute = patternSyntaxToken.HasValue && patternSyntaxToken.Value.Value != null;
-            if (addAttribute)
-            {// Pattern有默认值，需要将配置转移到PointcutAttribute中
-                var patternValue = patternSyntaxToken!.Value.ValueText;
-                var attributeArgument = SyntaxFactoryPlus.StringLiteralExpression(patternValue).AsAttributeArgument();
-                var attribute = typeDeclaration.GetAttribute(PatternRule.Attribute, semanticModel);
+            var newTypeDeclaration = typeDeclaration.RemoveNode(propertyDeclaration, SyntaxRemoveOptions.KeepNoTrivia);
+            if (propertyValue != null)
+            {// 属性有默认值，需要将配置转移到对应的Attribute中
+                var attribute = typeDeclaration.GetAttribute(attributeName, semanticModel);
 
                 if (attribute != null)
-                {// 已存在PointcutAttribute，直接替换
-                    var newAttribute = attribute.WithSingleArgument(attributeArgument);
+                {// 已存在Attribute，直接替换
+                    var newAttribute = rule.AttributeActivator!.Replace(attribute, propertyValue);
                     var attributeLists = typeDeclaration.AttributeLists.Replace(attribute, newAttribute);
                     newTypeDeclaration = newTypeDeclaration.WithAttributeLists(attributeLists);
                 }
                 else
                 {
-                    attribute = SyntaxFactoryPlus.Attribute(PatternRule.Attribute.ShortName, attributeArgument);
+                    attribute = rule.AttributeActivator!.New(attributeName.ShortName, propertyValue);
                     newTypeDeclaration = newTypeDeclaration.AddAttribute(attribute);
                 }
             }
 
             var newRoot = root.ReplaceNode(typeDeclaration, newTypeDeclaration);
 
-            if (addAttribute) newRoot = newRoot.AddNamespace(PatternRule.Attribute.Namespace);
+            if (propertyValue != null) newRoot = newRoot.AddNamespace(attributeName.Namespace);
 
             return document.WithSyntaxRoot(newRoot);
         }
 
-        private async Task<Document> FixPatternWithFlexibleInterfaceAsync(Document document, TypeDeclarationSyntax typeDeclaration, CancellationToken cancellationToken)
+        private async Task<Document> FixWithFlexibleInterfaceAsync(Document document, TypeDeclarationSyntax typeDeclaration, IPropertyRule rule, CancellationToken cancellationToken)
         {
-            var patternDeclaration = typeDeclaration.GetProperty(PatternRule.NAME);
+            var propertyDeclaration = typeDeclaration.GetProperty(rule.PropertyName);
 
-            if (patternDeclaration == null) return document;
+            if (propertyDeclaration == null) return document;
 
+            var interfaceName = rule.FlexibleInterfaceName!.Value;
             var root = await document.GetSyntaxRootAsync(cancellationToken);
 
-            var newPatternDeclaration = patternDeclaration.RemoveKeywords(SyntaxKind.NewKeyword);
-            var newTypeDeclaration = typeDeclaration.ReplaceNode(patternDeclaration, newPatternDeclaration);
+            var newPropertyDeclaration = propertyDeclaration.RemoveKeywords(SyntaxKind.NewKeyword, SyntaxKind.OverrideKeyword);
+            var newTypeDeclaration = typeDeclaration.ReplaceNode(propertyDeclaration, newPropertyDeclaration);
 
-            newTypeDeclaration = newTypeDeclaration.AddInterface(PatternRule.FlexibleInterface);
+            newTypeDeclaration = newTypeDeclaration.AddInterface(interfaceName);
 
-            var newRoot = root.ReplaceNode(typeDeclaration, newTypeDeclaration).AddNamespace(PatternRule.FlexibleInterface.Namespace);
+            var newRoot = root.ReplaceNode(typeDeclaration, newTypeDeclaration).AddNamespace(interfaceName.Namespace);
 
             return document.WithSyntaxRoot(newRoot);
+        }
+
+        private record struct FixRule(string Id, FixRuleType Type, IPropertyRule PropertyRule);
+
+        private enum FixRuleType
+        {
+            Attribute,
+            Interface
         }
     }
 }

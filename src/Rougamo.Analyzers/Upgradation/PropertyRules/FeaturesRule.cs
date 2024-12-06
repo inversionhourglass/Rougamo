@@ -13,10 +13,14 @@ namespace Rougamo.Analyzers.Upgradation.PropertyRules
 
         public SimpleSymbolType PropertyType => "Rougamo.Feature";
 
-        public DiagnosticDescriptor Rule => new(IDs.OBSOLETED_IMO_FEATURES, _Title, _MessageFormat, CATEGORY, DiagnosticSeverity.Error, true, _Description, RELEASE_5_URI);
+        public DiagnosticDescriptor? Rule => new(IDs.OBSOLETED_IMO_FEATURES, _Title, _MessageFormat, CATEGORY, DiagnosticSeverity.Error, true, _Description, RELEASE_5_URI);
 
         public DiagnosticDescriptor? FlexibleRule => null;
 
-        public string FlexibleInterfaceName => string.Empty;
+        public TypeName? FlexibleInterfaceName => null;
+
+        public AttributeName? AttributeName => "Rougamo.Metadatas.AdviceAttribute";
+
+        public IAttributeActivator? AttributeActivator => new CtorAttributeActivator();
     }
 }

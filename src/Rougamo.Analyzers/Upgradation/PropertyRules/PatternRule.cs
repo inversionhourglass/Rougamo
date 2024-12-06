@@ -10,18 +10,18 @@ namespace Rougamo.Analyzers.Upgradation.PropertyRules
         private static readonly LocalizableString _FlexibleMessageFormat = R.S(nameof(Resources.PatternFlexibleRuleMessage));
         private static readonly LocalizableString _Description = R.S(nameof(Resources.PatternRuleDescription));
 
-        public const string NAME = "Pattern";
-        public static readonly AttributeName Attribute = "Rougamo.Metadatas.PointcutAttribute";
-        public static readonly TypeName FlexibleInterface = "Rougamo.Flexibility.IFlexiblePatternPointcut";
-
-        public string PropertyName => NAME;
+        public string PropertyName => "Pattern";
 
         public SimpleSymbolType PropertyType => SpecialType.System_String;
 
-        public DiagnosticDescriptor Rule => new(IDs.OBSOLETED_IMO_PATTERN, _Title, _MessageFormat, CATEGORY, DiagnosticSeverity.Error, true, _Description, RELEASE_5_URI);
+        public DiagnosticDescriptor? Rule => new(IDs.OBSOLETED_IMO_PATTERN, _Title, _MessageFormat, CATEGORY, DiagnosticSeverity.Error, true, _Description, RELEASE_5_URI);
 
         public DiagnosticDescriptor? FlexibleRule => new(IDs.OBSOLETED_IMO_PATTERN_FLEXIBLE, _Title, _FlexibleMessageFormat, CATEGORY, DiagnosticSeverity.Error, true, _Description, RELEASE_5_URI);
 
-        public string FlexibleInterfaceName => FlexibleInterface;
+        public TypeName? FlexibleInterfaceName => "Rougamo.Flexibility.IFlexiblePatternPointcut";
+
+        public AttributeName? AttributeName => "Rougamo.Metadatas.PointcutAttribute";
+
+        public IAttributeActivator? AttributeActivator => new CtorAttributeActivator();
     }
 }

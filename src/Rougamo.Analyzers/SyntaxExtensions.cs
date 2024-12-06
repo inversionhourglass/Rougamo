@@ -53,26 +53,11 @@ namespace Rougamo.Analyzers
             return SyntaxFactory.AttributeList(SyntaxFactory.SingletonSeparatedList(attribute));
         }
 
-        public static AttributeSyntax WithSingleArgument(this AttributeSyntax attribute, AttributeArgumentSyntax argument)
+        public static AttributeSyntax WithArguments(this AttributeSyntax attribute, params AttributeArgumentSyntax[] arguments)
         {
-            var arguments = SyntaxFactory.AttributeArgumentList(SyntaxFactory.SingletonSeparatedList(argument));
-            return attribute.WithArgumentList(arguments);
-        }
+            var argumentList = SyntaxFactory.AttributeArgumentList(SyntaxFactory.SeparatedList(arguments));
 
-        public static AttributeArgumentSyntax AsAttributeArgument(this ExpressionSyntax expression)
-        {
-            return SyntaxFactory.AttributeArgument(expression);
-        }
-
-        public static SyntaxToken? GetDefaultValue(this PropertyDeclarationSyntax propertyDeclaration)
-        {
-            // public string Pattern { get; set; } = "";
-            if (propertyDeclaration.Initializer?.Value is LiteralExpressionSyntax les) return les.Token;
-
-            // public string Pattern => "";
-            if (propertyDeclaration.ExpressionBody?.Expression is LiteralExpressionSyntax les2) return les2.Token;
-
-            return null;
+            return attribute.WithArgumentList(argumentList);
         }
 
         public static PropertyDeclarationSyntax RemoveKeywords(this PropertyDeclarationSyntax propertyDeclaration, params SyntaxKind[] keywords)
