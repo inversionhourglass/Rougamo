@@ -80,5 +80,15 @@ namespace Rougamo.Analyzers
             var newModifiers = propertyDeclaration.Modifiers.Where(x => !keywords.Contains(x.Kind()));
             return propertyDeclaration.WithModifiers(SyntaxFactory.TokenList(newModifiers));
         }
+
+        public static PropertyDeclarationSyntax WithDefaultGetterSetter(this PropertyDeclarationSyntax propertyDeclaration)
+        {
+            return propertyDeclaration.WithAccessorList(SyntaxFactoryPlus.DefaultGetterSetter());
+        }
+
+        public static PropertyDeclarationSyntax WithInitializedValue(this PropertyDeclarationSyntax propertyDeclaration, ExpressionSyntax value)
+        {
+            return propertyDeclaration.WithInitializer(SyntaxFactory.EqualsValueClause(value)).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
+        }
     }
 }

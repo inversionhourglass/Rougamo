@@ -22,11 +22,6 @@ namespace Rougamo.Analyzers.Upgradation
 
         public override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(Version4To5Analyzer.Rules.Select(x => x.GetRules()).SelectMany(x => x).Select(x => x.Id).ToArray());
 
-        public override FixAllProvider GetFixAllProvider()
-        {
-            return WellKnownFixAllProviders.BatchFixer;
-        }
-
         public override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
             var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
@@ -104,6 +99,14 @@ namespace Rougamo.Analyzers.Upgradation
             var root = await document.GetSyntaxRootAsync(cancellationToken);
 
             var newPropertyDeclaration = propertyDeclaration.RemoveKeywords(SyntaxKind.NewKeyword, SyntaxKind.OverrideKeyword);
+
+            newPropertyDeclaration = newPropertyDeclaration.WithDefaultGetterSetter();
+            if (propertyDeclaration.ExpressionBody != null)
+            {
+                var expression = propertyDeclaration.ExpressionBody.Expression;
+                newPropertyDeclaration = newPropertyDeclaration.WithInitializedValue(expression).WithExpressionBody(null);
+            }
+
             var newTypeDeclaration = typeDeclaration.ReplaceNode(propertyDeclaration, newPropertyDeclaration);
 
             newTypeDeclaration = newTypeDeclaration.AddInterface(interfaceName);

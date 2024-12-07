@@ -14,5 +14,13 @@ namespace Rougamo.Analyzers
         {
             return SyntaxFactory.AttributeArgument(value).WithNameEquals(SyntaxFactory.NameEquals(SyntaxFactory.IdentifierName(propertyName)));
         }
+
+        public static AccessorListSyntax DefaultGetterSetter() => SyntaxFactory.AccessorList(SyntaxFactory.List([DefaultGetter(), DefaultSetter()]));
+
+        public static AccessorDeclarationSyntax DefaultGetter() => DefaultAccessor(SyntaxKind.GetAccessorDeclaration);
+
+        public static AccessorDeclarationSyntax DefaultSetter() => DefaultAccessor(SyntaxKind.SetAccessorDeclaration);
+
+        private static AccessorDeclarationSyntax DefaultAccessor(SyntaxKind kind) => SyntaxFactory.AccessorDeclaration(kind).WithSemicolonToken(SyntaxFactory.Token(SyntaxKind.SemicolonToken));
     }
 }
