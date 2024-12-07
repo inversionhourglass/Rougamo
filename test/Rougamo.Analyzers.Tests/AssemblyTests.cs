@@ -12,18 +12,11 @@ namespace Rougamo.Analyzers.Tests
     public class AssemblyTests
     {
         [Fact]
-        public async Task Test()
+        public async Task Version4To5Test()
         {
             using var workspace = MSBuildWorkspace.Create();
-            var project = await workspace.OpenProjectAsync("../../../../TestAssemblies/AnalyzerTestAssembly/AnalyzerTestAssembly.csproj");
-            AddCompilationConstants(project);
-            var compilation = await project.GetCompilationAsync();
-
-            var analyzer = new Version4To5Analyzer();
-            var analyzers = ImmutableArray.Create<DiagnosticAnalyzer>(analyzer);
-            var compilationWithAnalyzers = compilation!.WithAnalyzers(analyzers);
-
-            var diagnostics = await compilationWithAnalyzers.GetAnalyzerDiagnosticsAsync();
+            var project = await GetProjectAsync(workspace);
+            var diagnostics = await GetDiagnosticsAsync<Version4To5Analyzer>(workspace, project);
 
             Assert.NotEmpty(diagnostics);
             Assert.Contains(diagnostics, x => IsMatch(x, "OverrideOnlyAttribute.cs", IDs.OBSOLETED_IMO_PATTERN));
@@ -41,11 +34,42 @@ namespace Rougamo.Analyzers.Tests
             Assert.Contains(diagnostics, x => IsMatch(x, "WithNewKeywordAttribute.cs", IDs.OBSOLETED_IMO_ORDER_FLEXIBLE));
 
             //await TestCodeFix(project, diagnostics, "OverrideOnlyAttribute.cs", IDs.OBSOLETED_IMO_PATTERN);
-            //await TestCodeFix(project, diagnostics, "StructMo.cs", IDs.OBSOLETED_IMO_PATTERN);
+            await TestCodeFix(project, diagnostics, "StructMo.cs", IDs.OBSOLETED_IMO_ORDER_FLEXIBLE);
             //await TestCodeFix(project, diagnostics, "WithNewKeywordAttribute.cs", IDs.OBSOLETED_IMO_PATTERN);
         }
 
-        private static async Task TestCodeFix(Project project, ImmutableArray<Diagnostic> diagnostics, string diagnosticId, string fileName)
+        [Fact]
+        public async Task LifetimeTest()
+        {
+            using var workspace = MSBuildWorkspace.Create();
+            var project = await GetProjectAsync(workspace);
+            var diagnostics = await GetDiagnosticsAsync<LifetimeAttributeAnalyzer>(workspace, project);
+
+            Assert.NotEmpty(diagnostics);
+            Assert.Contains(diagnostics, x => IsMatch(x, "PooledAttribute.cs", IDs.LIFETIME_UNEXPECTED_ARGUMENTS));
+            Assert.Contains(diagnostics, x => IsMatch(x, "SingletonAttribute.cs", IDs.LIFETIME_UNEXPECTED_ARGUMENTS));
+            Assert.Contains(diagnostics, x => IsMatch(x, "SingletonAttribute.cs", IDs.LIFETIME_UNEXPECTED_PROPERTY));
+            Assert.Contains(diagnostics, x => IsMatch(x, "StructMo.cs", IDs.LIFETIME_STRUCT_UNSUPPORTED));
+        }
+
+        private static async Task<Project> GetProjectAsync(MSBuildWorkspace workspace)
+        {
+            return await workspace.OpenProjectAsync("../../../../TestAssemblies/AnalyzerTestAssembly/AnalyzerTestAssembly.csproj");
+        }
+
+        private static async Task<ImmutableArray<Diagnostic>> GetDiagnosticsAsync<TAnalyzer>(MSBuildWorkspace workspace, Project project) where TAnalyzer : DiagnosticAnalyzer, new()
+        {
+            AddCompilationConstants(project);
+            var compilation = await project.GetCompilationAsync();
+
+            var analyzer = new TAnalyzer();
+            var analyzers = ImmutableArray.Create<DiagnosticAnalyzer>(analyzer);
+            var compilationWithAnalyzers = compilation!.WithAnalyzers(analyzers);
+
+            return await compilationWithAnalyzers.GetAnalyzerDiagnosticsAsync();
+        }
+
+        private static async Task TestCodeFix(Project project, ImmutableArray<Diagnostic> diagnostics, string fileName, string diagnosticId)
         {
             var fixProvider = new Version4To5CodeFixProvider();
             var document = project.Documents.First(x => x.Name == fileName);
@@ -78,7 +102,7 @@ namespace Rougamo.Analyzers.Tests
         {
             var parseOptions = project.ParseOptions!;
             var pPreprocessorSymbols = parseOptions.GetType().GetProperty("PreprocessorSymbols", BindingFlags.NonPublic | BindingFlags.Instance);
-            var names = ImmutableArray.Create(parseOptions.PreprocessorSymbolNames.Concat(new[] { "ALLOWED_COMPILER_ERROR" }).ToArray());
+            var names = ImmutableArray.Create(parseOptions.PreprocessorSymbolNames.Concat(["ALLOWED_COMPILER_ERROR"]).ToArray());
             pPreprocessorSymbols!.SetValue(parseOptions, names);
         }
     }
