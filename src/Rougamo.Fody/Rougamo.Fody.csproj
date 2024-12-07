@@ -3,7 +3,6 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <IsPackable>false</IsPackable>
-    <DefineConstants>TRACE;FODY</DefineConstants>
 	<LangVersion>latest</LangVersion>
 	<Nullable>enable</Nullable>
   </PropertyGroup>

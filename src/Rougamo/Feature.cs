@@ -7,10 +7,10 @@ namespace Rougamo
     /// <summary>
     /// </summary>
     [Flags]
-#if FODY
-    internal enum Feature : int
-#else
+#if ROUGAMO
     public enum Feature : int
+#else
+    internal enum Feature : int
 #endif
     {
         /// <summary>

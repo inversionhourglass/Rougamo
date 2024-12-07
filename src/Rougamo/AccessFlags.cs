@@ -1,19 +1,15 @@
 ﻿using System;
 
-#if FODY
-namespace Rougamo.Fody
-#else
 namespace Rougamo
-#endif
 {
     /// <summary>
     /// accessable flags
     /// </summary>
     [Flags]
-#if FODY
-    internal enum AccessFlags : int
-#else
+#if ROUGAMO
     public enum AccessFlags : int
+#else
+    internal enum AccessFlags : int
 #endif
     {
         /// <summary>

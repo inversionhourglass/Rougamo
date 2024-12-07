@@ -6,10 +6,10 @@ namespace Rougamo
     /// Which methods should be executed synchronously in an async method
     /// </summary>
     [Flags]
-#if FODY
-    internal enum ForceSync : int
-#else
+#if ROUGAMO
     public enum ForceSync : int
+#else
+    internal enum ForceSync : int
 #endif
     {
         /// <summary>

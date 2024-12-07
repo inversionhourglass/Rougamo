@@ -4,6 +4,7 @@ using Fody.Simulations.Operations;
 using Fody.Simulations.Types;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
+using Rougamo.Context;
 using Rougamo.Fody.Contexts;
 using Rougamo.Fody.Simulations.Types;
 using System;

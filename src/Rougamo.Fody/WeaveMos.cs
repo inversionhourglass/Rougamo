@@ -4,6 +4,7 @@ using Fody.Simulations.PlainValues;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
+using Rougamo.Context;
 using Rougamo.Fody.Models;
 using Rougamo.Fody.Simulations.Types;
 using System;

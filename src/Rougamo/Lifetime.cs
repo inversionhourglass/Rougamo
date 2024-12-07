@@ -1,16 +1,12 @@
-﻿#if FODY
-namespace Rougamo.Fody
-#else
-namespace Rougamo
-#endif
+﻿namespace Rougamo
 {
     /// <summary>
     /// The lifetime of Mo.
     /// </summary>
-#if FODY
-    internal enum Lifetime
-#else
+#if ROUGAMO
     public enum Lifetime
+#else
+    internal enum Lifetime
 #endif
     {
         /// <summary>

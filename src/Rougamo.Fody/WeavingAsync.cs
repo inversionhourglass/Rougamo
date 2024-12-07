@@ -5,13 +5,13 @@ using Fody.Simulations.PlainValues;
 using Fody.Simulations.Types;
 using Mono.Cecil.Cil;
 using Mono.Cecil;
+using Rougamo.Context;
 using Rougamo.Fody.Contexts;
 using Rougamo.Fody.Simulations.Types;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using static Mono.Cecil.Cil.Instruction;
-using Mono.Cecil.Rocks;
 
 namespace Rougamo.Fody
 {

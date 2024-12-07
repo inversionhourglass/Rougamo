@@ -4,6 +4,7 @@ using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
 using Mono.Collections.Generic;
+using Rougamo.Context;
 using Rougamo.Fody.Models;
 using Rougamo.Fody.Simulations.Types;
 using System;

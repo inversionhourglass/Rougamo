@@ -1,19 +1,15 @@
 ﻿using System;
 
-#if FODY
-namespace Rougamo.Fody
-#else
 namespace Rougamo.Context
-#endif
 {
     /// <summary>
     /// To minimize boxing operations, discard some useless objects is the best way.
     /// </summary>
     [Flags]
-#if FODY
-    internal enum Omit : int
-#else
+#if ROUGAMO
     public enum Omit : int
+#else
+    internal enum Omit : int
 #endif
     {
         /// <summary>
