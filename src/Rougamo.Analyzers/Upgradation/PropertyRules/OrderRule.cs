@@ -6,9 +6,9 @@ namespace Rougamo.Analyzers.Upgradation.PropertyRules
 {
     internal class OrderRule : IPropertyRule
     {
-        private static readonly LocalizableString _Title = R.S(nameof(Resources.OrderRuleTitle));
-        private static readonly LocalizableString _FlexibleMessageFormat = R.S(nameof(Resources.OrderFlexibleRuleMessage));
-        private static readonly LocalizableString _Description = R.S(nameof(Resources.OrderRuleDescription));
+        private static readonly LocalizableString _Title = R.S(nameof(Resources.V4t5OrderRuleTitle));
+        private static readonly LocalizableString _FlexibleMessageFormat = R.S(nameof(Resources.V4t5OrderFlexibleRuleMessage));
+        private static readonly LocalizableString _Description = R.S(nameof(Resources.V4t5OrderRuleDescription));
 
         public string PropertyName => "Order";
 

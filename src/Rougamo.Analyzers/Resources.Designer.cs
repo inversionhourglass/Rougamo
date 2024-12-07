@@ -63,180 +63,180 @@ namespace Rougamo.Analyzers {
         /// <summary>
         ///   Looks up a localized string similar to The Features property has been moved into AdviceAttribute..
         /// </summary>
-        internal static string FeaturesRuleDescription {
+        internal static string V4t5FeaturesRuleDescription {
             get {
-                return ResourceManager.GetString("FeaturesRuleDescription", resourceCulture);
+                return ResourceManager.GetString("V4t5FeaturesRuleDescription", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to {0} contains the Features property, which has been removed from IMo since version 5.0. Use AdviceAttribute instead..
         /// </summary>
-        internal static string FeaturesRuleMessage {
+        internal static string V4t5FeaturesRuleMessage {
             get {
-                return ResourceManager.GetString("FeaturesRuleMessage", resourceCulture);
+                return ResourceManager.GetString("V4t5FeaturesRuleMessage", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to The Features property has been removed from IMo..
         /// </summary>
-        internal static string FeaturesRuleTitle {
+        internal static string V4t5FeaturesRuleTitle {
             get {
-                return ResourceManager.GetString("FeaturesRuleTitle", resourceCulture);
+                return ResourceManager.GetString("V4t5FeaturesRuleTitle", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to {0} contains the Flags property, which has been removed from IMo since version 5.0. Use IFlexibleModifierPointcut instead..
         /// </summary>
-        internal static string FlagsFlexibleRuleMessage {
+        internal static string V4t5FlagsFlexibleRuleMessage {
             get {
-                return ResourceManager.GetString("FlagsFlexibleRuleMessage", resourceCulture);
+                return ResourceManager.GetString("V4t5FlagsFlexibleRuleMessage", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to The Flags property has been moved into PointcutAttribute and IFlexibleModifierPointcut..
         /// </summary>
-        internal static string FlagsRuleDescription {
+        internal static string V4t5FlagsRuleDescription {
             get {
-                return ResourceManager.GetString("FlagsRuleDescription", resourceCulture);
+                return ResourceManager.GetString("V4t5FlagsRuleDescription", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to {0} contains the Flags property, which has been removed from IMo since version 5.0. Use PointcutAttribute instead..
         /// </summary>
-        internal static string FlagsRuleMessage {
+        internal static string V4t5FlagsRuleMessage {
             get {
-                return ResourceManager.GetString("FlagsRuleMessage", resourceCulture);
+                return ResourceManager.GetString("V4t5FlagsRuleMessage", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to The Flags property has been removed from IMo..
         /// </summary>
-        internal static string FlagsRuleTitle {
+        internal static string V4t5FlagsRuleTitle {
             get {
-                return ResourceManager.GetString("FlagsRuleTitle", resourceCulture);
+                return ResourceManager.GetString("V4t5FlagsRuleTitle", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to The ForceSync property has been moved into OptimizationAttribute..
         /// </summary>
-        internal static string ForceSyncRuleDescription {
+        internal static string V4t5ForceSyncRuleDescription {
             get {
-                return ResourceManager.GetString("ForceSyncRuleDescription", resourceCulture);
+                return ResourceManager.GetString("V4t5ForceSyncRuleDescription", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to {0} contains the ForceSync property, which has been removed from IMo since version 5.0. Use OptimizationAttribute instead..
         /// </summary>
-        internal static string ForceSyncRuleMessage {
+        internal static string V4t5ForceSyncRuleMessage {
             get {
-                return ResourceManager.GetString("ForceSyncRuleMessage", resourceCulture);
+                return ResourceManager.GetString("V4t5ForceSyncRuleMessage", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to The ForceSync property has been removed from IMo..
         /// </summary>
-        internal static string ForceSyncRuleTitle {
+        internal static string V4t5ForceSyncRuleTitle {
             get {
-                return ResourceManager.GetString("ForceSyncRuleTitle", resourceCulture);
+                return ResourceManager.GetString("V4t5ForceSyncRuleTitle", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to The MethodContextOmits property has been moved into OptimizationAttribute..
         /// </summary>
-        internal static string OmitsRuleDescription {
+        internal static string V4t5OmitsRuleDescription {
             get {
-                return ResourceManager.GetString("OmitsRuleDescription", resourceCulture);
+                return ResourceManager.GetString("V4t5OmitsRuleDescription", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to {0} contains the MethodContextOmits property, which has been removed from IMo since version 5.0. Use OptimizationAttribute instead..
         /// </summary>
-        internal static string OmitsRuleMessage {
+        internal static string V4t5OmitsRuleMessage {
             get {
-                return ResourceManager.GetString("OmitsRuleMessage", resourceCulture);
+                return ResourceManager.GetString("V4t5OmitsRuleMessage", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to The MethodContextOmits property has been removed from IMo..
         /// </summary>
-        internal static string OmitsRuleTitle {
+        internal static string V4t5OmitsRuleTitle {
             get {
-                return ResourceManager.GetString("OmitsRuleTitle", resourceCulture);
+                return ResourceManager.GetString("V4t5OmitsRuleTitle", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to {0} contains the Order property, which has been removed from IMo since version 5.0. Use IFlexibleOrderable instead..
         /// </summary>
-        internal static string OrderFlexibleRuleMessage {
+        internal static string V4t5OrderFlexibleRuleMessage {
             get {
-                return ResourceManager.GetString("OrderFlexibleRuleMessage", resourceCulture);
+                return ResourceManager.GetString("V4t5OrderFlexibleRuleMessage", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to The Order property has been moved into IFlexibleOrderable..
         /// </summary>
-        internal static string OrderRuleDescription {
+        internal static string V4t5OrderRuleDescription {
             get {
-                return ResourceManager.GetString("OrderRuleDescription", resourceCulture);
+                return ResourceManager.GetString("V4t5OrderRuleDescription", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to The Order property has been removed from IMo..
         /// </summary>
-        internal static string OrderRuleTitle {
+        internal static string V4t5OrderRuleTitle {
             get {
-                return ResourceManager.GetString("OrderRuleTitle", resourceCulture);
+                return ResourceManager.GetString("V4t5OrderRuleTitle", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to {0} contains the Pattern property, which has been removed from IMo since version 5.0. Use IFlexiblePatternPointcut instead..
         /// </summary>
-        internal static string PatternFlexibleRuleMessage {
+        internal static string V4t5PatternFlexibleRuleMessage {
             get {
-                return ResourceManager.GetString("PatternFlexibleRuleMessage", resourceCulture);
+                return ResourceManager.GetString("V4t5PatternFlexibleRuleMessage", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to The Pattern property has been moved into PointcutAttribute and IFlexiblePatternPointcut..
         /// </summary>
-        internal static string PatternRuleDescription {
+        internal static string V4t5PatternRuleDescription {
             get {
-                return ResourceManager.GetString("PatternRuleDescription", resourceCulture);
+                return ResourceManager.GetString("V4t5PatternRuleDescription", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to {0} contains the Pattern property, which has been removed from IMo since version 5.0. Use PointcutAttribute instead..
         /// </summary>
-        internal static string PatternRuleMessage {
+        internal static string V4t5PatternRuleMessage {
             get {
-                return ResourceManager.GetString("PatternRuleMessage", resourceCulture);
+                return ResourceManager.GetString("V4t5PatternRuleMessage", resourceCulture);
             }
         }
         
         /// <summary>
         ///   Looks up a localized string similar to The Pattern property has been removed from IMo..
         /// </summary>
-        internal static string PatternRuleTitle {
+        internal static string V4t5PatternRuleTitle {
             get {
-                return ResourceManager.GetString("PatternRuleTitle", resourceCulture);
+                return ResourceManager.GetString("V4t5PatternRuleTitle", resourceCulture);
             }
         }
     }

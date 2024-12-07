@@ -6,9 +6,9 @@ namespace Rougamo.Analyzers.Upgradation.PropertyRules
 {
     internal class ForceSyncRule : IPropertyRule
     {
-        private static readonly LocalizableString _Title = R.S(nameof(Resources.ForceSyncRuleTitle));
-        private static readonly LocalizableString _MessageFormat = R.S(nameof(Resources.ForceSyncRuleMessage));
-        private static readonly LocalizableString _Description = R.S(nameof(Resources.ForceSyncRuleDescription));
+        private static readonly LocalizableString _Title = R.S(nameof(Resources.V4t5ForceSyncRuleTitle));
+        private static readonly LocalizableString _MessageFormat = R.S(nameof(Resources.V4t5ForceSyncRuleMessage));
+        private static readonly LocalizableString _Description = R.S(nameof(Resources.V4t5ForceSyncRuleDescription));
 
         public string PropertyName => "ForceSync";
 

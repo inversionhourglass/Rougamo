@@ -6,10 +6,10 @@ namespace Rougamo.Analyzers.Upgradation.PropertyRules
 {
     internal class PatternRule : IPropertyRule
     {
-        private static readonly LocalizableString _Title = R.S(nameof(Resources.PatternRuleTitle));
-        private static readonly LocalizableString _MessageFormat = R.S(nameof(Resources.PatternRuleMessage));
-        private static readonly LocalizableString _FlexibleMessageFormat = R.S(nameof(Resources.PatternFlexibleRuleMessage));
-        private static readonly LocalizableString _Description = R.S(nameof(Resources.PatternRuleDescription));
+        private static readonly LocalizableString _Title = R.S(nameof(Resources.V4t5PatternRuleTitle));
+        private static readonly LocalizableString _MessageFormat = R.S(nameof(Resources.V4t5PatternRuleMessage));
+        private static readonly LocalizableString _FlexibleMessageFormat = R.S(nameof(Resources.V4t5PatternFlexibleRuleMessage));
+        private static readonly LocalizableString _Description = R.S(nameof(Resources.V4t5PatternRuleDescription));
 
         public string PropertyName => "Pattern";
 

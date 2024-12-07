@@ -6,9 +6,9 @@ namespace Rougamo.Analyzers.Upgradation.PropertyRules
 {
     internal class OmitsRule : IPropertyRule
     {
-        private static readonly LocalizableString _Title = R.S(nameof(Resources.OmitsRuleTitle));
-        private static readonly LocalizableString _MessageFormat = R.S(nameof(Resources.OmitsRuleMessage));
-        private static readonly LocalizableString _Description = R.S(nameof(Resources.OmitsRuleDescription));
+        private static readonly LocalizableString _Title = R.S(nameof(Resources.V4t5OmitsRuleTitle));
+        private static readonly LocalizableString _MessageFormat = R.S(nameof(Resources.V4t5OmitsRuleMessage));
+        private static readonly LocalizableString _Description = R.S(nameof(Resources.V4t5OmitsRuleDescription));
 
         public string PropertyName => "MethodContextOmits";
 

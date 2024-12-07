@@ -7,10 +7,10 @@ namespace Rougamo.Analyzers.Upgradation.PropertyRules
 {
     internal class FlagsRule : IPropertyRule
     {
-        private static readonly LocalizableString _Title = R.S(nameof(Resources.FlagsRuleTitle));
-        private static readonly LocalizableString _MessageFormat = R.S(nameof(Resources.FlagsRuleMessage));
-        private static readonly LocalizableString _FlexibleMessageFormat = R.S(nameof(Resources.FlagsFlexibleRuleMessage));
-        private static readonly LocalizableString _Description = R.S(nameof(Resources.FlagsRuleDescription));
+        private static readonly LocalizableString _Title = R.S(nameof(Resources.V4t5FlagsRuleTitle));
+        private static readonly LocalizableString _MessageFormat = R.S(nameof(Resources.V4t5FlagsRuleMessage));
+        private static readonly LocalizableString _FlexibleMessageFormat = R.S(nameof(Resources.V4t5FlagsFlexibleRuleMessage));
+        private static readonly LocalizableString _Description = R.S(nameof(Resources.V4t5FlagsRuleDescription));
 
         public string PropertyName => "Flags";
 

@@ -6,9 +6,9 @@ namespace Rougamo.Analyzers.Upgradation.PropertyRules
 {
     internal class FeaturesRule : IPropertyRule
     {
-        private static readonly LocalizableString _Title = R.S(nameof(Resources.FeaturesRuleTitle));
-        private static readonly LocalizableString _MessageFormat = R.S(nameof(Resources.FeaturesRuleMessage));
-        private static readonly LocalizableString _Description = R.S(nameof(Resources.FeaturesRuleDescription));
+        private static readonly LocalizableString _Title = R.S(nameof(Resources.V4t5FeaturesRuleTitle));
+        private static readonly LocalizableString _MessageFormat = R.S(nameof(Resources.V4t5FeaturesRuleMessage));
+        private static readonly LocalizableString _Description = R.S(nameof(Resources.V4t5FeaturesRuleDescription));
 
         public string PropertyName => "Features";
 

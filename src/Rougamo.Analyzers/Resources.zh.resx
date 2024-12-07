@@ -117,64 +117,64 @@
   <resheader name="writer">
     <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
   </resheader>
-  <data name="PatternFlexibleRuleMessage" xml:space="preserve">
+  <data name="V4t5PatternFlexibleRuleMessage" xml:space="preserve">
     <value>{0}包含Pattern属性，该属性在5.0版本中已从IMo中移除。请使用IFlexiblePatternPointcut.</value>
   </data>
-  <data name="FlagsFlexibleRuleMessage" xml:space="preserve">
+  <data name="V4t5FlagsFlexibleRuleMessage" xml:space="preserve">
     <value>{0}包含Flags属性，该属性在5.0版本中已从IMo中移除。请使用IFlexibleModifierPointcut.</value>
   </data>
-  <data name="PatternRuleDescription" xml:space="preserve">
+  <data name="V4t5PatternRuleDescription" xml:space="preserve">
     <value>Pattern 属性已被移动到 PointcutAttribute 和 IFlexiblePatternPointcut 中。</value>
   </data>
-  <data name="FlagsRuleDescription" xml:space="preserve">
+  <data name="V4t5FlagsRuleDescription" xml:space="preserve">
     <value>Flags 属性已被移动到 PointcutAttribute 和 IFlexibleModifierPointcut 中。</value>
   </data>
-  <data name="PatternRuleMessage" xml:space="preserve">
+  <data name="V4t5PatternRuleMessage" xml:space="preserve">
     <value>{0}包含Pattern属性，该属性在5.0版本中已从IMo中移除。请使用PointcutAttribute.</value>
   </data>
-  <data name="FlagsRuleMessage" xml:space="preserve">
+  <data name="V4t5FlagsRuleMessage" xml:space="preserve">
     <value>{0}包含Flags属性，该属性在5.0版本中已从IMo中移除。请使用PointcutAttribute.</value>
   </data>
-  <data name="PatternRuleTitle" xml:space="preserve">
+  <data name="V4t5PatternRuleTitle" xml:space="preserve">
     <value>Pattern属性已经从IMo中移除</value>
   </data>
-  <data name="FlagsRuleTitle" xml:space="preserve">
+  <data name="V4t5FlagsRuleTitle" xml:space="preserve">
     <value>Flags属性已经从IMo中移除</value>
   </data>
-  <data name="OrderFlexibleRuleMessage" xml:space="preserve">
+  <data name="V4t5OrderFlexibleRuleMessage" xml:space="preserve">
     <value>{0}包含Order属性，该属性在5.0版本中已从IMo中移除。请使用IFlexibleOrderable.</value>
   </data>
-  <data name="OrderRuleDescription" xml:space="preserve">
+  <data name="V4t5OrderRuleDescription" xml:space="preserve">
     <value>Order 属性已被移动到 IFlexibleOrderable 中。</value>
   </data>
-  <data name="OrderRuleTitle" xml:space="preserve">
+  <data name="V4t5OrderRuleTitle" xml:space="preserve">
     <value>Order属性已经从IMo中移除</value>
   </data>
-  <data name="FeaturesRuleDescription" xml:space="preserve">
+  <data name="V4t5FeaturesRuleDescription" xml:space="preserve">
     <value>Features 属性已被移动到 AdviceAttribute 中。</value>
   </data>
-  <data name="FeaturesRuleMessage" xml:space="preserve">
+  <data name="V4t5FeaturesRuleMessage" xml:space="preserve">
     <value>{0}包含Features属性，该属性在5.0版本中已从IMo中移除。请使用AdviceAttribute.</value>
   </data>
-  <data name="FeaturesRuleTitle" xml:space="preserve">
+  <data name="V4t5FeaturesRuleTitle" xml:space="preserve">
     <value>Features属性已经从IMo中移除</value>
   </data>
-  <data name="OmitsRuleTitle" xml:space="preserve">
+  <data name="V4t5OmitsRuleTitle" xml:space="preserve">
     <value>MethodContextOmits属性已经从IMo中移除</value>
   </data>
-  <data name="OmitsRuleDescription" xml:space="preserve">
+  <data name="V4t5OmitsRuleDescription" xml:space="preserve">
     <value>MethodContextOmits 属性已被移动到 OptimizationAttribute 中。</value>
   </data>
-  <data name="OmitsRuleMessage" xml:space="preserve">
+  <data name="V4t5OmitsRuleMessage" xml:space="preserve">
     <value>{0}包含MethodContextOmits属性，该属性在5.0版本中已从IMo中移除。请使用OptimizationAttribute.</value>
   </data>
-  <data name="ForceSyncRuleTitle" xml:space="preserve">
+  <data name="V4t5ForceSyncRuleTitle" xml:space="preserve">
     <value>ForceSync属性已经从IMo中移除</value>
   </data>
-  <data name="ForceSyncRuleDescription" xml:space="preserve">
+  <data name="V4t5ForceSyncRuleDescription" xml:space="preserve">
     <value>ForceSync 属性已被移动到 OptimizationAttribute 中。</value>
   </data>
-  <data name="ForceSyncRuleMessage" xml:space="preserve">
+  <data name="V4t5ForceSyncRuleMessage" xml:space="preserve">
     <value>{0}包含ForceSync属性，该属性在5.0版本中已从IMo中移除。请使用OptimizationAttribute.</value>
   </data>
 </root>
