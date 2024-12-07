@@ -16,7 +16,7 @@ namespace Rougamo.Analyzers.Upgradation.PropertyRules
 
         public DiagnosticDescriptor? Rule => null;
 
-        public DiagnosticDescriptor? FlexibleRule => new(IDs.OBSOLETED_IMO_ORDER_FLEXIBLE, _Title, _FlexibleMessageFormat, CATEGORY, DiagnosticSeverity.Error, true, _Description, RELEASE_5_URI);
+        public DiagnosticDescriptor? FlexibleRule => new(IDs.OBSOLETED_IMO_ORDER_FLEXIBLE, _Title, _FlexibleMessageFormat, R.CATEGORY, DiagnosticSeverity.Error, true, _Description, RELEASE_5_URI);
 
         public TypeName? FlexibleInterfaceName => "Rougamo.Flexibility.IFlexibleOrderable";
 

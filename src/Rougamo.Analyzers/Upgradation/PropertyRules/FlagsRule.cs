@@ -16,9 +16,9 @@ namespace Rougamo.Analyzers.Upgradation.PropertyRules
 
         public SimpleSymbolType PropertyType => "Rougamo.AccessFlags";
 
-        public DiagnosticDescriptor? Rule => new(IDs.OBSOLETED_IMO_FLAGS, _Title, _MessageFormat, CATEGORY, DiagnosticSeverity.Error, true, _Description, RELEASE_5_URI);
+        public DiagnosticDescriptor? Rule => new(IDs.OBSOLETED_IMO_FLAGS, _Title, _MessageFormat, R.CATEGORY, DiagnosticSeverity.Error, true, _Description, RELEASE_5_URI);
 
-        public DiagnosticDescriptor? FlexibleRule => new(IDs.OBSOLETED_IMO_FLAGS_FLEXIBLE, _Title, _FlexibleMessageFormat, CATEGORY, DiagnosticSeverity.Error, true, _Description, RELEASE_5_URI);
+        public DiagnosticDescriptor? FlexibleRule => new(IDs.OBSOLETED_IMO_FLAGS_FLEXIBLE, _Title, _FlexibleMessageFormat, R.CATEGORY, DiagnosticSeverity.Error, true, _Description, RELEASE_5_URI);
 
         public TypeName? FlexibleInterfaceName => "Rougamo.Flexibility.IFlexibleModifierPointcut";
 

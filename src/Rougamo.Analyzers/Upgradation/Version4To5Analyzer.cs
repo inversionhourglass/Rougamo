@@ -13,7 +13,6 @@ namespace Rougamo.Analyzers.Upgradation
     {
         private const string INTERFACE_IMo = "Rougamo.IMo";
 
-        internal const string CATEGORY = "Rougamo";
         internal const string RELEASE_5_URI = "https://github.com/inversionhourglass/Rougamo/releases/tag/v5.0.0";
 
         internal static readonly IPropertyRule[] Rules = [new PatternRule(), new FlagsRule(), new OrderRule(), new FeaturesRule(), new ForceSyncRule(), new OmitsRule()];

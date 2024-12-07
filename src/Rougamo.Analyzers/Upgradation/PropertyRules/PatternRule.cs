@@ -15,9 +15,9 @@ namespace Rougamo.Analyzers.Upgradation.PropertyRules
 
         public SimpleSymbolType PropertyType => SpecialType.System_String;
 
-        public DiagnosticDescriptor? Rule => new(IDs.OBSOLETED_IMO_PATTERN, _Title, _MessageFormat, CATEGORY, DiagnosticSeverity.Error, true, _Description, RELEASE_5_URI);
+        public DiagnosticDescriptor? Rule => new(IDs.OBSOLETED_IMO_PATTERN, _Title, _MessageFormat, R.CATEGORY, DiagnosticSeverity.Error, true, _Description, RELEASE_5_URI);
 
-        public DiagnosticDescriptor? FlexibleRule => new(IDs.OBSOLETED_IMO_PATTERN_FLEXIBLE, _Title, _FlexibleMessageFormat, CATEGORY, DiagnosticSeverity.Error, true, _Description, RELEASE_5_URI);
+        public DiagnosticDescriptor? FlexibleRule => new(IDs.OBSOLETED_IMO_PATTERN_FLEXIBLE, _Title, _FlexibleMessageFormat, R.CATEGORY, DiagnosticSeverity.Error, true, _Description, RELEASE_5_URI);
 
         public TypeName? FlexibleInterfaceName => "Rougamo.Flexibility.IFlexiblePatternPointcut";
 

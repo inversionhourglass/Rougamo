@@ -14,7 +14,7 @@ namespace Rougamo.Analyzers.Upgradation.PropertyRules
 
         public SimpleSymbolType PropertyType => "Rougamo.Context.Omit";
 
-        public DiagnosticDescriptor? Rule => new(IDs.OBSOLETED_IMO_OMITS, _Title, _MessageFormat, CATEGORY, DiagnosticSeverity.Error, true, _Description, RELEASE_5_URI);
+        public DiagnosticDescriptor? Rule => new(IDs.OBSOLETED_IMO_OMITS, _Title, _MessageFormat, R.CATEGORY, DiagnosticSeverity.Error, true, _Description, RELEASE_5_URI);
 
         public DiagnosticDescriptor? FlexibleRule => null;
 
