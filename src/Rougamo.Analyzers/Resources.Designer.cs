@@ -61,6 +61,87 @@ namespace Rougamo.Analyzers {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to Only classes support lifetime settings..
+        /// </summary>
+        internal static string LifetimeStructUnsupportedDescription {
+            get {
+                return ResourceManager.GetString("LifetimeStructUnsupportedDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} is a struct type that does not support lifetime settings..
+        /// </summary>
+        internal static string LifetimeStructUnsupportedMessage {
+            get {
+                return ResourceManager.GetString("LifetimeStructUnsupportedMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Struct types do not support lifetime settings.
+        /// </summary>
+        internal static string LifetimeStructUnsupportedTitle {
+            get {
+                return ResourceManager.GetString("LifetimeStructUnsupportedTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Only transient lifetime can use parameterized constructors..
+        /// </summary>
+        internal static string LifetimeUnexpectedArgumentsDescription {
+            get {
+                return ResourceManager.GetString("LifetimeUnexpectedArgumentsDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} has a {1} lifetime. It requires a parameterless constructor..
+        /// </summary>
+        internal static string LifetimeUnexpectedArgumentsMessage {
+            get {
+                return ResourceManager.GetString("LifetimeUnexpectedArgumentsMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Lifetime requires a parameterless constructor.
+        /// </summary>
+        internal static string LifetimeUnexpectedArgumentsTitle {
+            get {
+                return ResourceManager.GetString("LifetimeUnexpectedArgumentsTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Transient and Pooled lifetime can contain settable properties..
+        /// </summary>
+        internal static string LifetimeUnexpectedPropertyDescription {
+            get {
+                return ResourceManager.GetString("LifetimeUnexpectedPropertyDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} has a {1} lifetime. It requires properties to contain only getter..
+        /// </summary>
+        internal static string LifetimeUnexpectedPropertyMessage {
+            get {
+                return ResourceManager.GetString("LifetimeUnexpectedPropertyMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Lifetime requires the properties to contain only getter..
+        /// </summary>
+        internal static string LifetimeUnexpectedPropertyTitle {
+            get {
+                return ResourceManager.GetString("LifetimeUnexpectedPropertyTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to The Features property has been moved into AdviceAttribute..
         /// </summary>
         internal static string V4t5FeaturesRuleDescription {

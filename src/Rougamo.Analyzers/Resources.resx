@@ -177,4 +177,31 @@
   <data name="V4t5ForceSyncRuleMessage" xml:space="preserve">
     <value>{0} contains the ForceSync property, which has been removed from IMo since version 5.0. Use OptimizationAttribute instead.</value>
   </data>
+  <data name="LifetimeUnexpectedArgumentsMessage" xml:space="preserve">
+    <value>{0} has a {1} lifetime. It requires a parameterless constructor.</value>
+  </data>
+  <data name="LifetimeUnexpectedPropertyMessage" xml:space="preserve">
+    <value>{0} has a {1} lifetime. It requires properties to contain only getter.</value>
+  </data>
+  <data name="LifetimeUnexpectedArgumentsTitle" xml:space="preserve">
+    <value>Lifetime requires a parameterless constructor</value>
+  </data>
+  <data name="LifetimeUnexpectedArgumentsDescription" xml:space="preserve">
+    <value>Only transient lifetime can use parameterized constructors.</value>
+  </data>
+  <data name="LifetimeUnexpectedPropertyTitle" xml:space="preserve">
+    <value>Lifetime requires the properties to contain only getter.</value>
+  </data>
+  <data name="LifetimeUnexpectedPropertyDescription" xml:space="preserve">
+    <value>Transient and Pooled lifetime can contain settable properties.</value>
+  </data>
+  <data name="LifetimeStructUnsupportedTitle" xml:space="preserve">
+    <value>Struct types do not support lifetime settings</value>
+  </data>
+  <data name="LifetimeStructUnsupportedMessage" xml:space="preserve">
+    <value>{0} is a struct type that does not support lifetime settings.</value>
+  </data>
+  <data name="LifetimeStructUnsupportedDescription" xml:space="preserve">
+    <value>Only classes support lifetime settings.</value>
+  </data>
 </root>

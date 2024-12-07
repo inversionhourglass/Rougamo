@@ -177,4 +177,31 @@
   <data name="V4t5ForceSyncRuleMessage" xml:space="preserve">
     <value>{0}包含ForceSync属性，该属性在5.0版本中已从IMo中移除。请使用OptimizationAttribute.</value>
   </data>
+  <data name="LifetimeUnexpectedArgumentsMessage" xml:space="preserve">
+    <value>{0}声明了{1}生命周期，该生命周期要求切面类型必须使用无参构造方法</value>
+  </data>
+  <data name="LifetimeUnexpectedPropertyMessage" xml:space="preserve">
+    <value>{0}声明了{1}生命周期，该生命周期要求切面类型的属性只能包含getter，不能包含setter</value>
+  </data>
+  <data name="LifetimeUnexpectedArgumentsTitle" xml:space="preserve">
+    <value>声明周期要求切面类型使用无参构造方法</value>
+  </data>
+  <data name="LifetimeUnexpectedArgumentsDescription" xml:space="preserve">
+    <value>只有Transient生命周期可以使用带参数的构造函数</value>
+  </data>
+  <data name="LifetimeUnexpectedPropertyTitle" xml:space="preserve">
+    <value>生命周期要求切面类型的属性仅包含getter</value>
+  </data>
+  <data name="LifetimeUnexpectedPropertyDescription" xml:space="preserve">
+    <value>Transient和Pooled生命周期可以包含有setter的属性</value>
+  </data>
+  <data name="LifetimeStructUnsupportedTitle" xml:space="preserve">
+    <value>结构体不支持设置生命周期</value>
+  </data>
+  <data name="LifetimeStructUnsupportedMessage" xml:space="preserve">
+    <value>{0}是一个结构体，不支持设置生命周期</value>
+  </data>
+  <data name="LifetimeStructUnsupportedDescription" xml:space="preserve">
+    <value>只有类支持设置生命周期</value>
+  </data>
 </root>
