@@ -1,4 +1,5 @@
 ﻿using Microsoft.CodeAnalysis;
+using Rougamo.Analyzers.Reflection;
 using System.Collections.Generic;
 
 namespace Rougamo.Analyzers.Upgradation.PropertyRules

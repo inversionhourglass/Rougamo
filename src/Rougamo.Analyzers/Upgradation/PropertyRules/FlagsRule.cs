@@ -1,5 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Rougamo.Analyzers.Reflection;
 using static Rougamo.Analyzers.Upgradation.Version4To5Analyzer;
 
 namespace Rougamo.Analyzers.Upgradation.PropertyRules

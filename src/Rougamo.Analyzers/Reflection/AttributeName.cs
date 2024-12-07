@@ -1,4 +1,4 @@
-﻿namespace Rougamo.Analyzers
+﻿namespace Rougamo.Analyzers.Reflection
 {
     internal readonly struct AttributeName(string fullName)
     {

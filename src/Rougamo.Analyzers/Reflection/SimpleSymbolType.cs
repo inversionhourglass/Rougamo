@@ -1,6 +1,6 @@
 ﻿using Microsoft.CodeAnalysis;
 
-namespace Rougamo.Analyzers
+namespace Rougamo.Analyzers.Reflection
 {
     internal readonly struct SimpleSymbolType
     {
