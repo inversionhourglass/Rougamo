@@ -16,16 +16,19 @@ namespace Rougamo.Analyzers.Upgradation.PropertyRules
             var set = false;
             var newArguments = new List<AttributeArgumentSyntax>();
             var namedArgument = SyntaxFactoryPlus.AttributePropertyArgument(propertyName, argument);
-            foreach (var arg in attribute.ArgumentList.Arguments)
+            if (attribute.ArgumentList != null)
             {
-                if (arg.NameEquals?.Name.Identifier.Text == propertyName)
+                foreach (var arg in attribute.ArgumentList.Arguments)
                 {
-                    newArguments.Add(namedArgument);
-                    set = true;
-                }
-                else
-                {
-                    newArguments.Add(arg);
+                    if (arg.NameEquals?.Name.Identifier.Text == propertyName)
+                    {
+                        newArguments.Add(namedArgument);
+                        set = true;
+                    }
+                    else
+                    {
+                        newArguments.Add(arg);
+                    }
                 }
             }
             if (!set) newArguments.Add(namedArgument);

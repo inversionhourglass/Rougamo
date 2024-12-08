@@ -30,7 +30,7 @@ namespace Rougamo.Analyzers.Upgradation
         {
             var typeDeclaration = (TypeDeclarationSyntax)context.Node;
             var semanticModel = context.SemanticModel;
-            var typeSymbol = semanticModel.GetDeclaredSymbol(typeDeclaration);
+            var typeSymbol = semanticModel.GetDeclaredSymbol(typeDeclaration)!;
 
             var ruleMap = Rules.ToDictionary(x => x.PropertyName, x => x);
             if (typeSymbol.AllInterfaces.Any(x => x.ToString() == INTERFACE_IMo))
@@ -39,7 +39,7 @@ namespace Rougamo.Analyzers.Upgradation
                 {
                     if (member is not PropertyDeclarationSyntax propertyDeclaration) continue;
 
-                    var propertySymbol = semanticModel.GetDeclaredSymbol(propertyDeclaration);
+                    var propertySymbol = semanticModel.GetDeclaredSymbol(propertyDeclaration)!;
                     if (!ruleMap.TryGetValue(propertySymbol.Name, out var rule) || !rule.PropertyType.IsEqual(propertySymbol.Type)) continue;
 
                     if (typeSymbol.AllInterfaces.Any(x => x.ToString() == rule.FlexibleInterfaceName)) continue;
@@ -49,7 +49,7 @@ namespace Rougamo.Analyzers.Upgradation
                     {
                         dd = rule.FlexibleRule;
                     }
-                    var diagnostic = Diagnostic.Create(dd, propertySymbol.Locations[0], typeDeclaration.Identifier.Text);
+                    var diagnostic = Diagnostic.Create(dd!, propertySymbol.Locations[0], typeDeclaration.Identifier.Text);
                     context.ReportDiagnostic(diagnostic);
                 }
             }

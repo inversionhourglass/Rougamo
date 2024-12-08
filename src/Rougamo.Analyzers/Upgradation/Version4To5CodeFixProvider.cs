@@ -22,9 +22,11 @@ namespace Rougamo.Analyzers.Upgradation
 
         public override ImmutableArray<string> FixableDiagnosticIds => ImmutableArray.Create(Version4To5Analyzer.Rules.Select(x => x.GetRules()).SelectMany(x => x).Select(x => x.Id).ToArray());
 
+        public override FixAllProvider? GetFixAllProvider() => null;
+
         public override async Task RegisterCodeFixesAsync(CodeFixContext context)
         {
-            var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
+            var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken);
 
             var ruleMap = Version4To5Analyzer.Rules.Select(x =>
             {
@@ -37,7 +39,7 @@ namespace Rougamo.Analyzers.Upgradation
             {
                 var diagnosticSpan = diagnostic.Location.SourceSpan;
 
-                var declaration = root.FindToken(diagnosticSpan.Start).Parent.AncestorsAndSelf().OfType<TypeDeclarationSyntax>().First();
+                var declaration = root!.FindToken(diagnosticSpan.Start).Parent!.AncestorsAndSelf().OfType<TypeDeclarationSyntax>().First();
 
                 if (!ruleMap.TryGetValue(diagnostic.Id, out var rule)) throw new InvalidOperationException($"Unexpected diagnostic id: {diagnostic.Id}");
 
@@ -64,10 +66,10 @@ namespace Rougamo.Analyzers.Upgradation
             var attributeName = rule.AttributeName!.Value;
             var propertyValue = propertyDeclaration.Initializer?.Value ?? propertyDeclaration.ExpressionBody?.Expression;
 
-            var newTypeDeclaration = typeDeclaration.RemoveNode(propertyDeclaration, SyntaxRemoveOptions.KeepNoTrivia);
+            var newTypeDeclaration = typeDeclaration.RemoveNode(propertyDeclaration, SyntaxRemoveOptions.KeepNoTrivia)!;
             if (propertyValue != null)
             {// 属性有默认值，需要将配置转移到对应的Attribute中
-                var attribute = typeDeclaration.GetAttribute(attributeName, semanticModel);
+                var attribute = typeDeclaration.GetAttribute(attributeName, semanticModel!);
 
                 if (attribute != null)
                 {// 已存在Attribute，直接替换
@@ -82,7 +84,7 @@ namespace Rougamo.Analyzers.Upgradation
                 }
             }
 
-            var newRoot = root.ReplaceNode(typeDeclaration, newTypeDeclaration);
+            var newRoot = root!.ReplaceNode(typeDeclaration, newTypeDeclaration);
 
             if (propertyValue != null) newRoot = newRoot.AddNamespace(attributeName.Namespace);
 
@@ -111,7 +113,7 @@ namespace Rougamo.Analyzers.Upgradation
 
             newTypeDeclaration = newTypeDeclaration.AddInterface(interfaceName);
 
-            var newRoot = root.ReplaceNode(typeDeclaration, newTypeDeclaration).AddNamespace(interfaceName.Namespace);
+            var newRoot = root!.ReplaceNode(typeDeclaration, newTypeDeclaration).AddNamespace(interfaceName.Namespace);
 
             return document.WithSyntaxRoot(newRoot);
         }

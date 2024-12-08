@@ -42,17 +42,17 @@ namespace Rougamo.Analyzers
         {
             var typeDeclaration = (TypeDeclarationSyntax)context.Node;
             var semanticModel = context.SemanticModel;
-            var typeSymbol = semanticModel.GetDeclaredSymbol(typeDeclaration);
+            var typeSymbol = semanticModel.GetDeclaredSymbol(typeDeclaration)!;
 
-            var lifetimeAttribute = typeSymbol.GetAttributes().FirstOrDefault(attr => attr.AttributeClass.ToString() == ATTRIBUTE_FULLNAME);
+            var lifetimeAttribute = typeSymbol.GetAttributes().FirstOrDefault(attr => attr.AttributeClass?.ToString() == ATTRIBUTE_FULLNAME);
 
             if (lifetimeAttribute == null) return;
 
-            var lifetime = (Lifetime)(int)lifetimeAttribute.ConstructorArguments[0].Value;
+            var lifetime = (Lifetime)(int)lifetimeAttribute.ConstructorArguments[0].Value!;
 
             if (typeDeclaration is StructDeclarationSyntax)
             {
-                var location = lifetimeAttribute.ApplicationSyntaxReference.GetSyntax().GetLocation();
+                var location = lifetimeAttribute.ApplicationSyntaxReference!.GetSyntax().GetLocation();
                 var diagnostic = Diagnostic.Create(_StructUnsupportedRule, location, typeDeclaration.Identifier.Text);
                 context.ReportDiagnostic(diagnostic);
                 return;
@@ -61,10 +61,10 @@ namespace Rougamo.Analyzers
             if (lifetime == Lifetime.Transient) return;
 
             var hasParameterlessCtor = typeDeclaration.HasParameterlessConstructor();
-            
+
             if (!hasParameterlessCtor)
             {
-                var location = lifetimeAttribute.ApplicationSyntaxReference.GetSyntax().GetLocation();
+                var location = lifetimeAttribute.ApplicationSyntaxReference!.GetSyntax().GetLocation();
                 var diagnostic = Diagnostic.Create(_UnexpectedArgumentsRule, location, typeDeclaration.Identifier.Text, lifetime.ToString());
                 context.ReportDiagnostic(diagnostic);
             }

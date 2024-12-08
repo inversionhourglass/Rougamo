@@ -13,7 +13,7 @@ namespace Rougamo.Analyzers
         {
             if (root is not CompilationUnitSyntax compilationUnit) throw new ArgumentException("Root must be a CompilationUnitSyntax", nameof(root));
 
-            if (!compilationUnit.Usings.Any(u => u.Name.ToString() == @namespace))
+            if (!compilationUnit.Usings.Any(x => x.Name?.ToString() == @namespace))
             {
                 var usingDirective = SyntaxFactory.UsingDirective(SyntaxFactory.ParseName(@namespace));
                 compilationUnit = compilationUnit.AddUsings(usingDirective);
@@ -67,7 +67,7 @@ namespace Rougamo.Analyzers
 
         public static SyntaxList<AttributeListSyntax> Replace(this SyntaxList<AttributeListSyntax> attributeLists, AttributeSyntax oldAttribute, AttributeSyntax newAttribute)
         {
-            var attributeList = (AttributeListSyntax)oldAttribute.Parent;
+            var attributeList = (AttributeListSyntax)oldAttribute.Parent!;
             var newAttributeList = attributeList.ReplaceNode(oldAttribute, newAttribute);
             return attributeLists.Replace(attributeList, newAttributeList);
         }
