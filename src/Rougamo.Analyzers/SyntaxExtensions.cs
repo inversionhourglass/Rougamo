@@ -56,6 +56,15 @@ namespace Rougamo.Analyzers
             return typeDeclaration.AttributeLists.SelectMany(x => x.Attributes).FirstOrDefault(x => semanticModel.GetSymbolInfo(x).Symbol is IMethodSymbol symbol && symbol.ContainingType.ToDisplayString() == attributeFullName);
         }
 
+        public static bool HasParameterlessConstructor(this TypeDeclarationSyntax typeDeclaration)
+        {
+            if (typeDeclaration.ParameterList != null) return typeDeclaration.ParameterList.Parameters.Count == 0;
+
+            var constructorDeclarations = typeDeclaration.Members.OfType<ConstructorDeclarationSyntax>();
+
+            return !constructorDeclarations.Any() || constructorDeclarations.Any(x => x.ParameterList.Parameters.Count == 0);
+        }
+
         public static SyntaxList<AttributeListSyntax> Replace(this SyntaxList<AttributeListSyntax> attributeLists, AttributeSyntax oldAttribute, AttributeSyntax newAttribute)
         {
             var attributeList = (AttributeListSyntax)oldAttribute.Parent;

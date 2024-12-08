@@ -60,7 +60,7 @@ namespace Rougamo.Analyzers
 
             if (lifetime == Lifetime.Transient) return;
 
-            var hasParameterlessCtor = typeDeclaration.Members.OfType<ConstructorDeclarationSyntax>().Any(x => x.ParameterList.Parameters.Count == 0);
+            var hasParameterlessCtor = typeDeclaration.HasParameterlessConstructor();
             
             if (!hasParameterlessCtor)
             {
