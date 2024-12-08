@@ -26,7 +26,6 @@
     <Nullable>enable</Nullable>
     <PackageReleaseNotes Condition="'$(VersionSuffix)' == ''">For details: https://github.com/inversionhourglass/Rougamo/releases/tag/v$(VersionPrefix)</PackageReleaseNotes>
     <PackageReadmeFile>README_en.md</PackageReadmeFile>
-    <SuppressDependenciesWhenPacking>true</SuppressDependenciesWhenPacking>
 	<TargetsForTfmSpecificContentInPackage>$(TargetsForTfmSpecificContentInPackage);_AddAnalyzersToOutput</TargetsForTfmSpecificContentInPackage>
   </PropertyGroup>
 	
@@ -46,7 +45,7 @@
   </ItemGroup>
 	
   <ItemGroup>
-    <ProjectReference Include="..\Rougamo.Analyzers\Rougamo.Analyzers.csproj" />
+    <ProjectReference Include="..\Rougamo.Analyzers\Rougamo.Analyzers.csproj" PrivateAssets="All" />
   </ItemGroup>
 
   <Target Name="_AddAnalyzersToOutput">
