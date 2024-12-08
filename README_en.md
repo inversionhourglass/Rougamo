@@ -14,13 +14,12 @@ Rougamo, a type of traditional Chinese street food, is somewhat similar to a ham
 ### Rougamo's Advantages and Disadvantages
 
 - **Advantages:**
-  1. **Shorter Application Startup Time:** Static weaving occurs at compile time, whereas dynamic proxies are set up at application startup.
-  2. **Support for All Methods:** Rougamo supports all methods, including constructors, properties, and static methods. Dynamic proxies often only handle instance methods due to their reliance on IoC.
-  3. **Independent from Other Components:** Rougamo does not require initialization and is easy and quick to use. Dynamic AOP relies on IoC components, which often need initialization at application startup and vary between different IoC components. Rougamo does not require initialization; you just define the aspect type and apply it.
+  1. **Shorter Application Startup Time**, Static weaving occurs at compile time, whereas dynamic proxies are set up at application startup.
+  2. **Support for All Methods**, Rougamo supports all methods, including constructors, properties, and static methods. Dynamic proxies often only handle instance methods due to their reliance on IoC.
+  3. **Independent from Other Components**, Rougamo does not require initialization and is easy and quick to use. Dynamic AOP relies on IoC components, which often need initialization at application startup and vary between different IoC components. Rougamo does not require initialization; you just define the aspect type and apply it.
 
 - **Disadvantages:**
-  1. **Larger Assembly Size:** Since Rougamo is a compile-time AOP, it weaves additional code into the assembly at compile time, which increases the assembly size. However, this overhead is generally minimal and can be evaluated in your project through [configuration options](https://github.com/inversionhourglass/Rougamo/wiki/%E9%85%8D%E7%BD%AE%E9%A1%B9).
-  2. **Less Convenient IoC Interaction:** Dynamic AOP can easily access the IoC container and inject types into aspect types due to its reliance on IoC. Rougamo, being a compile-time AOP, does not depend on IoC components and thus cannot directly interact with IoC through methods like constructor injection. However, it can still be used with IoC; see [using IoC in Rougamo](https://github.com/inversionhourglass/Rougamo/wiki/%E5%85%B6%E4%BB%96#%E8%82%89%E5%A4%B9%E9%A6%8D%E4%B8%AD%E4%BD%BF%E7%94%A8IoC) for details.
+  **Larger Assembly Size**, Since Rougamo is a compile-time AOP, it weaves additional code into the assembly at compile time, which increases the assembly size. However, this overhead is generally minimal and can be evaluated in your project through [configuration options](https://github.com/inversionhourglass/Rougamo/wiki/%E9%85%8D%E7%BD%AE%E9%A1%B9).
 
 ## Basic Functionality Introduction
 
