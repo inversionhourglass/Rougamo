@@ -193,7 +193,7 @@ namespace Rougamo.Fody
             TypeDefinition typeDef;
             if (!rouMethod.SkipRefStruct && !rouMethod.MethodContextOmits.Contains(Omit.ReturnValue) && (typeDef = rouMethod.MethodDef.ReturnType.Resolve()) != null && typeDef.CustomAttributes.Any(x => x.Is(Constants.TYPE_IsByRefLikeAttribute)))
             {
-                var builder = new StringBuilder("Cannot save a ref struct value as an object. Change the return value type or set the MethodContextOmits property for the listed types to Omit.ReturnValue: [");
+                var builder = new StringBuilder("Cannot save a ref struct value as an object. Change the return value type or apply SkipRefStructAttribute to the method/class/assembly : [");
                 foreach (var mo in rouMethod.Mos)
                 {
                     if ((rouMethod.MethodContextOmits & Omit.ReturnValue) == 0)
@@ -203,14 +203,14 @@ namespace Rougamo.Fody
                     }
                 }
                 builder.Length -= 2;
-                builder.Append("]. For more information: https://github.com/inversionhourglass/Rougamo/issues/61");
+                builder.Append("]. For more information: https://github.com/inversionhourglass/Rougamo/issues/61 , https://github.com/inversionhourglass/Rougamo/releases/tag/v5.0.0#SkipRefStructAttribute");
 
                 exceptions.Add(new FodyWeavingException(builder.ToString(), rouMethod.MethodDef));
             }
 
             if (!rouMethod.SkipRefStruct && !rouMethod.MethodContextOmits.Contains(Omit.Arguments) && rouMethod.MethodDef.Parameters.Any(x => (typeDef = x.ParameterType.Resolve()) != null && typeDef.CustomAttributes.Any(y => y.Is(Constants.TYPE_IsByRefLikeAttribute))))
             {
-                var builder = new StringBuilder("Cannot save a ref struct value as an object. Change the parameter type or set the MethodContextOmits property for the listed types to Omit.Arguments: [");
+                var builder = new StringBuilder("Cannot save a ref struct value as an object. Change the parameter type or set the apply SkipRefStructAttribute to the method/class/assembly: [");
                 foreach (var mo in rouMethod.Mos)
                 {
                     if ((rouMethod.MethodContextOmits & Omit.Arguments) == 0)
@@ -220,7 +220,7 @@ namespace Rougamo.Fody
                     }
                 }
                 builder.Length -= 2;
-                builder.Append("]. For more information: https://github.com/inversionhourglass/Rougamo/issues/61");
+                builder.Append("]. For more information: https://github.com/inversionhourglass/Rougamo/issues/61 , https://github.com/inversionhourglass/Rougamo/releases/tag/v5.0.0#SkipRefStructAttribute");
 
                 exceptions.Add(new FodyWeavingException(builder.ToString(), rouMethod.MethodDef));
             }
