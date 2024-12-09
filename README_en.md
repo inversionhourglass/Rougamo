@@ -1,7 +1,7 @@
 
 # Rougamo - 肉夹馍
 
-[中文](README.md) | English
+[中文](https://github.com/inversionhourglass/Rougamo/blob/master/README.md) | English
 
 ## What is Rougamo
 
