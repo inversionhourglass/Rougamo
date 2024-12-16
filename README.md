@@ -99,6 +99,7 @@ class Abc
 1. [类或程序集级别的Attribute的方式](https://github.com/inversionhourglass/Rougamo/wiki/%E5%BA%94%E7%94%A8%E6%96%B9%E5%BC%8F#%E7%B1%BB%E6%88%96%E7%A8%8B%E5%BA%8F%E9%9B%86%E7%BA%A7attribute%E5%BA%94%E7%94%A8)
 2. [低侵入性的实现空接口IRougamo的方式](https://github.com/inversionhourglass/Rougamo/wiki/%E5%BA%94%E7%94%A8%E6%96%B9%E5%BC%8F#%E5%AE%9E%E7%8E%B0%E7%A9%BA%E6%8E%A5%E5%8F%A3irougamo)
 3. [指定某Attribute为代理Attribute，寻找应用了代理Attribute方法的方式](https://github.com/inversionhourglass/Rougamo/wiki/%E5%BA%94%E7%94%A8%E6%96%B9%E5%BC%8F#attribute%E4%BB%A3%E7%90%86)
+4. [非侵入式的配置化织入方式](https://github.com/inversionhourglass/Rougamo/wiki/%E5%BA%94%E7%94%A8%E6%96%B9%E5%BC%8F#%E9%85%8D%E7%BD%AE%E5%8C%96)
 
 我们在进行批量应用的时候，比如将`TestAttribute`直接应用到一个类上，我们一般并不是希望这个类的所有方法都应用`TestAttribute`，而是希望选定那些满足特定特征的部分方法。肉夹馍在方法筛选上提供了两种方案：
 1. [粗粒度的方法特征匹配](https://github.com/inversionhourglass/Rougamo/wiki/%E6%96%B9%E6%B3%95%E5%8C%B9%E9%85%8D#%E7%B2%97%E7%B2%92%E5%BA%A6%E7%9A%84%E6%96%B9%E6%B3%95%E7%89%B9%E6%80%A7%E5%8C%B9%E9%85%8D)，可以指定匹配静态、实例、共有、私有、属性、构造方法等一个或多个粗粒度特征；
@@ -127,10 +128,11 @@ public class TestAttribute : AsyncMoAttribute
 ## 性能优化
 
 肉夹馍是方法级AOP组件，在对方法应用肉夹馍后，每次调用方法都会实例化肉夹馍的相关对象，增加GC的负担。虽然这些负担是轻微的，很多时候是可以忽略不计的，但肉夹馍关注其对性能的影响，所以从不同的方向提供了各种优化方式：
-1. [部分编织](https://github.com/inversionhourglass/Rougamo/wiki/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96#%E9%83%A8%E5%88%86%E7%BC%96%E7%BB%87)，如果你只是想在执行方法前记录一下调用日志，那么其他生命周期节点以及异常处理等功能实际并用不上，此时通过部分编织功能仅选择你需要功能进行编织，这样可以缩减实际编织的IL代码，同时减少运行时实际执行的指令数量；
-2. [结构体](https://github.com/inversionhourglass/Rougamo/wiki/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96#%E7%BB%93%E6%9E%84%E4%BD%93)，类与结构体的其中一个区别便是，类分配在堆中，而结构体在栈中，使用结构体可以使肉夹馍的部分类型分配到栈中，减少GC压力；
-3. [瘦身MethodContext](https://github.com/inversionhourglass/Rougamo/wiki/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96#%E7%98%A6%E8%BA%ABmethodcontext)，`MethodContext`中保存了当前方法的一些上下文信息，这些信息需要使用额外的对象进行保存，同时伴随着一些装箱拆箱操作，比如方法参数、返回值等，如果确定不需要这些信息，可以通过瘦身`MethodContext`达到一定的优化效果；
-4. [强制同步](https://github.com/inversionhourglass/Rougamo/wiki/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96#%E5%BC%BA%E5%88%B6%E5%90%8C%E6%AD%A5)，在[异步切面](https://github.com/inversionhourglass/Rougamo/wiki/%E5%BC%82%E6%AD%A5%E5%88%87%E9%9D%A2)中介绍了异步切面与同步切面的关系，异步切面虽然使用了`ValueTask`来优化同步执行，但终究还是存在额外的开销，在编写异步切面时，如果确定不需要异步操作，可以通过强制调用同步切面来避免异步切面的额外开销。
+1. **[部分编织](https://github.com/inversionhourglass/Rougamo/wiki/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96#%E9%83%A8%E5%88%86%E7%BC%96%E7%BB%87)**，如果你只是想在执行方法前记录一下调用日志，那么其他生命周期节点以及异常处理等功能实际并用不上，此时通过部分编织功能仅选择你需要功能进行编织，这样可以缩减实际编织的IL代码，同时减少运行时实际执行的指令数量；
+2. **[结构体](https://github.com/inversionhourglass/Rougamo/wiki/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96#%E7%BB%93%E6%9E%84%E4%BD%93)**，类与结构体的其中一个区别便是，类分配在堆中，而结构体在栈中，使用结构体可以使肉夹馍的部分类型分配到栈中，减少GC压力；
+3. **[瘦身MethodContext](https://github.com/inversionhourglass/Rougamo/wiki/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96#%E7%98%A6%E8%BA%ABmethodcontext)**，`MethodContext`中保存了当前方法的一些上下文信息，这些信息需要使用额外的对象进行保存，同时伴随着一些装箱拆箱操作，比如方法参数、返回值等，如果确定不需要这些信息，可以通过瘦身`MethodContext`达到一定的优化效果；
+4. **[强制同步](https://github.com/inversionhourglass/Rougamo/wiki/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96#%E5%BC%BA%E5%88%B6%E5%90%8C%E6%AD%A5)**，在[异步切面](https://github.com/inversionhourglass/Rougamo/wiki/%E5%BC%82%E6%AD%A5%E5%88%87%E9%9D%A2)中介绍了异步切面与同步切面的关系，异步切面虽然使用了`ValueTask`来优化同步执行，但终究还是存在额外的开销，在编写异步切面时，如果确定不需要异步操作，可以通过强制调用同步切面来避免异步切面的额外开销。
+5. **[自定义切面类型生命周期](https://github.com/inversionhourglass/Rougamo/wiki/%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96#%E8%87%AA%E5%AE%9A%E4%B9%89%E5%88%87%E9%9D%A2%E7%B1%BB%E5%9E%8B%E5%A3%B0%E6%98%8E%E5%91%A8%E6%9C%9F)**，结构体虽然可以避免创建引用类型，但结构体本身也存在很多限制，比如无法继承父类实现逻辑复用，无法继承 Attribute 导致无法在应用切面类型时指定参数（Attribute 可以在应用时指定构造方法参数和属性参数[Xyz(123, V = "abc")]）等。兼顾易用性和性能的方式便是自定义声明周期了。
 
 ## 了解更多
 
