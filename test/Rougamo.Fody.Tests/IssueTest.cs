@@ -243,5 +243,17 @@ namespace Rougamo.Fody.Tests
 
             instance.M();
         }
+
+        [Fact]
+        public void Issue97Test()
+        {
+            var instance = Assembly.GetInstance(nameof(Issue97));
+
+            var orders = new List<double>();
+            instance.M(orders);
+
+            Assert.Equal(2, orders.Count);
+            Assert.Equal([1.0, 2.0], orders);
+        }
     }
 }
