@@ -146,7 +146,7 @@ namespace Rougamo.Fody
             AccessFlags? flags = null;
             if (implementedInterface)
             {
-                flags = ExtractFromIl(MoTypeRef, Constants.PROP_Flags, Constants.TYPE_AccessFlags, ParseFlags);
+                flags = ExtractFromIl(MoTypeRef, Constants.PROP_Flags, Constants.PROP_IFlexibleModifierPointcut_Flags, Constants.TYPE_AccessFlags, ParseFlags);
             }
             return flags ?? AccessFlags.InstancePublic;
 
@@ -177,7 +177,7 @@ namespace Rougamo.Fody
                     return (string)arg.Value;
                 }
             }
-            return implementedInterface ? ExtractFromIl(MoTypeRef, Constants.PROP_Pattern, Constants.TYPE_String, ParsePattern) : null;
+            return implementedInterface ? ExtractFromIl(MoTypeRef, Constants.PROP_Pattern, Constants.PROP_IFlexiblePatternPointcut_Pattern, Constants.TYPE_String, ParsePattern) : null;
 
             static string? ParsePattern(Instruction instruction)
             {
@@ -209,7 +209,7 @@ namespace Rougamo.Fody
             }
             if (implementedInterface)
             {
-                var order = ExtractFromIl(MoTypeRef, Constants.PROP_Order, Constants.TYPE_Double, ParseOrder);
+                var order = ExtractFromIl(MoTypeRef, Constants.PROP_Order, Constants.PROP_IFlexibleOrderable_Order, Constants.TYPE_Double, ParseOrder);
                 if (order.HasValue) return order.Value;
             }
             return 0;
@@ -264,18 +264,18 @@ namespace Rougamo.Fody
 
         #region Extract-Property-Value
 
-        private static T? ExtractFromIl<T>(TypeReference typeRef, string propertyName, string propertyTypeFullName, Func<Instruction, T?> tryResolve) where T : struct
+        private static T? ExtractFromIl<T>(TypeReference typeRef, string propertyName, string explicitPropertyName, string propertyTypeFullName, Func<Instruction, T?> tryResolve) where T : struct
         {
-            return ExtractFromProp(typeRef, propertyName, tryResolve) ??
-                ExtractFromCtor(typeRef, propertyTypeFullName, propertyName, tryResolve);
+            return ExtractFromProp(typeRef, propertyName, explicitPropertyName, tryResolve) ??
+                ExtractFromCtor(typeRef, propertyTypeFullName, propertyName, explicitPropertyName, tryResolve);
         }
 
-        private static T? ExtractFromProp<T>(TypeReference typeRef, string propName, Func<Instruction, T?> tryResolve) where T : struct
+        private static T? ExtractFromProp<T>(TypeReference typeRef, string propName, string explicitPropName, Func<Instruction, T?> tryResolve) where T : struct
         {
             var typeDef = typeRef.Resolve();
             while (typeDef != null)
             {
-                var property = typeDef.Properties.FirstOrDefault(prop => prop.Name == propName);
+                var property = typeDef.Properties.FirstOrDefault(prop => prop.Name == propName || prop.Name == explicitPropName);
                 if (property != null)
                 {
                     var instructions = property.GetMethod.Body.Instructions;
@@ -293,9 +293,10 @@ namespace Rougamo.Fody
             return null;
         }
 
-        private static T? ExtractFromCtor<T>(TypeReference typeRef, string propTypeFullName, string propertyName, Func<Instruction, T?> tryResolve) where T : struct
+        private static T? ExtractFromCtor<T>(TypeReference typeRef, string propTypeFullName, string propertyName, string explicitPropertyName, Func<Instruction, T?> tryResolve) where T : struct
         {
             var propFieldName = string.Format(Constants.FIELD_Format, propertyName);
+            var explicitPropFieldName = string.Format(Constants.FIELD_Format, explicitPropertyName);
             var setterName = Constants.Setter(propertyName);
             var typeDef = typeRef.Resolve();
             while (typeDef != null)
@@ -305,7 +306,7 @@ namespace Rougamo.Fody
                 {
                     foreach (var instruction in nonCtor.Body.Instructions)
                     {
-                        if (instruction.IsStfld(propFieldName, propTypeFullName) || instruction.IsCallAny(setterName))
+                        if (instruction.IsStfld(propFieldName, propTypeFullName) || instruction.IsStfld(explicitPropFieldName, propTypeFullName) || instruction.IsCallAny(setterName))
                         {
                             return tryResolve(instruction.Previous);
                         }
@@ -316,18 +317,18 @@ namespace Rougamo.Fody
             return null;
         }
 
-        private static T? ExtractFromIl<T>(TypeReference typeRef, string propertyName, string propertyTypeFullName, Func<Instruction, T?> tryResolve) where T : class
+        private static T? ExtractFromIl<T>(TypeReference typeRef, string propertyName, string explicitPropertyName, string propertyTypeFullName, Func<Instruction, T?> tryResolve) where T : class
         {
-            return ExtractFromProp(typeRef, propertyName, tryResolve) ??
-                ExtractFromCtor(typeRef, propertyTypeFullName, propertyName, tryResolve);
+            return ExtractFromProp(typeRef, propertyName, explicitPropertyName, tryResolve) ??
+                ExtractFromCtor(typeRef, propertyTypeFullName, propertyName, explicitPropertyName, tryResolve);
         }
 
-        private static T? ExtractFromProp<T>(TypeReference typeRef, string propName, Func<Instruction, T?> tryResolve) where T : class
+        private static T? ExtractFromProp<T>(TypeReference typeRef, string propName, string explicitPropName, Func<Instruction, T?> tryResolve) where T : class
         {
             var typeDef = typeRef.Resolve();
             while (typeDef != null)
             {
-                var property = typeDef.Properties.FirstOrDefault(prop => prop.Name == propName);
+                var property = typeDef.Properties.FirstOrDefault(prop => prop.Name == propName || prop.Name == explicitPropName);
                 if (property != null)
                 {
                     var instructions = property.GetMethod.Body.Instructions;
@@ -345,9 +346,10 @@ namespace Rougamo.Fody
             return null;
         }
 
-        private static T? ExtractFromCtor<T>(TypeReference typeRef, string propTypeFullName, string propertyName, Func<Instruction, T?> tryResolve) where T : class
+        private static T? ExtractFromCtor<T>(TypeReference typeRef, string propTypeFullName, string propertyName, string explicitPropertyName, Func<Instruction, T?> tryResolve) where T : class
         {
             var propFieldName = string.Format(Constants.FIELD_Format, propertyName);
+            var explicitPropFieldName = string.Format(Constants.FIELD_Format, explicitPropertyName);
             var setterName = Constants.Setter(propertyName);
             var typeDef = typeRef.Resolve();
             while (typeDef != null)
@@ -357,7 +359,7 @@ namespace Rougamo.Fody
                 {
                     foreach (var instruction in nonCtor.Body.Instructions)
                     {
-                        if (instruction.IsStfld(propFieldName, propTypeFullName) || instruction.IsCallAny(setterName))
+                        if (instruction.IsStfld(propFieldName, propTypeFullName) || instruction.IsStfld(explicitPropFieldName, propTypeFullName) || instruction.IsCallAny(setterName))
                         {
                             return tryResolve(instruction.Previous);
                         }

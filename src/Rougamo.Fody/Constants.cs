@@ -46,6 +46,9 @@
         public const string PROP_Method = "Method";
         public const string PROP_Mos = "Mos";
         public const string PROP_MethodContext = "MethodContext";
+        public const string PROP_IFlexibleOrderable_Order = "Rougamo.Flexibility.IFlexibleOrderable.Order";
+        public const string PROP_IFlexibleModifierPointcut_Flags = "Rougamo.Flexibility.IFlexibleModifierPointcut.Flags";
+        public const string PROP_IFlexiblePatternPointcut_Pattern = "Rougamo.Flexibility.IFlexiblePatternPointcut.Pattern";
 
         public const string FIELD_Repulsions = "<Repulsions>k__BackingField";
         public const string FIELD_RougamoMo_Prefix = ">_<rougamo_mo_";
