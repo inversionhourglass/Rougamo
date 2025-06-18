@@ -255,5 +255,12 @@ namespace Rougamo.Fody.Tests
             Assert.Equal(2, orders.Count);
             Assert.Equal([1.0, 2.0], orders);
         }
+
+        [Fact]
+        public void Issue106Test()
+        {
+            var instance = Assembly.GetInstance(nameof(Issue106));
+            instance.Test();
+        }
     }
 }
