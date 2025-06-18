@@ -44,6 +44,7 @@ namespace Rougamo.Fody
 
                 stateMachineTypeDef = AsyncBuildStateMachine(rouMethod.MethodDef);
                 AsyncBuildSetupMethod(rouMethod.MethodDef, stateMachineTypeDef);
+                DebuggerStepThrough(rouMethod.MethodDef);
                 buildSetStateMachine = true;
             }
 
