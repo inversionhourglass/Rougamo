@@ -8,7 +8,7 @@
 	            net6.0: StackTraceHiddenAttribute默认忽略调用堆栈的最低版本
 	-->
     <TargetFrameworks>netstandard2.0;netstandard2.1;netcoreapp2.1;netcoreapp3.0;net6.0</TargetFrameworks>
-    <VersionPrefix>5.0.0</VersionPrefix>
+    <VersionPrefix>5.0.1</VersionPrefix>
     <DefineConstants>TRACE;ROUGAMO</DefineConstants>
     <Authors>ihourglass</Authors>
     <Description>An AOP component that can be applied to any method, whether it is synchronous or asynchronous, instance or static, constructor or property. You can also apply it to types and assemblies, and use an AspectJ-like pattern to match the methods you want.</Description>
