@@ -66,6 +66,11 @@ jobs:
             8.0.x
             9.0.x
 
+      - name: Setup Mono
+        uses: mono-project/setup-mono@v1
+        with:
+          mono-version: '6.12.0'
+
       - name: Install OpenSSL 1.1
         run: |
           wget http://old-releases.ubuntu.com/ubuntu/pool/main/o/openssl/libssl1.1_1.1.1f-1ubuntu4.4_amd64.deb
@@ -89,6 +94,9 @@ jobs:
       - name: Test in DEBUG with net9.0
         run: dotnet test --configuration Debug --no-build --framework net9.0 test/Rougamo.Fody.Tests/Rougamo.Fody.Tests.csproj
         
+      - name: Test Fody in DEBUG with Mono (net48)
+        run: mono ~/.nuget/packages/xunit.runner.console/2.4.2/tools/net472/xunit.console.exe test/Rougamo.Fody.Tests/bin/Debug/net48/Rougamo.Fody.Tests.dll
+        
       - name: Test Analyzers in DEBUG with net8.0
         run: dotnet test --configuration Debug --no-build --framework net8.0 test/Rougamo.Analyzers.Tests/Rougamo.Analyzers.Tests.csproj
         
@@ -106,6 +114,9 @@ jobs:
         
       - name: Test in RELEASE with net9.0
         run: dotnet test --configuration Release --no-build --framework net9.0 test/Rougamo.Fody.Tests/Rougamo.Fody.Tests.csproj
+        
+      - name: Test Fody in RELEASE with Mono (net48)
+        run: mono ~/.nuget/packages/xunit.runner.console/2.4.2/tools/net472/xunit.console.exe test/Rougamo.Fody.Tests/bin/Release/net48/Rougamo.Fody.Tests.dll
         
       - name: Test in RELEASE with net8.0
         run: dotnet test --configuration Release --no-build --framework net8.0 test/Rougamo.Analyzers.Tests/Rougamo.Analyzers.Tests.csproj
