@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFrameworks>net461;net48;netcoreapp3.1;net6.0;net7.0;net8.0;net9.0</TargetFrameworks>
@@ -40,6 +40,18 @@
 
   <ItemGroup Condition="'$(TargetFramework)'=='net6.0'">
     <ProjectReference Include="..\TestAssemblies\WebApis\WebApis.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)'=='net48'">
+    <ProjectReference Include="..\TestAssemblies\MonoTest\MonoTest.csproj" />
+  </ItemGroup>
+
+  <Target Name="GenerateMono48MirrorTests" BeforeTargets="BeforeCompile" Condition="'$(TargetFramework)'=='net48' and '$(OS)'=='Windows_NT' and '$(SkipMono48MirrorGeneration)'!='true'">
+    <Exec Command="powershell -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\Mono48\Generate-Mono48Mirror.ps1&quot; -ProjectRoot &quot;$(MSBuildProjectDirectory)&quot; -Configuration &quot;$(Configuration)&quot;" />
+  </Target>
+
+  <ItemGroup Condition="'$(TargetFramework)'!='net48'">
+    <Compile Remove="MonoTests.cs" />
   </ItemGroup>
 
 </Project>
