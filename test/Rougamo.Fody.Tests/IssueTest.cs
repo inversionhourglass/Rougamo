@@ -1,4 +1,4 @@
-﻿using Issues;
+using Issues;
 using Issues.Attributes;
 using System;
 using System.Collections.Generic;
@@ -268,6 +268,12 @@ namespace Rougamo.Fody.Tests
         {
             var instance = Assembly.GetInstance(nameof(Issue107));
             instance.Test();
+        }
+        [Fact]
+        public void Issue108Test()
+        {
+            var instance = Assembly.GetInstance("Issue108`1", false, t => t.MakeGenericType(typeof(string)));
+            instance.CatchAndGetStackTrace(108, "mono-stacktrace");
         }
     }
 }
