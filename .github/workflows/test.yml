@@ -67,9 +67,9 @@ jobs:
             9.0.x
 
       - name: Setup Mono
-        uses: mono-project/setup-mono@v1
-        with:
-          mono-version: '6.12.0'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y mono-devel
 
       - name: Install OpenSSL 1.1
         run: |
