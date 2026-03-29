@@ -22,11 +22,6 @@ $items = @(
     @{ Namespace = "Rougamo.Fody.Tests.Mono48.Signatures"; Class = "MethodMatchTests"; TargetType = "Rougamo.Fody.Tests.Signatures.MethodMatchTests"; SourceFile = "Signatures/ExecutionMatchTests.cs" }
 )
 
-$excludedFacts = @(
-    "Rougamo.Fody.Tests.BasicTest.GenericMoTest",
-    "Rougamo.Fody.Tests.IssueTest.Issue63Test"
-)
-
 function Test-PreprocessorCondition {
     param(
         [string]$Expression,
@@ -123,9 +118,6 @@ foreach ($ns in $grouped.Keys) {
         [void]$sb.AppendLine("    {")
         foreach ($method in $entry.Methods) {
             $factFullName = "$($entry.TargetType).$method"
-            if ($excludedFacts -contains $factFullName) {
-                continue
-            }
             [void]$sb.AppendLine("        [Fact] public void $method() => MonoRunnerBridge.RunMonoFact(""$factFullName"");")
         }
         [void]$sb.AppendLine("    }")

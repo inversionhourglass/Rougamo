@@ -27,6 +27,7 @@ namespace Rougamo.Fody.Tests.Mono48
         [Fact] public void OrderTest() => MonoRunnerBridge.RunMonoFact("Rougamo.Fody.Tests.BasicTest.OrderTest");
         [Fact] public void FreshArgsTest() => MonoRunnerBridge.RunMonoFact("Rougamo.Fody.Tests.BasicTest.FreshArgsTest");
         [Fact] public void RougamoTest() => MonoRunnerBridge.RunMonoFact("Rougamo.Fody.Tests.BasicTest.RougamoTest");
+        [Fact] public void GenericMoTest() => MonoRunnerBridge.RunMonoFact("Rougamo.Fody.Tests.BasicTest.GenericMoTest");
         [Fact] public void OmitTest() => MonoRunnerBridge.RunMonoFact("Rougamo.Fody.Tests.BasicTest.OmitTest");
         [Fact] public void IndirectDependencyTest() => MonoRunnerBridge.RunMonoFact("Rougamo.Fody.Tests.BasicTest.IndirectDependencyTest");
         [Fact] public void CtorTest() => MonoRunnerBridge.RunMonoFact("Rougamo.Fody.Tests.BasicTest.CtorTest");
@@ -47,6 +48,7 @@ namespace Rougamo.Fody.Tests.Mono48
         [Fact] public void Issue51Test() => MonoRunnerBridge.RunMonoFact("Rougamo.Fody.Tests.IssueTest.Issue51Test");
         [Fact] public void Issue60Test() => MonoRunnerBridge.RunMonoFact("Rougamo.Fody.Tests.IssueTest.Issue60Test");
         [Fact] public void Issue61Test() => MonoRunnerBridge.RunMonoFact("Rougamo.Fody.Tests.IssueTest.Issue61Test");
+        [Fact] public void Issue63Test() => MonoRunnerBridge.RunMonoFact("Rougamo.Fody.Tests.IssueTest.Issue63Test");
         [Fact] public void Issue66Test() => MonoRunnerBridge.RunMonoFact("Rougamo.Fody.Tests.IssueTest.Issue66Test");
         [Fact] public void Issue72Test() => MonoRunnerBridge.RunMonoFact("Rougamo.Fody.Tests.IssueTest.Issue72Test");
         [Fact] public void Issue73Test() => MonoRunnerBridge.RunMonoFact("Rougamo.Fody.Tests.IssueTest.Issue73Test");
