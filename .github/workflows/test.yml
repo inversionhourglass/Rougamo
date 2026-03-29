@@ -52,13 +52,13 @@ jobs:
         run: dotnet build --configuration Debug --no-restore ${{ env.SOLUTION }} -p:MonoCompat=true
 
       - name: Test in DEBUG(Mono)
-        run: dotnet test --configuration Debug --no-build ${{ env.SOLUTION }} -f net48 --filter "FullyQualifiedName~Rougamo.Fody.Tests.Mono48." -p:MonoCompat=true
+        run: dotnet test --configuration Debug --no-build ${{ env.SOLUTION }} -f net48 -p:MonoCompat=true
 
       - name: Build Solution in Release(Mono)
         run: dotnet build --configuration Release --no-restore ${{ env.SOLUTION }} -p:MonoCompat=true
 
       - name: Test in Release(Mono)
-        run: dotnet test --configuration Release --no-build ${{ env.SOLUTION }} -f net48 --filter "FullyQualifiedName~Rougamo.Fody.Tests.Mono48." -p:MonoCompat=true
+        run: dotnet test --configuration Release --no-build ${{ env.SOLUTION }} -f net48 -p:MonoCompat=true
         
         
         
