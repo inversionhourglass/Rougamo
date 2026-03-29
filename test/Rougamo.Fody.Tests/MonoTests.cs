@@ -1,4 +1,4 @@
-#if NET48
+#if NET48 && MONO_COMPAT
 using System.Diagnostics;
 using System;
 using System.IO;
@@ -41,10 +41,7 @@ namespace Rougamo.Fody.Tests
             }
 
             var monoExe = ResolveMonoExePath();
-            if (monoExe == null)
-            {
-                return;
-            }
+            Assert.True(monoExe != null, "Mono executable not found while MonoCompat=true.");
 
             if (WhiteListedFacts.Contains(factFullName))
             {
@@ -63,7 +60,7 @@ namespace Rougamo.Fody.Tests
             EnsureRunnerReady(root, runnerProject, runnerExe, monoOutDir, testBinDir, sandboxDir);
 
             var run = Run(
-                monoExe,
+                monoExe!,
                 sandboxDir,
                 new[] { runnerExe, testDll, factFullName },
                 ("MONO_PATH", monoPath));
@@ -73,6 +70,11 @@ namespace Rougamo.Fody.Tests
 
         private static string ResolveMonoExePath()
         {
+            if (CanRunCommand("mono"))
+            {
+                return "mono";
+            }
+
             var path = Environment.GetEnvironmentVariable("PATH");
             if (!string.IsNullOrWhiteSpace(path))
             {
@@ -109,6 +111,29 @@ namespace Rougamo.Fody.Tests
             }
 
             return null;
+        }
+
+        private static bool CanRunCommand(string command)
+        {
+            try
+            {
+                using var process = Process.Start(new ProcessStartInfo
+                {
+                    FileName = command,
+                    Arguments = "--version",
+                    RedirectStandardOutput = true,
+                    RedirectStandardError = true,
+                    UseShellExecute = false,
+                    CreateNoWindow = true
+                });
+                if (process == null) return false;
+                process.WaitForExit(3000);
+                return process.HasExited;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         private static void EnsureRunnerReady(string root, string runnerProject, string runnerExe, string monoOutDir, string testBinDir, string sandboxDir)

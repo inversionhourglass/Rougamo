@@ -96,7 +96,10 @@ jobs:
         run: dotnet restore ${{ env.SOLUTION }}
         
       - name: Build Solution in DEBUG
-        run: dotnet build --configuration Debug --no-restore ${{ env.SOLUTION }}
+        run: dotnet build --configuration Debug --no-restore ${{ env.SOLUTION }} -p:MonoCompat=false
+
+      - name: Build Solution in DEBUG(Mono)
+        run: dotnet build --configuration Debug --no-restore ${{ env.SOLUTION }} -p:MonoCompat=true
         
       - name: Test in DEBUG with netcoreapp3.1
         run: dotnet test --configuration Debug --no-build --framework netcoreapp3.1 test/Rougamo.Fody.Tests/Rougamo.Fody.Tests.csproj
@@ -114,7 +117,10 @@ jobs:
         run: dotnet test --configuration Debug --no-build --framework net8.0 test/Rougamo.Analyzers.Tests/Rougamo.Analyzers.Tests.csproj
         
       - name: Build Solution in RELEASE
-        run: dotnet build --configuration Release --no-restore ${{ env.SOLUTION }}
+        run: dotnet build --configuration Release --no-restore ${{ env.SOLUTION }} -p:MonoCompat=false
+
+      - name: Build Solution in RELEASE(Mono)
+        run: dotnet build --configuration Release --no-restore ${{ env.SOLUTION }} -p:MonoCompat=true
         
       - name: Test in RELEASE with netcoreapp3.1
         run: dotnet test --configuration Release --no-build --framework netcoreapp3.1 test/Rougamo.Fody.Tests/Rougamo.Fody.Tests.csproj
@@ -127,9 +133,6 @@ jobs:
         
       - name: Test in RELEASE with net9.0
         run: dotnet test --configuration Release --no-build --framework net9.0 test/Rougamo.Fody.Tests/Rougamo.Fody.Tests.csproj
-        
-      - name: Test Fody in RELEASE with Mono (net48)
-        run: mono ~/.nuget/packages/xunit.runner.console/2.4.2/tools/net472/xunit.console.exe test/Rougamo.Fody.Tests/bin/Release/net48/Rougamo.Fody.Tests.dll
         
       - name: Test in RELEASE with net8.0
         run: dotnet test --configuration Release --no-build --framework net8.0 test/Rougamo.Analyzers.Tests/Rougamo.Analyzers.Tests.csproj
