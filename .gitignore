@@ -329,5 +329,3 @@ ASALocalRun/
 # MFractors (Xamarin productivity tool) working folder 
 .mfractor/
 
-# Generated mono mirror tests
-test/Rougamo.Fody.Tests/Mono48/Mono48MirrorTests.g.cs
