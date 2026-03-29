@@ -68,6 +68,10 @@
   </ItemGroup>
 
   <ItemGroup Condition="'$(TargetFramework)'=='net48' and '$(MonoCompat)'!='true'">
+    <Compile Remove="MonoTests.cs" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)'=='net48' and '$(MonoCompat)'!='true'">
     <Compile Remove="Mono48\Mono48MirrorTests.g.cs" />
   </ItemGroup>
 
