@@ -15,6 +15,7 @@ namespace Rougamo.Context
         private Type? _taskReturnType;
         private IDictionary? _datas;
         private MethodBase _method = null!;
+        private bool _methodResolved;
 
         /// <summary>
         /// User-defined state data.
@@ -44,8 +45,20 @@ namespace Rougamo.Context
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
         public MethodBase Method
         {
-            get => _method;
-            set => _method = ResolveMethod(value);
+            get
+            {
+                if (!_methodResolved)
+                {
+                    _method = ResolveMethod(_method);
+                    _methodResolved = true;
+                }
+                return _method;
+            }
+            set
+            {
+                _method = value;
+                _methodResolved = false;
+            }
         }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 
