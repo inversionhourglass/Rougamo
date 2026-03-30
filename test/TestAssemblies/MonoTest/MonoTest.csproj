@@ -1,0 +1,14 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net48</TargetFramework>
+    <IsPackable>false</IsPackable>
+    <DisableFody>true</DisableFody>
+    <LangVersion>latest</LangVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\..\src\Rougamo\Rougamo.csproj" />
+  </ItemGroup>
+
+</Project>

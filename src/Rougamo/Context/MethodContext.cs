@@ -1,6 +1,7 @@
-﻿using System;
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Threading.Tasks;
 
@@ -13,6 +14,8 @@ namespace Rougamo.Context
     {
         private Type? _taskReturnType;
         private IDictionary? _datas;
+        private MethodBase _method = null!;
+        private bool _methodResolved;
 
         /// <summary>
         /// User-defined state data.
@@ -40,7 +43,23 @@ namespace Rougamo.Context
         /// Current method information.
         /// </summary>
 #pragma warning disable CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
-        public MethodBase Method { get; set; }
+        public MethodBase Method
+        {
+            get
+            {
+                if (!_methodResolved)
+                {
+                    _method = ResolveMethod(_method);
+                    _methodResolved = true;
+                }
+                return _method;
+            }
+            set
+            {
+                _method = value;
+                _methodResolved = false;
+            }
+        }
 #pragma warning restore CS8618 // Non-nullable field must contain a non-null value when exiting constructor. Consider adding the 'required' modifier or declaring as nullable.
 
         /// <summary>
@@ -181,6 +200,80 @@ namespace Rougamo.Context
             ExceptionHandler = null;
 
             return true;
+        }
+
+        private static MethodBase ResolveMethod(MethodBase method)
+        {
+            if (method == null) return null!;
+
+            method = ResolveStateMachineMethod(method);
+            method = ResolveRougamoProxyMethod(method);
+            return method;
+        }
+
+        private static MethodBase ResolveStateMachineMethod(MethodBase method)
+        {
+            if (method.Name != "MoveNext") return method;
+
+            var stateMachineType = method.DeclaringType;
+            var declaringType = stateMachineType?.DeclaringType;
+            if (stateMachineType == null || declaringType == null) return method;
+
+            const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
+            foreach (var candidate in declaringType.GetMethods(flags))
+            {
+                var attributes = candidate.GetCustomAttributes(inherit: false);
+                foreach (var attribute in attributes)
+                {
+                    var attrType = attribute.GetType();
+                    var fullName = attrType.FullName;
+                    if (fullName != "System.Runtime.CompilerServices.AsyncStateMachineAttribute" &&
+                        fullName != "System.Runtime.CompilerServices.IteratorStateMachineAttribute" &&
+                        fullName != "System.Runtime.CompilerServices.AsyncIteratorStateMachineAttribute")
+                    {
+                        continue;
+                    }
+
+                    var stateMachineTypeProperty = attrType.GetProperty("StateMachineType", BindingFlags.Public | BindingFlags.Instance);
+                    if (stateMachineTypeProperty?.GetValue(attribute) is Type candidateStateMachineType &&
+                        candidateStateMachineType == stateMachineType)
+                    {
+                        return candidate;
+                    }
+                }
+            }
+
+            return method;
+        }
+
+        private static MethodBase ResolveRougamoProxyMethod(MethodBase method)
+        {
+            const string prefix = "$Rougamo_";
+            if (!method.Name.StartsWith(prefix, StringComparison.Ordinal)) return method;
+
+            var declaringType = method.DeclaringType;
+            if (declaringType == null) return method;
+
+            var expectedName = method.Name.Substring(prefix.Length);
+            var methodGenericCount = method.IsGenericMethod ? method.GetGenericArguments().Length : 0;
+            var parameterCount = method.GetParameters().Length;
+
+            const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
+            var candidates = declaringType.GetMethods(flags)
+                .Where(m => m.Name == expectedName)
+                .Where(m => m.GetParameters().Length == parameterCount)
+                .ToArray();
+
+            foreach (var candidate in candidates)
+            {
+                var candidateGenericCount = candidate.IsGenericMethod ? candidate.GetGenericArguments().Length : 0;
+                if (candidateGenericCount == methodGenericCount)
+                {
+                    return candidate;
+                }
+            }
+
+            return candidates.FirstOrDefault() ?? method;
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using Fody;
+using Fody;
 using Mono.Cecil;
 using Mono.Cecil.Cil;
 using Mono.Cecil.Rocks;
@@ -270,6 +270,11 @@ namespace Rougamo.Fody
                 else if (attribute.AttributeType.IsGeneric(Constants.TYPE_RougamoAttribute, 1, out var genericTypeRefs))
                 {
                     var moTypeRef = genericTypeRefs![0];
+                    generics.TryAdd(moTypeRef.FullName, moTypeRef);
+                }
+                else if (attrType.Is(Constants.TYPE_RougamoAttribute))
+                {
+                    var moTypeRef = (TypeReference)attribute.ConstructorArguments[0].Value;
                     generics.TryAdd(moTypeRef.FullName, moTypeRef);
                 }
                 else if (attrType.Is(Constants.TYPE_MoProxyAttribute))

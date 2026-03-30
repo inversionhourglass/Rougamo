@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using Xunit;
 using PatternUsage;
@@ -967,7 +967,7 @@ namespace Rougamo.Fody.Tests
             Assert.DoesNotContain(nameof(AnyTypeGenericNoneMethodGenericAttribute), executedMos);
             executedMos.Clear();
             clsAB.Call("ProtectedStaticDoubleGeneric", executedMos, typeof(Guid), typeof(decimal));
-            Assert.DoesNotContain(nameof(AnyTypeGenericNoneMethodGenericAttribute), executedMos);
+            Assert.DoesNotContain(nameof(AnyTypeGenericNoneMethodGenericAttribute), executedMos.ToArray());
         }
 
         [Fact]

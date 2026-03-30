@@ -8,6 +8,10 @@
     <InvariantGlobalization>true</InvariantGlobalization>
   </PropertyGroup>
 
+  <PropertyGroup Condition="'$(TargetFramework)'=='net48' and '$(MonoCompat)'=='true'">
+    <DefineConstants>$(DefineConstants);MONO_COMPAT</DefineConstants>
+  </PropertyGroup>
+
   <ItemGroup>
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="6.0.0" />
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
@@ -44,6 +48,31 @@
 
   <ItemGroup Condition="'$(TargetFramework)'=='net6.0'">
     <ProjectReference Include="..\TestAssemblies\WebApis\WebApis.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)'=='net48'">
+    <ProjectReference Include="..\TestAssemblies\MonoTest\MonoTest.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <Mono48MirrorGeneratorShell Condition="'$(OS)'=='Windows_NT'">powershell</Mono48MirrorGeneratorShell>
+    <Mono48MirrorGeneratorShell Condition="'$(OS)'!='Windows_NT'">pwsh</Mono48MirrorGeneratorShell>
+  </PropertyGroup>
+
+  <Target Name="GenerateMono48MirrorTests" BeforeTargets="BeforeCompile" Condition="'$(TargetFramework)'=='net48' and '$(MonoCompat)'=='true' and '$(SkipMono48MirrorGeneration)'!='true'">
+    <Exec Command="$(Mono48MirrorGeneratorShell) -NoProfile -ExecutionPolicy Bypass -File &quot;$(MSBuildProjectDirectory)\Mono48\Generate-Mono48Mirror.ps1&quot; -ProjectRoot &quot;$(MSBuildProjectDirectory)&quot; -Configuration &quot;$(Configuration)&quot;" />
+  </Target>
+
+  <ItemGroup Condition="'$(TargetFramework)'!='net48'">
+    <Compile Remove="MonoTests.cs" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)'=='net48' and '$(MonoCompat)'!='true'">
+    <Compile Remove="MonoTests.cs" />
+  </ItemGroup>
+
+  <ItemGroup Condition="'$(TargetFramework)'=='net48' and '$(MonoCompat)'!='true'">
+    <Compile Remove="Mono48\Mono48MirrorTests.g.cs" />
   </ItemGroup>
 
 </Project>

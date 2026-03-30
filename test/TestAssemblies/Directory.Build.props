@@ -1,0 +1,5 @@
+<Project>
+  <PropertyGroup Condition="'$(TargetFramework)'=='net48' and '$(MonoCompat)'=='true'">
+    <DefineConstants>$(DefineConstants);MONO</DefineConstants>
+  </PropertyGroup>
+</Project>

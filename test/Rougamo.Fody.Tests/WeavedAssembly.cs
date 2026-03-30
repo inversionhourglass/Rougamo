@@ -1,5 +1,6 @@
-﻿using Fody;
+using Fody;
 using System;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Xml.Linq;
@@ -24,6 +25,13 @@ namespace Rougamo.Fody.Tests
 
         private void WeaveAssembly(string assemblyPath, string? config)
         {
+            // Ensure test assembly references bind to the original assembly first.
+            var fullAssemblyPath = Path.GetFullPath(assemblyPath);
+            if (File.Exists(fullAssemblyPath))
+            {
+                Assembly.LoadFrom(fullAssemblyPath);
+            }
+
             var weaver = new ModuleWeaver(true);
             if (!string.IsNullOrEmpty(config))
             {
