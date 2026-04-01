@@ -687,7 +687,7 @@ namespace Rougamo.Fody.Tests
             await (Task)clsAB.Call("PublicSingleGenericAsync", listArg, typeof(int));
             Assert.Contains(nameof(SingleMethodGenericAttribute), listArg);
             listArg.Clear();
-            clsAB.Call("ProtectedStaticDoubleGeneric", listArg, typeof(DateTime), typeof(Guid));
+            await (ValueTask)clsAB.Call("ProtectedStaticDoubleGeneric", listArg, typeof(DateTime), typeof(Guid));
             Assert.DoesNotContain(nameof(SingleMethodGenericAttribute), listArg);
 
             listReturn = xClsA.Call("get_PublicProp", null);
@@ -710,7 +710,7 @@ namespace Rougamo.Fody.Tests
             await (Task)xClsA.Call("PublicSingleGenericAsync", listArg, typeof(int));
             Assert.Contains(nameof(SingleMethodGenericAttribute), listArg);
             listArg.Clear();
-            xClsA.Call("ProtectedStaticDoubleGeneric", listArg, typeof(DateTime), typeof(Guid));
+            await (ValueTask)xClsA.Call("ProtectedStaticDoubleGeneric", listArg, typeof(DateTime), typeof(Guid));
             Assert.DoesNotContain(nameof(SingleMethodGenericAttribute), listArg);
         }
 
@@ -743,7 +743,7 @@ namespace Rougamo.Fody.Tests
             await (Task)clsAB.Call("PublicSingleGenericAsync", listArg, typeof(int));
             Assert.DoesNotContain(nameof(DoubleMethodGenericAttribute), listArg);
             listArg.Clear();
-            clsAB.Call("ProtectedStaticDoubleGeneric", listArg, typeof(DateTime), typeof(Guid));
+            await (ValueTask)clsAB.Call("ProtectedStaticDoubleGeneric", listArg, typeof(DateTime), typeof(Guid));
             Assert.Contains(nameof(DoubleMethodGenericAttribute), listArg);
 
             listReturn = xClsA.Call("get_PublicProp", null);
@@ -766,7 +766,7 @@ namespace Rougamo.Fody.Tests
             await (Task)xClsA.Call("PublicSingleGenericAsync", listArg, typeof(int));
             Assert.DoesNotContain(nameof(DoubleMethodGenericAttribute), listArg);
             listArg.Clear();
-            xClsA.Call("ProtectedStaticDoubleGeneric", listArg, typeof(DateTime), typeof(Guid));
+            await (ValueTask)xClsA.Call("ProtectedStaticDoubleGeneric", listArg, typeof(DateTime), typeof(Guid));
             Assert.Contains(nameof(DoubleMethodGenericAttribute), listArg);
         }
 
@@ -816,7 +816,7 @@ namespace Rougamo.Fody.Tests
             await (Task)clsAB.Call("PublicSingleGenericAsync", executedMos, typeof(string));
             Assert.DoesNotContain(nameof(SingleTypeGenericAttribute), executedMos);
             executedMos.Clear();
-            clsAB.Call("ProtectedStaticDoubleGeneric", executedMos, typeof(Guid), typeof(decimal));
+            await (ValueTask)clsAB.Call("ProtectedStaticDoubleGeneric", executedMos, typeof(Guid), typeof(decimal));
             Assert.DoesNotContain(nameof(SingleTypeGenericAttribute), executedMos);
         }
 
@@ -866,7 +866,7 @@ namespace Rougamo.Fody.Tests
             await (Task)clsAB.Call("PublicSingleGenericAsync", executedMos, typeof(string));
             Assert.DoesNotContain(nameof(DoubleTypeGenericAttribute), executedMos);
             executedMos.Clear();
-            clsAB.Call("ProtectedStaticDoubleGeneric", executedMos, typeof(Guid), typeof(decimal));
+            await (ValueTask)clsAB.Call("ProtectedStaticDoubleGeneric", executedMos, typeof(Guid), typeof(decimal));
             Assert.DoesNotContain(nameof(DoubleTypeGenericAttribute), executedMos);
         }
 
@@ -916,7 +916,7 @@ namespace Rougamo.Fody.Tests
             await (Task)clsAB.Call("PublicSingleGenericAsync", executedMos, typeof(string));
             Assert.DoesNotContain(nameof(AnyTypeGenericAttribute), executedMos);
             executedMos.Clear();
-            clsAB.Call("ProtectedStaticDoubleGeneric", executedMos, typeof(Guid), typeof(decimal));
+            await (ValueTask)clsAB.Call("ProtectedStaticDoubleGeneric", executedMos, typeof(Guid), typeof(decimal));
             Assert.DoesNotContain(nameof(AnyTypeGenericAttribute), executedMos);
         }
 
@@ -966,8 +966,8 @@ namespace Rougamo.Fody.Tests
             await (Task)clsAB.Call("PublicSingleGenericAsync", executedMos, typeof(string));
             Assert.DoesNotContain(nameof(AnyTypeGenericNoneMethodGenericAttribute), executedMos);
             executedMos.Clear();
-            clsAB.Call("ProtectedStaticDoubleGeneric", executedMos, typeof(Guid), typeof(decimal));
-            Assert.DoesNotContain(nameof(AnyTypeGenericNoneMethodGenericAttribute), executedMos.ToArray());
+            await (ValueTask)clsAB.Call("ProtectedStaticDoubleGeneric", executedMos, typeof(Guid), typeof(decimal));
+            Assert.DoesNotContain(nameof(AnyTypeGenericNoneMethodGenericAttribute), executedMos);
         }
 
         [Fact]
@@ -1016,7 +1016,7 @@ namespace Rougamo.Fody.Tests
             await (Task)clsAB.Call("PublicSingleGenericAsync", executedMos, typeof(string));
             Assert.Contains(nameof(NoneTypeGenericAnyMethodGenericAttribute), executedMos);
             executedMos.Clear();
-            clsAB.Call("ProtectedStaticDoubleGeneric", executedMos, typeof(Guid), typeof(decimal));
+            await (ValueTask)clsAB.Call("ProtectedStaticDoubleGeneric", executedMos, typeof(Guid), typeof(decimal));
             Assert.Contains(nameof(NoneTypeGenericAnyMethodGenericAttribute), executedMos);
         }
 
