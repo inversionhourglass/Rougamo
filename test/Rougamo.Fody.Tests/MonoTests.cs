@@ -49,10 +49,15 @@ namespace Rougamo.Fody.Tests
             }
 
             var root = Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", ".."));
+#if DEBUG
+            const string configuration = "Debug";
+#else
+            const string configuration = "Release";
+#endif
             var runnerProject = Path.Combine(root, ".tmp", "MonoRunner", "MonoRunner.csproj");
-            var runnerExe = Path.Combine(root, ".tmp", "MonoRunner", "bin", "Debug", "net48", "MonoRunner.exe");
+            var runnerExe = Path.Combine(root, ".tmp", "MonoRunner", "bin", configuration, "net48", "MonoRunner.exe");
             var monoOutDir = Path.Combine(root, ".tmp", "MonoCompat", "TestAssemblies", "bin");
-            var testBinDir = Path.Combine(root, "test", "Rougamo.Fody.Tests", "bin", "Debug", "net48");
+            var testBinDir = Path.Combine(root, "test", "Rougamo.Fody.Tests", "bin", configuration, "net48");
             var sandboxDir = Path.Combine(root, ".tmp", "MonoRunSandbox", "net48");
             var testDll = Path.Combine(sandboxDir, "Rougamo.Fody.Tests.dll");
             var monoPath = sandboxDir;
@@ -138,6 +143,11 @@ namespace Rougamo.Fody.Tests
 
         private static void EnsureRunnerReady(string root, string runnerProject, string runnerExe, string monoOutDir, string testBinDir, string sandboxDir)
         {
+#if DEBUG
+            const string configuration = "Debug";
+#else
+            const string configuration = "Release";
+#endif
             if (RunnerReady) return;
 
             lock (RunnerLock)
@@ -145,12 +155,12 @@ namespace Rougamo.Fody.Tests
                 if (RunnerReady) return;
 
                 EnsureMonoRunnerProject(runnerProject);
-                var build = Run("dotnet", root, new[] { "build", runnerProject, "-f", "net48" });
+                var build = Run("dotnet", root, new[] { "build", runnerProject, "-c", configuration, "-f", "net48" });
                 Assert.True(build.ExitCode == 0, "Build Mono runner failed:\n" + build.Output);
                 Assert.True(File.Exists(runnerExe), "Mono runner exe not found after build: " + runnerExe);
 
                 Directory.CreateDirectory(monoOutDir);
-                var monoOutNet48Dir = Path.Combine(monoOutDir, "Debug", "net48");
+                var monoOutNet48Dir = Path.Combine(monoOutDir, configuration, "net48");
                 Directory.CreateDirectory(monoOutNet48Dir);
                 var monoOutArg = monoOutDir.Replace('\\', '/') + "/";
                 foreach (var relativeProject in MonoCompatProjects)
@@ -163,6 +173,8 @@ namespace Rougamo.Fody.Tests
                         {
                             "build",
                             project,
+                            "-c",
+                            configuration,
                             "-f",
                             "net48",
                             "-p:MonoCompat=true",
@@ -172,7 +184,7 @@ namespace Rougamo.Fody.Tests
                         });
                     Assert.True(buildMonoProject.ExitCode == 0, $"Build mono-compat project failed: {relativeProject}\n" + buildMonoProject.Output);
                 }
-                var monoBasicUsageDll = Path.Combine(monoOutDir, "Debug", "net48", "BasicUsage.dll");
+                var monoBasicUsageDll = Path.Combine(monoOutDir, configuration, "net48", "BasicUsage.dll");
                 Assert.True(File.Exists(monoBasicUsageDll), "Mono-compat BasicUsage dll not found after build: " + monoBasicUsageDll);
 
                 // Copy original net48 test output to isolated sandbox.
