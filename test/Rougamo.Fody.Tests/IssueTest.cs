@@ -1,6 +1,7 @@
 using Issues;
 using Issues.Attributes;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
@@ -269,11 +270,69 @@ namespace Rougamo.Fody.Tests
             var instance = Assembly.GetInstance(nameof(Issue107));
             instance.Test();
         }
+
         [Fact]
         public void Issue108Test()
         {
             var instance = Assembly.GetInstance("Issue108`1", false, t => t.MakeGenericType(typeof(string)));
             instance.CatchAndGetStackTrace(108, "mono-stacktrace");
+        }
+
+        [Fact]
+        public async Task Issue110Test()
+        {
+            var instance = Assembly.GetInstance(nameof(Issue110));
+            var logs = new List<string>();
+
+            var enumerator = (IEnumerator)instance.Enumerator(logs);
+            while (enumerator.MoveNext()) ;
+            Assert.Equal(["Enumerator OnEntry", "Enumerator OnSuccess", "Enumerator OnExit"], logs);
+            logs.Clear();
+
+            var genericEnumerator = (IEnumerator<int>)instance.GenericEnumerator(logs);
+            while (genericEnumerator.MoveNext()) ;
+            Assert.Equal(["GenericEnumerator OnEntry", "GenericEnumerator OnSuccess", "GenericEnumerator OnExit"], logs);
+            logs.Clear();
+
+            var genericEnumerator1 = (IEnumerator<Guid>)instance.GenericEnumerator<Guid>(logs);
+            while (genericEnumerator1.MoveNext()) ;
+            Assert.Equal(["GenericEnumerator`1 OnEntry", "GenericEnumerator`1 OnSuccess", "GenericEnumerator`1 OnExit"], logs);
+            logs.Clear();
+
+            var enumerable = (IEnumerable)instance.Enumerable(logs);
+            foreach (var item in enumerable) ;
+            Assert.Equal(["Enumerable OnEntry", "Enumerable OnSuccess", "Enumerable OnExit"], logs);
+            logs.Clear();
+
+            var genericEnumerable = (IEnumerable<int>)instance.GenericEnumerable(logs);
+            foreach (var item in genericEnumerable) ;
+            Assert.Equal(["GenericEnumerable OnEntry", "GenericEnumerable OnSuccess", "GenericEnumerable OnExit"], logs);
+            logs.Clear();
+
+            var genericEnumerable1 = (IEnumerable<string>)instance.GenericEnumerable<string>(logs);
+            foreach (var item in genericEnumerable1) ;
+            Assert.Equal(["GenericEnumerable`1 OnEntry", "GenericEnumerable`1 OnSuccess", "GenericEnumerable`1 OnExit"], logs);
+            logs.Clear();
+
+            var asyncEnumerator = (IAsyncEnumerator<int>)instance.EnumeratorAsync(logs);
+            while (await asyncEnumerator.MoveNextAsync()) ;
+            Assert.Equal(["EnumeratorAsync OnEntry", "EnumeratorAsync OnSuccess", "EnumeratorAsync OnExit"], logs);
+            logs.Clear();
+
+            var asyncEnumerator1 = (IAsyncEnumerator<decimal>)instance.EnumeratorAsync<decimal>(logs);
+            while (await asyncEnumerator1.MoveNextAsync()) ;
+            Assert.Equal(["EnumeratorAsync`1 OnEntry", "EnumeratorAsync`1 OnSuccess", "EnumeratorAsync`1 OnExit"], logs);
+            logs.Clear();
+
+            var asyncEnumerable = (IAsyncEnumerable<int>)instance.EnumerableAsync(logs);
+            await foreach (var item in asyncEnumerable) ;
+            Assert.Equal(["EnumerableAsync OnEntry", "EnumerableAsync OnSuccess", "EnumerableAsync OnExit"], logs);
+            logs.Clear();
+
+            var asyncEnumerable1 = (IAsyncEnumerable<DateTime>)instance.EnumerableAsync<DateTime>(logs);
+            await foreach (var item in asyncEnumerable1) ;
+            Assert.Equal(["EnumerableAsync`1 OnEntry", "EnumerableAsync`1 OnSuccess", "EnumerableAsync`1 OnExit"], logs);
+            logs.Clear();
         }
     }
 }
