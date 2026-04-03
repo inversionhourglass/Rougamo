@@ -1,4 +1,4 @@
-﻿using Fody;
+using Fody;
 using Fody.Simulations;
 using Fody.Simulations.Operations;
 using Fody.Simulations.PlainValues;
@@ -254,7 +254,7 @@ namespace Rougamo.Fody
             var state = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_State);
             var current = stateMachineTypeDef.Fields.Single(m => m.Name.EndsWith(Constants.FIELD_Current_Suffix));
             var initialThreadId = stateMachineTypeDef.Fields.SingleOrDefault(x => x.Name == Constants.FIELD_InitialThreadId);
-            var declaringThis = stateMachineTypeDef.Fields.SingleOrDefault(x => x.FieldType.Resolve() == stateMachineTypeDef.DeclaringType);
+            var declaringThis = ResolveDeclaringThisField(stateMachineTypeDef);
             FieldDefinition? recordedReturn = null;
             var transitParameters = StateMachineParameterFields(rouMethod);
             var parameters = isEnumerator ? transitParameters : IteratorGetPrivateParameterFields(getEnumeratorMethodDef!, transitParameters);

@@ -1,9 +1,9 @@
-﻿using System.Linq;
+using System.Linq;
 using System.Text.RegularExpressions;
 
 namespace Rougamo.Fody.Models
 {
-    internal class Config(bool enabled, bool compositeAccessibility, bool skipRefStruct, bool recordingIteratorReturns, bool reverseCallNonEntry, bool pureStackTrace, string[] exceptTypePatterns, Config.Mo[] mos)
+    internal class Config(bool enabled, bool compositeAccessibility, bool skipRefStruct, bool recordingIteratorReturns, bool reverseCallNonEntry, bool pureStackTrace, string[] exceptTypePatterns, string[] exceptNamespaces, Config.Mo[] mos)
     {
         /// <summary>
         /// 是否启用肉夹馍
@@ -43,6 +43,11 @@ namespace Rougamo.Fody.Models
         /// 类型的全名称与正则表达式匹配的类型将忽略所有IMo
         /// </summary>
         public Regex[] ExceptTypePatterns { get; } = exceptTypePatterns.Select(x => new Regex(x)).ToArray();
+
+        /// <summary>
+        /// 命名空间匹配（完全相等或前缀）将忽略所有IMo
+        /// </summary>
+        public string[] ExceptNamespaces { get; } = exceptNamespaces;
 
         /// <summary>
         /// 应用到程序集的Mo

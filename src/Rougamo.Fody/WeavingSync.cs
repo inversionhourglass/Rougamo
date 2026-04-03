@@ -1,4 +1,4 @@
-﻿using Fody;
+using Fody;
 using Fody.Simulations;
 using Fody.Simulations.Operations;
 using Fody.Simulations.PlainValues;
@@ -440,7 +440,10 @@ namespace Rougamo.Fody
             {
                 if (attribute.Is(Constants.TYPE_AsyncStateMachineAttribute))
                 {
-                    if (!methodDef.ReturnType.IsVoid()) throw new FodyWeavingException("Found AsyncStateMachineAttribute but the return type is not void", methodDef);
+                    if (!methodDef.ReturnType.IsVoid() && HasGetAwaiter(methodDef.ReturnType))
+                    {
+                        throw new FodyWeavingException("Found AsyncStateMachineAttribute but the return type is not void", methodDef);
+                    }
 
                     WriteWarning($"[{methodDef}] The async void method may not be able to execute OnSuccess and OnExit at the right time, and may not be able to execute OnException when an exception occurs.", methodDef);
                     asyncStateMachineAttribute = attribute;

@@ -1,4 +1,4 @@
-﻿using Fody;
+using Fody;
 using Fody.Simulations;
 using Fody.Simulations.Operations;
 using Fody.Simulations.PlainValues;
@@ -834,7 +834,7 @@ namespace Rougamo.Fody
             var result = resultTypeRef.Is(Constants.TYPE_Void) ? null : new FieldDefinition(Constants.FIELD_Result, FieldAttributes.Private, this.Import(resultTypeRef));
             var builder = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_Builder);
             var state = stateMachineTypeDef.Fields.Single(x => x.Name == Constants.FIELD_State);
-            var declaringThis = stateMachineTypeDef.Fields.SingleOrDefault(x => x.FieldType.Resolve() == stateMachineTypeDef.DeclaringType);
+            var declaringThis = ResolveDeclaringThisField(stateMachineTypeDef);
             var parameters = StateMachineParameterFields(rouMethod);
 
             stateMachineTypeDef
