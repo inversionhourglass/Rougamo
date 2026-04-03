@@ -78,6 +78,7 @@ namespace Rougamo.Fody
             var reverseCallNonEntry = "true".Equals(GetConfigValue("true", "reverse-call-nonentry"), StringComparison.OrdinalIgnoreCase);
             var pureStackTrace = "true".Equals(GetConfigValue("true", "pure-stacktrace"), StringComparison.OrdinalIgnoreCase);
             var exceptTypePatterns = GetConfigValue(string.Empty, "except-type-patterns").Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
+            var exceptNamespace = GetConfigValue(string.Empty, "except-namespaces").Split(new[] { ',', ';' }, StringSplitOptions.RemoveEmptyEntries);
             var mos = new List<Config.Mo>();
             var xMos = Config.Element("Mos");
             if (xMos != null)
@@ -96,7 +97,7 @@ namespace Rougamo.Fody
                 }
             }
 
-            return new(enabled, compositeAccessibility, skipRefStruct, recordingIteratorReturns, reverseCallNonEntry, pureStackTrace, exceptTypePatterns, mos.ToArray());
+            return new(enabled, compositeAccessibility, skipRefStruct, recordingIteratorReturns, reverseCallNonEntry, pureStackTrace, exceptTypePatterns, exceptNamespace, mos.ToArray());
         }
 
         private void StackTraceHidden(MethodDefinition methodDef)

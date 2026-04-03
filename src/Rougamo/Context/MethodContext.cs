@@ -207,7 +207,6 @@ namespace Rougamo.Context
             if (method == null) return null!;
 
             method = ResolveStateMachineMethod(method);
-            method = ResolveRougamoProxyMethod(method);
             return method;
         }
 
@@ -244,36 +243,6 @@ namespace Rougamo.Context
             }
 
             return method;
-        }
-
-        private static MethodBase ResolveRougamoProxyMethod(MethodBase method)
-        {
-            const string prefix = "$Rougamo_";
-            if (!method.Name.StartsWith(prefix, StringComparison.Ordinal)) return method;
-
-            var declaringType = method.DeclaringType;
-            if (declaringType == null) return method;
-
-            var expectedName = method.Name.Substring(prefix.Length);
-            var methodGenericCount = method.IsGenericMethod ? method.GetGenericArguments().Length : 0;
-            var parameterCount = method.GetParameters().Length;
-
-            const BindingFlags flags = BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance | BindingFlags.Static;
-            var candidates = declaringType.GetMethods(flags)
-                .Where(m => m.Name == expectedName)
-                .Where(m => m.GetParameters().Length == parameterCount)
-                .ToArray();
-
-            foreach (var candidate in candidates)
-            {
-                var candidateGenericCount = candidate.IsGenericMethod ? candidate.GetGenericArguments().Length : 0;
-                if (candidateGenericCount == methodGenericCount)
-                {
-                    return candidate;
-                }
-            }
-
-            return candidates.FirstOrDefault() ?? method;
         }
     }
 }

@@ -1,4 +1,4 @@
-﻿using Fody;
+using Fody;
 using Fody.Simulations;
 using Fody.Simulations.PlainValues;
 using Mono.Cecil;
@@ -37,7 +37,14 @@ namespace Rougamo.Fody
                         }
                         else if (rouMethod.IsAsyncTaskOrValueTask)
                         {
-                            WeavingAsyncTaskMethod(rouMethod);
+                            if (HasGetAwaiter(rouMethod.MethodDef.ReturnType))
+                            {
+                                WeavingAsyncTaskMethod(rouMethod);
+                            }
+                            else
+                            {
+                                WeavingSyncMethod(rouMethod);
+                            }
                         }
                         else if (!rouMethod.MethodDef.IsConstructor)
                         {
@@ -59,6 +66,40 @@ namespace Rougamo.Fody
                     }
                 }
             }
+        }
+
+
+        private bool HasGetAwaiter(TypeReference returnType)
+        {
+            try
+            {
+                return returnType.Resolve()?.Methods.Any(m => m.Name == Constants.METHOD_GetAwaiter) == true;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        private FieldDefinition? ResolveDeclaringThisField(TypeDefinition stateMachineTypeDef)
+        {
+            var candidates = stateMachineTypeDef.Fields
+                .Where(fieldDef =>
+                {
+                    try
+                    {
+                        var matched = fieldDef.FieldType.Resolve() == stateMachineTypeDef.DeclaringType;
+                        if (!matched) return false;
+
+                        return fieldDef.Name.IndexOf("wrap", StringComparison.OrdinalIgnoreCase) < 0;
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                })
+                .ToArray();
+                return candidates.SingleOrDefault();
         }
 
         private IList<Instruction> NewMo(RouMethod rouMethod, Mo mo, TsMo tMo, MethodSimulation executingMethod, List<IParameterSimulation> pooledItems)

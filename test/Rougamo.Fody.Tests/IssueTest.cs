@@ -334,5 +334,16 @@ namespace Rougamo.Fody.Tests
             Assert.Equal(["EnumerableAsync`1 OnEntry", "EnumerableAsync`1 OnSuccess", "EnumerableAsync`1 OnExit"], logs);
             logs.Clear();
         }
+
+        [Fact]
+        public void Issue111Test()
+        {
+            var instance = Assembly.GetInstance(nameof(Issue111));
+            var logs = new List<string>();
+
+            instance.NoAwaiterAsync(logs);
+
+            Assert.Equal(["OnEntry", "OnSuccess", "OnExit"], logs);
+        }
     }
 }
