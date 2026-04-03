@@ -5,9 +5,9 @@ using System.Runtime.CompilerServices;
 
 namespace Issues;
 
-public class Issue112
+public class Issue111
 {
-    [_112_]
+    [_111_]
     public async NoAwaiterTask NoAwaiterAsync(List<string> logs)
     {
     }

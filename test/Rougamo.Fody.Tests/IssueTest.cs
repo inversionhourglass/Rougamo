@@ -336,9 +336,9 @@ namespace Rougamo.Fody.Tests
         }
 
         [Fact]
-        public void Issue112Test()
+        public void Issue111Test()
         {
-            var instance = Assembly.GetInstance(nameof(Issue112));
+            var instance = Assembly.GetInstance(nameof(Issue111));
             var logs = new List<string>();
 
             instance.NoAwaiterAsync(logs);
