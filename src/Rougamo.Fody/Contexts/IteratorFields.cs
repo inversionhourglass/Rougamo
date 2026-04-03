@@ -5,7 +5,7 @@ namespace Rougamo.Fody.Contexts
     internal class IteratorFields(
         FieldDefinition[] mos, FieldDefinition methodContext,
         FieldDefinition state, FieldDefinition current,
-        FieldDefinition initialThreadId, FieldDefinition? recordedReturn,
+        FieldDefinition? initialThreadId, FieldDefinition? recordedReturn,
         FieldDefinition? declaringThis, FieldDefinition iterator,
         FieldDefinition?[] transitParameters, FieldDefinition?[] parameters) : IIteratorFields
     {
@@ -17,7 +17,8 @@ namespace Rougamo.Fody.Contexts
 
         public FieldDefinition Current { get; } = current!;
 
-        public FieldDefinition InitialThreadId { get; } = initialThreadId!;
+        // 当方法返回值直接是 IEnumerator 时，记录初始线程 ID 和返回值，否则不记录
+        public FieldDefinition? InitialThreadId { get; } = initialThreadId;
 
         public FieldDefinition? RecordedReturn { get; } = recordedReturn;
 

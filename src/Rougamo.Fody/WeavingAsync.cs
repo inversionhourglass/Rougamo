@@ -848,7 +848,7 @@ namespace Rougamo.Fody
 
         private FieldDefinition?[] StateMachineParameterFields(RouMethod rouMethod)
         {
-            if (rouMethod.MethodDef.Parameters.Count == 0) return new FieldDefinition?[0];
+            if (rouMethod.MethodDef.Parameters.Count == 0) return [];
 
             var isStaticMethod = rouMethod.MethodDef.IsStatic;
             var parameterFieldDefs = new FieldDefinition?[rouMethod.MethodDef.Parameters.Count];
