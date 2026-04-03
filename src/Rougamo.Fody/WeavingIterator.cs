@@ -375,11 +375,12 @@ namespace Rougamo.Fody
 
             if (!stloc.TryResolveVariable(getEnumeratorMethodDef, out var vStateMachine)) throw new FodyWeavingException($"Unable resolve the StateMachine variable");
 
+            var thisFieldRef = new FieldReference(fields.DeclaringThis.Name, fields.DeclaringThis.FieldType, vStateMachine!.VariableType);
             instructions.InsertAfter(stloc, [
                 Create(OpCodes.Ldloc, vStateMachine),
                 Create(OpCodes.Ldarg_0),
-                Create(OpCodes.Ldfld, fields.DeclaringThis),
-                Create(OpCodes.Stfld, new FieldReference(fields.DeclaringThis!.Name, fields.DeclaringThis!.FieldType, vStateMachine!.VariableType))
+                Create(OpCodes.Ldfld, thisFieldRef),
+                Create(OpCodes.Stfld, thisFieldRef)
             ]);
         }
 
@@ -399,8 +400,9 @@ namespace Rougamo.Fody
 
                 fields.TransitParameters[i] = fields.Parameters[i];
 
-                var transitParameterFieldRef = fields.TransitParameters[i]!;
-                var parameterFieldDef = new FieldDefinition($">_<{transitParameterFieldRef.Name}", FieldAttributes.Private, transitParameterFieldRef.FieldType);
+                var transitParameterFieldDef = fields.TransitParameters[i]!;
+                var transitParameterFieldRef = new FieldReference(transitParameterFieldDef.Name, transitParameterFieldDef.FieldType, vStateMachine!.VariableType);
+                var parameterFieldDef = new FieldDefinition($">_<{transitParameterFieldDef.Name}", FieldAttributes.Private, transitParameterFieldDef.FieldType);
                 var parameterFieldRef = new FieldReference(parameterFieldDef.Name, parameterFieldDef.FieldType, vStateMachine!.VariableType);
 
                 fields.SetParameter(i, parameterFieldDef);
